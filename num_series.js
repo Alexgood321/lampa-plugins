@@ -5,7 +5,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '1.2.0';
+    var VERSION = '1.3.0';
 
     function startPlugin() {
         // Локализация
@@ -278,7 +278,22 @@
         `;
         document.head.appendChild(style);
 
-        // Функция очистки "грязных" названий файлов
+        // Функция безопасного экранирования HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            return $('<div>').text(text).html();
+        }
+
+        // Получение активного базового URL TorrServer с учетом настроек Лампы
+        function getTorrServerUrl() {
+            if (Lampa.Torserver && typeof Lampa.Torserver.url === 'function') {
+                var u = Lampa.Torserver.url();
+                if (u) return u.replace(/\/$/, '');
+            }
+            return (Lampa.Storage.get('torrserver_url') || 'http://127.0.0.1:8090').replace(/\/$/, '');
+        }
+
+        // Очистка "грязных" названий файлов
         function cleanTechnicalTitle(rawTitle, epNum) {
             if (!rawTitle) return epNum ? 'Серия ' + epNum : '';
             var clean = rawTitle.replace(/\.(mkv|mp4|avi|ts|m4v|mov)$/i, '');
@@ -297,7 +312,7 @@
             return clean || rawTitle;
         }
 
-        // Парсер сезона и серии
+        // Парсер сезона и серии из пути
         function parseSeasonEpisode(path) {
             if (!path) return { season: 0, episode: 0 };
             var clean = path.replace(/_/g, ' ');
@@ -350,26 +365,6 @@
                     item.__num_season = item.season || parsed.season || 0;
                     item.__num_episode = item.episode || parsed.episode || 0;
                 });
-
-                var seasonCounts = {};
-                currentTorrentItems.forEach(function (item) {
-                    var s = item.__num_season;
-                    if (s > 0) seasonCounts[s] = (seasonCounts[s] || 0) + 1;
-                });
-
-                var seasons = Object.keys(seasonCounts).map(function (k) { return parseInt(k, 10); }).sort(function (a, b) { return a - b; });
-
-                var targetSeason = null;
-                for (var i = 0; i < currentTorrentItems.length; i++) {
-                    var el = currentTorrentItems[i];
-                    if (el.timeline && el.timeline.percent > 0 && el.timeline.percent < 85 && el.__num_season > 0) {
-                        targetSeason = el.__num_season;
-                        break;
-                    }
-                }
-
-                if (!targetSeason && seasons.length > 0) targetSeason = seasons[0];
-                activeSeason = targetSeason;
             }
 
             if (e.type === 'render') {
@@ -379,7 +374,11 @@
                 e.item.attr('data-num-season', s);
                 e.item.attr('data-num-episode', ep);
 
-                // Очистка грязных названий, если TMDB не дал названия
+                // Сохраняем точный процент просмотра из Timeline на DOM-элементе
+                var percent = (e.element.timeline && e.element.timeline.percent) || 0;
+                e.item.attr('data-num-percent', percent);
+
+                // Очистка грязных названий при отсутствии метаданных TMDB
                 var titleElem = e.item.find('.torrent-serial__title, .torrent-file__title');
                 var currentTitleText = titleElem.text().trim();
                 if (currentTitleText && (currentTitleText.indexOf('1080p') > -1 || currentTitleText.indexOf('WEB-DL') > -1 || currentTitleText.indexOf('.mkv') > -1)) {
@@ -388,23 +387,26 @@
                 }
 
                 // Индикатор прогресса на серии
-                if (e.element.timeline && e.element.timeline.percent > 0 && e.element.timeline.percent < 85) {
+                if (percent > 0 && percent < 85) {
                     if (!e.item.find('.num-resume-badge').length) {
-                        titleElem.append('<span class="num-resume-badge">' + e.element.timeline.percent + '%</span>');
+                        titleElem.append('<span class="num-resume-badge">' + percent + '%</span>');
                     }
                 }
             }
 
             if (e.type === 'onlong') {
                 if (e.items && e.items.length > 1 && e.element.torrent_hash) {
-                    var torrUrl = Lampa.Storage.get('torrserver_url') || 'http://127.0.0.1:8090';
-                    var m3uLink = torrUrl.replace(/\/$/, '') + '/stream?link=' + e.element.torrent_hash + '&m3u';
+                    var torrUrl = getTorrServerUrl();
+                    var m3uLink = torrUrl + '/stream?link=' + e.element.torrent_hash + '&m3u';
+                    var enabledController = Lampa.Controller.enabled() ? Lampa.Controller.enabled().name : 'modal';
 
                     e.menu.push({
                         title: Lampa.Lang.translate('num_open_m3u_iina'),
+                        num_iina_m3u: true,
+                        url: m3uLink,
                         onSelect: function () {
-                            var iinaUrl = 'iina://weblink?url=' + encodeURIComponent(m3uLink);
-                            window.location.href = iinaUrl;
+                            if (enabledController) Lampa.Controller.toggle(enabledController);
+                            window.location.href = 'iina://weblink?url=' + encodeURIComponent(m3uLink);
                             if (Lampa.Noty) Lampa.Noty.show('Запуск плейлиста в IINA...');
                         }
                     });
@@ -412,7 +414,17 @@
             }
         });
 
-        // Обновление бейджей сезонов (прогресс X/Y или ✓)
+        // Слушатель выбора в SelectBox для IINA (дублирующая надежность)
+        if (Lampa.Select && Lampa.Select.listener) {
+            Lampa.Select.listener.follow('select', function (ev) {
+                if (ev && ev.item && ev.item.num_iina_m3u && ev.item.url) {
+                    window.location.href = 'iina://weblink?url=' + encodeURIComponent(ev.item.url);
+                    if (Lampa.Noty) Lampa.Noty.show('Запуск плейлиста в IINA...');
+                }
+            });
+        }
+
+        // Обновление бейджей сезонов через реальный процент Timeline
         function updateSeasonTabBadges(container) {
             container.find('.num-season-tab').each(function () {
                 var s = $(this).attr('data-season');
@@ -421,11 +433,11 @@
 
                 container.find('.torrent-serial, .torrent-file').each(function () {
                     var itemSeason = parseInt($(this).attr('data-num-season'), 10) || 0;
+                    var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
+
                     if (s === 'all' || itemSeason === parseInt(s, 10)) {
                         total++;
-                        var badge = $(this).find('.torrent-serial__viewed, .torrent-file__viewed');
-                        var isViewed = badge.length > 0 && !badge.hasClass('hide');
-                        if (isViewed) watched++;
+                        if (percent >= 85) watched++;
                     }
                 });
 
@@ -451,25 +463,22 @@
             container.find('.num-resume-banner').remove();
 
             var candidateElem = null;
-            var isUnfinished = false;
-
             var visibleEpisodes = container.find('.torrent-serial:not(.num-hidden-item), .torrent-file:not(.num-hidden-item)');
 
-            // 1. Ищем недосмотренную серию (с бейджем %)
+            // 1. Ищем серию в процессе просмотра (0 < percent < 85)
             visibleEpisodes.each(function () {
-                if ($(this).find('.num-resume-badge').length > 0) {
+                var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
+                if (percent > 0 && percent < 85) {
                     candidateElem = $(this);
-                    isUnfinished = true;
                     return false;
                 }
             });
 
-            // 2. Если недосмотренных нет, ищем первую непросмотренную
+            // 2. Если в процессе нет — ищем первую непросмотренную (percent < 85)
             if (!candidateElem) {
                 visibleEpisodes.each(function () {
-                    var badge = $(this).find('.torrent-serial__viewed, .torrent-file__viewed');
-                    var isViewed = badge.length > 0 && !badge.hasClass('hide');
-                    if (!isViewed) {
+                    var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
+                    if (percent < 85) {
                         candidateElem = $(this);
                         return false;
                     }
@@ -477,9 +486,10 @@
             }
 
             if (candidateElem && candidateElem.length) {
-                var titleText = candidateElem.find('.torrent-serial__title, .torrent-file__title').text().replace(/\d+%/g, '').trim();
-                var epNum = candidateElem.attr('data-num-episode') || '';
-                var percentText = candidateElem.find('.num-resume-badge').text().trim();
+                var rawTitle = candidateElem.find('.torrent-serial__title, .torrent-file__title').text().replace(/\d+%/g, '').trim();
+                var titleText = escapeHtml(rawTitle);
+                var percent = parseInt(candidateElem.attr('data-num-percent'), 10) || 0;
+                var timeLabel = percent > 0 ? percent + '%' : Lampa.Lang.translate('num_play_now') + ' ▶';
 
                 var banner = $(`
                     <div class="num-resume-banner selector">
@@ -489,14 +499,15 @@
                             </svg>
                         </div>
                         <div class="num-resume-banner__body">
-                            <div class="num-resume-banner__label">${Lampa.Lang.translate('num_continue_watching')}</div>
+                            <div class="num-resume-banner__label">${escapeHtml(Lampa.Lang.translate('num_continue_watching'))}</div>
                             <div class="num-resume-banner__title">${titleText}</div>
                         </div>
-                        <div class="num-resume-banner__time">${percentText ? percentText : Lampa.Lang.translate('num_play_now')} ▶</div>
+                        <div class="num-resume-banner__time">${escapeHtml(timeLabel)}</div>
                     </div>
                 `);
 
-                banner.on('hover:enter click', function () {
+                banner.on('hover:enter click', function (ev) {
+                    ev.preventDefault();
                     candidateElem.trigger('hover:enter');
                 });
 
@@ -539,7 +550,7 @@
             }
         }
 
-        // Отметить весь сезон просмотренным в 1 клик
+        // Корректная отметка сезона как просмотренного без выдуманных длительностей
         function markSeasonWatched(container, targetSeason) {
             var itemsToMark = [];
             currentTorrentItems.forEach(function (el) {
@@ -550,24 +561,30 @@
 
             itemsToMark.forEach(function (el) {
                 if (!el.timeline) el.timeline = {};
-                var duration = el.timeline.duration || (45 * 60);
+                var duration = el.timeline.duration || 0;
                 el.timeline.percent = 100;
-                el.timeline.time = duration;
-                el.timeline.duration = duration;
+                el.timeline.time = duration > 0 ? duration : 0;
 
                 if (Lampa.Timeline && Lampa.Timeline.update) {
                     Lampa.Timeline.update(el.timeline);
                 }
 
-                if (Lampa.Storage.field('torrserver_tracktimecode') && Lampa.Torserver && Lampa.Torserver.viewedSet) {
+                // Синхронизируем с TorrServer только если известна реальная длительность
+                if (duration > 0 && Lampa.Storage.field('torrserver_tracktimecode') && Lampa.Torserver && Lampa.Torserver.viewedSet) {
                     Lampa.Torserver.viewedSet(el.torrent_hash, el.id, duration);
                 }
             });
 
+            // Обновляем атрибуты и таймлайны в DOM
             container.find('.torrent-serial:not(.num-hidden-item), .torrent-file:not(.num-hidden-item)').each(function () {
+                $(this).attr('data-num-percent', 100);
                 $(this).find('.num-resume-badge').remove();
-                var viewed = $(this).find('.torrent-serial__viewed, .torrent-file__viewed');
-                if (viewed.length) viewed.removeClass('hide');
+                
+                var line = $(this).find('.time-line');
+                if (line.length) {
+                    line.removeClass('hide');
+                    line.find('div').css('width', '100%');
+                }
             });
 
             updateSeasonTabBadges(container);
@@ -578,18 +595,17 @@
             }
         }
 
-        // Внедрение интерфейса
-        function checkAndInjectSeasonBar() {
-            var modal = $('.modal__content');
-            if (!modal.length) return;
-
-            var container = modal.find('.torrent-files');
+        // Внедрение панели сезонов (вызывается после того как все timeline данные готовы)
+        function checkAndInjectSeasonBar(targetContainer) {
+            var container = targetContainer || $('.modal__content .torrent-files');
             if (!container.length) return;
-
             if (container.find('.num-season-bar').length) return;
 
             var seasonCounts = {};
-            container.find('.torrent-serial, .torrent-file').each(function () {
+            var episodes = container.find('.torrent-serial, .torrent-file');
+            if (!episodes.length) return;
+
+            episodes.each(function () {
                 var s = parseInt($(this).attr('data-num-season'), 10) || 0;
                 if (s > 0) seasonCounts[s] = (seasonCounts[s] || 0) + 1;
             });
@@ -599,18 +615,18 @@
             if (seasons.length > 0) {
                 var bar = $('<div class="num-season-bar selector-box"></div>');
 
-                var totalFiles = container.find('.torrent-serial, .torrent-file').length;
-                var allTab = $('<div class="num-season-tab selector" data-season="all">' + Lampa.Lang.translate('num_season_all') + ' <span class="num-count">' + totalFiles + '</span></div>');
+                var totalFiles = episodes.length;
+                var allTab = $('<div class="num-season-tab selector" data-season="all">' + escapeHtml(Lampa.Lang.translate('num_season_all')) + ' <span class="num-count">' + totalFiles + '</span></div>');
                 bar.append(allTab);
 
                 seasons.forEach(function (s) {
                     var count = seasonCounts[s];
-                    var sTab = $('<div class="num-season-tab selector" data-season="' + s + '">' + Lampa.Lang.translate('num_season_prefix') + ' ' + s + ' <span class="num-count">' + count + '</span></div>');
+                    var sTab = $('<div class="num-season-tab selector" data-season="' + s + '">' + escapeHtml(Lampa.Lang.translate('num_season_prefix')) + ' ' + s + ' <span class="num-count">' + count + '</span></div>');
                     bar.append(sTab);
                 });
 
                 // Кнопка быстрой отметки сезона
-                var markBtn = $('<div class="num-season-action selector">' + Lampa.Lang.translate('num_mark_season_watched') + '</div>');
+                var markBtn = $('<div class="num-season-action selector">' + escapeHtml(Lampa.Lang.translate('num_mark_season_watched')) + '</div>');
                 markBtn.on('hover:enter click', function (e) {
                     e.preventDefault();
                     markSeasonWatched(container, activeSeason || 'all');
@@ -619,7 +635,43 @@
 
                 container.prepend(bar);
 
-                // Плавное центрирование активной вкладки
+                // Определение сезона с незавершенным просмотром по реальным данным Timeline
+                var determinedSeason = null;
+
+                // 1. Сначала ищем сезон где серия прямо сейчас не досмотрена (0 < percent < 85)
+                episodes.each(function () {
+                    var s = parseInt($(this).attr('data-num-season'), 10) || 0;
+                    var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
+                    if (s > 0 && percent > 0 && percent < 85) {
+                        determinedSeason = s;
+                        return false;
+                    }
+                });
+
+                // 2. Если таких нет — ищем первый сезон с непросмотренными сериями
+                if (!determinedSeason) {
+                    for (var i = 0; i < seasons.length; i++) {
+                        var seasonNum = seasons[i];
+                        var hasUnwatched = false;
+                        episodes.each(function () {
+                            var s = parseInt($(this).attr('data-num-season'), 10) || 0;
+                            var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
+                            if (s === seasonNum && percent < 85) {
+                                hasUnwatched = true;
+                                return false;
+                            }
+                        });
+                        if (hasUnwatched) {
+                            determinedSeason = seasonNum;
+                            break;
+                        }
+                    }
+                }
+
+                if (!determinedSeason) determinedSeason = seasons[0];
+                activeSeason = determinedSeason;
+
+                // Плавное центрирование активной вкладки при фокусе
                 bar.find('.num-season-tab').on('hover:focus', function () {
                     if (this.scrollIntoView) {
                         this.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -632,13 +684,29 @@
                     applySeasonFilter(container, s);
                 });
 
-                var initialSeason = activeSeason || seasons[0] || 'all';
-                applySeasonFilter(container, initialSeason);
+                applySeasonFilter(container, activeSeason);
             }
         }
 
+        // Подписка на официальное событие Modal.update (без холостой нагрузки на CPU)
+        if (Lampa.Modal && Lampa.Modal.listener) {
+            Lampa.Modal.listener.follow('update', function (e) {
+                if (e && e.new_html && e.new_html.hasClass('torrent-files')) {
+                    setTimeout(function () {
+                        checkAndInjectSeasonBar(e.new_html);
+                    }, 50);
+                }
+            });
+        }
+
+        // Легковесный оптимизированный MutationObserver с дебаунсом как страховка
+        var debounceTimer = null;
         var observer = new MutationObserver(function () {
-            checkAndInjectSeasonBar();
+            if (debounceTimer) return;
+            debounceTimer = setTimeout(function () {
+                debounceTimer = null;
+                checkAndInjectSeasonBar();
+            }, 120);
         });
 
         observer.observe(document.body, {
