@@ -1,19 +1,21 @@
 /**
  * Lampa Plugin: Home Categories Pro (Скрытие и настройка порядка категорий)
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Lampa Community & Alexgood321
  * Description: Полный контроль над главным экраном Lampa:
- *   - Мгновенное скрытие любых категорий (Сейчас смотрят, Рекомендуем посмотреть, Тренды, Ожидаемые, Жанры и др.)
+ *   - Мгновенное и гарантированное скрытие любых полок (Сейчас смотрят, Рекомендуем, Тренды, Ожидаемые и др.)
  *   - Настройка точного порядка категорий (Вверх / Вниз) с поддержкой пульта ТВ и сенсорного экрана
+ *   - Прямой DOM-движок: скрывает строки мгновенно через CSS и атрибуты data-hc-hidden
  *   - Интеграция в «Настройки -> Каналы и Главный экран»
- *   - Глубокий перехват DOM, Component и Activity для 100% надёжного применения
  */
 
 (function () {
     'use strict';
 
-    if (window.plugin_home_categories_ready) return;
-    window.plugin_home_categories_ready = true;
+    // Очистка предыдущей версии при горячем обновлении
+    if (window.plugin_home_categories_destroy) {
+        try { window.plugin_home_categories_destroy(); } catch (e) {}
+    }
 
     var STORAGE_ORDER_KEY = 'home_categories_order_v1';
     var STORAGE_HIDDEN_KEY = 'home_categories_hidden_v1';
@@ -192,7 +194,7 @@
             if (lower.indexOf(keywordsList[k]) >= 0) return 'keywords';
         }
 
-        // 4. Персоны (актеры/режиссеры)
+        // 4. Персоны
         if (itemOrData.icon_img || (itemOrData.params && itemOrData.params.icon_img)) {
             return 'persons';
         }
@@ -231,81 +233,107 @@
     }
 
     /**
-     * ПРЯМАЯ ФИЛЬТРАЦИЯ И СОРТИРОВКА В DOM (Работает мгновенно на видимом экране)
+     * ПРЯМОЙ ВЫСОКОСКОРОСТНОЙ DOM-ДВИЖОК СКРЫТИЯ И СОРТИРОВКИ
      */
-    function applyDOMFilterAndOrder(comp) {
+    function cleanAndReorderDOM() {
         try {
-            var lines = $('.items-line').toArray();
-            if (!lines.length) return;
+            var lines = document.querySelectorAll('.items-line');
+            if (!lines || !lines.length) return;
 
-            var parent = null;
+            var scrollBody = null;
             var visibleLines = [];
 
-            lines.forEach(function (el) {
-                var line = $(el);
-                var titleEl = line.find('.items-line__title');
-                var title = (titleEl.text() || '').trim();
-                if (!title) return;
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                var titleEl = line.querySelector('.items-line__title');
+                var title = (titleEl ? titleEl.textContent : '').trim();
+                if (!title) continue;
 
                 var catId = identifyCategory({ title: title });
 
                 if (isCategoryHidden(catId)) {
-                    // МГНОВЕННО УДАЛЯЕМ СКРЫТУЮ ПОЛКУ ИЗ DOM
-                    line.remove();
+                    // ГАРАНТИРОВАННОЕ СКРЫТИЕ В DOM
+                    if (line.getAttribute('data-hc-hidden') !== 'true') {
+                        line.setAttribute('data-hc-hidden', 'true');
+                        line.style.setProperty('display', 'none', 'important');
+                    }
                 } else {
-                    if (!parent) parent = el.parentNode;
+                    if (line.getAttribute('data-hc-hidden') === 'true') {
+                        line.removeAttribute('data-hc-hidden');
+                        line.style.display = '';
+                    }
+
+                    if (!scrollBody && line.parentNode) {
+                        scrollBody = line.parentNode;
+                    }
+
                     visibleLines.push({
-                        el: el,
+                        el: line,
                         rank: getCategoryRank(catId)
                     });
                 }
-            });
+            }
 
-            // ПЕРЕСТАНОВКА ВИДИМЫХ ПОЛОК В ЗАДАННОМ ПОРЯДКЕ
-            if (parent && visibleLines.length) {
+            // ПЕРЕСТАНОВКА ПОЛОК В ЗАДАННОМ ПОРЯДКЕ
+            if (scrollBody && visibleLines.length > 1) {
                 visibleLines.sort(function (a, b) {
                     return a.rank - b.rank;
                 });
-                visibleLines.forEach(function (item) {
-                    parent.appendChild(item.el);
-                });
-            }
 
-            // Синхронизация коллекции для пульта ТВ
-            var activeComp = comp;
-            if (!activeComp && Lampa.Activity && Lampa.Activity.active) {
-                var act = Lampa.Activity.active();
-                if (act && act.activity) activeComp = act.activity;
-            }
-
-            if (activeComp && Array.isArray(activeComp.items)) {
-                activeComp.items = activeComp.items.filter(function (it) {
-                    var catId = identifyCategory(it);
-                    return !isCategoryHidden(catId);
-                });
-
-                activeComp.items.sort(function (a, b) {
-                    return getCategoryRank(identifyCategory(a)) - getCategoryRank(identifyCategory(b));
-                });
-
-                if (activeComp.items.length > 0) {
-                    activeComp.active = Math.max(0, Math.min(activeComp.active || 0, activeComp.items.length - 1));
+                // Проверяем, нужно ли переставить в DOM
+                for (var j = 0; j < visibleLines.length; j++) {
+                    if (scrollBody.children[j] !== visibleLines[j].el) {
+                        scrollBody.appendChild(visibleLines[j].el);
+                    }
                 }
             }
+
+            syncControllerItems();
         } catch (e) {
-            console.error('HomeCategories: applyDOMFilterAndOrder error', e);
+            console.error('HomeCategories: cleanAndReorderDOM error', e);
         }
     }
 
     /**
-     * Применение изменений (DOM + инвалидация кэша Main + перерендер)
+     * Синхронизация фокуса пульта ТВ (D-pad)
+     */
+    function syncControllerItems() {
+        try {
+            var active = Lampa.Activity && Lampa.Activity.active ? Lampa.Activity.active() : null;
+            if (!active || !active.activity) return;
+
+            var comp = active.activity;
+            if (!Array.isArray(comp.items) || !comp.items.length) return;
+
+            var visible = comp.items.filter(function (item) {
+                var el = item.render ? item.render(true) : null;
+                if (el && el.getAttribute && el.getAttribute('data-hc-hidden') === 'true') {
+                    return false;
+                }
+                var catId = identifyCategory(item);
+                return !isCategoryHidden(catId);
+            });
+
+            visible.sort(function (a, b) {
+                return getCategoryRank(identifyCategory(a)) - getCategoryRank(identifyCategory(b));
+            });
+
+            comp.items = visible;
+            if (comp.items.length > 0) {
+                comp.active = Math.max(0, Math.min(comp.active || 0, comp.items.length - 1));
+            }
+        } catch (e) {
+            console.error('HomeCategories: syncControllerItems error', e);
+        }
+    }
+
+    /**
+     * Мгновенное применение изменений
      */
     function applyChangesToScreen() {
         try {
-            // 1. Мгновенная очистка текущего DOM
-            applyDOMFilterAndOrder();
+            cleanAndReorderDOM();
 
-            // 2. Инвалидируем Main активность в стеке Lampa.Activity.all()
             if (Lampa.Activity && Lampa.Activity.all) {
                 var all = Lampa.Activity.all();
                 var mainAct = all.find(function (a) { return a.component === 'main'; });
@@ -314,11 +342,10 @@
                     try {
                         mainAct.activity.destroy();
                     } catch (e) {}
-                    delete mainAct.activity; // Чтобы Lampa пересоздала Main заново при возврате
+                    delete mainAct.activity;
                 }
             }
 
-            // 3. Если мы прямо сейчас находимся на Главной — пересоздаём её
             var current = Lampa.Activity && Lampa.Activity.active ? Lampa.Activity.active() : null;
             if (current && current.component === 'main') {
                 Lampa.Activity.replace();
@@ -328,75 +355,6 @@
         } catch (e) {
             console.error('HomeCategories: applyChangesToScreen error', e);
         }
-    }
-
-    /**
-     * Глубокий перехват конструктора компонента Main через Lampa.Component
-     */
-    function hookComponentMain() {
-        if (!Lampa.Component || !Lampa.Component.get) return;
-
-        var origMainComponent = Lampa.Component.get('main');
-        if (!origMainComponent) return;
-
-        Lampa.Component.add('main', function (object) {
-            var comp = new origMainComponent(object);
-            var origBuild = comp.build;
-
-            comp.build = function (data) {
-                if (Array.isArray(data)) {
-                    data = filterAndSortData(data);
-                }
-                var res = origBuild.call(this, data);
-
-                setTimeout(function () {
-                    applyDOMFilterAndOrder(comp);
-                }, 50);
-
-                return res;
-            };
-
-            return comp;
-        });
-    }
-
-    /**
-     * Перехват Lampa.Api
-     */
-    function hookApi() {
-        if (!Lampa.Api) return;
-
-        var origMain = Lampa.Api.main;
-        Lampa.Api.main = function (params, oncomplite, onerror) {
-            var wrappedOncomplite = function (data) {
-                try {
-                    if (Array.isArray(data)) {
-                        data = filterAndSortData(data);
-                    }
-                } catch (e) {
-                    console.error('HomeCategories: Api.main wrap error', e);
-                }
-                if (oncomplite) oncomplite(data);
-            };
-
-            var nextCall = origMain.call(this, params, wrappedOncomplite, onerror);
-
-            if (typeof nextCall === 'function') {
-                return function (resolve, reject) {
-                    nextCall(function (nextData) {
-                        try {
-                            if (Array.isArray(nextData)) {
-                                nextData = filterAndSortData(nextData);
-                            }
-                        } catch (e) {
-                            console.error('HomeCategories: Api.main next error', e);
-                        }
-                        resolve(nextData);
-                    }, reject);
-                };
-            }
-            return nextCall;
-        };
     }
 
     /**
@@ -466,6 +424,7 @@
                     orderedList[index - 1] = temp;
 
                     saveOrder(orderedList.map(function (c) { return c.id; }));
+                    cleanAndReorderDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -485,6 +444,7 @@
                     orderedList[index + 1] = temp;
 
                     saveOrder(orderedList.map(function (c) { return c.id; }));
+                    cleanAndReorderDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -503,6 +463,7 @@
                         hiddenMap[cat.id] = true;
                     }
                     saveHiddenMap(hiddenMap);
+                    cleanAndReorderDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -521,6 +482,7 @@
                         hiddenMap[cat.id] = true;
                     }
                     saveHiddenMap(hiddenMap);
+                    cleanAndReorderDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -559,6 +521,7 @@
                         Lampa.Storage.set(STORAGE_HIDDEN_KEY, {});
                         orderedList = BASE_CATEGORIES.slice();
                         hiddenMap = {};
+                        cleanAndReorderDOM();
                         updateRowsUI();
                         Lampa.Noty.show('Порядок и скрытие сброшены по умолчанию');
                     }
@@ -647,6 +610,7 @@
                     row.on('hover:enter click', function () {
                         var nowHidden = toggleCategoryHidden(t.id);
                         row.find('.settings-param__value').text(nowHidden ? 'Да' : 'Нет');
+                        cleanAndReorderDOM();
                         applyChangesToScreen();
                     });
 
@@ -664,6 +628,7 @@
                     Lampa.Storage.set(STORAGE_ORDER_KEY, null);
                     Lampa.Storage.set(STORAGE_HIDDEN_KEY, {});
                     Lampa.Noty.show('Настройки категорий сброшены!');
+                    cleanAndReorderDOM();
                     applyChangesToScreen();
                     body.find('.settings-param__value').text('Нет');
                 });
@@ -698,16 +663,27 @@
             }
         });
 
-        // Слушаем закрытие настроек для немедленного обновления главной страницы
         Lampa.Settings.listener.follow('close', function () {
-            setTimeout(applyDOMFilterAndOrder, 80);
+            cleanAndReorderDOM();
         });
     }
 
     function injectStyles() {
-        if (document.getElementById('lampa-home-categories-style')) return;
+        var existing = document.getElementById('lampa-home-categories-style');
+        if (existing) existing.remove();
 
         var css = `
+            /* Полное схлопывание скрытых полок */
+            .items-line[data-hc-hidden="true"] {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+
             .hc-modal-wrap {
                 padding: 10px 5px;
                 color: #f8fafc;
@@ -907,55 +883,69 @@
     }
 
     /**
-     * Постоянный наблюдатель за появлением новых полок в DOM
+     * Постоянный наблюдатель DOM
      */
-    function setupDOMObserver() {
-        var timer = null;
-        var observer = new MutationObserver(function (mutations) {
-            var needCheck = false;
-            for (var i = 0; i < mutations.length; i++) {
-                if (mutations[i].addedNodes && mutations[i].addedNodes.length) {
-                    needCheck = true;
-                    break;
+    var intervalTimer = null;
+    var domObserver = null;
+
+    function setupWatchers() {
+        // Постоянный лёгкий интервал
+        if (intervalTimer) clearInterval(intervalTimer);
+        intervalTimer = setInterval(function () {
+            cleanAndReorderDOM();
+        }, 350);
+
+        // MutationObserver при наличии
+        if (typeof MutationObserver !== 'undefined' && document.body) {
+            if (domObserver) domObserver.disconnect();
+            var mTimer = null;
+            domObserver = new MutationObserver(function (mutations) {
+                var hasNew = false;
+                for (var i = 0; i < mutations.length; i++) {
+                    if (mutations[i].addedNodes && mutations[i].addedNodes.length) {
+                        hasNew = true;
+                        break;
+                    }
                 }
-            }
-
-            if (needCheck) {
-                clearTimeout(timer);
-                timer = setTimeout(function () {
-                    applyDOMFilterAndOrder();
-                }, 60);
-            }
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+                if (hasNew) {
+                    clearTimeout(mTimer);
+                    mTimer = setTimeout(cleanAndReorderDOM, 40);
+                }
+            });
+            domObserver.observe(document.body, { childList: true, subtree: true });
+        }
     }
+
+    /**
+     * Деструктор для горячей перезагрузки
+     */
+    window.plugin_home_categories_destroy = function () {
+        if (intervalTimer) clearInterval(intervalTimer);
+        if (domObserver) domObserver.disconnect();
+        var style = document.getElementById('lampa-home-categories-style');
+        if (style) style.remove();
+    };
 
     /**
      * Старт плагина
      */
     function init() {
         injectStyles();
-        hookComponentMain();
-        hookApi();
         registerSettings();
-        setupDOMObserver();
+        setupWatchers();
 
         if (Lampa.Listener) {
             Lampa.Listener.follow('activity', function (e) {
                 if (e.component === 'main') {
-                    setTimeout(applyDOMFilterAndOrder, 80);
+                    cleanAndReorderDOM();
                 }
             });
         }
 
-        // Первичная проверка текущего экрана
-        setTimeout(applyDOMFilterAndOrder, 200);
+        // Первичная очистка
+        cleanAndReorderDOM();
 
-        console.log('HomeCategories: Plugin v1.1.0 successfully loaded!');
+        console.log('HomeCategories: Plugin v1.2.0 successfully initialized!');
     }
 
     if (window.appready) {
