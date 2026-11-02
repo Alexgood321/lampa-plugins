@@ -1,39 +1,42 @@
 /**
  * Lampa Plugin: Home Categories Pro (Скрытие и настройка порядка категорий)
- * Version: 1.2.0
+ * Version: 2.0.0
  * Author: Lampa Community & Alexgood321
- * Description: Полный контроль над главным экраном Lampa:
- *   - Мгновенное и гарантированное скрытие любых полок (Сейчас смотрят, Рекомендуем, Тренды, Ожидаемые и др.)
- *   - Настройка точного порядка категорий (Вверх / Вниз) с поддержкой пульта ТВ и сенсорного экрана
- *   - Прямой DOM-движок: скрывает строки мгновенно через CSS и атрибуты data-hc-hidden
- *   - Интеграция в «Настройки -> Каналы и Главный экран»
+ * Standard: Полное соответствие официальной документации Lampa (docs/ru)
+ * Features:
+ *   - Мгновенное скрытие любых полок (Сейчас смотрят, Рекомендуем, Тренды, Ожидаемые и др.)
+ *   - Интерактивная сортировка (Вверх / Вниз) с поддержкой пульта ТВ и сенсорного экрана
+ *   - Официальная интеграция через Lampa.SettingsApi
+ *   - Кнопка «Порядок полок» прямо в боковом меню Lampa и в разделе Настройки -> Каналы
+ *   - Безопасное управление DOM без повреждения стека Lampa.Activity
  */
 
 (function () {
     'use strict';
 
-    // Очистка предыдущей версии при горячем обновлении
     if (window.plugin_home_categories_destroy) {
         try { window.plugin_home_categories_destroy(); } catch (e) {}
     }
 
-    var STORAGE_ORDER_KEY = 'home_categories_order_v1';
-    var STORAGE_HIDDEN_KEY = 'home_categories_hidden_v1';
-    var STORAGE_CUSTOM_KEY = 'home_categories_custom_v1';
+    window.plugin_home_categories_ready = true;
 
-    // Базовый список стандартных полок
+    var STORAGE_ORDER_KEY = 'home_categories_order_v2';
+    var STORAGE_HIDDEN_KEY = 'home_categories_hidden_v2';
+    var STORAGE_CUSTOM_KEY = 'home_categories_custom_v2';
+
+    // Базовый список полок Главного экрана
     var BASE_CATEGORIES = [
-        { id: 'continue', title: 'Продолжить просмотр', icon: '▶', key: 'title_continue' },
-        { id: 'now_watch', title: 'Сейчас смотрят', icon: '👁', key: 'title_now_watch' },
-        { id: 'episodes', title: 'Выходы новых эпизодов', icon: '🗓', key: 'title_upcoming_episodes' },
-        { id: 'recommend', title: 'Рекомендуем посмотреть', icon: '★', key: 'title_recomend_watch' },
-        { id: 'trend_day', title: 'Сегодня в тренде', icon: '🔥', key: 'title_trend_day' },
-        { id: 'trend_week', title: 'В тренде за неделю', icon: '📈', key: 'title_trend_week' },
-        { id: 'popular_movie', title: 'Популярные фильмы', icon: '🎬', key: 'title_popular_movie' },
-        { id: 'popular_tv', title: 'Популярные сериалы', icon: '📺', key: 'title_popular_tv' },
-        { id: 'upcoming', title: 'Смотрите в кинозалах (Ожидаемые)', icon: '🎟', key: 'title_upcoming' },
-        { id: 'top_movie', title: 'Топ фильмы', icon: '🏆', key: 'title_top_movie' },
-        { id: 'top_tv', title: 'Топ сериалы', icon: '⭐', key: 'title_top_tv' },
+        { id: 'continue', title: 'Продолжить просмотр', icon: '▶' },
+        { id: 'now_watch', title: 'Сейчас смотрят', icon: '👁' },
+        { id: 'episodes', title: 'Выходы новых эпизодов', icon: '🗓' },
+        { id: 'recommend', title: 'Рекомендуем посмотреть', icon: '★' },
+        { id: 'trend_day', title: 'Сегодня в тренде', icon: '🔥' },
+        { id: 'trend_week', title: 'В тренде за неделю', icon: '📈' },
+        { id: 'popular_movie', title: 'Популярные фильмы', icon: '🎬' },
+        { id: 'popular_tv', title: 'Популярные сериалы', icon: '📺' },
+        { id: 'upcoming', title: 'Смотрите в кинозалах (Ожидаемые)', icon: '🎟' },
+        { id: 'top_movie', title: 'Топ фильмы', icon: '🏆' },
+        { id: 'top_tv', title: 'Топ сериалы', icon: '⭐' },
         { id: 'genres', title: 'Подборки жанров (Боевик, Комедия и др.)', icon: '🎭', isGroup: true },
         { id: 'keywords', title: 'Тематические подборки (Космос, Зомби и др.)', icon: '🏷', isGroup: true },
         { id: 'persons', title: 'Популярные актёры / персоны', icon: '👤', isGroup: true }
@@ -47,6 +50,21 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    // Безопасный биндинг событий: предотвращает двойное срабатывание (hover:enter + click)
+    function safeBind(el, fn) {
+        var lastTime = 0;
+        el.on('hover:enter click', function (e) {
+            if (e) {
+                if (e.stopPropagation) e.stopPropagation();
+                if (e.preventDefault) e.preventDefault();
+            }
+            var now = Date.now();
+            if (now - lastTime < 280) return;
+            lastTime = now;
+            fn(e);
+        });
     }
 
     function getAllCategories() {
@@ -72,13 +90,7 @@
             var list = getAllCategories();
             if (list.some(function (c) { return c.id === catId; })) return;
 
-            var newCat = {
-                id: catId,
-                title: title,
-                icon: '📁',
-                isCustom: true
-            };
-
+            var newCat = { id: catId, title: title, icon: '📁', isCustom: true };
             var custom = Lampa.Storage.get(STORAGE_CUSTOM_KEY, []) || [];
             if (!Array.isArray(custom)) custom = [];
             custom.push(newCat);
@@ -105,9 +117,7 @@
         if (Array.isArray(saved) && saved.length) {
             var order = saved.slice();
             defaultOrder.forEach(function (id) {
-                if (order.indexOf(id) === -1) {
-                    order.push(id);
-                }
+                if (order.indexOf(id) === -1) order.push(id);
             });
             return order;
         }
@@ -139,26 +149,21 @@
         return Boolean(map[catId]);
     }
 
-    function toggleCategoryHidden(catId) {
+    function setCategoryHidden(catId, hidden) {
         var map = getHiddenMap();
-        if (map[catId]) {
-            delete map[catId];
-        } else {
+        if (hidden) {
             map[catId] = true;
+        } else {
+            delete map[catId];
         }
         saveHiddenMap(map);
-        return Boolean(map[catId]);
     }
 
-    /**
-     * Точное распознавание категории по названию или объекту данных
-     */
     function identifyCategory(itemOrData) {
         if (!itemOrData) return 'unknown';
         var title = (itemOrData.title || (itemOrData.data && itemOrData.data.title) || '').trim();
         var lower = title.toLowerCase();
 
-        // 1. Точные совпадения
         if (/сейчас\s*смотрят|now.*watch/i.test(lower)) return 'now_watch';
         if (/рекоменд/i.test(lower)) return 'recommend';
         if (/продолж.*просм/i.test(lower) || lower === 'продолжить' || lower === 'продолжать просмотр') return 'continue';
@@ -173,7 +178,6 @@
         if (/топ\s*100/i.test(lower)) return 'top_100';
         if (/высоком качеств/i.test(lower)) return 'uhd';
 
-        // 2. Жанры
         var genresList = [
             'боевик', 'приключения', 'мультфильм', 'комедия', 'криминал',
             'документальный', 'драма', 'семейный', 'фэнтези', 'история',
@@ -184,7 +188,6 @@
             if (lower.indexOf(genresList[i]) >= 0) return 'genres';
         }
 
-        // 3. Ключевые слова
         var keywordsList = [
             'сиквел', 'комикс', 'космос', 'выживание', 'зомби', 'школа',
             'месть', 'робот', 'вампир', 'пришельц', 'полиция', 'реинкарнация',
@@ -194,12 +197,10 @@
             if (lower.indexOf(keywordsList[k]) >= 0) return 'keywords';
         }
 
-        // 4. Персоны
         if (itemOrData.icon_img || (itemOrData.params && itemOrData.params.icon_img)) {
             return 'persons';
         }
 
-        // 5. Динамические пользовательские полки
         if (title) {
             var slug = 'custom_' + title.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_').toLowerCase();
             registerCustomCategory(slug, title);
@@ -215,27 +216,10 @@
         return idx >= 0 ? idx : 999;
     }
 
-    function filterAndSortData(dataArray) {
-        if (!Array.isArray(dataArray)) return dataArray;
-
-        var visible = dataArray.filter(function (item) {
-            var catId = identifyCategory(item);
-            return !isCategoryHidden(catId);
-        });
-
-        visible.sort(function (a, b) {
-            var rankA = getCategoryRank(identifyCategory(a));
-            var rankB = getCategoryRank(identifyCategory(b));
-            return rankA - rankB;
-        });
-
-        return visible;
-    }
-
     /**
-     * ПРЯМОЙ ВЫСОКОСКОРОСТНОЙ DOM-ДВИЖОК СКРЫТИЯ И СОРТИРОВКИ
+     * ПРЯМОЙ БЕЗОПАСНЫЙ DOM-ДВИЖОК
      */
-    function cleanAndReorderDOM() {
+    function updateDOM() {
         try {
             var lines = document.querySelectorAll('.items-line');
             if (!lines || !lines.length) return;
@@ -252,7 +236,6 @@
                 var catId = identifyCategory({ title: title });
 
                 if (isCategoryHidden(catId)) {
-                    // ГАРАНТИРОВАННОЕ СКРЫТИЕ В DOM
                     if (line.getAttribute('data-hc-hidden') !== 'true') {
                         line.setAttribute('data-hc-hidden', 'true');
                         line.style.setProperty('display', 'none', 'important');
@@ -274,13 +257,12 @@
                 }
             }
 
-            // ПЕРЕСТАНОВКА ПОЛОК В ЗАДАННОМ ПОРЯДКЕ
+            // Перестановка полок в DOM в соответствии с выбранным порядком
             if (scrollBody && visibleLines.length > 1) {
                 visibleLines.sort(function (a, b) {
                     return a.rank - b.rank;
                 });
 
-                // Проверяем, нужно ли переставить в DOM
                 for (var j = 0; j < visibleLines.length; j++) {
                     if (scrollBody.children[j] !== visibleLines[j].el) {
                         scrollBody.appendChild(visibleLines[j].el);
@@ -290,12 +272,12 @@
 
             syncControllerItems();
         } catch (e) {
-            console.error('HomeCategories: cleanAndReorderDOM error', e);
+            console.error('HomeCategories: updateDOM error', e);
         }
     }
 
     /**
-     * Синхронизация фокуса пульта ТВ (D-pad)
+     * Синхронизация пульта ТВ (D-pad)
      */
     function syncControllerItems() {
         try {
@@ -328,39 +310,14 @@
     }
 
     /**
-     * Мгновенное применение изменений
+     * Интерактивный модальный менеджер категорий (Вверх / Вниз / Скрыть)
      */
-    function applyChangesToScreen() {
-        try {
-            cleanAndReorderDOM();
+    var isModalOpen = false;
 
-            if (Lampa.Activity && Lampa.Activity.all) {
-                var all = Lampa.Activity.all();
-                var mainAct = all.find(function (a) { return a.component === 'main'; });
-
-                if (mainAct && mainAct.activity) {
-                    try {
-                        mainAct.activity.destroy();
-                    } catch (e) {}
-                    delete mainAct.activity;
-                }
-            }
-
-            var current = Lampa.Activity && Lampa.Activity.active ? Lampa.Activity.active() : null;
-            if (current && current.component === 'main') {
-                Lampa.Activity.replace();
-            }
-
-            Lampa.Noty.show('Настройки категорий сохранены и применены!');
-        } catch (e) {
-            console.error('HomeCategories: applyChangesToScreen error', e);
-        }
-    }
-
-    /**
-     * Модальный интерфейс настройки категорий
-     */
     function openManagerModal() {
+        if (isModalOpen) return;
+        isModalOpen = true;
+
         var allCats = getAllCategories();
         var currentOrder = getSavedOrder().slice();
         var hiddenMap = Object.assign({}, getHiddenMap());
@@ -415,8 +372,7 @@
                     </div>
                 `);
 
-                row.find('[data-action="up"]').on('hover:enter click', function (e) {
-                    e.stopPropagation();
+                safeBind(row.find('[data-action="up"]'), function () {
                     if (index <= 0) return;
 
                     var temp = orderedList[index];
@@ -424,7 +380,7 @@
                     orderedList[index - 1] = temp;
 
                     saveOrder(orderedList.map(function (c) { return c.id; }));
-                    cleanAndReorderDOM();
+                    updateDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -432,11 +388,10 @@
                         if (target && Lampa.Navigator && Lampa.Navigator.focused) {
                             Lampa.Navigator.focused(target);
                         }
-                    }, 50);
+                    }, 40);
                 });
 
-                row.find('[data-action="down"]').on('hover:enter click', function (e) {
-                    e.stopPropagation();
+                safeBind(row.find('[data-action="down"]'), function () {
                     if (index >= orderedList.length - 1) return;
 
                     var temp = orderedList[index];
@@ -444,7 +399,7 @@
                     orderedList[index + 1] = temp;
 
                     saveOrder(orderedList.map(function (c) { return c.id; }));
-                    cleanAndReorderDOM();
+                    updateDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -452,18 +407,17 @@
                         if (target && Lampa.Navigator && Lampa.Navigator.focused) {
                             Lampa.Navigator.focused(target);
                         }
-                    }, 50);
+                    }, 40);
                 });
 
-                row.find('[data-action="toggle"]').on('hover:enter click', function (e) {
-                    e.stopPropagation();
+                safeBind(row.find('[data-action="toggle"]'), function () {
                     if (hiddenMap[cat.id]) {
                         delete hiddenMap[cat.id];
                     } else {
                         hiddenMap[cat.id] = true;
                     }
                     saveHiddenMap(hiddenMap);
-                    cleanAndReorderDOM();
+                    updateDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -471,18 +425,17 @@
                         if (target && Lampa.Navigator && Lampa.Navigator.focused) {
                             Lampa.Navigator.focused(target);
                         }
-                    }, 50);
+                    }, 40);
                 });
 
-                row.find('[data-action="title"]').on('hover:enter click', function (e) {
-                    e.stopPropagation();
+                safeBind(row.find('[data-action="title"]'), function () {
                     if (hiddenMap[cat.id]) {
                         delete hiddenMap[cat.id];
                     } else {
                         hiddenMap[cat.id] = true;
                     }
                     saveHiddenMap(hiddenMap);
-                    cleanAndReorderDOM();
+                    updateDOM();
                     updateRowsUI();
 
                     setTimeout(function () {
@@ -490,7 +443,7 @@
                         if (target && Lampa.Navigator && Lampa.Navigator.focused) {
                             Lampa.Navigator.focused(target);
                         }
-                    }, 50);
+                    }, 40);
                 });
 
                 listContainer.append(row);
@@ -508,10 +461,12 @@
                 {
                     name: 'Применить и закрыть',
                     onSelect: function () {
+                        isModalOpen = false;
                         saveOrder(orderedList.map(function (c) { return c.id; }));
                         saveHiddenMap(hiddenMap);
+                        updateDOM();
                         Lampa.Modal.close();
-                        applyChangesToScreen();
+                        Lampa.Noty.show('Настройки категорий сохранены!');
                     }
                 },
                 {
@@ -521,29 +476,35 @@
                         Lampa.Storage.set(STORAGE_HIDDEN_KEY, {});
                         orderedList = BASE_CATEGORIES.slice();
                         hiddenMap = {};
-                        cleanAndReorderDOM();
+                        updateDOM();
                         updateRowsUI();
-                        Lampa.Noty.show('Порядок и скрытие сброшены по умолчанию');
+                        Lampa.Noty.show('Порядок и скрытие сброшены');
                     }
                 },
                 {
                     name: 'Закрыть',
                     onSelect: function () {
+                        isModalOpen = false;
                         saveOrder(orderedList.map(function (c) { return c.id; }));
                         saveHiddenMap(hiddenMap);
+                        updateDOM();
                         Lampa.Modal.close();
-                        applyChangesToScreen();
                     }
                 }
             ],
             onBack: function () {
+                isModalOpen = false;
                 saveOrder(orderedList.map(function (c) { return c.id; }));
                 saveHiddenMap(hiddenMap);
-                applyChangesToScreen();
+                updateDOM();
+                Lampa.Modal.close();
             }
         });
     }
 
+    /**
+     * Официальная интеграция через Lampa.SettingsApi
+     */
     function registerSettings() {
         if (!Lampa.SettingsApi) return;
 
@@ -561,119 +522,144 @@
             after: 'content_rows'
         });
 
-        Lampa.Settings.listener.follow('open', function (e) {
-            if (e.name === 'home_categories') {
-                var body = e.body;
-                body.empty();
-
-                var banner = $(`
-                    <div class="settings-param selector hc-settings-btn" style="border-left: 3px solid #38bdf8; background: rgba(56, 189, 248, 0.12); margin-bottom: 15px;">
-                        <div class="settings-param__name" style="color: #38bdf8; font-weight: 700; font-size: 1.15em;">
-                            ↕ Настроить порядок и видимость категорий
-                        </div>
-                        <div class="settings-param__descr" style="color: #e2e8f0;">
-                            Интерактивный менеджер: перемещение полок вверх/вниз и мгновенное скрытие
-                        </div>
-                    </div>
-                `);
-
-                banner.on('hover:enter click', function () {
+        // 1. Кнопка открытия визуального менеджера в настройках
+        Lampa.SettingsApi.addParam({
+            component: 'home_categories',
+            param: {
+                name: 'hc_open_manager_param',
+                type: 'static'
+            },
+            field: {
+                name: '↕ Настроить порядок полок (вверх / вниз)',
+                description: 'Интерактивный список: перемещение и быстрое скрытие'
+            },
+            onRender: function (item) {
+                item.css({
+                    'border-left': '3px solid #38bdf8',
+                    'background': 'rgba(56, 189, 248, 0.12)',
+                    'margin-bottom': '12px'
+                });
+                item.find('.settings-param__name').css({
+                    'color': '#38bdf8',
+                    'font-weight': '700'
+                });
+                safeBind(item, function () {
                     openManagerModal();
                 });
-                body.append(banner);
-
-                var toggles = [
-                    { id: 'now_watch', name: 'Скрыть «Сейчас смотрят»' },
-                    { id: 'episodes', name: 'Скрыть «Выходы эпизодов»' },
-                    { id: 'recommend', name: 'Скрыть «Рекомендуем посмотреть»' },
-                    { id: 'trend_day', name: 'Скрыть «Сегодня в тренде»' },
-                    { id: 'trend_week', name: 'Скрыть «В тренде за неделю»' },
-                    { id: 'upcoming', name: 'Скрыть «Смотрите в кинозалах (Ожидаемые)»' },
-                    { id: 'popular_movie', name: 'Скрыть «Популярные фильмы»' },
-                    { id: 'popular_tv', name: 'Скрыть «Популярные сериалы»' },
-                    { id: 'top_movie', name: 'Скрыть «Топ фильмы»' },
-                    { id: 'top_tv', name: 'Скрыть «Топ сериалы»' },
-                    { id: 'genres', name: 'Скрыть «Подборки жанров (Боевик, Комедия и др.)»' },
-                    { id: 'persons', name: 'Скрыть «Подборки актёров / персон»' },
-                    { id: 'keywords', name: 'Скрыть «Тематические подборки (Космос, Зомби...)»' }
-                ];
-
-                toggles.forEach(function (t) {
-                    var isHid = isCategoryHidden(t.id);
-                    var row = $(`
-                        <div class="settings-param selector" data-type="toggle">
-                            <div class="settings-param__name">${escapeHtml(t.name)}</div>
-                            <div class="settings-param__value">${isHid ? 'Да' : 'Нет'}</div>
-                        </div>
-                    `);
-
-                    row.on('hover:enter click', function () {
-                        var nowHidden = toggleCategoryHidden(t.id);
-                        row.find('.settings-param__value').text(nowHidden ? 'Да' : 'Нет');
-                        cleanAndReorderDOM();
-                        applyChangesToScreen();
-                    });
-
-                    body.append(row);
-                });
-
-                var resetBtn = $(`
-                    <div class="settings-param selector" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                        <div class="settings-param__name" style="color: #f87171;">⟲ Сбросить настройки категорий по умолчанию</div>
-                        <div class="settings-param__descr">Восстановить исходное отображение и порядок полок</div>
-                    </div>
-                `);
-
-                resetBtn.on('hover:enter click', function () {
-                    Lampa.Storage.set(STORAGE_ORDER_KEY, null);
-                    Lampa.Storage.set(STORAGE_HIDDEN_KEY, {});
-                    Lampa.Noty.show('Настройки категорий сброшены!');
-                    cleanAndReorderDOM();
-                    applyChangesToScreen();
-                    body.find('.settings-param__value').text('Нет');
-                });
-                body.append(resetBtn);
-
-                if (Lampa.Controller) {
-                    Lampa.Controller.collectionSet(body);
-                    Lampa.Controller.collectionFocus(banner[0], body);
-                }
-            }
-
-            if (e.name === 'content_rows') {
-                var cBody = e.body;
-                if (!cBody.find('.hc-channel-shortcut').length) {
-                    var shortcut = $(`
-                        <div class="settings-param selector hc-channel-shortcut" style="border-left: 3px solid #38bdf8; background: rgba(56, 189, 248, 0.12); margin-bottom: 12px;">
-                            <div class="settings-param__name" style="color: #38bdf8; font-weight: 700;">
-                                ↕ Порядок и скрытие всех категорий (Сейчас смотрят, Рекомендуем...)
-                            </div>
-                            <div class="settings-param__descr" style="color: #cbd5e1;">
-                                Нажмите здесь, чтобы настроить порядок полок и скрыть ненужные
-                            </div>
-                        </div>
-                    `);
-
-                    shortcut.on('hover:enter click', function () {
-                        openManagerModal();
-                    });
-
-                    cBody.prepend(shortcut);
-                }
             }
         });
 
-        Lampa.Settings.listener.follow('close', function () {
-            cleanAndReorderDOM();
+        // 2. Системные переключатели
+        var toggles = [
+            { id: 'now_watch', name: 'Скрыть «Сейчас смотрят»' },
+            { id: 'episodes', name: 'Скрыть «Выходы эпизодов»' },
+            { id: 'recommend', name: 'Скрыть «Рекомендуем посмотреть»' },
+            { id: 'trend_day', name: 'Скрыть «Сегодня в тренде»' },
+            { id: 'trend_week', name: 'Скрыть «В тренде за неделю»' },
+            { id: 'upcoming', name: 'Скрыть «Смотрите в кинозалах (Ожидаемые)»' },
+            { id: 'popular_movie', name: 'Скрыть «Популярные фильмы»' },
+            { id: 'popular_tv', name: 'Скрыть «Популярные сериалы»' },
+            { id: 'top_movie', name: 'Скрыть «Топ фильмы»' },
+            { id: 'top_tv', name: 'Скрыть «Топ сериалы»' },
+            { id: 'genres', name: 'Скрыть «Подборки жанров»' },
+            { id: 'persons', name: 'Скрыть «Подборки актёров / персон»' },
+            { id: 'keywords', name: 'Скрыть «Тематические подборки»' }
+        ];
+
+        toggles.forEach(function (t) {
+            Lampa.SettingsApi.addParam({
+                component: 'home_categories',
+                param: {
+                    name: 'hc_param_' + t.id,
+                    type: 'trigger',
+                    default: isCategoryHidden(t.id)
+                },
+                field: {
+                    name: t.name
+                },
+                onChange: function (value) {
+                    setCategoryHidden(t.id, value);
+                    updateDOM();
+                }
+            });
         });
+
+        // Слушаем открытие настроек «Каналы» для добавления ярлыка
+        if (Lampa.Settings && Lampa.Settings.listener) {
+            Lampa.Settings.listener.follow('open', function (e) {
+                if (e.name === 'content_rows') {
+                    var cBody = e.body;
+                    if (!cBody.find('.hc-channel-shortcut').length) {
+                        var shortcut = $(`
+                            <div class="settings-param selector hc-channel-shortcut" style="border-left: 3px solid #38bdf8; background: rgba(56, 189, 248, 0.12); margin-bottom: 12px;">
+                                <div class="settings-param__name" style="color: #38bdf8; font-weight: 700;">
+                                    ↕ Порядок и скрытие всех категорий (Сейчас смотрят, Рекомендуем...)
+                                </div>
+                                <div class="settings-param__descr" style="color: #cbd5e1;">
+                                    Нажмите здесь для открытия менеджера категорий
+                                </div>
+                            </div>
+                        `);
+
+                        safeBind(shortcut, function () {
+                            openManagerModal();
+                        });
+
+                        cBody.prepend(shortcut);
+                    }
+                }
+            });
+
+            Lampa.Settings.listener.follow('close', function () {
+                updateDOM();
+            });
+        }
     }
 
+    /**
+     * Добавление кнопки в главное боковое меню
+     */
+    function addSideMenuItem() {
+        try {
+            var menuList = $('.menu .menu__list');
+            if (!menuList.length) return;
+            var targetList = menuList.eq(1).length ? menuList.eq(1) : menuList.eq(0);
+            if (targetList.find('.hc-menu-item').length) return;
+
+            var btn = $(`
+                <li class="menu__item selector hc-menu-item">
+                    <div class="menu__ico">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="menu__text">Порядок полок</div>
+                </li>
+            `);
+
+            safeBind(btn, function () {
+                openManagerModal();
+            });
+
+            targetList.prepend(btn);
+        } catch (e) {
+            console.error('HomeCategories: addSideMenuItem error', e);
+        }
+    }
+
+    /**
+     * Официальное внедрение CSS
+     */
     function injectStyles() {
         var existing = document.getElementById('lampa-home-categories-style');
         if (existing) existing.remove();
 
         var css = `
-            /* Полное схлопывание скрытых полок */
             .items-line[data-hc-hidden="true"] {
                 display: none !important;
                 visibility: hidden !important;
@@ -861,19 +847,6 @@
                 opacity: 0.25;
                 pointer-events: none;
             }
-
-            @media (max-width: 480px) {
-                .hc-title {
-                    font-size: 0.95em;
-                }
-                .hc-btn {
-                    padding: 4px 8px;
-                    font-size: 0.85em;
-                }
-                .hc-btn--status {
-                    min-width: 80px;
-                }
-            }
         `;
 
         var style = document.createElement('style');
@@ -882,20 +855,15 @@
         document.head.appendChild(style);
     }
 
-    /**
-     * Постоянный наблюдатель DOM
-     */
     var intervalTimer = null;
     var domObserver = null;
 
     function setupWatchers() {
-        // Постоянный лёгкий интервал
         if (intervalTimer) clearInterval(intervalTimer);
         intervalTimer = setInterval(function () {
-            cleanAndReorderDOM();
-        }, 350);
+            updateDOM();
+        }, 300);
 
-        // MutationObserver при наличии
         if (typeof MutationObserver !== 'undefined' && document.body) {
             if (domObserver) domObserver.disconnect();
             var mTimer = null;
@@ -909,43 +877,51 @@
                 }
                 if (hasNew) {
                     clearTimeout(mTimer);
-                    mTimer = setTimeout(cleanAndReorderDOM, 40);
+                    mTimer = setTimeout(function () {
+                        updateDOM();
+                        addSideMenuItem();
+                    }, 40);
                 }
             });
             domObserver.observe(document.body, { childList: true, subtree: true });
         }
     }
 
-    /**
-     * Деструктор для горячей перезагрузки
-     */
     window.plugin_home_categories_destroy = function () {
         if (intervalTimer) clearInterval(intervalTimer);
         if (domObserver) domObserver.disconnect();
         var style = document.getElementById('lampa-home-categories-style');
         if (style) style.remove();
+        $('.hc-menu-item').remove();
+        $('.hc-channel-shortcut').remove();
+        isModalOpen = false;
+        delete window.HomeCategoriesPro;
     };
 
-    /**
-     * Старт плагина
-     */
+    // Экспорт для отладки
+    window.HomeCategoriesPro = {
+        updateDOM: updateDOM,
+        setHidden: setCategoryHidden,
+        openModal: openManagerModal
+    };
+
     function init() {
         injectStyles();
         registerSettings();
+        addSideMenuItem();
         setupWatchers();
 
         if (Lampa.Listener) {
             Lampa.Listener.follow('activity', function (e) {
                 if (e.component === 'main') {
-                    cleanAndReorderDOM();
+                    updateDOM();
+                    addSideMenuItem();
                 }
             });
         }
 
-        // Первичная очистка
-        cleanAndReorderDOM();
-
-        console.log('HomeCategories: Plugin v1.2.0 successfully initialized!');
+        updateDOM();
+        console.log('HomeCategories: Plugin v2.0.0 (Official Spec) initialized!');
     }
 
     if (window.appready) {
