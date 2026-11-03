@@ -1,6 +1,12 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.6.0
+ * Версия: 3.7.0 (Anti-Slop UI & Multi-Device Ergonomics Redesign)
+ * Релиз: Полный редизайн модального менеджера полок по канонам Apple tvOS / iOS / Leanback.
+ *   - Выверенная визуальная иерархия: убран слоёный пирог в футере, единый акцент Lampa.
+ *   - Разгрузка строки: 1-клик перенос в топ, быстрый тумблер и контекстное меню действий (···).
+ *   - Защита от случайного сброса: диалог подтверждения сброса полок.
+ *   - TV Remote Legend: подсказка навигации для 10-foot UI.
+ *   - Чистка кода: удалены все запрещенные em-dashes, ликвидирован AI-фиолетовый градиент.
  * Авторы: aviamovie (оригинальная идея) & Lampa Community / Alexgood321 (стабилизация и визуальный редактор)
  *
  * Особенности:
@@ -289,69 +295,6 @@
                         font-size: 0.75em !important;
                     }
 
-                    /* Модальное окно редактора на мобильных */
-                    .surs-sm-wrap {
-                        padding: 0.8em !important;
-                        max-width: 100% !important;
-                    }
-                    .surs-sm-title {
-                        font-size: 1.25em !important;
-                    }
-                    .surs-sm-subtitle {
-                        font-size: 0.8em !important;
-                    }
-                    .surs-sm-tabs {
-                        gap: 0.35em !important;
-                        margin-bottom: 0.6em !important;
-                    }
-                    .surs-sm-tab {
-                        padding: 0.35em 0.65em !important;
-                        font-size: 0.78em !important;
-                    }
-                    .surs-sm-list {
-                        max-height: 50vh !important;
-                    }
-                    .surs-sm-item {
-                        padding: 0.5em 0.7em !important;
-                    }
-                    .surs-sm-toggle {
-                        min-width: 4.6em !important;
-                        font-size: 0.8em !important;
-                        padding: 0.35em 0.5em !important;
-                        margin-right: 0.5em !important;
-                    }
-                    .surs-sm-name {
-                        font-size: 0.9em !important;
-                    }
-                    .surs-sm-desc {
-                        font-size: 0.72em !important;
-                    }
-                    .surs-sm-badge {
-                        font-size: 0.65em !important;
-                        padding: 0.1em 0.4em !important;
-                    }
-                    .surs-sm-navbtn {
-                        padding: 0.3em 0.4em !important;
-                        font-size: 0.95em !important;
-                        min-width: 1.8em !important;
-                    }
-                    .surs-sm-footer {
-                        flex-direction: column !important;
-                        gap: 0.6em !important;
-                    }
-                    .surs-sm-footer-left,
-                    .surs-sm-footer-right {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 0.5em !important;
-                        width: 100% !important;
-                    }
-                    .surs-sm-btn {
-                        width: 100% !important;
-                        text-align: center !important;
-                        padding: 0.7em !important;
-                        font-size: 0.95em !important;
-                    }
                 }
 
                 /* Адаптация для планшетов (iPad / Tablets 768px - 1024px) */
@@ -374,28 +317,50 @@
                     }
                 }
 
-                /* Модальное окно настройки полок */
+                /* Модальное окно настройки полок (SURS v3.7.0 Pro Anti-Slop) */
                 .surs-sm-wrap {
                     padding: 1.2em 1.5em;
-                    max-width: 900px;
+                    max-width: 920px;
                     margin: 0 auto;
+                    box-sizing: border-box;
                 }
                 .surs-sm-header {
-                    margin-bottom: 1em;
+                    margin-bottom: 0.9em;
                     border-bottom: 1px solid rgba(255,255,255,0.1);
                     padding-bottom: 0.8em;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 0.6em;
+                }
+                .surs-sm-title-group {
+                    display: flex;
+                    align-items: baseline;
+                    gap: 0.8em;
+                    flex-wrap: wrap;
                 }
                 .surs-sm-title {
-                    font-size: 1.6em;
+                    font-size: 1.5em;
                     font-weight: 700;
                     color: #fff;
-                    margin-bottom: 0.2em;
+                    letter-spacing: -0.01em;
                 }
-                .surs-sm-subtitle {
-                    font-size: 0.9em;
-                    color: rgba(255,255,255,0.65);
-                    line-height: 1.4;
-                    margin-bottom: 0.8em;
+                .surs-sm-counter {
+                    display: inline-flex;
+                    align-items: center;
+                    padding: 0.2em 0.7em;
+                    border-radius: 999px;
+                    background: rgba(41, 128, 185, 0.2);
+                    border: 1px solid rgba(52, 152, 219, 0.4);
+                    color: #5dade2;
+                    font-size: 0.8em;
+                    font-weight: 600;
+                }
+                .surs-sm-legend {
+                    color: rgba(255,255,255,0.45);
+                    font-size: 0.8em;
+                    letter-spacing: 0.02em;
                 }
                 /* Вкладки категорий */
                 .surs-sm-tabs {
@@ -403,7 +368,7 @@
                     gap: 0.5em;
                     overflow-x: auto;
                     padding-bottom: 0.4em;
-                    margin-bottom: 0.6em;
+                    margin-bottom: 0.8em;
                     scrollbar-width: none;
                     -webkit-overflow-scrolling: touch;
                 }
@@ -411,74 +376,94 @@
                     display: none;
                 }
                 .surs-sm-tab {
-                    padding: 0.4em 0.85em;
-                    border-radius: 6px;
-                    background: rgba(255, 255, 255, 0.08);
+                    padding: 0.4em 0.9em;
+                    border-radius: 8px;
+                    background: rgba(255, 255, 255, 0.06);
                     color: rgba(255, 255, 255, 0.7);
                     font-size: 0.85em;
                     font-weight: 600;
                     cursor: pointer;
                     white-space: nowrap;
-                    transition: all 0.2s;
-                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    user-select: none;
                 }
                 .surs-sm-tab.active {
                     background: #2980b9;
                     color: #fff;
-                    border-color: rgba(255, 255, 255, 0.25);
+                    border-color: rgba(255, 255, 255, 0.3);
+                    box-shadow: 0 2px 8px rgba(41, 128, 185, 0.4);
                 }
                 .surs-sm-tab.focus {
                     transform: scale(1.05);
-                    box-shadow: 0 0 10px rgba(41, 128, 185, 0.8);
+                    box-shadow: 0 0 12px rgba(52, 152, 219, 0.8);
                     border-color: #3498db;
+                    background: #2980b9;
+                    color: #fff;
                 }
                 .surs-sm-list {
                     position: relative;
                     max-height: 52vh;
                     overflow-y: auto;
-                    padding-right: 0.5em;
-                    margin-bottom: 1.2em;
+                    padding-right: 0.4em;
+                    margin-bottom: 0.9em;
                     scroll-behavior: smooth;
                     -webkit-overflow-scrolling: touch;
                 }
                 .surs-sm-item {
                     display: flex;
                     align-items: center;
-                    background: rgba(255,255,255,0.06);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 8px;
-                    padding: 0.6em 1em;
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba(255,255,255,0.08);
+                    border-radius: 10px;
+                    padding: 0.6em 0.9em;
                     margin-bottom: 0.5em;
-                    transition: background 0.15s, border-color 0.15s;
+                    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+                    box-sizing: border-box;
+                }
+                .surs-sm-item:hover {
+                    background: rgba(255,255,255,0.07);
+                    border-color: rgba(255,255,255,0.15);
                 }
                 .surs-sm-item:focus-within,
                 .surs-sm-item.focus {
-                    background: rgba(255,255,255,0.15);
-                    border-color: rgba(255,255,255,0.3);
+                    background: rgba(41, 128, 185, 0.12);
+                    border-color: rgba(52, 152, 219, 0.5);
                 }
                 .surs-sm-item--disabled {
                     opacity: 0.45;
                 }
-                .surs-sm-toggle {
-                    min-width: 5.5em;
-                    padding: 0.35em 0.8em;
-                    border-radius: 6px;
-                    font-weight: 600;
-                    font-size: 0.9em;
-                    text-align: center;
-                    cursor: pointer;
-                    margin-right: 1em;
-                    background: rgba(255,255,255,0.1);
-                    color: #aaa;
-                    transition: all 0.2s;
+                .surs-sm-drag-handle {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 32px;
+                    height: 38px;
+                    margin-right: 0.6em;
+                    color: rgba(255, 255, 255, 0.4);
+                    cursor: grab;
+                    user-select: none;
+                    touch-action: none;
+                    flex-shrink: 0;
+                    transition: color 0.15s, transform 0.15s;
                 }
-                .surs-sm-toggle.active {
-                    background: #27ae60;
-                    color: #fff;
+                .surs-sm-drag-handle:hover {
+                    color: #3498db;
+                    transform: scale(1.15);
                 }
-                .surs-sm-toggle.focus {
-                    box-shadow: 0 0 10px #27ae60;
-                    transform: scale(1.05);
+                .surs-sm-drag-handle:active {
+                    cursor: grabbing;
+                }
+                .surs-sm-item--dragging {
+                    opacity: 0.35;
+                    background: rgba(41, 128, 185, 0.2) !important;
+                    border: 2px dashed #3498db !important;
+                    pointer-events: none !important;
+                }
+                .surs-sm-item--drag-over {
+                    border-top: 3px solid #3498db !important;
+                    transform: translateY(-2px);
+                    transition: transform 0.15s ease;
                 }
                 .surs-sm-info {
                     flex: 1;
@@ -489,10 +474,11 @@
                     display: flex;
                     align-items: center;
                     flex-wrap: wrap;
-                    gap: 0.4em;
+                    gap: 0.5em;
                 }
                 .surs-sm-badge {
-                    display: inline-block;
+                    display: inline-flex;
+                    align-items: center;
                     padding: 0.15em 0.5em;
                     border-radius: 4px;
                     font-size: 0.7em;
@@ -500,6 +486,7 @@
                     text-transform: uppercase;
                     letter-spacing: 0.04em;
                     vertical-align: middle;
+                    flex-shrink: 0;
                 }
                 .surs-sm-badge--surs {
                     background: rgba(41, 128, 185, 0.25);
@@ -523,7 +510,7 @@
                 }
                 .surs-sm-name {
                     font-size: 1.05em;
-                    font-weight: 500;
+                    font-weight: 600;
                     color: #fff;
                     white-space: nowrap;
                     overflow: hidden;
@@ -539,67 +526,61 @@
                 }
                 .surs-sm-actions {
                     display: flex;
-                    gap: 0.4em;
+                    align-items: center;
+                    gap: 0.45em;
+                    flex-shrink: 0;
+                }
+                .surs-sm-toggle {
+                    min-width: 5.2em;
+                    padding: 0.38em 0.8em;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    font-size: 0.88em;
+                    text-align: center;
+                    cursor: pointer;
+                    background: rgba(255,255,255,0.08);
+                    color: #aaa;
+                    transition: all 0.2s;
+                    border: 1px solid rgba(255,255,255,0.06);
+                    user-select: none;
+                }
+                .surs-sm-toggle.active {
+                    background: #27ae60;
+                    color: #fff;
+                    border-color: rgba(46, 204, 113, 0.4);
+                }
+                .surs-sm-toggle.focus {
+                    box-shadow: 0 0 12px #27ae60;
+                    transform: scale(1.06);
                 }
                 .surs-sm-navbtn {
-                    min-width: 2.2em;
-                    height: 2em;
+                    height: 2.2em;
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0 0.5em;
-                    background: rgba(255,255,255,0.12);
+                    padding: 0 0.65em;
+                    background: rgba(255,255,255,0.08);
+                    border: 1px solid rgba(255,255,255,0.08);
                     border-radius: 6px;
                     color: #fff;
-                    font-size: 1.05em;
-                    font-weight: 700;
+                    font-size: 0.9em;
+                    font-weight: 600;
                     cursor: pointer;
                     transition: all 0.2s;
                     user-select: none;
-                }
-                .surs-sm-drag-handle {
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 28px;
-                    height: 36px;
-                    margin-right: 0.6em;
-                    color: rgba(255, 255, 255, 0.45);
-                    cursor: grab;
-                    user-select: none;
-                    touch-action: none;
-                    flex-shrink: 0;
-                    transition: color 0.2s, transform 0.2s;
-                }
-                .surs-sm-drag-handle:hover {
-                    color: #3498db;
-                    transform: scale(1.15);
-                }
-                .surs-sm-drag-handle:active {
-                    cursor: grabbing;
-                }
-                .surs-sm-item--dragging {
-                    opacity: 0.35;
-                    background: rgba(41, 128, 185, 0.25) !important;
-                    border: 2px dashed #3498db !important;
-                    pointer-events: none !important; /* Критично для сенсорного Drag & Drop на iOS/Android! */
-                }
-                .surs-sm-item--drag-over {
-                    border-top: 3px solid #2ecc71 !important;
-                    transform: translateY(-2px);
-                    transition: transform 0.15s ease;
+                    gap: 0.3em;
                 }
                 .surs-sm-navbtn.focus {
                     background: #2980b9;
                     box-shadow: 0 0 10px #2980b9;
-                    transform: scale(1.08);
+                    border-color: #3498db;
+                    transform: scale(1.06);
+                    color: #fff;
                 }
                 .surs-sm-navbtn--top {
-                    background: rgba(41, 128, 185, 0.3);
-                    border: 1px solid rgba(52, 152, 219, 0.5);
+                    background: rgba(41, 128, 185, 0.2);
+                    border: 1px solid rgba(52, 152, 219, 0.4);
                     color: #5dade2;
-                    font-weight: 700;
-                    min-width: 2.8em;
                 }
                 .surs-sm-navbtn--top.focus {
                     background: #2980b9;
@@ -607,23 +588,24 @@
                     box-shadow: 0 0 12px #3498db;
                     border-color: #5dade2;
                 }
+                .surs-sm-navbtn--more {
+                    min-width: 2.2em;
+                    padding: 0 0.4em;
+                    color: rgba(255,255,255,0.7);
+                    font-weight: 700;
+                    letter-spacing: 0.1em;
+                }
                 .surs-sm-navbtn--disabled {
                     opacity: 0.35;
                     cursor: default;
+                    pointer-events: none;
                 }
-                .surs-sm-navbtn--remove {
-                    background: rgba(231, 76, 60, 0.15);
-                    color: #ff6b6b;
-                }
-                .surs-sm-navbtn--remove.focus {
-                    background: #e74c3c;
-                    color: #fff;
-                    box-shadow: 0 0 10px #e74c3c;
-                }
+                /* Нижний колонтитул (Dock) */
                 .surs-sm-footer {
                     display: flex;
-                    gap: 1em;
+                    align-items: center;
                     justify-content: space-between;
+                    gap: 0.8em;
                     border-top: 1px solid rgba(255,255,255,0.1);
                     padding-top: 0.8em;
                     position: sticky;
@@ -634,82 +616,121 @@
                 }
                 .surs-sm-footer-left {
                     display: flex;
-                    gap: 0.8em;
+                    align-items: center;
+                    gap: 0.6em;
                 }
                 .surs-sm-footer-right {
                     display: flex;
-                    gap: 0.8em;
+                    align-items: center;
+                    gap: 0.6em;
                 }
                 .surs-sm-btn {
-                    padding: 0.7em 1.3em;
+                    padding: 0.65em 1.2em;
                     border-radius: 8px;
-                    font-size: 1em;
+                    font-size: 0.95em;
                     font-weight: 600;
                     cursor: pointer;
-                    transition: all 0.2s;
-                    display: flex;
+                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    display: inline-flex;
                     align-items: center;
                     justify-content: center;
                     gap: 0.4em;
+                    user-select: none;
+                    border: 1px solid transparent;
                 }
                 .surs-sm-btn.focus {
                     transform: scale(1.05);
                     box-shadow: 0 0 15px rgba(255,255,255,0.3);
                 }
                 .surs-sm-btn--primary {
-                    background: #27ae60;
-                    color: #fff;
-                }
-                .surs-sm-btn--secondary {
                     background: #2980b9;
                     color: #fff;
+                    border-color: rgba(255,255,255,0.2);
+                    box-shadow: 0 2px 10px rgba(41, 128, 185, 0.4);
                 }
-                .surs-sm-btn--rescan {
-                    background: linear-gradient(135deg, #8e44ad, #9b59b6);
-                    color: #fff;
-                    border: 1px solid rgba(255, 255, 255, 0.15);
-                }
-                .surs-sm-btn--rescan.focus {
-                    transform: scale(1.05);
-                    box-shadow: 0 0 15px rgba(155, 89, 182, 0.8);
+                .surs-sm-btn--primary.focus {
+                    background: #3498db;
+                    box-shadow: 0 0 15px rgba(52, 152, 219, 0.8);
                 }
                 .surs-sm-btn--ghost {
-                    background: rgba(255,255,255,0.12);
+                    background: rgba(255,255,255,0.08);
+                    color: rgba(255,255,255,0.85);
+                    border-color: rgba(255,255,255,0.1);
+                }
+                .surs-sm-btn--ghost:hover, .surs-sm-btn--ghost.focus {
+                    background: rgba(255,255,255,0.16);
                     color: #fff;
+                    border-color: rgba(255,255,255,0.25);
+                }
+                .surs-sm-btn--rescan {
+                    background: rgba(41, 128, 185, 0.15);
+                    color: #5dade2;
+                    border-color: rgba(52, 152, 219, 0.3);
+                }
+                .surs-sm-btn--rescan.focus {
+                    background: #2980b9;
+                    color: #fff;
+                    box-shadow: 0 0 15px rgba(52, 152, 219, 0.7);
+                }
+                .surs-sm-btn--reset {
+                    background: transparent;
+                    color: rgba(231, 76, 60, 0.8);
+                    border-color: transparent;
+                }
+                .surs-sm-btn--reset:hover, .surs-sm-btn--reset.focus {
+                    background: rgba(231, 76, 60, 0.15);
+                    color: #ff6b6b;
+                    border-color: rgba(231, 76, 60, 0.3);
+                    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
                 }
                 @media (max-width: 680px) {
                     .surs-sm-wrap {
                         padding: 0.6em !important;
                     }
+                    .surs-sm-header {
+                        margin-bottom: 0.6em !important;
+                    }
+                    .surs-sm-title {
+                        font-size: 1.25em !important;
+                    }
+                    .surs-sm-legend {
+                        display: none !important;
+                    }
                     .surs-sm-item {
                         padding: 0.5em 0.6em !important;
-                        gap: 0.5em !important;
+                        gap: 0.4em !important;
                     }
                     .surs-sm-drag-handle {
-                        width: 32px !important;
+                        width: 30px !important;
                         height: 44px !important;
+                        margin-right: 0.2em !important;
+                    }
+                    .surs-sm-name {
+                        font-size: 0.95em !important;
                     }
                     .surs-sm-toggle {
-                        min-width: 62px !important;
-                        height: 44px !important;
-                        line-height: 44px !important;
+                        min-width: 44px !important;
+                        height: 38px !important;
+                        line-height: 38px !important;
+                        padding: 0 0.4em !important;
+                        font-size: 0.82em !important;
                     }
                     .surs-sm-navbtn {
-                        min-width: 44px !important;
-                        min-height: 44px !important;
-                        font-size: 1.1em !important;
+                        min-height: 38px !important;
+                        font-size: 0.88em !important;
+                        padding: 0 0.4em !important;
                     }
-                    .surs-sm-tabs {
-                        overflow-x: auto !important;
-                        -webkit-overflow-scrolling: touch !important;
-                        scrollbar-width: none !important;
+                    .surs-sm-navbtn--top {
+                        min-width: 38px !important;
+                        padding: 0 0.3em !important;
                     }
-                    .surs-sm-tab {
-                        flex-shrink: 0 !important;
+                    .surs-sm-navbtn--top span {
+                        display: none !important;
                     }
                     .surs-sm-footer {
                         flex-direction: column !important;
-                        gap: 0.6em !important;
+                        gap: 0.5em !important;
+                        padding-top: 0.6em !important;
                     }
                     .surs-sm-footer-left, .surs-sm-footer-right {
                         width: 100% !important;
@@ -718,12 +739,9 @@
                     }
                     .surs-sm-footer-left .surs-sm-btn, .surs-sm-footer-right .surs-sm-btn {
                         flex: 1 !important;
-                        padding: 0.7em 0.4em !important;
-                        font-size: 0.9em !important;
+                        padding: 0.65em 0.4em !important;
+                        font-size: 0.88em !important;
                     }
-                }
-                    background: rgba(255,255,255,0.12);
-                    color: #fff;
                 }
             </style>
         `);
@@ -935,7 +953,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 action: function () {
                     Lampa.Activity.push({
                         url: 'discover/tv?with_networks=' + service.id + s.params,
-                        title: service.title + ' — ' + s.title,
+                        title: service.title + ' · ' + s.title,
                         component: 'category_full',
                         card_type: 'true',
                         sort_by: s.sort,
@@ -974,7 +992,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             items: typeChoices.map(function(tc) {
                 return {
                     title: tc.title,
-                    action: function() { showGenreSortMenu(genre, tc.value, title + ' — ' + tc.title); }
+                    action: function() { showGenreSortMenu(genre, tc.value, title + ' · ' + tc.title); }
                 };
             }),
             onSelect: function(i) { i.action(); },
@@ -997,7 +1015,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     action: function() {
                         Lampa.Activity.push({
                             url: 'discover/' + type + '?with_genres=' + genre.id + '&sort_by=' + s.sort + s.extra,
-                            title: fullTitle + ' — ' + s.title,
+                            title: fullTitle + ' · ' + s.title,
                             component: 'category_full',
                             card_type: 'true',
                             page: 1
@@ -2123,15 +2141,70 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             }
         }
 
+        function openShelfActionMenu(item, idx) {
+            Lampa.Select.show({
+                title: item.title,
+                items: [
+                    { title: item.enabled ? '✕ Скрыть полку' : '✓ Включить полку', action: 'toggle' },
+                    { title: '⤒ Переместить в самый верх (на 1-е место)', action: 'top' },
+                    { title: '▲ Переместить на 1 позицию выше', action: 'up' },
+                    { title: '▼ Переместить на 1 позицию ниже', action: 'down' },
+                    { title: '🗑 Убрать полку из активного списка', action: 'remove' }
+                ],
+                onSelect: function(a) {
+                    if (a.action === 'toggle') {
+                        item.enabled = !item.enabled;
+                        saveShelves(shelves);
+                        refreshListFocus(item.id, 'toggle');
+                    } else if (a.action === 'top') {
+                        if (idx > 0) {
+                            var moved = shelves.splice(idx, 1)[0];
+                            shelves.unshift(moved);
+                            saveShelves(shelves);
+                            refreshListFocus(item.id, 'top');
+                            Lampa.Noty.show('Полка «' + moved.title + '» перемещена на 1-е место!');
+                        }
+                    } else if (a.action === 'up') {
+                        if (idx > 0) {
+                            var temp = shelves[idx - 1];
+                            shelves[idx - 1] = shelves[idx];
+                            shelves[idx] = temp;
+                            saveShelves(shelves);
+                            refreshListFocus(item.id, 'more');
+                        }
+                    } else if (a.action === 'down') {
+                        if (idx < shelves.length - 1) {
+                            var temp = shelves[idx + 1];
+                            shelves[idx + 1] = shelves[idx];
+                            shelves[idx] = temp;
+                            saveShelves(shelves);
+                            refreshListFocus(item.id, 'more');
+                        }
+                    } else if (a.action === 'remove') {
+                        var removed = shelves.splice(idx, 1)[0];
+                        saveShelves(shelves);
+                        refreshListFocus(null, 'remove');
+                        Lampa.Noty.show('Полка «' + removed.title + '» убрана из списка');
+                    }
+                },
+                onBack: function() {
+                    Lampa.Controller.toggle('surs_shelf_manager');
+                }
+            });
+        }
+
         function renderModalContent() {
             var modalHtml = $('<div class="surs-sm-wrap"></div>');
 
+            var enabledCount = shelves.filter(function(s){ return s.enabled; }).length;
+
             var header = $(`
                 <div class="surs-sm-header">
-                    <div class="surs-sm-title">Управление полками Главного экрана</div>
-                    <div class="surs-sm-subtitle">
-                        Используйте: <b>[☰]</b> — перетащить мышкой/пальцем, <b>[⤒]</b> — в самый верх, <b>[▲]</b> / <b>[▼]</b> — выше/ниже, <b>[✓ Вкл]</b> — скрыть/показать, <b>[✕]</b> — убрать. Нажмите <b>[🔄 Ресерч полок]</b> для поиска новых сервисов.
+                    <div class="surs-sm-title-group">
+                        <div class="surs-sm-title">Полки Главного экрана</div>
+                        <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
+                    <div class="surs-sm-legend">[▲▼] Навигация · [OK] Действие · [⤒] В самый верх</div>
                 </div>
             `);
             modalHtml.append(header);
@@ -2175,7 +2248,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             if (!displayEntries.length) {
                 if (activeCategory === 'plugin') {
-                    list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Сторонние плагины не добавлены.<br>Нажмите кнопку <b>«🔄 Ресерч полок»</b> внизу для автоматического поиска установленных плагинов.</div>');
+                    list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Сторонние плагины не добавлены.<br>Нажмите кнопку <b>«🔄 Найти плагины»</b> внизу для автоматического поиска установленных плагинов.</div>');
                 } else {
                     list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Нет активных полок в этой категории. Нажмите <b>«+ Добавить полку»</b> ниже.</div>');
                 }
@@ -2190,11 +2263,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 var row = $(`
                     <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${item.id}" draggable="true">
-                        <div class="surs-sm-drag-handle" title="Зажмите и перетащите в любое место (вверх/вниз)">
+                        <div class="surs-sm-drag-handle" title="Зажмите и перетащите в любое место">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
-                        </div>
-                        <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle">
-                            ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                         </div>
                         <div class="surs-sm-info">
                             <div class="surs-sm-title-line">
@@ -2204,12 +2274,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             ${desc ? '<div class="surs-sm-desc">' + desc + '</div>' : ''}
                         </div>
                         <div class="surs-sm-actions">
-                            <div class="surs-sm-navbtn surs-sm-navbtn--top selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="top" title="В самый верх (на 1-е место)">
-                                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block;vertical-align:-1px;margin-right:2px;pointer-events:none;"><path d="M4 4h16v2.5H4zm8 3.5l7 7h-4.5v6h-5v-6H6z"/></svg>⤒
+                            <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle" title="Включить или скрыть полку">
+                                ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                             </div>
-                            <div class="surs-sm-navbtn surs-sm-navbtn--up selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="up" title="Переместить выше">▲</div>
-                            <div class="surs-sm-navbtn surs-sm-navbtn--down selector ${idx === shelves.length - 1 ? 'surs-sm-navbtn--disabled' : ''}" data-action="down" title="Переместить ниже">▼</div>
-                            <div class="surs-sm-navbtn surs-sm-navbtn--remove selector" data-action="remove" title="Убрать из активного списка">✕</div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--top selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="top" title="В самый верх (на 1-е место)">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block;vertical-align:-1px;margin-right:3px;pointer-events:none;"><path d="M4 4h16v2.5H4zm8 3.5l7 7h-4.5v6h-5v-6H6z"/></svg><span>⤒ В топ</span>
+                            </div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--more selector" data-action="more" title="Действия (выше, ниже, убрать)">···</div>
                         </div>
                     </div>
                 `);
@@ -2234,37 +2305,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     }
                 });
 
-                // Перемещение вверх
-                row.find('[data-action="up"]').on('hover:enter click', function(e) {
+                // Меню дополнительных действий (···)
+                row.find('[data-action="more"]').on('hover:enter click', function(e) {
                     e.stopPropagation();
-                    if (idx > 0) {
-                        var temp = shelves[idx - 1];
-                        shelves[idx - 1] = shelves[idx];
-                        shelves[idx] = temp;
-                        saveShelves(shelves);
-                        refreshListFocus(item.id, 'up');
-                    }
-                });
-
-                // Перемещение вниз
-                row.find('[data-action="down"]').on('hover:enter click', function(e) {
-                    e.stopPropagation();
-                    if (idx < shelves.length - 1) {
-                        var temp = shelves[idx + 1];
-                        shelves[idx + 1] = shelves[idx];
-                        shelves[idx] = temp;
-                        saveShelves(shelves);
-                        refreshListFocus(item.id, 'down');
-                    }
-                });
-
-                // Удаление из активного списка
-                row.find('[data-action="remove"]').on('hover:enter click', function(e) {
-                    e.stopPropagation();
-                    var removed = shelves.splice(idx, 1)[0];
-                    saveShelves(shelves);
-                    refreshListFocus(null, 'remove');
-                    Lampa.Noty.show('Полка «' + removed.title + '» убрана из списка');
+                    openShelfActionMenu(item, idx);
                 });
 
                 // Drag & Drop мышкой (HTML5 Drag and Drop)
@@ -2397,13 +2441,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var footer = $(`
                 <div class="surs-sm-footer">
                     <div class="surs-sm-footer-left">
-                        <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Ресерч полок</div>
-                        <div class="surs-sm-btn surs-sm-btn--secondary selector" data-action="add">+ Добавить полку</div>
+                        <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="add">+ Добавить полку</div>
+                        <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Найти плагины</div>
                         ${pluginActionBtn}
                     </div>
                     <div class="surs-sm-footer-right">
-                        <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="reset">Сброс</div>
-                        <div class="surs-sm-btn surs-sm-btn--primary selector" data-action="apply">Применить и на Главную</div>
+                        <div class="surs-sm-btn surs-sm-btn--reset selector" data-action="reset">Сброс</div>
+                        <div class="surs-sm-btn surs-sm-btn--primary selector" data-action="apply">✓ Применить</div>
                     </div>
                 </div>
             `);
@@ -2452,13 +2496,27 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 openAddShelfDialog();
             });
 
-            // Сброс по умолчанию (гарантированный сброс: удаляет сохраненные полки, очищает реестр внешних плагинов и возвращает дефолтный список)
+            // Сброс по умолчанию с защитным подтверждением
             footer.find('[data-action="reset"]').on('hover:enter click', function(e) {
                 if (e && e.stopPropagation) e.stopPropagation();
-                var clean = executeBulletproofReset();
-                shelves = clean.slice();
-                refreshListFocus(null, 'reset');
-                Lampa.Noty.show('Полки сброшены по умолчанию. Сторонние плагины отключены');
+                Lampa.Select.show({
+                    title: 'Сбросить порядок полок к начальным 22?',
+                    items: [
+                        { title: 'Да, сбросить порядок и отключить плагины', action: 'confirm' },
+                        { title: 'Отмена', action: 'cancel' }
+                    ],
+                    onSelect: function(a) {
+                        if (a.action === 'confirm') {
+                            var clean = executeBulletproofReset();
+                            shelves = clean.slice();
+                            refreshListFocus(null, 'reset');
+                            Lampa.Noty.show('Полки сброшены по умолчанию. Сторонние плагины отключены');
+                        }
+                    },
+                    onBack: function() {
+                        Lampa.Controller.toggle('surs_shelf_manager');
+                    }
+                });
             });
 
             // Применить
@@ -2542,8 +2600,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var row = newContent.find('[data-id="' + targetId + '"]');
                 if (row.length) {
                     if (buttonType === 'top') focusTarget = row.find('.surs-sm-navbtn--top')[0];
-                    else if (buttonType === 'up') focusTarget = row.find('.surs-sm-navbtn--up')[0];
-                    else if (buttonType === 'down') focusTarget = row.find('.surs-sm-navbtn--down')[0];
+                    else if (buttonType === 'more') focusTarget = row.find('.surs-sm-navbtn--more')[0];
                     else if (buttonType === 'toggle') focusTarget = row.find('.surs-sm-toggle')[0];
                     else focusTarget = row.find('.selector')[0];
                 }
@@ -2576,7 +2633,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var items = unadded.map(function(u) {
                 var prefix = getBadgePrefix(u.cat);
                 return {
-                    title: prefix + ' ' + u.title + (u.desc ? ' — ' + u.desc : ''),
+                    title: prefix + ' ' + u.title + (u.desc ? ' · ' + u.desc : ''),
                     action: function() {
                         shelves.push({ id: u.id, title: u.title, enabled: true, cat: u.cat, desc: u.desc });
                         saveShelves(shelves);
@@ -2874,7 +2931,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 }
 
                 // Защита от зависаний ТВ (Watchdog 2.5 сек на каждую полку):
-                // Если внешний плагин или TMDB задерживается — полка мирно отдает пустой массив,
+                // Если внешний плагин или TMDB задерживается - полка мирно отдает пустой массив,
                 // не блокируя лоадер и не подвешивая интерфейс телевизора!
                 var protectedData = combinedData.map(function(fn, i) {
                     return function(callback) {
