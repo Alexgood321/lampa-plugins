@@ -1,12 +1,10 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.7.0 (Anti-Slop UI & Multi-Device Ergonomics Redesign)
- * Релиз: Полный редизайн модального менеджера полок по канонам Apple tvOS / iOS / Leanback.
- *   - Выверенная визуальная иерархия: убран слоёный пирог в футере, единый акцент Lampa.
- *   - Разгрузка строки: 1-клик перенос в топ, быстрый тумблер и контекстное меню действий (···).
- *   - Защита от случайного сброса: диалог подтверждения сброса полок.
- *   - TV Remote Legend: подсказка навигации для 10-foot UI.
- *   - Чистка кода: удалены все запрещенные em-dashes, ликвидирован AI-фиолетовый градиент.
+ * Версия: 3.7.1 (Trakt Normalization & Direct Reorder Controls)
+ * Релиз: Исправление отображения карточек Trakt и добавление прямых кнопок перетаскивания.
+ *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
+ *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
+ *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
  * Авторы: aviamovie (оригинальная идея) & Lampa Community / Alexgood321 (стабилизация и визуальный редактор)
  *
  * Особенности:
@@ -438,21 +436,29 @@
                     align-items: center;
                     justify-content: center;
                     width: 32px;
-                    height: 38px;
-                    margin-right: 0.6em;
-                    color: rgba(255, 255, 255, 0.4);
+                    height: 36px;
+                    margin-right: 0.5em;
+                    color: rgba(255, 255, 255, 0.45);
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid rgba(255, 255, 255, 0.07);
+                    border-radius: 6px;
                     cursor: grab;
                     user-select: none;
                     touch-action: none;
                     flex-shrink: 0;
-                    transition: color 0.15s, transform 0.15s;
+                    transition: color 0.15s, transform 0.15s, background 0.15s, border-color 0.15s;
                 }
-                .surs-sm-drag-handle:hover {
-                    color: #3498db;
-                    transform: scale(1.15);
+                .surs-sm-drag-handle:hover,
+                .surs-sm-drag-handle.focus {
+                    color: #fff;
+                    background: rgba(41, 128, 185, 0.3);
+                    border-color: #3498db;
+                    box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+                    transform: scale(1.08);
                 }
                 .surs-sm-drag-handle:active {
                     cursor: grabbing;
+                    background: #2980b9;
                 }
                 .surs-sm-item--dragging {
                     opacity: 0.35;
@@ -595,6 +601,15 @@
                     font-weight: 700;
                     letter-spacing: 0.1em;
                 }
+                .surs-sm-navbtn--step {
+                    min-width: 2.1em;
+                    padding: 0 0.4em;
+                    font-size: 0.95em;
+                    line-height: 1;
+                }
+                .surs-sm-navbtn--step svg {
+                    pointer-events: none;
+                }
                 .surs-sm-navbtn--disabled {
                     opacity: 0.35;
                     cursor: default;
@@ -688,44 +703,62 @@
                         padding: 0.6em !important;
                     }
                     .surs-sm-header {
-                        margin-bottom: 0.6em !important;
+                        margin-bottom: 0.5em !important;
                     }
                     .surs-sm-title {
-                        font-size: 1.25em !important;
+                        font-size: 1.15em !important;
                     }
                     .surs-sm-legend {
                         display: none !important;
                     }
                     .surs-sm-item {
-                        padding: 0.5em 0.6em !important;
-                        gap: 0.4em !important;
+                        padding: 0.45em 0.5em !important;
+                        gap: 0.3em !important;
                     }
                     .surs-sm-drag-handle {
-                        width: 30px !important;
-                        height: 44px !important;
+                        width: 28px !important;
+                        height: 36px !important;
                         margin-right: 0.2em !important;
                     }
                     .surs-sm-name {
-                        font-size: 0.95em !important;
+                        font-size: 0.9em !important;
+                    }
+                    .surs-sm-actions {
+                        gap: 0.25em !important;
                     }
                     .surs-sm-toggle {
-                        min-width: 44px !important;
-                        height: 38px !important;
-                        line-height: 38px !important;
-                        padding: 0 0.4em !important;
-                        font-size: 0.82em !important;
+                        min-width: 40px !important;
+                        height: 34px !important;
+                        line-height: 34px !important;
+                        padding: 0 0.35em !important;
+                        font-size: 0.78em !important;
                     }
                     .surs-sm-navbtn {
-                        min-height: 38px !important;
-                        font-size: 0.88em !important;
-                        padding: 0 0.4em !important;
+                        height: 34px !important;
+                        min-height: 34px !important;
+                        font-size: 0.82em !important;
+                        padding: 0 0.35em !important;
+                    }
+                    .surs-sm-navbtn--step {
+                        width: 30px !important;
+                        min-width: 30px !important;
+                        padding: 0 !important;
                     }
                     .surs-sm-navbtn--top {
-                        min-width: 38px !important;
-                        padding: 0 0.3em !important;
+                        width: 30px !important;
+                        min-width: 30px !important;
+                        padding: 0 !important;
                     }
                     .surs-sm-navbtn--top span {
                         display: none !important;
+                    }
+                    .surs-sm-navbtn--top svg {
+                        margin-right: 0 !important;
+                    }
+                    .surs-sm-navbtn--more {
+                        width: 28px !important;
+                        min-width: 28px !important;
+                        padding: 0 !important;
                     }
                     .surs-sm-footer {
                         flex-direction: column !important;
@@ -1319,7 +1352,15 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         } catch(e) {}
 
         if (Array.isArray(saved) && saved.length > 0) {
-            return saved;
+            var seen = {};
+            var unique = [];
+            saved.forEach(function(s) {
+                if (s && s.id && !seen[s.id]) {
+                    seen[s.id] = true;
+                    unique.push(s);
+                }
+            });
+            return unique;
         }
 
         return getDefaultShelvesList();
@@ -1899,10 +1940,128 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var timer = setTimeout(function() {
                     if (!called) {
                         called = true;
-                        console.warn('[SURS Trakt] Таймаут полки Trakt (2.5с):', shelfId);
+                        console.warn('[SURS Trakt] Таймаут полки Trakt (3.5с):', shelfId);
                         callback({ results: [] });
                     }
-                }, 2500);
+                }, 3500);
+
+                function normalizeTraktItem(raw) {
+                    if (!raw) return null;
+                    var media = raw.movie || raw.show || raw;
+                    var ep = raw.episode || null;
+                    var isTv = Boolean(raw.show || (raw.type === 'tv') || (media && media.first_aired));
+
+                    var title = media.title || media.name || (ep ? ep.title : '') || 'Без названия';
+                    var episodeNote = '';
+                    if (ep && (ep.season != null || ep.number != null)) {
+                        var sNum = (ep.season != null) ? (ep.season < 10 ? '0' + ep.season : '' + ep.season) : '01';
+                        var eNum = (ep.number != null) ? (ep.number < 10 ? '0' + ep.number : '' + ep.number) : '01';
+                        episodeNote = ' (s' + sNum + 'e' + eNum + (ep.title ? ' · ' + ep.title : '') + ')';
+                    }
+
+                    var year = media.year || (media.released ? ('' + media.released).slice(0, 4) : (media.first_aired ? ('' + media.first_aired).slice(0, 4) : ''));
+                    var releaseDate = media.released || media.first_aired || (year ? year + '-01-01' : '2024-01-01');
+                    var tmdbId = (media.ids && media.ids.tmdb) || raw.tmdb_id || media.tmdb_id || media.id;
+                    var traktId = (media.ids && media.ids.trakt) || raw.trakt_id || media.trakt_id;
+                    var imdbId = (media.ids && media.ids.imdb) || raw.imdb_id;
+
+                    var posterPath = (media.images && media.images.poster && (media.images.poster.medium || media.images.poster.full)) || media.poster_path || raw.poster_path || '';
+                    var backdropPath = (media.images && media.images.fanart && (media.images.fanart.medium || media.images.fanart.full)) || media.backdrop_path || raw.backdrop_path || '';
+
+                    var card = {
+                        source: 'tmdb',
+                        method: isTv ? 'tv' : 'movie',
+                        type: isTv ? 'tv' : 'movie',
+                        id: tmdbId || traktId || raw.id,
+                        tmdb_id: tmdbId,
+                        trakt_id: traktId,
+                        imdb_id: imdbId,
+                        title: title + episodeNote,
+                        name: title + episodeNote,
+                        original_title: media.original_title || media.title || '',
+                        original_name: media.original_name || media.name || '',
+                        release_date: releaseDate,
+                        first_air_date: releaseDate,
+                        release_year: year ? ('' + year) : (releaseDate ? releaseDate.slice(0, 4) : '2024'),
+                        vote_average: media.rating ? Math.round(media.rating * 10) / 10 : (raw.vote_average || 7.2),
+                        overview: (ep && ep.overview) || media.overview || '',
+                        poster_path: posterPath,
+                        backdrop_path: backdropPath,
+                        img: posterPath ? (posterPath.indexOf('http') === 0 ? posterPath : (Lampa.TMDB ? Lampa.TMDB.image('t/p/w300' + posterPath) : posterPath)) : '',
+                        background_image: backdropPath ? (backdropPath.indexOf('http') === 0 ? backdropPath : (Lampa.TMDB ? Lampa.TMDB.image('t/p/w1280' + backdropPath) : backdropPath)) : ''
+                    };
+
+                    return card;
+                }
+
+                function enrichCardsWithTMDB(cards, onComplete) {
+                    var needEnrich = cards.filter(function(c) {
+                        return c && c.tmdb_id && (!c.poster_path || c.poster_path.indexOf('http') !== 0);
+                    });
+
+                    if (!needEnrich.length || !Lampa.TMDB || !Lampa.TMDB.key || !Lampa.Network) {
+                        return onComplete();
+                    }
+
+                    var count = Math.min(needEnrich.length, 12);
+                    var done = 0;
+                    var finished = false;
+                    var tmdbTimer = setTimeout(function() {
+                        if (!finished) {
+                            finished = true;
+                            onComplete();
+                        }
+                    }, 1200);
+
+                    needEnrich.slice(0, 12).forEach(function(cardItem) {
+                        var endpoint = (cardItem.type === 'tv' ? 'tv/' : 'movie/') + cardItem.tmdb_id + '?api_key=' + Lampa.TMDB.key() + '&language=ru';
+                        var apiUrl = Lampa.TMDB.api(endpoint);
+                        Lampa.Network.silent(apiUrl, function(data) {
+                            if (data) {
+                                if (data.poster_path) {
+                                    cardItem.poster_path = data.poster_path;
+                                    cardItem.img = Lampa.TMDB.image('t/p/w300' + data.poster_path);
+                                }
+                                if (data.backdrop_path) {
+                                    cardItem.backdrop_path = data.backdrop_path;
+                                    cardItem.background_image = Lampa.TMDB.image('t/p/w1280' + data.backdrop_path);
+                                }
+                                if (data.title || data.name) {
+                                    var origTitle = cardItem.title;
+                                    var baseTitle = data.title || data.name;
+                                    if (origTitle.indexOf(' (s') > 0) {
+                                        var epPart = origTitle.slice(origTitle.indexOf(' (s'));
+                                        cardItem.title = baseTitle + epPart;
+                                        cardItem.name = cardItem.title;
+                                    } else {
+                                        cardItem.title = baseTitle;
+                                        cardItem.name = baseTitle;
+                                    }
+                                }
+                                if (data.vote_average) cardItem.vote_average = Math.round(data.vote_average * 10) / 10;
+                                if (data.release_date || data.first_air_date) {
+                                    var rel = data.release_date || data.first_air_date;
+                                    cardItem.release_date = rel;
+                                    cardItem.first_air_date = rel;
+                                    cardItem.release_year = ('' + rel).slice(0, 4);
+                                }
+                            }
+                            done++;
+                            if (done >= count && !finished) {
+                                finished = true;
+                                clearTimeout(tmdbTimer);
+                                onComplete();
+                            }
+                        }, function() {
+                            done++;
+                            if (done >= count && !finished) {
+                                finished = true;
+                                clearTimeout(tmdbTimer);
+                                onComplete();
+                            }
+                        }, false, { cache: { life: 60 * 24 * 3 } });
+                    });
+                }
 
                 function finishTrakt(line) {
                     if (!called) {
@@ -1910,38 +2069,43 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         clearTimeout(timer);
                         if (!line) return callback({ results: [] });
 
-                        var cards = Array.isArray(line) ? line : (line.results || []);
-                        if (!Array.isArray(cards) || !cards.length) return callback({ results: [] });
+                        var rawCards = Array.isArray(line) ? line : (line.results || line.items || []);
+                        if (!Array.isArray(rawCards) || !rawCards.length) return callback({ results: [] });
 
-                        cards.forEach(function(item) {
-                            if (!item.params) {
-                                item.params = {
-                                    createInstance: function() { return createCardMaker(this, 'Card'); },
-                                    emit: {
-                                        onlyEnter: function() { Lampa.Router.call('full', item); },
-                                        onlyFocus: function() {
-                                            if (Lampa.Background && Lampa.Utils && Lampa.Utils.cardImgBackgroundBlur) {
-                                                Lampa.Background.change(Lampa.Utils.cardImgBackgroundBlur(item));
+                        var cards = rawCards.map(normalizeTraktItem).filter(Boolean);
+                        if (!cards.length) return callback({ results: [] });
+
+                        enrichCardsWithTMDB(cards, function() {
+                            cards.forEach(function(item) {
+                                if (!item.params) {
+                                    item.params = {
+                                        createInstance: function() { return Lampa.Maker.make('Card', item); },
+                                        emit: {
+                                            onlyEnter: function() { Lampa.Router.call('full', item); },
+                                            onlyFocus: function() {
+                                                if (Lampa.Background && Lampa.Utils && Lampa.Utils.cardImgBackgroundBlur) {
+                                                    Lampa.Background.change(Lampa.Utils.cardImgBackgroundBlur(item));
+                                                }
                                             }
                                         }
-                                    }
-                                };
+                                    };
+                                }
+                            });
+
+                            var shelfTitle = line.title;
+                            if (!shelfTitle) {
+                                if (shelfId === 'trakt_continue' || shelfId === 'ext_TraktUpNextRow') shelfTitle = 'Trakt: Смотреть дальше';
+                                else if (shelfId === 'trakt_watchlist' || shelfId === 'ext_TraktWatchlistRow') shelfTitle = 'Trakt: Хочу посмотреть';
+                                else if (shelfId === 'trakt_recommendations' || shelfId === 'ext_TraktRecommendationsRow') shelfTitle = 'Trakt: Рекомендации';
+                                else if (shelfId === 'trakt_trending' || shelfId === 'ext_TraktTrendingRow') shelfTitle = 'Trakt: В тренде';
+                                else shelfTitle = 'Trakt.TV';
                             }
-                        });
 
-                        var shelfTitle = line.title;
-                        if (!shelfTitle) {
-                            if (shelfId === 'trakt_continue' || shelfId === 'ext_TraktUpNextRow') shelfTitle = 'Trakt: Смотреть дальше';
-                            else if (shelfId === 'trakt_watchlist' || shelfId === 'ext_TraktWatchlistRow') shelfTitle = 'Trakt: Хочу посмотреть';
-                            else if (shelfId === 'trakt_recommendations' || shelfId === 'ext_TraktRecommendationsRow') shelfTitle = 'Trakt: Рекомендации';
-                            else if (shelfId === 'trakt_trending' || shelfId === 'ext_TraktTrendingRow') shelfTitle = 'Trakt: В тренде';
-                            else shelfTitle = 'Trakt.TV';
-                        }
-
-                        callback({
-                            results: cards,
-                            title: shelfTitle,
-                            params: { items: { view: 20, mapping: 'line' } }
+                            callback({
+                                results: cards,
+                                title: shelfTitle,
+                                params: { items: { view: 20, mapping: 'line' } }
+                            });
                         });
                     }
                 }
@@ -2145,10 +2309,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             Lampa.Select.show({
                 title: item.title,
                 items: [
-                    { title: item.enabled ? '✕ Скрыть полку' : '✓ Включить полку', action: 'toggle' },
-                    { title: '⤒ Переместить в самый верх (на 1-е место)', action: 'top' },
-                    { title: '▲ Переместить на 1 позицию выше', action: 'up' },
-                    { title: '▼ Переместить на 1 позицию ниже', action: 'down' },
+                    { title: item.enabled ? '✕ Скрыть полку с экрана' : '✓ Включить показ полки', action: 'toggle' },
+                    { title: '⤒ В самый верх (на 1-е место)', action: 'top' },
+                    { title: '▲ На 1 позицию выше', action: 'up' },
+                    { title: '▼ На 1 позицию ниже', action: 'down' },
+                    { title: '⤓ В самый низ списка', action: 'bottom' },
                     { title: '🗑 Убрать полку из активного списка', action: 'remove' }
                 ],
                 onSelect: function(a) {
@@ -2170,7 +2335,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             shelves[idx - 1] = shelves[idx];
                             shelves[idx] = temp;
                             saveShelves(shelves);
-                            refreshListFocus(item.id, 'more');
+                            refreshListFocus(item.id, 'up');
+                            Lampa.Noty.show('Полка «' + item.title + '» поднята выше');
                         }
                     } else if (a.action === 'down') {
                         if (idx < shelves.length - 1) {
@@ -2178,7 +2344,16 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             shelves[idx + 1] = shelves[idx];
                             shelves[idx] = temp;
                             saveShelves(shelves);
-                            refreshListFocus(item.id, 'more');
+                            refreshListFocus(item.id, 'down');
+                            Lampa.Noty.show('Полка «' + item.title + '» опущена ниже');
+                        }
+                    } else if (a.action === 'bottom') {
+                        if (idx < shelves.length - 1) {
+                            var movedBottom = shelves.splice(idx, 1)[0];
+                            shelves.push(movedBottom);
+                            saveShelves(shelves);
+                            refreshListFocus(item.id, 'down');
+                            Lampa.Noty.show('Полка «' + movedBottom.title + '» перемещена в самый низ');
                         }
                     } else if (a.action === 'remove') {
                         var removed = shelves.splice(idx, 1)[0];
@@ -2204,7 +2379,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         <div class="surs-sm-title">Полки Главного экрана</div>
                         <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
-                    <div class="surs-sm-legend">[▲▼] Навигация · [OK] Действие · [⤒] В самый верх</div>
+                    <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
                 </div>
             `);
             modalHtml.append(header);
@@ -2260,10 +2435,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var cat = getShelfCategory(item.id);
                 var desc = getShelfDesc(item.id);
                 var badgeHtml = getBadgeHtml(cat);
+                var isFirst = (idx === 0);
+                var isLast = (idx === shelves.length - 1);
 
                 var row = $(`
                     <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${item.id}" draggable="true">
-                        <div class="surs-sm-drag-handle" title="Зажмите и перетащите в любое место">
+                        <div class="surs-sm-drag-handle selector" data-action="handle" title="Зажмите для перетаскивания или нажмите для меню порядка">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
                         </div>
                         <div class="surs-sm-info">
@@ -2277,13 +2454,25 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle" title="Включить или скрыть полку">
                                 ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                             </div>
-                            <div class="surs-sm-navbtn surs-sm-navbtn--top selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="top" title="В самый верх (на 1-е место)">
-                                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block;vertical-align:-1px;margin-right:3px;pointer-events:none;"><path d="M4 4h16v2.5H4zm8 3.5l7 7h-4.5v6h-5v-6H6z"/></svg><span>⤒ В топ</span>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--step surs-sm-navbtn--up selector ${isFirst ? 'surs-sm-navbtn--disabled' : ''}" data-action="up" title="Поднять на 1 позицию выше">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
                             </div>
-                            <div class="surs-sm-navbtn surs-sm-navbtn--more selector" data-action="more" title="Действия (выше, ниже, убрать)">···</div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--step surs-sm-navbtn--down selector ${isLast ? 'surs-sm-navbtn--disabled' : ''}" data-action="down" title="Опустить на 1 позицию ниже">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+                            </div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--top selector ${isFirst ? 'surs-sm-navbtn--disabled' : ''}" data-action="top" title="В самый верх (на 1-е место)">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block;vertical-align:-1px;margin-right:2px;pointer-events:none;"><path d="M4 4h16v2.5H4zm8 3.5l7 7h-4.5v6h-5v-6H6z"/></svg><span>В топ</span>
+                            </div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--more selector" data-action="more" title="Все действия (вверх, вниз, в низ, скрыть)">···</div>
                         </div>
                     </div>
                 `);
+
+                // Клик или OK по иконке перетаскивания (три полоски)
+                row.find('.surs-sm-drag-handle').on('hover:enter click', function(e) {
+                    e.stopPropagation();
+                    openShelfActionMenu(item, idx);
+                });
 
                 // Переключение видимости
                 row.find('[data-action="toggle"]').on('hover:enter click', function(e) {
@@ -2291,6 +2480,32 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     item.enabled = !item.enabled;
                     saveShelves(shelves);
                     refreshListFocus(item.id, 'toggle');
+                });
+
+                // Перемещение на 1 позицию выше (▲)
+                row.find('[data-action="up"]').on('hover:enter click', function(e) {
+                    e.stopPropagation();
+                    if (idx > 0) {
+                        var temp = shelves[idx - 1];
+                        shelves[idx - 1] = shelves[idx];
+                        shelves[idx] = temp;
+                        saveShelves(shelves);
+                        refreshListFocus(item.id, 'up');
+                        Lampa.Noty.show('Полка «' + item.title + '» поднята выше');
+                    }
+                });
+
+                // Перемещение на 1 позицию ниже (▼)
+                row.find('[data-action="down"]').on('hover:enter click', function(e) {
+                    e.stopPropagation();
+                    if (idx < shelves.length - 1) {
+                        var temp = shelves[idx + 1];
+                        shelves[idx + 1] = shelves[idx];
+                        shelves[idx] = temp;
+                        saveShelves(shelves);
+                        refreshListFocus(item.id, 'down');
+                        Lampa.Noty.show('Полка «' + item.title + '» опущена ниже');
+                    }
                 });
 
                 // Перемещение в самый верх списка (на 1-е место)
@@ -2600,6 +2815,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var row = newContent.find('[data-id="' + targetId + '"]');
                 if (row.length) {
                     if (buttonType === 'top') focusTarget = row.find('.surs-sm-navbtn--top')[0];
+                    else if (buttonType === 'up') focusTarget = row.find('.surs-sm-navbtn--up')[0];
+                    else if (buttonType === 'down') focusTarget = row.find('.surs-sm-navbtn--down')[0];
+                    else if (buttonType === 'handle') focusTarget = row.find('.surs-sm-drag-handle')[0];
                     else if (buttonType === 'more') focusTarget = row.find('.surs-sm-navbtn--more')[0];
                     else if (buttonType === 'toggle') focusTarget = row.find('.surs-sm-toggle')[0];
                     else focusTarget = row.find('.selector')[0];
@@ -3096,7 +3314,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.7.1 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
