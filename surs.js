@@ -31,7 +31,7 @@
             title: def.title || def.name || def.id,
             cat: def.cat || 'plugin',
             desc: def.desc || 'Сторонний сервис',
-            def: def.def !== undefined ? def.def : true,
+            def: def.def !== undefined ? def.def : false,
             loader: def.loader || null,
             call: def.call || null,
             raw: def.raw || def
@@ -1009,6 +1009,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         if (id.indexOf('core_') === 0) return 'core';
         if (id.indexOf('trakt_') === 0) return 'trakt';
         if (id.indexOf('ext_') === 0) return 'plugin';
+        if (id.indexOf('cr_') === 0) return 'plugin';
         return 'surs';
     }
 
@@ -1053,12 +1054,43 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     if (testItems && testItems.length) {
                         testItems.forEach(function(rowFunc, idx) {
                             if (typeof rowFunc === 'function') {
+                                var baseId = 'ext_lampa_row_' + idx;
+                                var baseTitle = 'Lampa Row #' + (idx + 1);
+                                var fnStr = rowFunc.toString();
+
+                                if (fnStr.indexOf('lenta') >= 0 || fnStr.indexOf('shots') >= 0) {
+                                    baseTitle = 'Shots';
+                                } else if (fnStr.indexOf('recomend') >= 0) {
+                                    baseTitle = 'Рекомендуем посмотреть';
+                                } else if (fnStr.indexOf('timetable_lately') >= 0) {
+                                    baseTitle = 'Ближайшие выходы эпизодов';
+                                } else if (fnStr.indexOf('timetable_recently') >= 0) {
+                                    baseTitle = 'Недавние выходы эпизодов';
+                                } else if (fnStr.indexOf('continue') >= 0) {
+                                    baseTitle = 'Продолжить просмотр';
+                                }
+
+                                // Быстрый опрос для извлечения настоящего заголовка
+                                try {
+                                    rowFunc(function(probeData) {
+                                        if (probeData && (probeData.title || probeData.name)) {
+                                            var pTitle = probeData.title || probeData.name;
+                                            baseTitle = pTitle;
+                                            if (window.SURS_EXTERNAL_SHELVES && window.SURS_EXTERNAL_SHELVES[baseId]) {
+                                                window.SURS_EXTERNAL_SHELVES[baseId].title = pTitle;
+                                                saveDiscoveredToStorage();
+                                            }
+                                        }
+                                    });
+                                } catch(e){}
+
                                 registerDiscoveredShelf({
-                                    id: 'ext_lampa_row_' + idx,
-                                    title: 'Lampa Row #' + (idx + 1),
+                                    id: baseId,
+                                    title: baseTitle,
                                     cat: 'plugin',
                                     desc: 'Строка из Lampa.ContentRows',
-                                    loader: function(callback) {
+                                    def: false,
+                                    loader: function(callback, pms, own) {
                                         rowFunc(function(data) {
                                             callback(data || { results: [] });
                                         });
@@ -1764,7 +1796,16 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             if (!called) {
                                 called = true;
                                 clearTimeout(timer);
-                                callback(prepareResults(data, extShelf.title));
+                                if (!data) return callback({ results: [] });
+                                // Прямой проброс данных стороннего плагина без фильтрации кириллицы TMDB
+                                if (Array.isArray(data)) {
+                                    callback({ results: data, title: extShelf.title || '' });
+                                } else if (data && Array.isArray(data.results)) {
+                                    if (!data.title && extShelf.title) data.title = extShelf.title;
+                                    callback(data);
+                                } else {
+                                    callback(data);
+                                }
                             }
                         }, params, owner);
                     } else {
@@ -1801,6 +1842,23 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var shelves = getSavedShelves().slice();
         var activeCategory = 'all';
         var modalHtml = null;
+
+        // Миграция: сторонние плагинные полки по умолчанию выключены, пользователь включает только нужные
+        var migrationKey = 'surs_plugins_default_off_v2';
+        if (!Lampa.Storage.get(migrationKey)) {
+            var hadChange = false;
+            shelves.forEach(function(s) {
+                var cat = getShelfCategory(s.id);
+                if (cat === 'plugin' || (s.id && s.id.indexOf('ext_lampa_row_') === 0) || (s.id && s.id.indexOf('ext_') === 0)) {
+                    s.enabled = false;
+                    hadChange = true;
+                }
+            });
+            if (hadChange) {
+                saveShelves(shelves);
+            }
+            Lampa.Storage.set(migrationKey, 'true');
+        }
 
         function closeModalSafely(needRefresh) {
             isModalOpen = false;
@@ -1884,7 +1942,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             });
 
             if (!displayEntries.length) {
-                list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Нет активных полок в этой категории. Нажмите <b>«+ Добавить полку»</b> ниже.</div>');
+                if (activeCategory === 'plugin') {
+                    list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Сторонние плагины не добавлены.<br>Нажмите кнопку <b>«🔄 Ресерч полок»</b> внизу для автоматического поиска установленных плагинов.</div>');
+                } else {
+                    list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Нет активных полок в этой категории. Нажмите <b>«+ Добавить полку»</b> ниже.</div>');
+                }
             }
 
             displayEntries.forEach(function(entry) {
@@ -1975,11 +2037,17 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             modalHtml.append(list);
 
+            var pluginActionBtn = '';
+            if (activeCategory === 'plugin') {
+                pluginActionBtn = '<div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="hide-all-plugins" style="color:#ff6b6b;border-color:rgba(231,76,60,0.3);">✕ Выключить все плагины</div>';
+            }
+
             var footer = $(`
                 <div class="surs-sm-footer">
                     <div class="surs-sm-footer-left">
                         <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Ресерч полок</div>
                         <div class="surs-sm-btn surs-sm-btn--secondary selector" data-action="add">+ Добавить полку</div>
+                        ${pluginActionBtn}
                     </div>
                     <div class="surs-sm-footer-right">
                         <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="reset">Сброс</div>
@@ -1992,20 +2060,38 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             footer.find('[data-action="rescan"]').on('hover:enter click', function(e) {
                 e.stopPropagation();
                 runAutoDiscovery(true);
-                // Автоматически добавляем вновь обнаруженные плагины, если их еще нет в списке
+                // Автоматически добавляем вновь обнаруженные плагины, если их еще нет в списке - выключенными по умолчанию (enabled: false)
                 var all = getAllAvailableShelves();
                 var newAdded = 0;
                 all.forEach(function(s) {
-                    if (s.cat === 'plugin' && !shelves.some(function(sh) { return sh.id === s.id; })) {
-                        shelves.push({ id: s.id, title: s.title, enabled: true, cat: s.cat, desc: s.desc });
+                    var isPluginShelf = s.cat === 'plugin' || s.cat === 'trakt' || (s.id && (s.id.indexOf('ext_') === 0 || s.id.indexOf('cr_') === 0));
+                    if (isPluginShelf && !shelves.some(function(sh) { return sh.id === s.id; })) {
+                        shelves.push({ id: s.id, title: s.title, enabled: false, cat: s.cat || 'plugin', desc: s.desc });
                         newAdded++;
                     }
                 });
                 if (newAdded > 0) {
                     saveShelves(shelves);
-                    Lampa.Noty.show('Добавлено новых плагинных полок: ' + newAdded);
+                    Lampa.Noty.show('Найдено новых полок: ' + newAdded + ' (выключены по умолчанию)');
                 }
                 refreshListFocus('rescan_btn', 'rescan');
+            });
+
+            // Выключить все плагины
+            footer.find('[data-action="hide-all-plugins"]').on('hover:enter click', function(e) {
+                e.stopPropagation();
+                var count = 0;
+                shelves.forEach(function(s) {
+                    var cat = getShelfCategory(s.id);
+                    var isPluginShelf = cat === 'plugin' || cat === 'trakt' || s.cat === 'plugin' || s.cat === 'trakt' || (s.id && (s.id.indexOf('ext_') === 0 || s.id.indexOf('cr_') === 0));
+                    if (isPluginShelf && s.enabled) {
+                        s.enabled = false;
+                        count++;
+                    }
+                });
+                saveShelves(shelves);
+                refreshListFocus(null, 'tab');
+                Lampa.Noty.show('Все сторонние плагины выключены (' + count + ')');
             });
 
             // Добавить полку
@@ -2014,14 +2100,18 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 openAddShelfDialog();
             });
 
-            // Сброс по умолчанию
+            // Сброс по умолчанию (чистый сброс: удаляет сохраненные полки, найденные плагины и очищает память до нажатия Ресерч)
             footer.find('[data-action="reset"]').on('hover:enter click', function(e) {
                 e.stopPropagation();
-                Lampa.Storage.remove(STORAGE_SHELVES_KEY);
-                shelves = getSavedShelves();
+                Lampa.Storage.set(STORAGE_SHELVES_KEY, '');
+                Lampa.Storage.set(STORAGE_DISCOVERED_KEY, []);
+                try { localStorage.removeItem(STORAGE_SHELVES_KEY); } catch(err){}
+                try { localStorage.removeItem(STORAGE_DISCOVERED_KEY); } catch(err){}
+                window.SURS_EXTERNAL_SHELVES = {};
+                shelves = getSavedShelves().slice();
                 saveShelves(shelves);
                 refreshListFocus(null, null);
-                Lampa.Noty.show('Настройки полок сброшены по умолчанию');
+                Lampa.Noty.show('Настройки полок сброшены. Сторонние плагины очищены до нажатия Ресерч');
             });
 
             // Применить
@@ -2377,7 +2467,45 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             this.main = function(params, onComplete, onError) {
                 params = params || {};
                 var owner = this;
-                var partsLimit = 9;
+
+                // Реконнект живых загрузчиков ContentRows при каждом построении Главного экрана
+                try {
+                    if (typeof Lampa !== 'undefined' && Lampa.ContentRows && typeof Lampa.ContentRows.call === 'function') {
+                        var liveCRItems = [];
+                        Lampa.ContentRows.call('main', params, liveCRItems);
+                        if (liveCRItems && liveCRItems.length) {
+                            window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
+                            liveCRItems.forEach(function(rowFunc, idx) {
+                                if (typeof rowFunc === 'function') {
+                                    var rowId = 'ext_lampa_row_' + idx;
+                                    var shelfObj = window.SURS_EXTERNAL_SHELVES[rowId];
+                                    if (shelfObj) {
+                                        shelfObj.loader = function(cb, p, o) {
+                                            rowFunc(function(data) { cb(data || { results: [] }); });
+                                        };
+                                    }
+                                    // Также связываем по заголовку
+                                    try {
+                                        rowFunc(function(pData) {
+                                            if (pData && (pData.title || pData.name)) {
+                                                var pTitle = pData.title || pData.name;
+                                                for (var k in window.SURS_EXTERNAL_SHELVES) {
+                                                    if (window.SURS_EXTERNAL_SHELVES[k].title === pTitle) {
+                                                        window.SURS_EXTERNAL_SHELVES[k].loader = function(cb, p, o) {
+                                                            rowFunc(function(data) { cb(data || { results: [] }); });
+                                                        };
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    } catch(e){}
+                                }
+                            });
+                        }
+                    }
+                } catch(e) {
+                    console.error('[SURS Hub] Ошибка реконнекта ContentRows в main():', e);
+                }
 
                 var savedShelves = getSavedShelves();
                 var combinedData = [];
@@ -2405,6 +2533,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         }
                     });
                 }
+
+                // ВАЖНО: partsLimit должен гарантировать отображение ВСЕХ включенных полок,
+                // включая сторонние плагины в самом низу экрана без блокировки пагинации в веб-версии!
+                var partsLimit = Math.max(50, combinedData.length);
 
                 function loadPart(partLoaded, partEmpty) {
                     Lampa.Api.partNext(combinedData, partsLimit, partLoaded, partEmpty);
@@ -2474,16 +2606,20 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     description: 'Вернуть исходную структуру полок'
                 },
                 onChange: function() {
-                    Lampa.Storage.remove(STORAGE_SHELVES_KEY);
-                    saveShelves(getSavedShelves());
-                    Lampa.Noty.show('Настройки полок сброшены!');
+                    Lampa.Storage.set(STORAGE_SHELVES_KEY, '');
+                    Lampa.Storage.set(STORAGE_DISCOVERED_KEY, []);
+                    try { localStorage.removeItem(STORAGE_SHELVES_KEY); } catch(err){}
+                    try { localStorage.removeItem(STORAGE_DISCOVERED_KEY); } catch(err){}
+                    window.SURS_EXTERNAL_SHELVES = {};
+                    saveShelves(getSavedShelves().slice());
+                    Lampa.Noty.show('Настройки полок сброшены! Сторонние плагины очищены до Ресерча');
                 }
             });
         }
 
-        // Запуск обнаружения и перехвата
+        // Запуск перехвата и загрузка ранее сохраненных исследованных полок (если они были сохранены до сброса)
         patchContentRows();
-        runAutoDiscovery(false);
+        loadDiscoveredFromStorage();
 
         // Адаптация бокового Главного меню Lampa (ТВ, телефон, планшет, браузер)
         function setupMainMenuIntegration() {
