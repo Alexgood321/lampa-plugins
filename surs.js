@@ -19,6 +19,95 @@
     window.plugin_surs_fixed_ready = true;
 
     // ==========================================
+    // 0. ДИНАМИЧЕСКИЙ РЕЕСТР И ПЕРЕХВАТЧИК СТОРОННИХ ПЛАГИНОВ
+    // ==========================================
+    window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
+    var STORAGE_DISCOVERED_KEY = 'surs_discovered_shelves_v2';
+
+    function registerDiscoveredShelf(def) {
+        if (!def || !def.id) return false;
+        window.SURS_EXTERNAL_SHELVES[def.id] = {
+            id: def.id,
+            title: def.title || def.name || def.id,
+            cat: def.cat || 'plugin',
+            desc: def.desc || 'Сторонний сервис',
+            def: def.def !== undefined ? def.def : true,
+            loader: def.loader || null,
+            call: def.call || null,
+            raw: def.raw || def
+        };
+        saveDiscoveredToStorage();
+        return true;
+    }
+
+    function saveDiscoveredToStorage() {
+        try {
+            if (typeof Lampa === 'undefined' || !Lampa.Storage) return;
+            var list = [];
+            for (var key in window.SURS_EXTERNAL_SHELVES) {
+                var it = window.SURS_EXTERNAL_SHELVES[key];
+                list.push({
+                    id: it.id,
+                    title: it.title,
+                    cat: it.cat,
+                    desc: it.desc,
+                    def: it.def
+                });
+            }
+            Lampa.Storage.set(STORAGE_DISCOVERED_KEY, list);
+        } catch(e) {}
+    }
+
+    function loadDiscoveredFromStorage() {
+        try {
+            if (typeof Lampa === 'undefined' || !Lampa.Storage) return;
+            var saved = Lampa.Storage.get(STORAGE_DISCOVERED_KEY, []);
+            if (Array.isArray(saved)) {
+                saved.forEach(function(item) {
+                    if (item && item.id && !window.SURS_EXTERNAL_SHELVES[item.id]) {
+                        window.SURS_EXTERNAL_SHELVES[item.id] = item;
+                    }
+                });
+            }
+        } catch(e) {}
+    }
+
+    // Экспорт в глобальное пространство для других плагинов
+    window.surs_register_shelf = registerDiscoveredShelf;
+
+    // Перехват Lampa.ContentRows.add для автоматического обнаружения любых плагинов
+    function patchContentRows() {
+        try {
+            if (typeof Lampa !== 'undefined' && Lampa.ContentRows && Lampa.ContentRows.add) {
+                if (!Lampa.ContentRows.__surs_patched) {
+                    var origAdd = Lampa.ContentRows.add;
+                    Lampa.ContentRows.add = function(rowDef) {
+                        try {
+                            if (rowDef && typeof rowDef === 'object' && rowDef.call) {
+                                var rowId = 'ext_' + (rowDef.name || ('row_' + Math.random().toString(36).substr(2, 6)));
+                                registerDiscoveredShelf({
+                                    id: rowId,
+                                    title: rowDef.title || rowDef.name || 'Сторонняя полка',
+                                    cat: 'plugin',
+                                    desc: 'Lampa ContentRow (' + (rowDef.name || 'плагин') + ')',
+                                    call: rowDef.call,
+                                    screen: rowDef.screen,
+                                    raw: rowDef
+                                });
+                            }
+                        } catch(e) {
+                            console.error('[SURS Hub] Ошибка перехвата ContentRows.add:', e);
+                        }
+                        return origAdd.apply(this, arguments);
+                    };
+                    Lampa.ContentRows.__surs_patched = true;
+                }
+            }
+        } catch(e) {}
+    }
+    patchContentRows();
+
+    // ==========================================
     // 1. СТИЛИ ИНТЕРФЕЙСА
     // ==========================================
     function addPluginStyles() {
@@ -211,8 +300,16 @@
                     .surs-sm-subtitle {
                         font-size: 0.8em !important;
                     }
+                    .surs-sm-tabs {
+                        gap: 0.35em !important;
+                        margin-bottom: 0.6em !important;
+                    }
+                    .surs-sm-tab {
+                        padding: 0.35em 0.65em !important;
+                        font-size: 0.78em !important;
+                    }
                     .surs-sm-list {
-                        max-height: 52vh !important;
+                        max-height: 50vh !important;
                     }
                     .surs-sm-item {
                         padding: 0.5em 0.7em !important;
@@ -226,6 +323,13 @@
                     .surs-sm-name {
                         font-size: 0.9em !important;
                     }
+                    .surs-sm-desc {
+                        font-size: 0.72em !important;
+                    }
+                    .surs-sm-badge {
+                        font-size: 0.65em !important;
+                        padding: 0.1em 0.4em !important;
+                    }
                     .surs-sm-navbtn {
                         padding: 0.35em 0.6em !important;
                         font-size: 1em !important;
@@ -233,6 +337,13 @@
                     .surs-sm-footer {
                         flex-direction: column !important;
                         gap: 0.6em !important;
+                    }
+                    .surs-sm-footer-left,
+                    .surs-sm-footer-right {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        gap: 0.5em !important;
+                        width: 100% !important;
                     }
                     .surs-sm-btn {
                         width: 100% !important;
@@ -257,7 +368,7 @@
                         height: 5em !important;
                     }
                     .surs-sm-wrap {
-                        max-width: 90% !important;
+                        max-width: 92% !important;
                         padding: 1.2em !important;
                     }
                 }
@@ -265,11 +376,11 @@
                 /* Модальное окно настройки полок */
                 .surs-sm-wrap {
                     padding: 1.2em 1.5em;
-                    max-width: 850px;
+                    max-width: 900px;
                     margin: 0 auto;
                 }
                 .surs-sm-header {
-                    margin-bottom: 1.2em;
+                    margin-bottom: 1em;
                     border-bottom: 1px solid rgba(255,255,255,0.1);
                     padding-bottom: 0.8em;
                 }
@@ -280,12 +391,48 @@
                     margin-bottom: 0.2em;
                 }
                 .surs-sm-subtitle {
-                    font-size: 0.95em;
+                    font-size: 0.9em;
                     color: rgba(255,255,255,0.65);
                     line-height: 1.4;
+                    margin-bottom: 0.8em;
+                }
+                /* Вкладки категорий */
+                .surs-sm-tabs {
+                    display: flex;
+                    gap: 0.5em;
+                    overflow-x: auto;
+                    padding-bottom: 0.4em;
+                    margin-bottom: 0.6em;
+                    scrollbar-width: none;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .surs-sm-tabs::-webkit-scrollbar {
+                    display: none;
+                }
+                .surs-sm-tab {
+                    padding: 0.4em 0.85em;
+                    border-radius: 6px;
+                    background: rgba(255, 255, 255, 0.08);
+                    color: rgba(255, 255, 255, 0.7);
+                    font-size: 0.85em;
+                    font-weight: 600;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: all 0.2s;
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                }
+                .surs-sm-tab.active {
+                    background: #2980b9;
+                    color: #fff;
+                    border-color: rgba(255, 255, 255, 0.25);
+                }
+                .surs-sm-tab.focus {
+                    transform: scale(1.05);
+                    box-shadow: 0 0 10px rgba(41, 128, 185, 0.8);
+                    border-color: #3498db;
                 }
                 .surs-sm-list {
-                    max-height: 55vh;
+                    max-height: 52vh;
                     overflow-y: auto;
                     padding-right: 0.5em;
                     margin-bottom: 1.2em;
@@ -328,11 +475,59 @@
                     box-shadow: 0 0 10px #27ae60;
                     transform: scale(1.05);
                 }
-                .surs-sm-name {
+                .surs-sm-info {
                     flex: 1;
-                    font-size: 1.1em;
+                    min-width: 0;
+                    margin-right: 0.8em;
+                }
+                .surs-sm-title-line {
+                    display: flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 0.4em;
+                }
+                .surs-sm-badge {
+                    display: inline-block;
+                    padding: 0.15em 0.5em;
+                    border-radius: 4px;
+                    font-size: 0.7em;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    vertical-align: middle;
+                }
+                .surs-sm-badge--surs {
+                    background: rgba(41, 128, 185, 0.25);
+                    color: #54a0ff;
+                    border: 1px solid rgba(84, 160, 255, 0.4);
+                }
+                .surs-sm-badge--core {
+                    background: rgba(230, 126, 34, 0.25);
+                    color: #f39c12;
+                    border: 1px solid rgba(243, 156, 18, 0.4);
+                }
+                .surs-sm-badge--plugin {
+                    background: rgba(39, 174, 96, 0.25);
+                    color: #2ecc71;
+                    border: 1px solid rgba(46, 204, 113, 0.4);
+                }
+                .surs-sm-badge--trakt {
+                    background: rgba(231, 76, 60, 0.25);
+                    color: #ff6b6b;
+                    border: 1px solid rgba(255, 107, 107, 0.4);
+                }
+                .surs-sm-name {
+                    font-size: 1.05em;
                     font-weight: 500;
                     color: #fff;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .surs-sm-desc {
+                    font-size: 0.78em;
+                    color: rgba(255, 255, 255, 0.5);
+                    margin-top: 0.15em;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -356,6 +551,15 @@
                     box-shadow: 0 0 10px #2980b9;
                     transform: scale(1.08);
                 }
+                .surs-sm-navbtn--remove {
+                    background: rgba(231, 76, 60, 0.15);
+                    color: #ff6b6b;
+                }
+                .surs-sm-navbtn--remove.focus {
+                    background: #e74c3c;
+                    color: #fff;
+                    box-shadow: 0 0 10px #e74c3c;
+                }
                 .surs-sm-footer {
                     display: flex;
                     gap: 1em;
@@ -363,13 +567,25 @@
                     border-top: 1px solid rgba(255,255,255,0.1);
                     padding-top: 1em;
                 }
+                .surs-sm-footer-left {
+                    display: flex;
+                    gap: 0.8em;
+                }
+                .surs-sm-footer-right {
+                    display: flex;
+                    gap: 0.8em;
+                }
                 .surs-sm-btn {
-                    padding: 0.7em 1.4em;
+                    padding: 0.7em 1.3em;
                     border-radius: 8px;
-                    font-size: 1.05em;
+                    font-size: 1em;
                     font-weight: 600;
                     cursor: pointer;
                     transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.4em;
                 }
                 .surs-sm-btn.focus {
                     transform: scale(1.05);
@@ -382,6 +598,15 @@
                 .surs-sm-btn--secondary {
                     background: #2980b9;
                     color: #fff;
+                }
+                .surs-sm-btn--rescan {
+                    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+                    color: #fff;
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                }
+                .surs-sm-btn--rescan.focus {
+                    transform: scale(1.05);
+                    box-shadow: 0 0 15px rgba(155, 89, 182, 0.8);
                 }
                 .surs-sm-btn--ghost {
                     background: rgba(255,255,255,0.12);
@@ -673,48 +898,208 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     }
 
     // ==========================================
-    // 3. ПОЛНЫЙ РЕЕСТР ПОЛОК (36 ПОЛОК)
+    // 3. ПОЛНЫЙ ДИНАМИЧЕСКИЙ РЕЕСТР ПОЛОК
     // ==========================================
     var STORAGE_SHELVES_KEY = 'surs_fixed_shelves_v2';
 
-    var ALL_REGISTERED_SHELVES = [
-        { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'nav', def: true },
-        { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'icons', def: true },
-        { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'icons', def: true },
-        { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'icons', def: true },
-        { id: 'trend_movies', title: 'В тренде: Фильмы недели', cat: 'feed', def: true },
-        { id: 'trend_tv', title: 'В тренде: Сериалы недели', cat: 'feed', def: true },
-        { id: 'upcoming_episodes', title: 'Расписание новых серий (Выходят скоро)', cat: 'feed', def: true },
-        { id: 'new_movies', title: 'Новинки мирового кино', cat: 'feed', def: true },
-        { id: 'new_tv', title: 'Новинки зарубежных сериалов', cat: 'feed', def: true },
-        { id: 'rus_movies', title: 'Российские фильмы (Новинки)', cat: 'feed', def: true },
-        { id: 'rus_tv', title: 'Российские сериалы (Новинки)', cat: 'feed', def: true },
-        { id: 'stream_kinopoisk', title: 'Кинопоиск (Популярное)', cat: 'streaming', def: true },
-        { id: 'stream_premier', title: 'Premier (Популярное)', cat: 'streaming', def: true },
-        { id: 'stream_start', title: 'Start (Популярное)', cat: 'streaming', def: false },
-        { id: 'stream_ivi', title: 'Иви (Популярное)', cat: 'streaming', def: false },
-        { id: 'stream_okko', title: 'Okko (Популярное)', cat: 'streaming', def: false },
-        { id: 'stream_kion', title: 'KION (Популярное)', cat: 'streaming', def: false },
-        { id: 'stream_wink', title: 'Wink (Популярное)', cat: 'streaming', def: false },
-        { id: 'stream_netflix', title: 'Netflix (Популярное)', cat: 'streaming', def: true },
-        { id: 'stream_apple', title: 'Apple TV+ (Популярное)', cat: 'streaming', def: true },
-        { id: 'stream_disney', title: 'Disney+ (Популярное)', cat: 'streaming', def: false },
-        { id: 'stream_hbo', title: 'Max / HBO (Популярное)', cat: 'streaming', def: false },
-        { id: 'stream_amazon', title: 'Amazon Prime (Популярное)', cat: 'streaming', def: false },
-        { id: 'turkish_tv', title: 'Турецкие сериалы', cat: 'regional', def: true },
-        { id: 'korean_tv', title: 'Корейские дорамы', cat: 'regional', def: true },
-        { id: 'anime', title: 'Популярное Аниме', cat: 'regional', def: false },
-        { id: 'genre_comedy', title: 'Комедии (Популярные)', cat: 'genre', def: true },
-        { id: 'genre_action', title: 'Боевики (Популярные)', cat: 'genre', def: true },
-        { id: 'genre_scifi', title: 'Фантастика (Популярное)', cat: 'genre', def: true },
-        { id: 'genre_thriller', title: 'Триллеры и детективы', cat: 'genre', def: false },
-        { id: 'genre_horror', title: 'Фильмы ужасов', cat: 'genre', def: false },
-        { id: 'genre_drama', title: 'Драмы', cat: 'genre', def: false },
-        { id: 'genre_family', title: 'Семейное кино и мультфильмы', cat: 'genre', def: false },
-        { id: 'period_90s', title: 'Классика 90-х годов', cat: 'period', def: false },
-        { id: 'period_00s', title: 'Лучшие фильмы 2000-х', cat: 'period', def: true },
-        { id: 'period_10s', title: 'Хиты 2010-х годов', cat: 'period', def: false }
+    var SURS_BASE_SHELVES = [
+        { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
+        { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
+        { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
+        { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
+        { id: 'trend_movies', title: 'В тренде: Фильмы недели', cat: 'surs', def: true, desc: 'Популярное кино по версии TMDB' },
+        { id: 'trend_tv', title: 'В тренде: Сериалы недели', cat: 'surs', def: true, desc: 'Популярные сериалы по версии TMDB' },
+        { id: 'upcoming_episodes', title: 'Расписание новых серий (Выходят скоро)', cat: 'surs', def: true, desc: 'График релизов TimeTable' },
+        { id: 'new_movies', title: 'Новинки мирового кино', cat: 'surs', def: true, desc: 'Свежие мировые премьеры' },
+        { id: 'new_tv', title: 'Новинки зарубежных сериалов', cat: 'surs', def: true, desc: 'Свежие зарубежные сериалы' },
+        { id: 'rus_movies', title: 'Российские фильмы (Новинки)', cat: 'surs', def: true, desc: 'Свежее российское кино' },
+        { id: 'rus_tv', title: 'Российские сериалы (Новинки)', cat: 'surs', def: true, desc: 'Свежие российские сериалы' },
+        { id: 'stream_kinopoisk', title: 'Кинопоиск (Популярное)', cat: 'streaming', def: true, desc: 'Релизы Кинопоиска' },
+        { id: 'stream_premier', title: 'Premier (Популярное)', cat: 'streaming', def: true, desc: 'Релизы Premier' },
+        { id: 'stream_start', title: 'Start (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Start' },
+        { id: 'stream_ivi', title: 'Иви (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Иви' },
+        { id: 'stream_okko', title: 'Okko (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Okko' },
+        { id: 'stream_kion', title: 'KION (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Kion' },
+        { id: 'stream_wink', title: 'Wink (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Wink' },
+        { id: 'stream_netflix', title: 'Netflix (Популярное)', cat: 'streaming', def: true, desc: 'Релизы Netflix' },
+        { id: 'stream_apple', title: 'Apple TV+ (Популярное)', cat: 'streaming', def: true, desc: 'Релизы Apple TV+' },
+        { id: 'stream_disney', title: 'Disney+ (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Disney+' },
+        { id: 'stream_hbo', title: 'Max / HBO (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Max (HBO)' },
+        { id: 'stream_amazon', title: 'Amazon Prime (Популярное)', cat: 'streaming', def: false, desc: 'Релизы Amazon' },
+        { id: 'turkish_tv', title: 'Турецкие сериалы', cat: 'regional', def: true, desc: 'Популярные сериалы Турции' },
+        { id: 'korean_tv', title: 'Корейские дорамы', cat: 'regional', def: true, desc: 'Популярные дорамы Кореи' },
+        { id: 'anime', title: 'Популярное Аниме', cat: 'regional', def: false, desc: 'Топ японской анимации' },
+        { id: 'genre_comedy', title: 'Комедии (Популярные)', cat: 'genre', def: true, desc: 'Лучшие комедии' },
+        { id: 'genre_action', title: 'Боевики (Популярные)', cat: 'genre', def: true, desc: 'Экшн и приключения' },
+        { id: 'genre_scifi', title: 'Фантастика (Популярное)', cat: 'genre', def: true, desc: 'Научная фантастика и космос' },
+        { id: 'genre_thriller', title: 'Триллеры и детективы', cat: 'genre', def: false, desc: 'Саспенс и расследования' },
+        { id: 'genre_horror', title: 'Фильмы ужасов', cat: 'genre', def: false, desc: 'Хорроры и мистика' },
+        { id: 'genre_drama', title: 'Драмы', cat: 'genre', def: false, desc: 'Глубокие драматические сюжеты' },
+        { id: 'genre_family', title: 'Семейное кино и мультфильмы', cat: 'genre', def: false, desc: 'Для просмотра всей семьей' },
+        { id: 'period_90s', title: 'Классика 90-х годов', cat: 'period', def: false, desc: 'Золотая эпоха кино 90-х' },
+        { id: 'period_00s', title: 'Лучшие фильмы 2000-х', cat: 'period', def: true, desc: 'Культовые хиты 2000-2009' },
+        { id: 'period_10s', title: 'Хиты 2010-х годов', cat: 'period', def: false, desc: 'Популярное кино 2010-2019' }
     ];
+
+    var LAMPA_CORE_SHELVES = [
+        { id: 'core_continue', title: 'Продолжить просмотр (Все)', cat: 'core', def: true, desc: 'Lampa Timeline / Недосмотренное' },
+        { id: 'core_continue_tv', title: 'Продолжить просмотр: Сериалы', cat: 'core', def: false, desc: 'Lampa Недосмотренные сериалы' },
+        { id: 'core_continue_movie', title: 'Продолжить просмотр: Фильмы', cat: 'core', def: false, desc: 'Lampa Недосмотренные фильмы' },
+        { id: 'core_bookmarks', title: 'Мои закладки', cat: 'core', def: false, desc: 'Lampa Избранное' },
+        { id: 'core_history', title: 'История просмотров', cat: 'core', def: false, desc: 'Lampa История' },
+        { id: 'core_timetable', title: 'Расписание новых серий (Lampa)', cat: 'core', def: false, desc: 'Lampa TimeTable' },
+        { id: 'core_now_playing', title: 'TMDB: Сейчас в кинотеатрах', cat: 'core', def: false, desc: 'Свежий кинопрокат' },
+        { id: 'core_top_rated_movies', title: 'TMDB: Топ рейтинга (Фильмы)', cat: 'core', def: false, desc: 'Высокие зрительские оценки' },
+        { id: 'core_top_rated_tv', title: 'TMDB: Топ рейтинга (Сериалы)', cat: 'core', def: false, desc: 'Культовые сериалы с топ-оценками' },
+        { id: 'core_cartoons', title: 'Семейные мультфильмы (Топ)', cat: 'core', def: false, desc: 'Анимация и семейные ленты' }
+    ];
+
+    function getAllAvailableShelves() {
+        loadDiscoveredFromStorage();
+        var map = {};
+        var list = [];
+
+        function add(item) {
+            if (!item || !item.id) return;
+            if (!map[item.id]) {
+                map[item.id] = true;
+                list.push(item);
+            }
+        }
+
+        SURS_BASE_SHELVES.forEach(add);
+        LAMPA_CORE_SHELVES.forEach(add);
+
+        for (var k in window.SURS_EXTERNAL_SHELVES) {
+            add(window.SURS_EXTERNAL_SHELVES[k]);
+        }
+
+        return list;
+    }
+
+    function getShelfCategory(id) {
+        var all = getAllAvailableShelves();
+        for (var i = 0; i < all.length; i++) {
+            if (all[i].id === id) return all[i].cat || 'surs';
+        }
+        if (id.indexOf('core_') === 0) return 'core';
+        if (id.indexOf('trakt_') === 0) return 'trakt';
+        if (id.indexOf('ext_') === 0) return 'plugin';
+        return 'surs';
+    }
+
+    function getShelfDesc(id) {
+        var all = getAllAvailableShelves();
+        for (var i = 0; i < all.length; i++) {
+            if (all[i].id === id) return all[i].desc || '';
+        }
+        return '';
+    }
+
+    function getBadgeHtml(cat) {
+        if (cat === 'core') return '<span class="surs-sm-badge surs-sm-badge--core">Lampa</span>';
+        if (cat === 'plugin') return '<span class="surs-sm-badge surs-sm-badge--plugin">Плагин</span>';
+        if (cat === 'trakt') return '<span class="surs-sm-badge surs-sm-badge--trakt">Trakt</span>';
+        if (cat === 'streaming') return '<span class="surs-sm-badge surs-sm-badge--surs">Стриминг</span>';
+        if (cat === 'genre') return '<span class="surs-sm-badge surs-sm-badge--surs">Жанр</span>';
+        if (cat === 'regional') return '<span class="surs-sm-badge surs-sm-badge--surs">Регион</span>';
+        if (cat === 'period') return '<span class="surs-sm-badge surs-sm-badge--surs">Эпоха</span>';
+        return '<span class="surs-sm-badge surs-sm-badge--surs">SURS</span>';
+    }
+
+    function getBadgePrefix(cat) {
+        if (cat === 'core') return '[Lampa]';
+        if (cat === 'plugin') return '[Плагин]';
+        if (cat === 'trakt') return '[Trakt]';
+        if (cat === 'streaming') return '[Стриминг]';
+        if (cat === 'genre') return '[Жанр]';
+        return '[SURS]';
+    }
+
+    function runAutoDiscovery(notifyUser) {
+        loadDiscoveredFromStorage();
+        var beforeCount = Object.keys(window.SURS_EXTERNAL_SHELVES).length;
+
+        // 1. Проверяем ContentRows - если кто-то зарегистрировал строки в Lampa
+        try {
+            if (typeof Lampa !== 'undefined' && Lampa.ContentRows) {
+                var testItems = [];
+                if (typeof Lampa.ContentRows.call === 'function') {
+                    Lampa.ContentRows.call('main', {}, testItems);
+                    if (testItems && testItems.length) {
+                        testItems.forEach(function(rowFunc, idx) {
+                            if (typeof rowFunc === 'function') {
+                                registerDiscoveredShelf({
+                                    id: 'ext_lampa_row_' + idx,
+                                    title: 'Lampa Row #' + (idx + 1),
+                                    cat: 'plugin',
+                                    desc: 'Строка из Lampa.ContentRows',
+                                    loader: function(callback) {
+                                        rowFunc(function(data) {
+                                            callback(data || { results: [] });
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+        } catch(e) {
+            console.error('[SURS Hub] Error scanning ContentRows:', e);
+        }
+
+        // 2. Проверяем Trakt
+        try {
+            var traktToken = (typeof Lampa !== 'undefined' && Lampa.Storage) ? 
+                (Lampa.Storage.get('trakt_token') || Lampa.Storage.get('trakt')) : null;
+            var hasTraktObj = typeof Lampa !== 'undefined' && typeof Lampa.Trakt !== 'undefined';
+            if (traktToken || hasTraktObj) {
+                registerDiscoveredShelf({
+                    id: 'trakt_continue',
+                    title: 'Trakt: Продолжить просмотр',
+                    cat: 'trakt',
+                    desc: 'Синхронизация Trakt.tv'
+                });
+                registerDiscoveredShelf({
+                    id: 'trakt_watchlist',
+                    title: 'Trakt: Список к просмотру',
+                    cat: 'trakt',
+                    desc: 'Ваш Watchlist из Trakt'
+                });
+                registerDiscoveredShelf({
+                    id: 'trakt_recommendations',
+                    title: 'Trakt: Персональные рекомендации',
+                    cat: 'trakt',
+                    desc: 'Рекомендации профиля Trakt'
+                });
+                registerDiscoveredShelf({
+                    id: 'trakt_trending',
+                    title: 'Trakt: В тренде сообщества',
+                    cat: 'trakt',
+                    desc: 'Тренды кино и сериалов Trakt'
+                });
+            }
+        } catch(e) {}
+
+        saveDiscoveredToStorage();
+
+        var all = getAllAvailableShelves();
+        var afterCount = Object.keys(window.SURS_EXTERNAL_SHELVES).length;
+        var diff = afterCount - beforeCount;
+
+        if (notifyUser && typeof Lampa !== 'undefined' && Lampa.Noty) {
+            var msg = 'Ресерч завершён: доступно ' + all.length + ' полок';
+            if (diff > 0) msg += ' (найдено новых: ' + diff + ')';
+            Lampa.Noty.show(msg);
+        }
+
+        return {
+            total: all.length,
+            discovered: afterCount,
+            newCount: diff
+        };
+    }
 
     function getSavedShelves() {
         var saved = null;
@@ -723,19 +1108,36 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         } catch(e) {}
 
         if (Array.isArray(saved) && saved.length > 0) {
-            // Дополняем новыми полками, если они появились в коде
-            ALL_REGISTERED_SHELVES.forEach(function(base) {
-                if (!saved.some(function(s){ return s.id === base.id; })) {
-                    saved.push({ id: base.id, title: base.title, enabled: false });
-                }
-            });
             return saved;
         }
 
-        // По умолчанию
-        return ALL_REGISTERED_SHELVES.map(function(s) {
-            return { id: s.id, title: s.title, enabled: s.def };
-        });
+        // По умолчанию: формируем список из рекомендуемых полок SURS и Lampa Core
+        var defaultList = [
+            { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
+            { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
+            { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'trend_movies', title: 'В тренде: Фильмы недели', enabled: true, cat: 'surs' },
+            { id: 'trend_tv', title: 'В тренде: Сериалы недели', enabled: true, cat: 'surs' },
+            { id: 'upcoming_episodes', title: 'Расписание новых серий (Выходят скоро)', enabled: true, cat: 'surs' },
+            { id: 'new_movies', title: 'Новинки мирового кино', enabled: true, cat: 'surs' },
+            { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: true, cat: 'surs' },
+            { id: 'rus_movies', title: 'Российские фильмы (Новинки)', enabled: true, cat: 'surs' },
+            { id: 'rus_tv', title: 'Российские сериалы (Новинки)', enabled: true, cat: 'surs' },
+            { id: 'stream_kinopoisk', title: 'Кинопоиск (Популярное)', enabled: true, cat: 'streaming' },
+            { id: 'stream_premier', title: 'Premier (Популярное)', enabled: true, cat: 'streaming' },
+            { id: 'stream_netflix', title: 'Netflix (Популярное)', enabled: true, cat: 'streaming' },
+            { id: 'stream_apple', title: 'Apple TV+ (Популярное)', enabled: true, cat: 'streaming' },
+            { id: 'turkish_tv', title: 'Турецкие сериалы', enabled: true, cat: 'regional' },
+            { id: 'korean_tv', title: 'Корейские дорамы', enabled: true, cat: 'regional' },
+            { id: 'genre_comedy', title: 'Комедии (Популярные)', enabled: true, cat: 'genre' },
+            { id: 'genre_action', title: 'Боевики (Популярные)', enabled: true, cat: 'genre' },
+            { id: 'genre_scifi', title: 'Фантастика (Популярное)', enabled: true, cat: 'genre' },
+            { id: 'period_00s', title: 'Лучшие фильмы 2000-х', enabled: true, cat: 'period' }
+        ];
+
+        return defaultList;
     }
 
     function saveShelves(list) {
@@ -1167,20 +1569,213 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             };
         }
 
+        // ==========================================
+        // ПОЛКИ LAMPA CORE (ПРОДОЛЖИТЬ ПРОСМОТР, ЗАКЛАДКИ, TMDB)
+        // ==========================================
+        if (shelfId === 'core_continue' || shelfId === 'core_continue_tv' || shelfId === 'core_continue_movie') {
+            return function(callback) {
+                try {
+                    var tv = (shelfId === 'core_continue_movie') ? [] : (Lampa.Favorite && typeof Lampa.Favorite.continues === 'function' ? Lampa.Favorite.continues('tv') : []);
+                    var movie = (shelfId === 'core_continue_tv') ? [] : (Lampa.Favorite && typeof Lampa.Favorite.continues === 'function' ? Lampa.Favorite.continues('movie') : []);
+                    var items = [].concat(tv || [], movie || []);
+
+                    if (!items.length) {
+                        return callback({ results: [] });
+                    }
+
+                    items.forEach(function(item) {
+                        if (!item.params) {
+                            item.params = {
+                                createInstance: function(data) {
+                                    return Lampa.Maker.make('Card', data, function(mod) {
+                                        return mod.only('Card', 'Callback');
+                                    });
+                                },
+                                emit: {
+                                    onlyEnter: function() {
+                                        Lampa.Router.call('full', item);
+                                    },
+                                    onlyFocus: function() {
+                                        if (Lampa.Background && Lampa.Utils && Lampa.Utils.cardImgBackgroundBlur) {
+                                            Lampa.Background.change(Lampa.Utils.cardImgBackgroundBlur(item));
+                                        }
+                                    }
+                                }
+                            };
+                        }
+                    });
+
+                    var title = 'Продолжить просмотр';
+                    if (shelfId === 'core_continue_tv') title = 'Продолжить просмотр: Сериалы';
+                    if (shelfId === 'core_continue_movie') title = 'Продолжить просмотр: Фильмы';
+
+                    callback({
+                        results: items,
+                        title: title,
+                        params: { items: { view: 20, mapping: 'line' } }
+                    });
+                } catch(e) {
+                    console.error('[SURS Hub] Ошибка загрузки Продолжить просмотр:', e);
+                    callback({ results: [] });
+                }
+            };
+        }
+
+        if (shelfId === 'core_bookmarks') {
+            return function(callback) {
+                try {
+                    var items = (Lampa.Favorite && Lampa.Favorite.get) ? Lampa.Favorite.get({ type: 'book' }) : [];
+                    callback({
+                        results: items || [],
+                        title: 'Мои закладки',
+                        params: { items: { view: 20, mapping: 'line' } }
+                    });
+                } catch(e) { callback({ results: [] }); }
+            };
+        }
+
+        if (shelfId === 'core_history') {
+            return function(callback) {
+                try {
+                    var items = (Lampa.Favorite && Lampa.Favorite.get) ? Lampa.Favorite.get({ type: 'history' }) : [];
+                    callback({
+                        results: items || [],
+                        title: 'История просмотров',
+                        params: { items: { view: 20, mapping: 'line' } }
+                    });
+                } catch(e) { callback({ results: [] }); }
+            };
+        }
+
+        if (shelfId === 'core_timetable') {
+            return function(callback) {
+                try {
+                    var lately = Lampa.TimeTable ? Lampa.TimeTable.lately().slice(0, 20) : [];
+                    lately.forEach(function(item) {
+                        item.params = {
+                            createInstance: function(item_data) {
+                                return Lampa.Maker.make('Episode', item_data, function(mod) { return mod.only('Card', 'Callback'); });
+                            },
+                            emit: {
+                                onlyEnter: function() { Lampa.Router.call('full', item.card); },
+                                onlyFocus: function() { Lampa.Background.change(Lampa.Utils.cardImgBackgroundBlur(item.card)); }
+                            }
+                        };
+                        Lampa.Arrays.extend(item, item.episode);
+                    });
+                    callback({
+                        results: lately,
+                        title: 'Расписание новых серий (Lampa)',
+                        params: { items: { view: 20, mapping: 'line' } }
+                    });
+                } catch(e) { callback({ results: [] }); }
+            };
+        }
+
+        if (shelfId === 'core_now_playing') {
+            return function(callback) {
+                owner.get('movie/now_playing', params, function(json) {
+                    callback(prepareResults(json, 'Сейчас в кинотеатрах'));
+                }, function() { callback({ results: [] }); });
+            };
+        }
+
+        if (shelfId === 'core_top_rated_movies') {
+            return function(callback) {
+                owner.get('movie/top_rated', params, function(json) {
+                    callback(prepareResults(json, 'Фильмы с высоким рейтингом'));
+                }, function() { callback({ results: [] }); });
+            };
+        }
+
+        if (shelfId === 'core_top_rated_tv') {
+            return function(callback) {
+                owner.get('tv/top_rated', params, function(json) {
+                    callback(prepareResults(json, 'Сериалы с высоким рейтингом'));
+                }, function() { callback({ results: [] }); });
+            };
+        }
+
+        if (shelfId === 'core_cartoons') {
+            return function(callback) {
+                var url = 'discover/movie?with_genres=16,10751&sort_by=popularity.desc&vote_count.gte=30';
+                owner.get(url, params, function(json) {
+                    callback(prepareResults(json, 'Семейные мультфильмы'));
+                }, function() { callback({ results: [] }); });
+            };
+        }
+
+        // ==========================================
+        // ВНЕШНИЕ СТОРОННИЕ ПОЛКИ И ПЛАГИНЫ (ПЕСОЧНИЦА С ТАЙМАУТОМ)
+        // ==========================================
+        var extShelf = window.SURS_EXTERNAL_SHELVES ? window.SURS_EXTERNAL_SHELVES[shelfId] : null;
+        if (extShelf) {
+            return function(callback) {
+                var called = false;
+                var timer = setTimeout(function() {
+                    if (!called) {
+                        called = true;
+                        console.warn('[SURS Hub] Таймаут внешней полки (4с):', shelfId);
+                        callback({ results: [] });
+                    }
+                }, 4000);
+
+                try {
+                    var handler = extShelf.loader;
+                    if (!handler && extShelf.call) {
+                        handler = function(cb) {
+                            var res = extShelf.call(params || {}, 'main');
+                            if (typeof res === 'function') {
+                                res(cb);
+                            } else if (res && typeof res === 'object') {
+                                cb(res);
+                            } else {
+                                cb({ results: [] });
+                            }
+                        };
+                    }
+
+                    if (typeof handler === 'function') {
+                        handler(function(data) {
+                            if (!called) {
+                                called = true;
+                                clearTimeout(timer);
+                                callback(prepareResults(data, extShelf.title));
+                            }
+                        }, params, owner);
+                    } else {
+                        clearTimeout(timer);
+                        callback({ results: [] });
+                    }
+                } catch(err) {
+                    clearTimeout(timer);
+                    if (!called) {
+                        called = true;
+                        console.error('[SURS Hub] Ошибка загрузчика внешней полки:', shelfId, err);
+                        callback({ results: [] });
+                    }
+                }
+            };
+        }
+
         return null;
     }
 
     // ==========================================
-    // 5. МОДАЛЬНЫЙ РЕДАКТОР ПОЛОК (НАСТРОЙКА ТВ)
+    // 5. МОДАЛЬНЫЙ ДИСПЕТЧЕР ПОЛОК (НАСТРОЙКА ТВ И ВСЕХ УСТРОЙСТВ)
     // ==========================================
     var isModalOpen = false;
 
     function openShelfManagerModal() {
-        if (isModalOpen) return;
+        if (isModalOpen) {
+            try { Lampa.Modal.close(); } catch(e){}
+            isModalOpen = false;
+        }
         isModalOpen = true;
 
         var prevController = (Lampa.Controller && Lampa.Controller.enabled) ? Lampa.Controller.enabled().name : 'content';
         var shelves = getSavedShelves().slice();
+        var activeCategory = 'all';
 
         function closeModalSafely(needRefresh) {
             isModalOpen = false;
@@ -1188,7 +1783,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             setTimeout(function() {
                 if (needRefresh) {
-                    Lampa.Noty.show('Порядок полок обновлён!');
+                    Lampa.Noty.show('Порядок полок сохранён и применён!');
                     if (Lampa.Activity.replace) {
                         Lampa.Activity.replace({
                             title: 'Главная',
@@ -1218,39 +1813,91 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             var header = $(`
                 <div class="surs-sm-header">
-                    <div class="surs-sm-title">Настройка Главного экрана</div>
+                    <div class="surs-sm-title">Управление полками Главного экрана</div>
                     <div class="surs-sm-subtitle">
-                        Используйте пульт: <b>[▲]</b> / <b>[▼]</b> — переместить полку, <b>[✓ Вкл]</b> — скрыть/показать. Нажмите <b>«Применить»</b> для сохранения.
+                        Используйте пульт: <b>[▲]</b> / <b>[▼]</b> — переместить, <b>[✓ Вкл]</b> — скрыть/показать, <b>[✕]</b> — убрать. Нажмите <b>[🔄 Ресерч полок]</b> для поиска новых сервисов.
                     </div>
                 </div>
             `);
             modalHtml.append(header);
 
+            // Панель вкладок категорий
+            var catTabs = [
+                { id: 'all', title: 'Все' },
+                { id: 'surs', title: 'SURS' },
+                { id: 'core', title: 'Lampa Core' },
+                { id: 'plugin', title: 'Плагины' },
+                { id: 'streaming', title: 'Стриминги' },
+                { id: 'genre', title: 'Жанры' }
+            ];
+
+            var tabsWrap = $('<div class="surs-sm-tabs"></div>');
+            catTabs.forEach(function(t) {
+                var tabBtn = $('<div class="surs-sm-tab selector ' + (activeCategory === t.id ? 'active' : '') + '" data-cat="' + t.id + '">' + t.title + '</div>');
+                tabBtn.on('hover:enter click', function(e) {
+                    if (e && e.stopPropagation) e.stopPropagation();
+                    activeCategory = t.id;
+                    refreshListFocus(null, 'tab');
+                });
+                tabsWrap.append(tabBtn);
+            });
+            modalHtml.append(tabsWrap);
+
             var list = $('<div class="surs-sm-list"></div>');
 
-            shelves.forEach(function(item, idx) {
+            var displayEntries = shelves.map(function(item, idx) {
+                return { item: item, originalIndex: idx };
+            }).filter(function(entry) {
+                if (activeCategory === 'all') return true;
+                var cat = getShelfCategory(entry.item.id);
+                if (activeCategory === 'surs') return cat === 'surs' || cat === 'nav' || cat === 'icons' || cat === 'feed';
+                if (activeCategory === 'core') return cat === 'core';
+                if (activeCategory === 'plugin') return cat === 'plugin' || cat === 'trakt';
+                if (activeCategory === 'streaming') return cat === 'streaming';
+                if (activeCategory === 'genre') return cat === 'genre' || cat === 'regional' || cat === 'period';
+                return true;
+            });
+
+            if (!displayEntries.length) {
+                list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Нет активных полок в этой категории. Нажмите <b>«+ Добавить полку»</b> ниже.</div>');
+            }
+
+            displayEntries.forEach(function(entry) {
+                var item = entry.item;
+                var idx = entry.originalIndex;
+                var cat = getShelfCategory(item.id);
+                var desc = getShelfDesc(item.id);
+                var badgeHtml = getBadgeHtml(cat);
+
                 var row = $(`
                     <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${item.id}">
                         <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle">
                             ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                         </div>
-                        <div class="surs-sm-name">${item.title}</div>
+                        <div class="surs-sm-info">
+                            <div class="surs-sm-title-line">
+                                ${badgeHtml}
+                                <span class="surs-sm-name">${item.title}</span>
+                            </div>
+                            ${desc ? '<div class="surs-sm-desc">' + desc + '</div>' : ''}
+                        </div>
                         <div class="surs-sm-actions">
-                            <div class="surs-sm-navbtn surs-sm-navbtn--up selector" data-action="up">▲</div>
-                            <div class="surs-sm-navbtn surs-sm-navbtn--down selector" data-action="down">▼</div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--up selector" data-action="up" title="Переместить выше">▲</div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--down selector" data-action="down" title="Переместить ниже">▼</div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--remove selector" data-action="remove" title="Убрать из активного списка">✕</div>
                         </div>
                     </div>
                 `);
 
-                // Событие переключения видимости
+                // Переключение видимости
                 row.find('[data-action="toggle"]').on('hover:enter click', function(e) {
                     e.stopPropagation();
                     item.enabled = !item.enabled;
                     saveShelves(shelves);
-                    refreshListFocus($(this).closest('.surs-sm-item').data('id'), 'toggle');
+                    refreshListFocus(item.id, 'toggle');
                 });
 
-                // Событие перемещения вверх
+                // Перемещение вверх
                 row.find('[data-action="up"]').on('hover:enter click', function(e) {
                     e.stopPropagation();
                     if (idx > 0) {
@@ -1262,7 +1909,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     }
                 });
 
-                // Событие перемещения вниз
+                // Перемещение вниз
                 row.find('[data-action="down"]').on('hover:enter click', function(e) {
                     e.stopPropagation();
                     if (idx < shelves.length - 1) {
@@ -1274,6 +1921,15 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     }
                 });
 
+                // Удаление из активного списка
+                row.find('[data-action="remove"]').on('hover:enter click', function(e) {
+                    e.stopPropagation();
+                    var removed = shelves.splice(idx, 1)[0];
+                    saveShelves(shelves);
+                    refreshListFocus(null, 'remove');
+                    Lampa.Noty.show('Полка «' + removed.title + '» убрана из списка');
+                });
+
                 list.append(row);
             });
 
@@ -1281,15 +1937,36 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             var footer = $(`
                 <div class="surs-sm-footer">
-                    <div>
+                    <div class="surs-sm-footer-left">
+                        <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Ресерч полок</div>
                         <div class="surs-sm-btn surs-sm-btn--secondary selector" data-action="add">+ Добавить полку</div>
                     </div>
-                    <div style="display:flex;gap:0.8em;">
+                    <div class="surs-sm-footer-right">
                         <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="reset">Сброс</div>
                         <div class="surs-sm-btn surs-sm-btn--primary selector" data-action="apply">Применить и на Главную</div>
                     </div>
                 </div>
             `);
+
+            // Ресерч внешних полок
+            footer.find('[data-action="rescan"]').on('hover:enter click', function(e) {
+                e.stopPropagation();
+                runAutoDiscovery(true);
+                // Автоматически добавляем вновь обнаруженные плагины, если их еще нет в списке
+                var all = getAllAvailableShelves();
+                var newAdded = 0;
+                all.forEach(function(s) {
+                    if (s.cat === 'plugin' && !shelves.some(function(sh) { return sh.id === s.id; })) {
+                        shelves.push({ id: s.id, title: s.title, enabled: true, cat: s.cat, desc: s.desc });
+                        newAdded++;
+                    }
+                });
+                if (newAdded > 0) {
+                    saveShelves(shelves);
+                    Lampa.Noty.show('Добавлено новых плагинных полок: ' + newAdded);
+                }
+                refreshListFocus('rescan_btn', 'rescan');
+            });
 
             // Добавить полку
             footer.find('[data-action="add"]').on('hover:enter click', function(e) {
@@ -1300,12 +1977,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             // Сброс по умолчанию
             footer.find('[data-action="reset"]').on('hover:enter click', function(e) {
                 e.stopPropagation();
-                shelves = ALL_REGISTERED_SHELVES.map(function(s) {
-                    return { id: s.id, title: s.title, enabled: s.def };
-                });
+                Lampa.Storage.remove(STORAGE_SHELVES_KEY);
+                shelves = getSavedShelves();
                 saveShelves(shelves);
                 refreshListFocus(null, null);
-                Lampa.Noty.show('Настройки сброшены по умолчанию');
+                Lampa.Noty.show('Настройки полок сброшены по умолчанию');
             });
 
             // Применить
@@ -1327,7 +2003,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             Lampa.Controller.collectionSet(newContent);
 
             var focusTarget = null;
-            if (targetId) {
+            if (targetId === 'rescan_btn') {
+                focusTarget = newContent.find('[data-action="rescan"]')[0];
+            } else if (targetId) {
                 var row = newContent.find('[data-id="' + targetId + '"]');
                 if (row.length) {
                     if (buttonType === 'up') focusTarget = row.find('.surs-sm-navbtn--up')[0];
@@ -1335,6 +2013,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     else if (buttonType === 'toggle') focusTarget = row.find('.surs-sm-toggle')[0];
                     else focusTarget = row.find('.selector')[0];
                 }
+            } else if (buttonType === 'tab') {
+                focusTarget = newContent.find('.surs-sm-tab.active')[0];
             }
 
             if (!focusTarget) focusTarget = newContent.find('.selector')[0];
@@ -1342,7 +2022,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
 
         function openAddShelfDialog() {
-            var unadded = ALL_REGISTERED_SHELVES.filter(function(b) {
+            var allAvailable = getAllAvailableShelves();
+            var unadded = allAvailable.filter(function(b) {
                 return !shelves.some(function(s){ return s.id === b.id; });
             });
 
@@ -1352,10 +2033,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             }
 
             var items = unadded.map(function(u) {
+                var prefix = getBadgePrefix(u.cat);
                 return {
-                    title: u.title,
+                    title: prefix + ' ' + u.title + (u.desc ? ' — ' + u.desc : ''),
                     action: function() {
-                        shelves.push({ id: u.id, title: u.title, enabled: true });
+                        shelves.push({ id: u.id, title: u.title, enabled: true, cat: u.cat, desc: u.desc });
                         saveShelves(shelves);
                         refreshListFocus(u.id, 'toggle');
                         Lampa.Noty.show('Полка «' + u.title + '» добавлена!');
@@ -1364,7 +2046,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             });
 
             Lampa.Select.show({
-                title: 'Выберите полку для добавления',
+                title: 'Выберите полку для добавления (' + unadded.length + ' доступно)',
                 items: items,
                 onSelect: function(item) { item.action(); },
                 onBack: function() {
@@ -1507,13 +2189,16 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     description: 'Вернуть исходную структуру полок'
                 },
                 onChange: function() {
-                    saveShelves(ALL_REGISTERED_SHELVES.map(function(s) {
-                        return { id: s.id, title: s.title, enabled: s.def };
-                    }));
-                    Lampa.Noty.show('Настройки сброшены!');
+                    Lampa.Storage.remove(STORAGE_SHELVES_KEY);
+                    saveShelves(getSavedShelves());
+                    Lampa.Noty.show('Настройки полок сброшены!');
                 }
             });
         }
+
+        // Запуск обнаружения и перехвата
+        patchContentRows();
+        runAutoDiscovery(false);
 
         // Адаптация бокового Главного меню Lampa (ТВ, телефон, планшет, браузер)
         function setupMainMenuIntegration() {
@@ -1570,6 +2255,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     // Экспорт для быстрого вызова из консоли или других плагинов
     window.openSursShelfManager = openShelfManagerModal;
+    window.LampaShelfManager = {
+        open: openShelfManagerModal,
+        register: registerDiscoveredShelf,
+        rescan: function(notify) { return runAutoDiscovery(notify !== false); },
+        getAllShelves: getAllAvailableShelves,
+        getSavedShelves: getSavedShelves,
+        saveShelves: saveShelves
+    };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
     if (window.appready || (Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active())) {
