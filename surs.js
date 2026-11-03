@@ -557,19 +557,54 @@
                     transition: all 0.2s;
                     user-select: none;
                 }
+                .surs-sm-drag-handle {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 26px;
+                    height: 32px;
+                    margin-right: 0.6em;
+                    color: rgba(255, 255, 255, 0.45);
+                    cursor: grab;
+                    user-select: none;
+                    touch-action: none;
+                    flex-shrink: 0;
+                    transition: color 0.2s, transform 0.2s;
+                }
+                .surs-sm-drag-handle:hover {
+                    color: #3498db;
+                    transform: scale(1.15);
+                }
+                .surs-sm-drag-handle:active {
+                    cursor: grabbing;
+                }
+                .surs-sm-item--dragging {
+                    opacity: 0.35;
+                    background: rgba(41, 128, 185, 0.2) !important;
+                    border: 2px dashed #3498db !important;
+                }
+                .surs-sm-item--drag-over {
+                    border-top: 3px solid #2ecc71 !important;
+                    transform: translateY(-2px);
+                    transition: transform 0.15s ease;
+                }
                 .surs-sm-navbtn.focus {
                     background: #2980b9;
                     box-shadow: 0 0 10px #2980b9;
                     transform: scale(1.08);
                 }
                 .surs-sm-navbtn--top {
-                    background: rgba(41, 128, 185, 0.18);
+                    background: rgba(41, 128, 185, 0.3);
+                    border: 1px solid rgba(52, 152, 219, 0.5);
                     color: #5dade2;
+                    font-weight: 700;
+                    min-width: 2.6em;
                 }
                 .surs-sm-navbtn--top.focus {
                     background: #2980b9;
                     color: #fff;
-                    box-shadow: 0 0 10px #2980b9;
+                    box-shadow: 0 0 12px #3498db;
+                    border-color: #5dade2;
                 }
                 .surs-sm-navbtn--disabled {
                     opacity: 0.35;
@@ -1898,7 +1933,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 <div class="surs-sm-header">
                     <div class="surs-sm-title">Управление полками Главного экрана</div>
                     <div class="surs-sm-subtitle">
-                        Используйте пульт: <b>[⤒]</b> — в самый верх, <b>[▲]</b> / <b>[▼]</b> — выше/ниже, <b>[✓ Вкл]</b> — скрыть/показать, <b>[✕]</b> — убрать. Нажмите <b>[🔄 Ресерч полок]</b> для поиска новых сервисов.
+                        Используйте: <b>[☰]</b> — перетащить мышкой/пальцем, <b>[⤒]</b> — в самый верх, <b>[▲]</b> / <b>[▼]</b> — выше/ниже, <b>[✓ Вкл]</b> — скрыть/показать, <b>[✕]</b> — убрать. Нажмите <b>[🔄 Ресерч полок]</b> для поиска новых сервисов.
                     </div>
                 </div>
             `);
@@ -1957,7 +1992,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var badgeHtml = getBadgeHtml(cat);
 
                 var row = $(`
-                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${item.id}">
+                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${item.id}" draggable="true">
+                        <div class="surs-sm-drag-handle" title="Зажмите и перетащите в любое место (вверх/вниз)">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+                        </div>
                         <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle">
                             ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                         </div>
@@ -1970,7 +2008,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         </div>
                         <div class="surs-sm-actions">
                             <div class="surs-sm-navbtn surs-sm-navbtn--top selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="top" title="В самый верх (на 1-е место)">
-                                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="display:inline-block;pointer-events:none;"><path d="M4 4h16v2.5H4zm8 3.5l7 7h-4.5v6h-5v-6H6z"/></svg>
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block;vertical-align:-1px;margin-right:2px;pointer-events:none;"><path d="M4 4h16v2.5H4zm8 3.5l7 7h-4.5v6h-5v-6H6z"/></svg>⤒
                             </div>
                             <div class="surs-sm-navbtn surs-sm-navbtn--up selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="up" title="Переместить выше">▲</div>
                             <div class="surs-sm-navbtn surs-sm-navbtn--down selector ${idx === shelves.length - 1 ? 'surs-sm-navbtn--disabled' : ''}" data-action="down" title="Переместить ниже">▼</div>
@@ -2030,6 +2068,111 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     saveShelves(shelves);
                     refreshListFocus(null, 'remove');
                     Lampa.Noty.show('Полка «' + removed.title + '» убрана из списка');
+                });
+
+                // Drag & Drop мышкой (HTML5 Drag and Drop)
+                row.on('dragstart', function(e) {
+                    if (e.originalEvent && e.originalEvent.dataTransfer) {
+                        e.originalEvent.dataTransfer.effectAllowed = 'move';
+                        e.originalEvent.dataTransfer.setData('text/plain', item.id);
+                    }
+                    row.addClass('surs-sm-item--dragging');
+                });
+
+                row.on('dragover', function(e) {
+                    e.preventDefault();
+                    if (e.originalEvent && e.originalEvent.dataTransfer) {
+                        e.originalEvent.dataTransfer.dropEffect = 'move';
+                    }
+                    $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
+                    row.addClass('surs-sm-item--drag-over');
+                });
+
+                row.on('dragleave', function(e) {
+                    row.removeClass('surs-sm-item--drag-over');
+                });
+
+                row.on('drop', function(e) {
+                    e.preventDefault();
+                    row.removeClass('surs-sm-item--drag-over');
+                    $('.surs-sm-item--dragging').removeClass('surs-sm-item--dragging');
+
+                    var sourceId = (e.originalEvent && e.originalEvent.dataTransfer) ? e.originalEvent.dataTransfer.getData('text/plain') : null;
+                    if (!sourceId || sourceId === item.id) return;
+
+                    var srcIdx = -1, targetIdx = -1;
+                    for (var sI = 0; sI < shelves.length; sI++) {
+                        if (shelves[sI].id === sourceId) srcIdx = sI;
+                        if (shelves[sI].id === item.id) targetIdx = sI;
+                    }
+
+                    if (srcIdx >= 0 && targetIdx >= 0) {
+                        var moved = shelves.splice(srcIdx, 1)[0];
+                        shelves.splice(targetIdx, 0, moved);
+                        saveShelves(shelves);
+                        refreshListFocus(moved.id, 'toggle');
+                        if (targetIdx === 0) {
+                            Lampa.Noty.show('Полка «' + moved.title + '» перемещена в самый верх!');
+                        } else {
+                            Lampa.Noty.show('Полка «' + moved.title + '» перемещена на позицию ' + (targetIdx + 1));
+                        }
+                    }
+                });
+
+                row.on('dragend', function(e) {
+                    $('.surs-sm-item--dragging').removeClass('surs-sm-item--dragging');
+                    $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
+                });
+
+                // Сенсорное перетаскивание (Touch Drag) через три полоски на смартфонах/планшетах
+                var handle = row.find('.surs-sm-drag-handle');
+                var touchSourceId = null;
+                var touchTargetId = null;
+
+                handle.on('touchstart', function(e) {
+                    touchSourceId = item.id;
+                    row.addClass('surs-sm-item--dragging');
+                });
+
+                handle.on('touchmove', function(e) {
+                    e.preventDefault();
+                    var touch = e.originalEvent.touches[0];
+                    var elem = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (elem) {
+                        var trg = $(elem).closest('.surs-sm-item');
+                        if (trg.length && trg.attr('data-id') !== touchSourceId) {
+                            $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
+                            trg.addClass('surs-sm-item--drag-over');
+                            touchTargetId = trg.attr('data-id');
+                        }
+                    }
+                });
+
+                handle.on('touchend', function(e) {
+                    $('.surs-sm-item--dragging').removeClass('surs-sm-item--dragging');
+                    $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
+
+                    if (touchTargetId && touchTargetId !== touchSourceId) {
+                        var sIdx = -1, tIdx = -1;
+                        for (var sI = 0; sI < shelves.length; sI++) {
+                            if (shelves[sI].id === touchSourceId) sIdx = sI;
+                            if (shelves[sI].id === touchTargetId) tIdx = sI;
+                        }
+
+                        if (sIdx >= 0 && tIdx >= 0) {
+                            var movedItem = shelves.splice(sIdx, 1)[0];
+                            shelves.splice(tIdx, 0, movedItem);
+                            saveShelves(shelves);
+                            refreshListFocus(movedItem.id, 'toggle');
+                            if (tIdx === 0) {
+                                Lampa.Noty.show('Полка «' + movedItem.title + '» перемещена в самый верх!');
+                            } else {
+                                Lampa.Noty.show('Полка «' + movedItem.title + '» перемещена на позицию ' + (tIdx + 1));
+                            }
+                        }
+                    }
+                    touchSourceId = null;
+                    touchTargetId = null;
                 });
 
                 list.append(row);
