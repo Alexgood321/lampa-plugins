@@ -432,10 +432,13 @@
                     border-color: #3498db;
                 }
                 .surs-sm-list {
+                    position: relative;
                     max-height: 52vh;
                     overflow-y: auto;
                     padding-right: 0.5em;
                     margin-bottom: 1.2em;
+                    scroll-behavior: smooth;
+                    -webkit-overflow-scrolling: touch;
                 }
                 .surs-sm-item {
                     display: flex;
@@ -445,8 +448,9 @@
                     border-radius: 8px;
                     padding: 0.6em 1em;
                     margin-bottom: 0.5em;
-                    transition: background 0.15s;
+                    transition: background 0.15s, border-color 0.15s;
                 }
+                .surs-sm-item:focus-within,
                 .surs-sm-item.focus {
                     background: rgba(255,255,255,0.15);
                     border-color: rgba(255,255,255,0.3);
@@ -1776,6 +1780,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var prevController = (Lampa.Controller && Lampa.Controller.enabled) ? Lampa.Controller.enabled().name : 'content';
         var shelves = getSavedShelves().slice();
         var activeCategory = 'all';
+        var modalHtml = null;
 
         function closeModalSafely(needRefresh) {
             isModalOpen = false;
@@ -1996,9 +2001,63 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return modalHtml;
         }
 
+        function scrollItemIntoView(elem) {
+            if (!elem) return;
+            var root = modalHtml || $('.surs-sm-wrap');
+            var list = root.find('.surs-sm-list')[0];
+            if (!list) return;
+
+            var row = $(elem).closest('.surs-sm-item')[0];
+            if (!row) {
+                if ($(elem).hasClass('surs-sm-tab')) {
+                    list.scrollTop = 0;
+                }
+                return;
+            }
+
+            var listRect = list.getBoundingClientRect();
+            var rowRect = row.getBoundingClientRect();
+            var padding = 20;
+
+            if (rowRect.top < listRect.top + padding) {
+                list.scrollTop += (rowRect.top - listRect.top - padding);
+            } else if (rowRect.bottom > listRect.bottom - padding) {
+                list.scrollTop += (rowRect.bottom - listRect.bottom + padding);
+            }
+        }
+
+        function setModalFocus(elem, needScroll) {
+            if (!elem) return;
+            if (elem instanceof $) elem = elem[0];
+            if (!elem) return;
+
+            var root = modalHtml || $('.surs-sm-wrap');
+            Lampa.Controller.collectionFocus(elem, root);
+
+            if (needScroll !== false) {
+                scrollItemIntoView(elem);
+            }
+        }
+
+        function getCurrentFocus() {
+            var root = modalHtml || $('.surs-sm-wrap');
+            var cur = root.find('.selector.focus');
+            if (!cur.length && window.Navigator && window.Navigator._focus) {
+                cur = $(window.Navigator._focus);
+            }
+            if (!cur.length) {
+                cur = root.find('.surs-sm-tab.active');
+            }
+            if (!cur.length) {
+                cur = root.find('.selector').eq(0);
+            }
+            return cur;
+        }
+
         function refreshListFocus(targetId, buttonType) {
             var newContent = renderModalContent();
             $('.surs-sm-wrap').replaceWith(newContent);
+            modalHtml = newContent;
 
             Lampa.Controller.collectionSet(newContent);
 
@@ -2018,7 +2077,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             }
 
             if (!focusTarget) focusTarget = newContent.find('.selector')[0];
-            if (focusTarget) Lampa.Controller.collectionFocus(focusTarget, newContent);
+            if (focusTarget) {
+                setModalFocus(focusTarget, true);
+            }
         }
 
         function openAddShelfDialog() {
@@ -2055,7 +2116,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             });
         }
 
-        var modalHtml = renderModalContent();
+        modalHtml = renderModalContent();
 
         Lampa.Modal.open({
             title: '',
@@ -2068,14 +2129,202 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
         Lampa.Controller.add('surs_shelf_manager', {
             toggle: function () {
-                Lampa.Controller.collectionSet(modalHtml);
-                Lampa.Controller.collectionFocus(modalHtml.find('.selector.focus')[0] || modalHtml.find('.selector')[0], modalHtml);
+                var root = modalHtml || $('.surs-sm-wrap');
+                Lampa.Controller.collectionSet(root);
+                var f = root.find('.selector.focus')[0] || root.find('.surs-sm-tab.active')[0] || root.find('.selector')[0];
+                setModalFocus(f, true);
             },
-            up: function () { Navigator.move('up'); },
-            down: function () { Navigator.move('down'); },
-            left: function () { Navigator.move('left'); },
-            right: function () { Navigator.move('right'); },
-            back: function () { closeModalSafely(false); }
+            up: function () {
+                var root = modalHtml || $('.surs-sm-wrap');
+                var cur = getCurrentFocus();
+
+                // 1. Из футера -> переход к последней строке списка
+                if (cur.closest('.surs-sm-footer').length) {
+                    var allRows = root.find('.surs-sm-item');
+                    if (allRows.length) {
+                        var lastRow = allRows.last();
+                        var target = lastRow.find('.surs-sm-toggle')[0] || lastRow.find('.selector')[0];
+                        setModalFocus(target, true);
+                    } else {
+                        var tab = root.find('.surs-sm-tab.active')[0] || root.find('.surs-sm-tab')[0];
+                        setModalFocus(tab, false);
+                    }
+                    return;
+                }
+
+                // 2. В строке списка -> переход к предыдущей строке или к вкладкам
+                var row = cur.closest('.surs-sm-item');
+                if (row.length) {
+                    var allRows = root.find('.surs-sm-item');
+                    var rowIndex = allRows.index(row);
+                    var currentAction = cur.data('action');
+                    var rowSelectors = row.find('.selector');
+                    var btnIndex = rowSelectors.index(cur);
+
+                    if (rowIndex > 0) {
+                        var prevRow = allRows.eq(rowIndex - 1);
+                        var prevTarget = null;
+                        if (currentAction) {
+                            prevTarget = prevRow.find('[data-action="' + currentAction + '"]')[0];
+                        }
+                        if (!prevTarget) {
+                            var prevSelectors = prevRow.find('.selector');
+                            prevTarget = prevSelectors.eq(btnIndex >= 0 ? btnIndex : 0)[0] || prevSelectors[0];
+                        }
+                        setModalFocus(prevTarget, true);
+                    } else {
+                        // Первая строка -> переходим к активной вкладке
+                        var activeTab = root.find('.surs-sm-tab.active')[0] || root.find('.surs-sm-tab')[0];
+                        setModalFocus(activeTab, true);
+                    }
+                    return;
+                }
+
+                // 3. Во вкладках -> уже на самом верху
+                if (cur.hasClass('surs-sm-tab')) {
+                    return;
+                }
+
+                try { Navigator.move('up'); } catch(e){}
+            },
+            down: function () {
+                var root = modalHtml || $('.surs-sm-wrap');
+                var cur = getCurrentFocus();
+
+                // 1. Из вкладок -> переход к первой строке списка
+                if (cur.hasClass('surs-sm-tab')) {
+                    var firstRow = root.find('.surs-sm-item').first();
+                    if (firstRow.length) {
+                        var target = firstRow.find('.surs-sm-toggle')[0] || firstRow.find('.selector')[0];
+                        setModalFocus(target, true);
+                    } else {
+                        var footerBtn = root.find('.surs-sm-footer [data-action="add"]')[0] || root.find('.surs-sm-footer .selector')[0];
+                        setModalFocus(footerBtn, false);
+                    }
+                    return;
+                }
+
+                // 2. В строке списка -> переход к следующей строке или в футер (только с последней строки!)
+                var row = cur.closest('.surs-sm-item');
+                if (row.length) {
+                    var allRows = root.find('.surs-sm-item');
+                    var rowIndex = allRows.index(row);
+                    var currentAction = cur.data('action');
+                    var rowSelectors = row.find('.selector');
+                    var btnIndex = rowSelectors.index(cur);
+
+                    if (rowIndex < allRows.length - 1) {
+                        var nextRow = allRows.eq(rowIndex + 1);
+                        var nextTarget = null;
+                        if (currentAction) {
+                            nextTarget = nextRow.find('[data-action="' + currentAction + '"]')[0];
+                        }
+                        if (!nextTarget) {
+                            var nextSelectors = nextRow.find('.selector');
+                            nextTarget = nextSelectors.eq(btnIndex >= 0 ? btnIndex : 0)[0] || nextSelectors[0];
+                        }
+                        setModalFocus(nextTarget, true);
+                    } else {
+                        // Достигли последней строки! Переходим в футер на кнопку "Применить"
+                        var applyBtn = root.find('.surs-sm-footer [data-action="apply"]')[0] || root.find('.surs-sm-footer .selector')[0];
+                        setModalFocus(applyBtn, false);
+                    }
+                    return;
+                }
+
+                // 3. В футере -> уже внизу
+                if (cur.closest('.surs-sm-footer').length) {
+                    return;
+                }
+
+                try { Navigator.move('down'); } catch(e){}
+            },
+            left: function () {
+                var root = modalHtml || $('.surs-sm-wrap');
+                var cur = getCurrentFocus();
+
+                // Во вкладках
+                if (cur.hasClass('surs-sm-tab')) {
+                    var tabs = root.find('.surs-sm-tab');
+                    var tabIndex = tabs.index(cur);
+                    if (tabIndex > 0) {
+                        setModalFocus(tabs.eq(tabIndex - 1)[0], false);
+                    }
+                    return;
+                }
+
+                // Внутри строки (между кнопками строки: Toggle <-> Up <-> Down <-> Remove)
+                var row = cur.closest('.surs-sm-item');
+                if (row.length) {
+                    var selectors = row.find('.selector');
+                    var idx = selectors.index(cur);
+                    if (idx > 0) {
+                        setModalFocus(selectors.eq(idx - 1)[0], false);
+                    }
+                    return;
+                }
+
+                // В футере
+                var footer = cur.closest('.surs-sm-footer');
+                if (footer.length) {
+                    var fBtns = footer.find('.selector');
+                    var fIdx = fBtns.index(cur);
+                    if (fIdx > 0) {
+                        setModalFocus(fBtns.eq(fIdx - 1)[0], false);
+                    }
+                    return;
+                }
+
+                try { Navigator.move('left'); } catch(e){}
+            },
+            right: function () {
+                var root = modalHtml || $('.surs-sm-wrap');
+                var cur = getCurrentFocus();
+
+                // Во вкладках
+                if (cur.hasClass('surs-sm-tab')) {
+                    var tabs = root.find('.surs-sm-tab');
+                    var tabIndex = tabs.index(cur);
+                    if (tabIndex < tabs.length - 1) {
+                        setModalFocus(tabs.eq(tabIndex + 1)[0], false);
+                    }
+                    return;
+                }
+
+                // Внутри строки
+                var row = cur.closest('.surs-sm-item');
+                if (row.length) {
+                    var selectors = row.find('.selector');
+                    var idx = selectors.index(cur);
+                    if (idx < selectors.length - 1) {
+                        setModalFocus(selectors.eq(idx + 1)[0], false);
+                    }
+                    return;
+                }
+
+                // В футере
+                var footer = cur.closest('.surs-sm-footer');
+                if (footer.length) {
+                    var fBtns = footer.find('.selector');
+                    var fIdx = fBtns.index(cur);
+                    if (fIdx < fBtns.length - 1) {
+                        setModalFocus(fBtns.eq(fIdx + 1)[0], false);
+                    }
+                    return;
+                }
+
+                try { Navigator.move('right'); } catch(e){}
+            },
+            enter: function () {
+                var cur = getCurrentFocus();
+                if (cur && cur.length) {
+                    cur.trigger('hover:enter');
+                    cur.trigger('click');
+                }
+            },
+            back: function () {
+                closeModalSafely(false);
+            }
         });
 
         Lampa.Controller.toggle('surs_shelf_manager');
