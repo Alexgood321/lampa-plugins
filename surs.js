@@ -331,8 +331,9 @@
                         padding: 0.1em 0.4em !important;
                     }
                     .surs-sm-navbtn {
-                        padding: 0.35em 0.6em !important;
-                        font-size: 1em !important;
+                        padding: 0.3em 0.4em !important;
+                        font-size: 0.95em !important;
+                        min-width: 1.8em !important;
                     }
                     .surs-sm-footer {
                         flex-direction: column !important;
@@ -541,19 +542,38 @@
                     gap: 0.4em;
                 }
                 .surs-sm-navbtn {
-                    padding: 0.35em 0.8em;
+                    min-width: 2.2em;
+                    height: 2em;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0 0.5em;
                     background: rgba(255,255,255,0.12);
                     border-radius: 6px;
                     color: #fff;
-                    font-size: 1.1em;
+                    font-size: 1.05em;
                     font-weight: 700;
                     cursor: pointer;
                     transition: all 0.2s;
+                    user-select: none;
                 }
                 .surs-sm-navbtn.focus {
                     background: #2980b9;
                     box-shadow: 0 0 10px #2980b9;
                     transform: scale(1.08);
+                }
+                .surs-sm-navbtn--top {
+                    background: rgba(41, 128, 185, 0.18);
+                    color: #5dade2;
+                }
+                .surs-sm-navbtn--top.focus {
+                    background: #2980b9;
+                    color: #fff;
+                    box-shadow: 0 0 10px #2980b9;
+                }
+                .surs-sm-navbtn--disabled {
+                    opacity: 0.35;
+                    cursor: default;
                 }
                 .surs-sm-navbtn--remove {
                     background: rgba(231, 76, 60, 0.15);
@@ -1820,7 +1840,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 <div class="surs-sm-header">
                     <div class="surs-sm-title">Управление полками Главного экрана</div>
                     <div class="surs-sm-subtitle">
-                        Используйте пульт: <b>[▲]</b> / <b>[▼]</b> — переместить, <b>[✓ Вкл]</b> — скрыть/показать, <b>[✕]</b> — убрать. Нажмите <b>[🔄 Ресерч полок]</b> для поиска новых сервисов.
+                        Используйте пульт: <b>[⤒]</b> — в самый верх, <b>[▲]</b> / <b>[▼]</b> — выше/ниже, <b>[✓ Вкл]</b> — скрыть/показать, <b>[✕]</b> — убрать. Нажмите <b>[🔄 Ресерч полок]</b> для поиска новых сервисов.
                     </div>
                 </div>
             `);
@@ -1887,8 +1907,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             ${desc ? '<div class="surs-sm-desc">' + desc + '</div>' : ''}
                         </div>
                         <div class="surs-sm-actions">
-                            <div class="surs-sm-navbtn surs-sm-navbtn--up selector" data-action="up" title="Переместить выше">▲</div>
-                            <div class="surs-sm-navbtn surs-sm-navbtn--down selector" data-action="down" title="Переместить ниже">▼</div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--top selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="top" title="В самый верх (на 1-е место)">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="display:inline-block;pointer-events:none;"><path d="M4 4h16v2.5H4zm8 3.5l7 7h-4.5v6h-5v-6H6z"/></svg>
+                            </div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--up selector ${idx === 0 ? 'surs-sm-navbtn--disabled' : ''}" data-action="up" title="Переместить выше">▲</div>
+                            <div class="surs-sm-navbtn surs-sm-navbtn--down selector ${idx === shelves.length - 1 ? 'surs-sm-navbtn--disabled' : ''}" data-action="down" title="Переместить ниже">▼</div>
                             <div class="surs-sm-navbtn surs-sm-navbtn--remove selector" data-action="remove" title="Убрать из активного списка">✕</div>
                         </div>
                     </div>
@@ -1900,6 +1923,18 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     item.enabled = !item.enabled;
                     saveShelves(shelves);
                     refreshListFocus(item.id, 'toggle');
+                });
+
+                // Перемещение в самый верх списка (на 1-е место)
+                row.find('[data-action="top"]').on('hover:enter click', function(e) {
+                    e.stopPropagation();
+                    if (idx > 0) {
+                        var moved = shelves.splice(idx, 1)[0];
+                        shelves.unshift(moved);
+                        saveShelves(shelves);
+                        refreshListFocus(item.id, 'top');
+                        Lampa.Noty.show('Полка «' + moved.title + '» перемещена на 1-е место!');
+                    }
                 });
 
                 // Перемещение вверх
@@ -2067,7 +2102,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             } else if (targetId) {
                 var row = newContent.find('[data-id="' + targetId + '"]');
                 if (row.length) {
-                    if (buttonType === 'up') focusTarget = row.find('.surs-sm-navbtn--up')[0];
+                    if (buttonType === 'top') focusTarget = row.find('.surs-sm-navbtn--top')[0];
+                    else if (buttonType === 'up') focusTarget = row.find('.surs-sm-navbtn--up')[0];
                     else if (buttonType === 'down') focusTarget = row.find('.surs-sm-navbtn--down')[0];
                     else if (buttonType === 'toggle') focusTarget = row.find('.surs-sm-toggle')[0];
                     else focusTarget = row.find('.selector')[0];
