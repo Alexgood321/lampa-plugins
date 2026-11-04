@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.3';
+    var VERSION = '2.0.4';
 
     function startPlugin() {
         // Локализация
@@ -73,6 +73,7 @@
             '.num2-actions svg{display:block;width:1.25em;height:1.25em;pointer-events:none;}',
             '.num2-resume{display:flex;gap:.8em;align-items:center;min-height:3.35em;padding:.55em .85em;margin:0 0 .7em;border:1px solid rgba(255,255,255,.12);border-radius:.6em;background:rgba(255,255,255,.055);box-sizing:border-box;cursor:pointer;}',
             '.num2-play{display:flex;align-items:center;justify-content:center;width:2.25em;height:2.25em;flex:0 0 auto;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;}',
+            '.num2-play svg{display:block;width:1.2em;height:1.2em;flex:0 0 auto;fill:currentColor;transform:translateX(.08em);}',
             '.num2-resume-body{flex:1;min-width:0;}',
             '.num2-resume-top{display:flex;align-items:center;gap:.55em;min-width:0;font-size:.81em;margin-bottom:.16em;}',
             '.num2-resume-status{flex:0 0 auto;color:rgba(255,255,255,.8);font-weight:600;}',
@@ -367,7 +368,8 @@
             var percent = display.percent;
             var banner = $('<div class="num2-resume selector" role="button" aria-label="' +
                 escapeHtml(display.status + ', ' + display.meta + ', ' + name) + '">' +
-                '<div class="num2-play" aria-hidden="true">▶</div>' +
+                '<div class="num2-play" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false" xmlns="http://www.w3.org/2000/svg">' +
+                '<path d="M8 5.5c0-.8.9-1.2 1.6-.7l10 6.5a.9.9 0 0 1 0 1.4l-10 6.5c-.7.5-1.6.1-1.6-.7z"/></svg></div>' +
                 '<div class="num2-resume-body">' +
                 '<div class="num2-resume-top"><span class="num2-resume-status">' + escapeHtml(display.status) + '</span>' +
                 '<span class="num2-resume-meta">' + escapeHtml(display.meta) + '</span></div>' +
