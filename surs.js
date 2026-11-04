@@ -3494,7 +3494,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         rescan: function(notify) { return runAutoDiscovery(notify !== false); },
         getAllShelves: getAllAvailableShelves,
         getSavedShelves: getSavedShelves,
-        saveShelves: saveShelves
+        saveShelves: saveShelves,
+        resetDefaults: function() {
+            var defaults = executeBulletproofReset();
+            refreshSursHome();
+            return defaults;
+        },
+        version: '3.8.2'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
