@@ -1,4 +1,4 @@
-name: SURS JavaScript checks
+name: Lampa plugin JavaScript checks
 on:
   push:
     branches:
@@ -6,11 +6,15 @@ on:
       - feat/surs-v3.8.0
     paths:
       - surs.js
+      - num_series.js
+      - num_series_v1_3_0.js
       - tests/**
       - .github/workflows/surs-ci.yml
   pull_request:
     paths:
       - surs.js
+      - num_series.js
+      - num_series_v1_3_0.js
       - tests/**
       - .github/workflows/surs-ci.yml
 jobs:
@@ -22,5 +26,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --check surs.js
+      - run: node --check num_series.js
+      - run: node --check tests/num-series-smoke.cjs
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
+      - run: node tests/num-series-smoke.cjs
