@@ -2923,9 +2923,56 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var prevController = (Lampa.Controller && Lampa.Controller.enabled) ? Lampa.Controller.enabled().name : 'content';
         // Редактор работает с копией; изменения сохраняются только после «Применить».
         var shelves = getSavedShelves().map(function(item) { return Object.assign({}, item); });
-        var activeCategory = 'all';
+        var activeCategory = 'enabled';
         var searchQuery = '';
         var modalHtml = null;
+        var originalShelvesSnapshot = JSON.stringify(shelves);
+        var editorPlatform = {
+            tv: false,
+            touch: false
+        };
+        try {
+            editorPlatform.tv = !!(Lampa.Platform && Lampa.Platform.screen && Lampa.Platform.screen('tv'));
+            editorPlatform.touch = !editorPlatform.tv && !!(
+                (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+                (window.navigator && window.navigator.maxTouchPoints > 0)
+            );
+        } catch(e) {}
+
+        function hasUnsavedChanges() {
+            return JSON.stringify(shelves) !== originalShelvesSnapshot;
+        }
+        function updateApplyState() {
+            if (!modalHtml) return;
+            modalHtml.find('[data-action="apply"]')
+                .toggleClass('surs-sm-btn--inactive', !hasUnsavedChanges())
+                .attr('aria-disabled', hasUnsavedChanges() ? 'false' : 'true');
+        }
+        function applyAndClose() {
+            if (hasUnsavedChanges()) {
+                saveShelves(shelves);
+                if (needsPluginMigration) Lampa.Storage.set(migrationKey, 'true');
+            }
+            closeModalSafely(hasUnsavedChanges());
+        }
+        function requestCloseEditor() {
+            if (!hasUnsavedChanges()) { closeModalSafely(false); return; }
+            Lampa.Select.show({
+                title: 'Есть несохранённые изменения',
+                items: [
+                    { title: '✓ Сохранить и выйти', action: 'save' },
+                    { title: 'Выйти без сохранения', action: 'discard' },
+                    { title: 'Продолжить редактирование', action: 'continue' }
+                ],
+                onSelect: function(choice) {
+                    if (choice.action === 'save') applyAndClose();
+                    else if (choice.action === 'discard') closeModalSafely(false);
+                    else Lampa.Controller.toggle('surs_shelf_manager');
+                },
+                onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
+            });
+        }
+
 
         // Миграция: сторонние плагинные полки по умолчанию выключены, пользователь включает только нужные
         var migrationKey = 'surs_plugins_default_off_v2';
@@ -3019,13 +3066,35 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки Главного экрана <span class="surs-sm-version">v3.9.0</span></div>
-                        <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
+                        <div class="surs-sm-title">Полки главного экрана <span class="surs-sm-version">v3.9.0</span></div>
+                        <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
-                    <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
+                    <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
+                    <div class="surs-sm-header-btn selector" data-action="back" role="button" aria-label="Закрыть редактор">✕</div>
+                    <div class="surs-sm-header-btn selector" data-action="options" role="button" aria-label="Дополнительные действия">⋯</div>
                 </div>
             `);
             modalHtml.append(header);
+            header.find('[data-action="back"]').on('hover:enter click', function(e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+                requestCloseEditor();
+            });
+            header.find('[data-action="options"]').on('hover:enter click', function(e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+                Lampa.Select.show({
+                    title: 'Действия с полками',
+                    items: [
+                        { title: 'Обновить источники', action: 'rescan' },
+                        { title: 'Сбросить порядок полок', action: 'reset' },
+                        { title: 'Скрыть все сторонние полки', action: 'hide-all-plugins' }
+                    ],
+                    onSelect: function(choice) {
+                        var target = modalHtml.find('[data-action="' + choice.action + '"]');
+                        if (target.length) target.trigger('click');
+                    },
+                    onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
+                });
+            });
 
             // Панель вкладок категорий
             var catTabs = [
@@ -3049,22 +3118,50 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 });
                 tabsWrap.append(tabBtn);
             });
-            modalHtml.append(tabsWrap);
-            if (searchQuery) {
-                var queryLabel = $('<div class="surs-sm-search-query"></div>');
-                queryLabel.text('Поиск: ' + searchQuery);
-                modalHtml.append(queryLabel);
-            }
+            var toolbar = $('<div class="surs-sm-toolbar"></div>');
+            toolbar.append(tabsWrap);
+            var categoryName = catTabs.filter(function(t) { return t.id === activeCategory; })[0];
+            var categoryBtn = $('<div class="surs-sm-toolbar-btn surs-sm-toolbar-btn--category selector" data-action="categories">Категории' +
+                (categoryName && ['all','enabled','hidden'].indexOf(activeCategory) < 0 ? ': ' + categoryName.title : '') + '</div>');
+            categoryBtn.on('hover:enter click', function(e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+                Lampa.Select.show({
+                    title: 'Категория полок',
+                    items: catTabs.map(function(t) { return { title: t.title, action: t.id }; }),
+                    onSelect: function(chosen) {
+                        activeCategory = chosen.action;
+                        refreshListFocus(null, 'tab');
+                    },
+                    onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
+                });
+            });
+            toolbar.append(categoryBtn);
 
+            var searchField = $('<div class="surs-sm-search-field"></div>');
+            var searchInput = $('<input type="search" class="surs-sm-search-input" placeholder="Найти полку..." aria-label="Поиск полок" autocomplete="off">');
+            searchInput.val(searchQuery);
+            searchInput.on('input', function() {
+                searchQuery = String($(this).val() || '');
+                filterVisibleRows();
+            });
+            searchField.append($('<span class="surs-sm-search-icon">⌕</span>')).append(searchInput);
+            toolbar.append(searchField);
+            var tvSearch = $('<div class="surs-sm-search-trigger selector" data-action="search" role="button">Поиск</div>');
+            tvSearch.on('hover:enter click', function(e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+                openSearchKeyboard();
+            });
+            toolbar.append(tvSearch);
+            modalHtml.append(toolbar);
+
+            var listHeading = $('<div class="surs-sm-list-heading"><span>Порядок отображения</span><span>Удерживайте ≡ для перемещения</span></div>');
+            modalHtml.append(listHeading);
             var list = $('<div class="surs-sm-list"></div>');
 
             var displayEntries = shelves.map(function(item, idx) {
                 return { item: item, originalIndex: idx };
             }).filter(function(entry) {
-                if (searchQuery) {
-                    var haystack = (entry.item.title || '') + ' ' + (entry.item.desc || getShelfDesc(entry.item.id)) + ' ' + entry.item.id;
-                    if (haystack.toLowerCase().indexOf(searchQuery.toLowerCase()) < 0) return false;
-                }
+                // Live search filters existing rows without rebuilding the input and losing focus.
                 if (activeCategory === 'all') return true;
                 if (activeCategory === 'enabled') return !!entry.item.enabled;
                 if (activeCategory === 'hidden') return !entry.item.enabled;
@@ -3134,6 +3231,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 `);
 
                 // Клик или OK по иконке перетаскивания (три полоски)
+                row.data('surs-search', ((item.title || '') + ' ' + (desc || '') + ' ' + item.id).toLowerCase());
                 row.find('.surs-sm-drag-handle').on('hover:enter click', function(e) {
                     e.stopPropagation();
                     openShelfActionMenu(item, idx);
@@ -3315,7 +3413,36 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 list.append(row);
             });
 
+            list.append('<div class="surs-sm-empty-search">По вашему запросу полки не найдены</div>');
             modalHtml.append(list);
+
+            function filterVisibleRows() {
+                var needle = searchQuery.trim().toLowerCase();
+                var matched = 0;
+                list.children('.surs-sm-item').each(function() {
+                    var el = $(this);
+                    var hit = !needle || String(el.data('surs-search') || '').indexOf(needle) !== -1;
+                    el.toggleClass('surs-sm-row-filtered', !hit);
+                    if (hit) matched++;
+                });
+                list.find('.surs-sm-empty-search').toggle(!!needle && matched === 0);
+            }
+            filterVisibleRows();
+
+            function openSearchKeyboard() {
+                if (!Lampa.Input || typeof Lampa.Input.edit !== 'function') {
+                    Lampa.Noty.show('Поиск недоступен в этой сборке Lampa');
+                    return;
+                }
+                Lampa.Input.edit({
+                    title: 'Поиск полок',
+                    value: searchQuery, free: true, nosave: true
+                }, function(value) {
+                    searchQuery = String(value || '').trim();
+                    Lampa.Controller.toggle('surs_shelf_manager');
+                    refreshListFocus(null, 'tab');
+                });
+            }
 
             var pluginActionBtn = '';
             if (activeCategory === 'plugin') {
@@ -3338,18 +3465,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 </div>
             `);
 
-            // Поиск через штатную клавиатуру Lampa (работает и с пульта).
             footer.find('[data-action="search"]').on('hover:enter click', function(e) {
-                e.stopPropagation();
-                if (!Lampa.Input || typeof Lampa.Input.edit !== 'function') {
-                    Lampa.Noty.show('Поиск недоступен в этой сборке Lampa');
-                    return;
-                }
-                Lampa.Input.edit({ title: 'Поиск полок (пусто = все)', value: searchQuery, free: true, nosave: true }, function(value) {
-                    searchQuery = String(value || '').trim();
-                    Lampa.Controller.toggle('surs_shelf_manager');
-                    refreshListFocus(null, 'tab');
-                });
+                if (e && e.stopPropagation) e.stopPropagation();
+                openSearchKeyboard();
             });
 
             // Повторное обнаружение зарегистрированных источников.
