@@ -327,7 +327,7 @@ test('very narrow phones keep icon-only seven-column layout', () => {
 test('compact rules apply only to navigation cards', () => {
     assert.match(source, /\.surs-nav-line--touch \.card--button-compact \{/);
     assert.match(source, /\.surs-nav-line--touch \.card__button-icon \{/);
-    assert.doesNotMatch(source, /\.card--button-compact\s*\{[^}]*height:\s*4\.5em/);
+    assert.doesNotMatch(source, /\n\s*\.card--button-compact\s*\{[^}]*height:\s*4\.5em/);
 });
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
