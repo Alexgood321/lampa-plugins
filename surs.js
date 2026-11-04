@@ -2871,7 +2871,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // ==========================================
     var isModalOpen = false;
 
-    function openShelfManagerModal() {
+    function openShelfManagerModal(scope) {
         if (isModalOpen) {
             try { Lampa.Modal.close(); } catch(e){}
             isModalOpen = false;
@@ -2880,7 +2880,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
         var prevController = (Lampa.Controller && Lampa.Controller.enabled) ? Lampa.Controller.enabled().name : 'content';
         // Редактор работает с копией; изменения сохраняются только после «Применить».
-        var shelves = getSavedShelves().map(function(item) { return Object.assign({}, item); });
+        var editorScope = normalizeShelfScope(scope || activeShelfScope());
+        var shelves = getSavedShelves(editorScope).map(function(item) { return Object.assign({}, item); });
         var activeCategory = 'enabled';
         var searchQuery = '';
         var modalHtml = null;
@@ -2908,8 +2909,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
         function applyAndClose() {
             if (hasUnsavedChanges()) {
-                saveShelves(shelves);
-                if (needsPluginMigration) Lampa.Storage.set(migrationKey, 'true');
+                saveShelves(shelves, editorScope);
+                if (needsPluginMigration && editorScope === 'MAIN') Lampa.Storage.set(migrationKey, 'true');
             }
             closeModalSafely(hasUnsavedChanges());
         }
@@ -2934,13 +2935,48 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
         // Миграция: сторонние плагинные полки по умолчанию выключены, пользователь включает только нужные
         var migrationKey = 'surs_plugins_default_off_v2';
-        var needsPluginMigration = !Lampa.Storage.get(migrationKey);
+        var needsPluginMigration = editorScope === 'MAIN' && !Lampa.Storage.get(migrationKey);
         if (needsPluginMigration) {
             shelves.forEach(function(s) {
                 var cat = getShelfCategory(s.id);
                 if (cat === 'plugin' || cat === 'trakt' || (s.id && s.id.indexOf('ext_') === 0)) {
                     s.enabled = false;
                 }
+            });
+        }
+
+        originalShelvesSnapshot = JSON.stringify(shelves);
+
+        function switchEditorScope(nextScope) {
+            var selected = normalizeShelfScope(nextScope);
+            if (selected === editorScope) return;
+            function activate() {
+                editorScope = selected;
+                shelves = getSavedShelves(editorScope).map(function(item) { return Object.assign({}, item); });
+                originalShelvesSnapshot = JSON.stringify(shelves);
+                needsPluginMigration = editorScope === 'MAIN' && !Lampa.Storage.get(migrationKey);
+                activeCategory = 'enabled';
+                searchQuery = '';
+                refreshListFocus(null, 'tab');
+            }
+            if (!hasUnsavedChanges()) { activate(); return; }
+            Lampa.Select.show({
+                title: 'Изменения в разделе «' + shelfScopeTitle(editorScope) + '»',
+                items: [
+                    {title: '✓ Сохранить и перейти', action: 'save'},
+                    {title: 'Перейти без сохранения', action: 'discard'},
+                    {title: 'Остаться в разделе', action: 'cancel'}
+                ],
+                onSelect: function(choice) {
+                    if (choice.action === 'save') {
+                        saveShelves(shelves, editorScope);
+                        if (needsPluginMigration && editorScope === 'MAIN')
+                            Lampa.Storage.set(migrationKey, 'true');
+                        activate();
+                    } else if (choice.action === 'discard') activate();
+                    else Lampa.Controller.toggle('surs_shelf_manager');
+                },
+                onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
             });
         }
 
@@ -2955,7 +2991,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             if (needRefresh) {
                 Lampa.Noty.show('Порядок полок сохранён и применён!');
-                refreshSursHome();
+                refreshSursHome(editorScope);
             }
         }
 
@@ -3024,7 +3060,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки главного экрана <span class="surs-sm-version">v3.9.2</span></div>
+                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.2</span></div>
                         <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
@@ -3067,6 +3103,27 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
                 });
             });
+
+            // Main / World / Russia are separate storage scopes. Categories below
+            // filter only the currently selected section.
+            var scopeTabs = $('<div class="surs-sm-screen-tabs" role="tablist" aria-label="Настраиваемый экран"></div>');
+            [
+                {id:'MAIN', title:'Главная'},
+                {id:'NEW', title:'Новинки Мир'},
+                {id:'RUS', title:'Новинки Россия'}
+            ].forEach(function(profile) {
+                var tab = $('<div class="surs-sm-screen-tab selector ' +
+                    (editorScope === profile.id ? 'active' : '') +
+                    '" data-surs-screen="' + profile.id + '" role="tab" aria-selected="' +
+                    (editorScope === profile.id ? 'true' : 'false') + '">' +
+                    profile.title + '</div>');
+                tab.on('hover:enter click', function(e) {
+                    if (e && e.stopPropagation) e.stopPropagation();
+                    switchEditorScope(profile.id);
+                });
+                scopeTabs.append(tab);
+            });
+            modalHtml.append(scopeTabs);
 
             // Панель вкладок категорий
             var catTabs = [
@@ -3503,7 +3560,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             footer.find('[data-action="reset"]').on('hover:enter click', function(e) {
                 if (e && e.stopPropagation) e.stopPropagation();
                 Lampa.Select.show({
-                    title: 'Восстановить заводской порядок 23 полок?',
+                    title: 'Сбросить полки раздела «' + shelfScopeTitle(editorScope) + '»?',
                     items: [
                         { title: 'Да, сбросить порядок и отключить плагины', action: 'confirm' },
                         { title: 'Отмена', action: 'cancel' }
@@ -3511,11 +3568,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     onSelect: function(a) {
                         if (a.action === 'confirm') {
                             // Сброс выполняется сразу после подтверждения, без второго «Применить».
-                            shelves = executeBulletproofReset();
+                            shelves = executeBulletproofReset(editorScope);
                             activeCategory = 'all';
                             searchQuery = '';
                             closeModalSafely(true);
-                            Lampa.Noty.show('Восстановлены 11 активных полок из 23');
+                            Lampa.Noty.show('Сброшен раздел «' + shelfScopeTitle(editorScope) + '»');
                         }
                     },
                     onBack: function() {
@@ -3910,7 +3967,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 }
             },
             back: function () {
-                closeModalSafely(false);
+                requestCloseEditor();
             }
         });
 
