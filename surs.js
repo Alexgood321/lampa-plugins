@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.2 (Independent Screen Shelves)
- * Релиз: независимые профили полок главного экрана, мировых и российских новинок, отдельные настройки и сброс.
+ * Версия: 3.9.3 (Independent Section Defaults)
+ * Релиз: мировые и российские премьеры по умолчанию включены только в своих разделах; пользовательские настройки главной не перезаписываются.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1777,14 +1777,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     // Заводской профиль: личный контент → премьеры → тренды → навигация.
     // Применяется при первой установке или явном сбросе. Сохранённый порядок не меняем.
-    // Порядок заводского профиля по скриншоту пользователя (11 видимых строк).
+    // Заводской профиль сохраняет порядок, но мировые премьеры теперь включены только в «Новинках Мир».
     // Оставшиеся полки зарегистрированы, но не показываются до ручного включения.
     function getDefaultShelvesList() {
         return [
             { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
             { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
-            { id: 'new_movies', title: 'Новинки мирового кино', enabled: true, cat: 'surs' },
-            { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: true, cat: 'surs' },
+            { id: 'new_movies', title: 'Новинки мирового кино', enabled: false, cat: 'surs' },
+            { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: false, cat: 'surs' },
             { id: 'trend_movies', title: 'В тренде: Фильмы недели', enabled: true, cat: 'surs' },
             { id: 'trend_tv', title: 'В тренде: Сериалы недели', enabled: true, cat: 'surs' },
             { id: 'period_10s', title: 'Хиты 2010-х годов', enabled: true, cat: 'period' },
@@ -3090,7 +3090,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.2</span></div>
+                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.3</span></div>
                         <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
@@ -4267,7 +4267,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         onSelect: function(choice) {
                             if (choice.action === 'confirm') {
                                 executeBulletproofReset();
-                                Lampa.Noty.show('Восстановлены 11 активных полок из 23');
+                                Lampa.Noty.show('Восстановлены 9 активных полок из 23');
                                 refreshSursHome();
                             }
                         },
@@ -4323,7 +4323,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.9.2 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.9.3 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -4342,7 +4342,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.2'
+        version: '3.9.3'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
