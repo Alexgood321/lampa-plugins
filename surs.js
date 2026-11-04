@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.1 (Swipeable Category Tabs)
- * Релиз: все категории доступны в горизонтальной ленте свайпом без выпадающего меню, с сохранением позиции.
+ * Версия: 3.9.2 (Independent Screen Shelves)
+ * Релиз: независимые профили полок главного экрана, мировых и российских новинок, отдельные настройки и сброс.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1274,6 +1274,36 @@
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-header-btn { padding: 0 8px; }
                 }
 
+                /* Independent screen profiles; category chips remain below. */
+                .modal.surs-sm-modal .surs-sm-screen-tabs {
+                    display: flex; flex: 0 0 auto; width: 100%; min-width: 0;
+                    align-items: stretch; gap: 8px; padding: 0 0 12px;
+                    margin: 0 0 10px; border-bottom: 1px solid var(--sm-border);
+                    overflow-x: auto; -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none; overscroll-behavior-x: contain;
+                }
+                .modal.surs-sm-modal .surs-sm-screen-tabs::-webkit-scrollbar { display: none; }
+                .modal.surs-sm-modal .surs-sm-screen-tab {
+                    display: inline-flex; flex: 1 1 0; min-width: 0;
+                    min-height: 44px; padding: 8px 10px; box-sizing: border-box;
+                    align-items: center; justify-content: center; text-align: center;
+                    border-radius: 10px; background: rgba(255,255,255,.06);
+                    border: 1px solid var(--sm-border); color: var(--sm-muted);
+                    font-size: 13px; font-weight: 600; line-height: 1.2;
+                    cursor: pointer;
+                }
+                .modal.surs-sm-modal .surs-sm-screen-tab.active {
+                    color: #fff; background: rgba(65,138,196,.4); border-color: #6eb4e9;
+                }
+                .modal.surs-sm-modal .surs-sm-screen-tab.focus {
+                    outline: 2px solid #9ad3ff; outline-offset: -2px;
+                }
+                @media screen and (max-width: 700px) {
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-screen-tabs { gap: 5px; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-screen-tab {
+                        font-size: 12px; padding: 7px 5px; min-height: 44px;
+                    }
+                }
             </style>
         `);
         $('body').append(style);
@@ -1777,21 +1807,78 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         ];
     }
 
-    function executeBulletproofReset() {
+    // Every SURS screen owns its own list. The original MAIN key is intentionally
+    // unchanged, so existing users and external plugins keep all their settings.
+    var SURS_SECTION_PROFILES = {
+        NEW: {
+            key: 'surs_shelves_world_v1',
+            title: 'Новинки Мир',
+            source: 'SURS NEW',
+            defaults: ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv'],
+            enabled: ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv']
+        },
+        RUS: {
+            key: 'surs_shelves_russia_v1',
+            title: 'Новинки Россия',
+            source: 'SURS RUS',
+            defaults: ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv',
+                'stream_kinopoisk', 'stream_premier', 'stream_start'],
+            enabled: ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv']
+        }
+    };
+
+    function normalizeShelfScope(scope) {
+        return scope === 'NEW' || scope === 'RUS' ? scope : 'MAIN';
+    }
+
+    function shelfScopeTitle(scope) {
+        return normalizeShelfScope(scope) === 'MAIN' ? 'Главная' :
+            SURS_SECTION_PROFILES[scope].title;
+    }
+
+    function activeShelfScope() {
+        try {
+            var activity = Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active();
+            var source = activity && activity.source;
+            if (source === 'SURS NEW') return 'NEW';
+            if (source === 'SURS RUS') return 'RUS';
+        } catch(e) {}
+        return 'MAIN';
+    }
+
+    function getDefaultSectionShelves(scope) {
+        var name = normalizeShelfScope(scope), config = SURS_SECTION_PROFILES[name];
+        if (!config) return getDefaultShelvesList();
+        var catalog = getAllAvailableShelves();
+        var known = {};
+        catalog.forEach(function(shelf) { if (shelf && shelf.id) known[shelf.id] = shelf; });
+        return config.defaults.map(function(id) {
+            var item = known[id] || { id: id, title: id, cat: 'surs' };
+            return {
+                id: id, title: item.title, cat: item.cat,
+                desc: item.desc, enabled: config.enabled.indexOf(id) !== -1
+            };
+        });
+    }
+
+    function executeBulletproofReset(scope) {
         // Сохраняем непосредственно новый профиль. Промежуточная запись [] и
         // removeItem могли конфликтовать с кэшем Lampa.Storage.
-        var cleanDefaults = getDefaultShelvesList();
-        saveShelves(cleanDefaults);
-        Lampa.Storage.set('surs_plugins_default_off_v2', 'true');
+        var name = normalizeShelfScope(scope);
+        var cleanDefaults = getDefaultSectionShelves(name);
+        saveShelves(cleanDefaults, name);
+        if (name === 'MAIN') Lampa.Storage.set('surs_plugins_default_off_v2', 'true');
         return cleanDefaults;
     }
 
-    function refreshSursHome() {
+    function refreshSursHome(scope) {
         setTimeout(function() {
             try {
+                var name = normalizeShelfScope(scope);
+                var profile = SURS_SECTION_PROFILES[name];
                 var activity = {
-                    title: 'Главная', component: 'main',
-                    source: 'SURS', page: 1
+                    title: shelfScopeTitle(name), component: 'main',
+                    source: profile ? profile.source : 'SURS', page: 1
                 };
                 if (Lampa.Activity && typeof Lampa.Activity.replace === 'function') {
                     Lampa.Activity.replace(activity);
@@ -1836,11 +1923,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         return defaults;
     }
 
-    function getSavedShelves() {
+    function getSavedShelves(scope) {
+        var name = normalizeShelfScope(scope);
+        var profile = SURS_SECTION_PROFILES[name];
         var saved = null;
         try {
-            saved = Lampa.Storage.get(STORAGE_SHELVES_KEY, null);
-            saved = migrateLegacyFactoryOrder(saved);
+            saved = Lampa.Storage.get(profile ? profile.key : STORAGE_SHELVES_KEY, null);
+            if (!profile) saved = migrateLegacyFactoryOrder(saved);
         } catch(e) {}
 
         if (Array.isArray(saved)) {
@@ -1853,18 +1942,19 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 }
             });
             // Нельзя оставлять пользователя без доступа к менеджеру полок.
-            if (!unique.length) return [getDefaultShelvesList()[0]];
+            if (!unique.length) return profile ? getDefaultSectionShelves(name) : [getDefaultShelvesList()[0]];
             // Скрытые полки остаются в редакторе. Для пустой главной
             // безопасная навигация добавляется только в загрузчике главной.
             return unique;
         }
 
-        return getDefaultShelvesList();
+        return getDefaultSectionShelves(name);
     }
 
-    function saveShelves(list) {
+    function saveShelves(list, scope) {
+        var profile = SURS_SECTION_PROFILES[normalizeShelfScope(scope)];
         try {
-            Lampa.Storage.set(STORAGE_SHELVES_KEY, list);
+            Lampa.Storage.set(profile ? profile.key : STORAGE_SHELVES_KEY, list);
         } catch(e) {}
     }
 
@@ -2811,7 +2901,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // ==========================================
     var isModalOpen = false;
 
-    function openShelfManagerModal() {
+    function openShelfManagerModal(scope) {
         if (isModalOpen) {
             try { Lampa.Modal.close(); } catch(e){}
             isModalOpen = false;
@@ -2820,7 +2910,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
         var prevController = (Lampa.Controller && Lampa.Controller.enabled) ? Lampa.Controller.enabled().name : 'content';
         // Редактор работает с копией; изменения сохраняются только после «Применить».
-        var shelves = getSavedShelves().map(function(item) { return Object.assign({}, item); });
+        var editorScope = normalizeShelfScope(scope || activeShelfScope());
+        var shelves = getSavedShelves(editorScope).map(function(item) { return Object.assign({}, item); });
         var activeCategory = 'enabled';
         var searchQuery = '';
         var modalHtml = null;
@@ -2848,8 +2939,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
         function applyAndClose() {
             if (hasUnsavedChanges()) {
-                saveShelves(shelves);
-                if (needsPluginMigration) Lampa.Storage.set(migrationKey, 'true');
+                saveShelves(shelves, editorScope);
+                if (needsPluginMigration && editorScope === 'MAIN') Lampa.Storage.set(migrationKey, 'true');
             }
             closeModalSafely(hasUnsavedChanges());
         }
@@ -2874,13 +2965,48 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
         // Миграция: сторонние плагинные полки по умолчанию выключены, пользователь включает только нужные
         var migrationKey = 'surs_plugins_default_off_v2';
-        var needsPluginMigration = !Lampa.Storage.get(migrationKey);
+        var needsPluginMigration = editorScope === 'MAIN' && !Lampa.Storage.get(migrationKey);
         if (needsPluginMigration) {
             shelves.forEach(function(s) {
                 var cat = getShelfCategory(s.id);
                 if (cat === 'plugin' || cat === 'trakt' || (s.id && s.id.indexOf('ext_') === 0)) {
                     s.enabled = false;
                 }
+            });
+        }
+
+        originalShelvesSnapshot = JSON.stringify(shelves);
+
+        function switchEditorScope(nextScope) {
+            var selected = normalizeShelfScope(nextScope);
+            if (selected === editorScope) return;
+            function activate() {
+                editorScope = selected;
+                shelves = getSavedShelves(editorScope).map(function(item) { return Object.assign({}, item); });
+                originalShelvesSnapshot = JSON.stringify(shelves);
+                needsPluginMigration = editorScope === 'MAIN' && !Lampa.Storage.get(migrationKey);
+                activeCategory = 'enabled';
+                searchQuery = '';
+                refreshListFocus(null, 'tab');
+            }
+            if (!hasUnsavedChanges()) { activate(); return; }
+            Lampa.Select.show({
+                title: 'Изменения в разделе «' + shelfScopeTitle(editorScope) + '»',
+                items: [
+                    {title: '✓ Сохранить и перейти', action: 'save'},
+                    {title: 'Перейти без сохранения', action: 'discard'},
+                    {title: 'Остаться в разделе', action: 'cancel'}
+                ],
+                onSelect: function(choice) {
+                    if (choice.action === 'save') {
+                        saveShelves(shelves, editorScope);
+                        if (needsPluginMigration && editorScope === 'MAIN')
+                            Lampa.Storage.set(migrationKey, 'true');
+                        activate();
+                    } else if (choice.action === 'discard') activate();
+                    else Lampa.Controller.toggle('surs_shelf_manager');
+                },
+                onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
             });
         }
 
@@ -2895,7 +3021,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             if (needRefresh) {
                 Lampa.Noty.show('Порядок полок сохранён и применён!');
-                refreshSursHome();
+                refreshSursHome(editorScope);
             }
         }
 
@@ -2964,7 +3090,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки главного экрана <span class="surs-sm-version">v3.9.1</span></div>
+                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.2</span></div>
                         <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
@@ -3007,6 +3133,27 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
                 });
             });
+
+            // Main / World / Russia are separate storage scopes. Categories below
+            // filter only the currently selected section.
+            var scopeTabs = $('<div class="surs-sm-screen-tabs" role="tablist" aria-label="Настраиваемый экран"></div>');
+            [
+                {id:'MAIN', title:'Главная'},
+                {id:'NEW', title:'Новинки Мир'},
+                {id:'RUS', title:'Новинки Россия'}
+            ].forEach(function(profile) {
+                var tab = $('<div class="surs-sm-screen-tab selector ' +
+                    (editorScope === profile.id ? 'active' : '') +
+                    '" data-surs-screen="' + profile.id + '" role="tab" aria-selected="' +
+                    (editorScope === profile.id ? 'true' : 'false') + '">' +
+                    profile.title + '</div>');
+                tab.on('hover:enter click', function(e) {
+                    if (e && e.stopPropagation) e.stopPropagation();
+                    switchEditorScope(profile.id);
+                });
+                scopeTabs.append(tab);
+            });
+            modalHtml.append(scopeTabs);
 
             // Панель вкладок категорий
             var catTabs = [
@@ -3443,7 +3590,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             footer.find('[data-action="reset"]').on('hover:enter click', function(e) {
                 if (e && e.stopPropagation) e.stopPropagation();
                 Lampa.Select.show({
-                    title: 'Восстановить заводской порядок 23 полок?',
+                    title: 'Сбросить полки раздела «' + shelfScopeTitle(editorScope) + '»?',
                     items: [
                         { title: 'Да, сбросить порядок и отключить плагины', action: 'confirm' },
                         { title: 'Отмена', action: 'cancel' }
@@ -3451,11 +3598,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     onSelect: function(a) {
                         if (a.action === 'confirm') {
                             // Сброс выполняется сразу после подтверждения, без второго «Применить».
-                            shelves = executeBulletproofReset();
+                            shelves = executeBulletproofReset(editorScope);
                             activeCategory = 'all';
                             searchQuery = '';
                             closeModalSafely(true);
-                            Lampa.Noty.show('Восстановлены 11 активных полок из 23');
+                            Lampa.Noty.show('Сброшен раздел «' + shelfScopeTitle(editorScope) + '»');
                         }
                     },
                     onBack: function() {
@@ -3707,16 +3854,26 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     return;
                 }
 
-                // 3. Во вкладках -> уже на самом верху
+                // From category tabs, Up selects the screen profile selector.
                 if (cur.hasClass('surs-sm-tab')) {
+                    var currentProfile = root.find('.surs-sm-screen-tab.active')[0];
+                    if (currentProfile) setModalFocus(currentProfile, false);
                     return;
                 }
+                if (cur.hasClass('surs-sm-screen-tab')) return;
 
                 try { Navigator.move('up'); } catch(e){}
             },
             down: function () {
                 var root = modalHtml || $('.surs-sm-wrap');
                 var cur = getCurrentFocus();
+
+                // From the screen selector, Down opens category filters.
+                if (cur.hasClass('surs-sm-screen-tab')) {
+                    var categoryTab = root.find('.surs-sm-tab.active')[0];
+                    if (categoryTab) setModalFocus(categoryTab, false);
+                    return;
+                }
 
                 // 1. Из вкладок -> переход к первой строке списка
                 if (cur.hasClass('surs-sm-tab')) {
@@ -3769,6 +3926,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             left: function () {
                 var root = modalHtml || $('.surs-sm-wrap');
                 var cur = getCurrentFocus();
+
+                if (cur.hasClass('surs-sm-screen-tab')) {
+                    var screens = root.find('.surs-sm-screen-tab');
+                    var screenIndex = screens.index(cur);
+                    if (screenIndex > 0) setModalFocus(screens.eq(screenIndex - 1)[0], false);
+                    return;
+                }
 
                 // Во вкладках
                 if (cur.hasClass('surs-sm-tab')) {
@@ -3850,7 +4014,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 }
             },
             back: function () {
-                closeModalSafely(false);
+                requestCloseEditor();
             }
         });
 
@@ -3893,49 +4057,23 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     console.error('[SURS Hub] Ошибка реконнекта ContentRows в main():', e);
                 }
 
-                var savedShelves = getSavedShelves();
+                var savedShelves = getSavedShelves(mode);
                 var combinedData = [];
-                if (!savedShelves.some(function(sh) { return sh.enabled; })) savedShelves = [getDefaultShelvesList()[0]];
-
-                if (mode === 'NEW') {
-                    // Режим "Новинки Мир"
-                    var allowedNew = ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv'];
-                    var newOrder = savedShelves.filter(function(sh) { return sh.enabled && allowedNew.indexOf(sh.id) !== -1; })
-                        .map(function(sh) { return sh.id; });
-                    newOrder.forEach(function(sid) {
-                        var fn = getShelfLoader(sid, owner, params);
-                        if (fn) {
-                            fn.__sursId = sid;
-                            fn.__sursTimeout = shelfTimeout(sid);
-                            combinedData.push(fn);
-                        }
-                    });
-                } else if (mode === 'RUS') {
-                    // Режим "Новинки Россия"
-                    var allowedRus = ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv', 'stream_kinopoisk', 'stream_premier', 'stream_start'];
-                    var rusOrder = savedShelves.filter(function(sh) { return sh.enabled && allowedRus.indexOf(sh.id) !== -1; })
-                        .map(function(sh) { return sh.id; });
-                    rusOrder.forEach(function(sid) {
-                        var fn = getShelfLoader(sid, owner, params);
-                        if (fn) {
-                            fn.__sursId = sid;
-                            fn.__sursTimeout = shelfTimeout(sid);
-                            combinedData.push(fn);
-                        }
-                    });
-                } else {
-                    // Стандартный настраиваемый Главный экран
-                    savedShelves.forEach(function(shelf) {
-                        if (shelf.enabled) {
-                            var fn = getShelfLoader(shelf.id, owner, params);
-                            if (fn) {
-                                fn.__sursId = shelf.id;
-                                fn.__sursTimeout = shelfTimeout(shelf.id);
-                                combinedData.push(fn);
-                            }
-                        }
-                    });
+                if (!savedShelves.some(function(sh) { return sh.enabled; })) {
+                    savedShelves = [getDefaultSectionShelves(mode)[0]];
                 }
+
+                // Only the active screen's independently saved profile determines
+                // visibility and order; disabling a home shelf has no side effects.
+                savedShelves.forEach(function(shelf) {
+                    if (!shelf.enabled) return;
+                    var fn = getShelfLoader(shelf.id, owner, params);
+                    if (fn) {
+                        fn.__sursId = shelf.id;
+                        fn.__sursTimeout = shelfTimeout(shelf.id);
+                        combinedData.push(fn);
+                    }
+                });
 
                 if (!combinedData.length) {
                     var nav = getShelfLoader('nav_buttons', owner, params);
@@ -4047,8 +4185,27 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     description: 'Изменить порядок полок (▲/▼), скрыть лишние или добавить новые'
                 },
                 onChange: function() {
-                    openShelfManagerModal();
+                    openShelfManagerModal('MAIN');
                 }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: 'surs',
+                param: { name: 'surs_open_world_editor', type: 'button' },
+                field: {
+                    name: 'Настроить «Новинки Мир»',
+                    description: 'Отдельные полки мировых новинок, независимо от главной'
+                },
+                onChange: function() { openShelfManagerModal('NEW'); }
+            });
+            Lampa.SettingsApi.addParam({
+                component: 'surs',
+                param: { name: 'surs_open_russia_editor', type: 'button' },
+                field: {
+                    name: 'Настроить «Новинки Россия»',
+                    description: 'Отдельные российские фильмы и сериалы, не меняя главную'
+                },
+                onChange: function() { openShelfManagerModal('RUS'); }
             });
 
             Lampa.SettingsApi.addParam({
@@ -4166,7 +4323,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.9.1 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.9.2 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -4178,12 +4335,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         getAllShelves: getAllAvailableShelves,
         getSavedShelves: getSavedShelves,
         saveShelves: saveShelves,
-        resetDefaults: function() {
-            var defaults = executeBulletproofReset();
-            refreshSursHome();
+        resetDefaults: function(scope) {
+            var name = normalizeShelfScope(scope);
+            var defaults = executeBulletproofReset(name);
+            refreshSursHome(name);
             return defaults;
         },
-        version: '3.9.1'
+        getDefaultSectionShelves: getDefaultSectionShelves,
+        version: '3.9.2'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
