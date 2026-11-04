@@ -645,6 +645,29 @@ test('saved home profile uses the original storage key after update', () => {
     assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),custom.map(x=>x.id));
     assert.equal(app.stored.get('surs_fixed_shelves_v2'),custom);
 });
+test('main factory reset leaves customized World and Russia profiles untouched', () => {
+    const app=boot();
+    const manager=app.window.LampaShelfManager;
+    manager.saveShelves([{id:'rus_tv',enabled:false}],'RUS');
+    manager.saveShelves([{id:'trend_movies',enabled:false}],'NEW');
+    manager.resetDefaults();
+    assert.equal(manager.getSavedShelves().filter(x=>x.enabled).length,11);
+    assert.equal(manager.getSavedShelves('RUS')[0].enabled,false);
+    assert.equal(manager.getSavedShelves('NEW')[0].enabled,false);
+});
+test('screen profile tabs support TV D-pad directional navigation', () => {
+    assert.match(source,/cur\.hasClass\('surs-sm-screen-tab'\)/);
+    assert.match(source,/root\.find\('\.surs-sm-screen-tab'\)/);
+    assert.match(source,/root\.find\('\.surs-sm-screen-tab\.active'\)/);
+    assert.match(source,/function switchEditorScope\(nextScope\)/);
+});
+test('profile edits save under dedicated keys and refresh their own activity', () => {
+    assert.match(source,/saveShelves\(shelves, editorScope\)/);
+    assert.match(source,/refreshSursHome\(editorScope\)/);
+    assert.match(source,/surs_shelves_world_v1/);
+    assert.match(source,/surs_shelves_russia_v1/);
+    assert.match(source,/openShelfManagerModal\('MAIN'\)/);
+});
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
 });
