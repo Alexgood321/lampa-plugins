@@ -75,21 +75,21 @@ function boot({ ready = true, saved = null } = {}) {
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.8\.2/);
+    assert.match(source, /Версия: 3\.8\.3/);
 });
-test('factory profile has 12 active rows in UX order and 10 hidden rows', () => {
+test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
     const rows = app.rows();
     const expected = [
         'nav_buttons', 'core_continue', 'new_movies', 'new_tv',
-        'trend_movies', 'trend_tv', 'upcoming_episodes', 'rus_movies',
-        'rus_tv', 'genres_icons', 'streaming_russian', 'streaming_global'
+        'trend_movies', 'trend_tv', 'period_10s', 'period_00s',
+        'genres_icons', 'streaming_global', 'streaming_russian'
     ];
-    assert.equal(rows.length, 22);
-    assert.deepEqual(Array.from(rows.slice(0, 12), x => x.id), expected);
-    assert.equal(rows.filter(x => x.enabled).length, 12);
-    assert.equal(rows.filter(x => !x.enabled).length, 10);
-    assert.ok(rows.slice(12).every(x => !x.enabled));
+    assert.equal(rows.length, 23);
+    assert.deepEqual(Array.from(rows.slice(0, 11), x => x.id), expected);
+    assert.equal(rows.filter(x => x.enabled).length, 11);
+    assert.equal(rows.filter(x => !x.enabled).length, 12);
+    assert.ok(rows.slice(11).every(x => !x.enabled));
 });
 test('custom saved shelf order and visibility survive the update', () => {
     const custom = [
@@ -101,7 +101,7 @@ test('custom saved shelf order and visibility survive the update', () => {
     assert.deepEqual(Array.from(app.rows(), x => x.id), custom.map(x => x.id));
     assert.deepEqual(Array.from(app.rows(), x => x.enabled), custom.map(x => x.enabled));
 });
-test('legacy factory 22-enabled configuration automatically migrates to 12 active', () => {
+test('legacy factory 22-enabled configuration automatically migrates to 11 active', () => {
     const legacy = [
         'nav_buttons','core_continue','streaming_russian','streaming_global',
         'genres_icons','trend_movies','trend_tv','upcoming_episodes',
@@ -111,10 +111,30 @@ test('legacy factory 22-enabled configuration automatically migrates to 12 activ
         'genre_scifi','period_00s'
     ].map(id => ({ id, enabled: true }));
     const app = boot({ saved: legacy });
-    assert.equal(app.rows().filter(x => x.enabled).length, 12);
+    assert.equal(app.rows().filter(x => x.enabled).length, 11);
     assert.equal(app.rows()[2].id, 'new_movies');
-    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 22);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 23);
     assert.equal(app.stored.get('surs_fixed_shelves_v2')[2].id, 'new_movies');
+});
+test('the previous 3.8.2 factory profile migrates, but customized visibility does not', () => {
+    const last = [
+        'nav_buttons','core_continue','new_movies','new_tv',
+        'trend_movies','trend_tv','upcoming_episodes','rus_movies',
+        'rus_tv','genres_icons','streaming_russian','streaming_global',
+        'stream_kinopoisk','stream_premier','stream_netflix','stream_apple',
+        'turkish_tv','korean_tv','genre_comedy','genre_action',
+        'genre_scifi','period_00s'
+    ].map((id, i) => ({id, enabled: i < 12}));
+    const app = boot({saved: last});
+    assert.equal(app.rows().length, 23);
+    assert.equal(app.rows().filter(x => x.enabled).length, 11);
+    assert.equal(app.rows()[6].id, 'period_10s');
+
+    last[12].enabled = true;
+    const customized = boot({saved: last});
+    assert.equal(customized.rows().length, 22);
+    assert.equal(customized.rows()[6].id, 'upcoming_episodes');
+    assert.equal(customized.rows().filter(x => x.enabled).length, 13);
 });
 test('custom rearrangement of legacy profile is not migrated', () => {
     const legacy = [
@@ -136,11 +156,11 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.8.2');
+    assert.equal(app.window.LampaShelfManager.version, '3.8.3');
     const defaults = app.window.LampaShelfManager.resetDefaults();
-    assert.equal(defaults.length, 22);
-    assert.equal(defaults.filter(x => x.enabled).length, 12);
-    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 22);
+    assert.equal(defaults.length, 23);
+    assert.equal(defaults.filter(x => x.enabled).length, 11);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 23);
     assert.equal(app.rows()[2].id, 'new_movies');
     const refresh = app.timers.find(t => t.ms === 80);
     assert.ok(refresh);
