@@ -76,7 +76,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.8\.4/);
+    assert.match(source, /Версия: 3\.8\.5/);
 });
 test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
@@ -157,7 +157,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.8.4');
+    assert.equal(app.window.LampaShelfManager.version, '3.8.5');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -285,7 +285,7 @@ test('TV keeps one horizontal DPAD-friendly line even if a coarse pointer is rep
     row.params.emit.onCreate.call({html:{addClass:name => classes.push(name)}});
     assert.deepEqual(classes,['surs-nav-line']);
 });
-test('iPhone/iPad get wrapped navigation without affecting regular content rows', () => {
+test('iPhone/iPad use single-row navigation without altering regular content rows', () => {
     const app = boot({ saved: [{id:'nav_buttons',enabled:true}], coarse: true });
     const row = app.getMain()[0];
     const classes = [];
@@ -295,8 +295,8 @@ test('iPhone/iPad get wrapped navigation without affecting regular content rows'
     const unchanged = [];
     desktop.getMain()[0].params.emit.onCreate.call({html:{addClass:name => unchanged.push(name)}});
     assert.deepEqual(unchanged,['surs-nav-line']);
-    assert.match(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\(4/);
-    assert.match(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\(3/);
+    assert.match(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\(7, minmax\(0, 1fr\)\) !important/);
+    assert.doesNotMatch(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\([34],/);
 });
 test('iPad pointer fallback identifies touch input via maxTouchPoints', () => {
     const app = boot({ saved: [{id:'nav_buttons',enabled:true}], coarse:false, touchPoints:5 });
@@ -310,6 +310,24 @@ test('navigation CSS remains isolated and hides film badges on quick buttons', (
     assert.match(source,/\.surs-nav-line \.card__quality,/);
     assert.match(source,/\.surs-nav-line \.card--button-compact\s*\{/);
     assert.doesNotMatch(source,/\.items-line\s*\{\s*display:\s*grid/);
+});
+test('mobile navigation has short labels and accessible full names', () => {
+    const labels = ['Главная', 'Мир', 'Россия', 'Полки', 'Избр.', 'История', 'Настр.'];
+    const block = source.slice(source.indexOf('var mobileLabels = {'),source.indexOf('var results = baseButtons.map('));
+    labels.forEach(label => assert.ok(block.includes("'" + label + "'")));
+    assert.match(source, /\$h\.attr\('aria-label', b\.title\)/);
+    assert.match(source, /\$h\.attr\('title', b\.title\)/);
+    assert.match(source, /card__button-label--mobile/);
+});
+test('very narrow phones keep icon-only seven-column layout', () => {
+    assert.match(source, /@media screen and \(max-width: 350px\)/);
+    assert.match(source, /\.surs-nav-line--touch \.card__button-label--mobile\s*\{\s*display: none !important/);
+    assert.match(source,/grid-template-columns: repeat\(7, minmax\(0, 1fr\)\) !important/);
+});
+test('compact rules apply only to navigation cards', () => {
+    assert.match(source, /\.surs-nav-line--touch \.card--button-compact \{/);
+    assert.match(source, /\.surs-nav-line--touch \.card__button-icon \{/);
+    assert.doesNotMatch(source, /\.card--button-compact\s*\{[^}]*height:\s*4\.5em/);
 });
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
