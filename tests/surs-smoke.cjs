@@ -70,7 +70,31 @@ function boot({ ready = true, saved = null } = {}) {
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.8\.0/);
+    assert.match(source, /Версия: 3\.8\.1/);
+});
+test('factory profile has 12 active rows in UX order and 10 hidden rows', () => {
+    const app = boot();
+    const rows = app.rows();
+    const expected = [
+        'nav_buttons', 'core_continue', 'new_movies', 'new_tv',
+        'trend_movies', 'trend_tv', 'upcoming_episodes', 'rus_movies',
+        'rus_tv', 'genres_icons', 'streaming_russian', 'streaming_global'
+    ];
+    assert.equal(rows.length, 22);
+    assert.deepEqual(Array.from(rows.slice(0, 12), x => x.id), expected);
+    assert.equal(rows.filter(x => x.enabled).length, 12);
+    assert.equal(rows.filter(x => !x.enabled).length, 10);
+    assert.ok(rows.slice(12).every(x => !x.enabled));
+});
+test('custom saved shelf order and visibility survive the update', () => {
+    const custom = [
+        { id: 'stream_netflix', title: 'Netflix', enabled: true },
+        { id: 'nav_buttons', title: 'Навигация', enabled: false },
+        { id: 'core_continue', title: 'Продолжить просмотр', enabled: true }
+    ];
+    const app = boot({ saved: custom });
+    assert.deepEqual(Array.from(app.rows(), x => x.id), custom.map(x => x.id));
+    assert.deepEqual(Array.from(app.rows(), x => x.enabled), custom.map(x => x.enabled));
 });
 test('default shelves are retained', () => {
     const app = boot();
