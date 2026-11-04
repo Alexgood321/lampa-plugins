@@ -78,7 +78,9 @@ function boot({mac = false, appready = true} = {}) {
         setTimeout: fn => { fn(); return 1; },
         clearTimeout() {}
     };
-    vm.runInNewContext(source, ctx, {filename:'num_series.js'});
+    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, setWatched, undoBulk}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
+    if (runtime === source) throw new Error('QA injection anchor missing');
+    vm.runInNewContext(runtime, ctx, {filename:'num_series.js'});
     return {...ctx, stream, modal, timeline, storage, settings, components, logs};
 }
 
@@ -142,4 +144,59 @@ test('no global MutationObserver or legacy Select listener', () => {
     assert.doesNotMatch(source, /new MutationObserver\(/);
     assert.doesNotMatch(source, /Lampa\.Select\.listener\.follow/);
 });
+
+test('alternative files of one episode count only once', () => {
+    const p = boot();
+    p.stream.send('torrent_file', {type:'list_open',items:[]});
+    const a={season:1,episode:3,path:'Show.S01E03.mkv',timeline:{hash:'a',percent:30,updated:100}};
+    const b={season:1,episode:3,path:'Show.S01E03.ALT.mkv',timeline:{hash:'b',percent:70,updated:150}};
+    const c={season:1,episode:4,path:'Show.S01E04.mkv',timeline:{hash:'c',percent:0,updated:0}};
+    [a,b,c].forEach(x=>p.stream.send('torrent_file',{type:'render',element:x,item:element()}));
+    const groups=p.window.__num2Qa.groups();
+    assert.equal(groups.length,2);
+    assert.equal(groups[0].percent,70);
+    assert.equal(groups[0].alternatives.length,2);
+});
+test('resume uses latest incomplete episode, then next episode', () => {
+    const p=boot();
+    const choose=p.window.__num2Qa.resumeCandidate;
+    const rows=[
+        {season:1,episode:1,percent:55,updated:50},
+        {season:1,episode:2,percent:25,updated:300},
+        {season:1,episode:3,percent:0,updated:0}
+    ];
+    assert.equal(choose(rows).episode,2);
+    assert.equal(choose([
+        {season:1,episode:1,percent:100,updated:10},
+        {season:1,episode:2,percent:100,updated:20},
+        {season:1,episode:3,percent:0,updated:0}
+    ]).episode,3);
+});
+test('bulk operations target only chosen season and can undo', () => {
+    const p=boot();
+    p.stream.send('torrent_file',{type:'list_open',items:[]});
+    const a={season:1,episode:1,path:'S01E01.mkv',torrent_hash:'T',id:1,timeline:{hash:'one',percent:30,time:18,duration:60}};
+    const b={season:1,episode:2,path:'S01E02.mkv',torrent_hash:'T',id:2,timeline:{hash:'two',percent:0,time:0,duration:90}};
+    const c={season:2,episode:1,path:'S02E01.mkv',torrent_hash:'T',id:3,timeline:{hash:'three',percent:45,time:27,duration:60}};
+    [a,b,c].forEach(x=>p.stream.send('torrent_file',{type:'render',element:x,item:element()}));
+    p.window.__num2Qa.setWatched('1',true);
+    assert.equal(a.timeline.percent,100);
+    assert.equal(b.timeline.percent,100);
+    assert.equal(c.timeline.percent,45);
+    p.window.__num2Qa.undoBulk();
+    assert.equal(a.timeline.percent,30);
+    assert.equal(a.timeline.time,18);
+    assert.equal(b.timeline.percent,0);
+    assert.equal(c.timeline.percent,45);
+});
+test('timeline updates refresh current row state', () => {
+    const p=boot();
+    p.stream.send('torrent_file',{type:'list_open',items:[]});
+    const a={season:1,episode:1,path:'S01E01.mkv',timeline:{hash:'hash',percent:0,time:0,duration:100}};
+    p.stream.send('torrent_file',{type:'render',element:a,item:element()});
+    p.timeline.send('update',{data:{hash:'hash',road:{percent:46,time:46,duration:100,updated:333}}});
+    assert.equal(a.timeline.percent,46);
+    assert.equal(a.timeline.updated,333);
+});
+
 process.stdout.write('\nNUM Series Pro: ' + total + ' smoke checks passed\n');
