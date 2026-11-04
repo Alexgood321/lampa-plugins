@@ -20,6 +20,8 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
     const warnings = [];
     let contentRowsCalls = 0;
     const added = [];
+    const settings = [];
+    const components = [];
     const navigations = [];
     const window = { appready: true, matchMedia: () => ({matches: coarse}), navigator: {maxTouchPoints: touchPoints} };
     const Lampa = {
@@ -45,7 +47,12 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
         },
         Storage: {
             get: (key, fallback) => stored.has(key) ? stored.get(key) : fallback,
+            field: key => stored.has(key) ? stored.get(key) : true,
             set: (key, value) => stored.set(key, value)
+        },
+        SettingsApi: {
+            addComponent: component => components.push(component),
+            addParam: param => settings.push(param)
         },
         Activity: { active: () => true, replace: value => navigations.push(value) },
         Listener: { follow: () => {} },
@@ -57,7 +64,14 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
             return { type, data };
         }}
     };
-    const $ = target => target && typeof target.addClass === 'function' ? target : ({ length: 1, append: () => {} });
+    const $ = target => {
+        if (target && typeof target.addClass === 'function') {
+            if (!target.css) target.css = (key, value) => { if (!target.styles) target.styles = {}; target.styles[key] = value; return target; };
+            if (!target.attr) target.attr = (key, value) => { if (!target.attrs) target.attrs = {}; target.attrs[key] = value; return target; };
+            return target;
+        }
+        return { length: 1, append: () => {} };
+    };
     const ctx = {
         window, Lampa, $,
         setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
@@ -71,12 +85,12 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
         Lampa.Api.sources[sourceId].main({ source: sourceId }, x => { result = x; }, () => { result = []; });
         return result;
     };
-    return { stored, timers, warnings, window, Lampa, added, navigations, rows, getMain,
+    return { stored, timers, warnings, window, Lampa, added, settings, components, navigations, rows, getMain,
         contentRowsCalls: () => contentRowsCalls };
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.8\.5/);
+    assert.match(source, /Версия: 3\.8\.6/);
 });
 test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
@@ -157,7 +171,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.8.5');
+    assert.equal(app.window.LampaShelfManager.version, '3.8.6');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -295,7 +309,7 @@ test('iPhone/iPad use single-row navigation without altering regular content row
     const unchanged = [];
     desktop.getMain()[0].params.emit.onCreate.call({html:{addClass:name => unchanged.push(name)}});
     assert.deepEqual(unchanged,['surs-nav-line']);
-    assert.match(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\(7, minmax\(0, 1fr\)\) !important/);
+    assert.match(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\(var\(--surs-nav-count, 7\), minmax\(0, 1fr\)\) !important/);
     assert.doesNotMatch(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\([34],/);
 });
 test('iPad pointer fallback identifies touch input via maxTouchPoints', () => {
@@ -322,12 +336,90 @@ test('mobile navigation has short labels and accessible full names', () => {
 test('very narrow phones keep icon-only seven-column layout', () => {
     assert.match(source, /@media screen and \(max-width: 350px\)/);
     assert.match(source, /\.surs-nav-line--touch \.card__button-label--mobile\s*\{\s*display: none !important/);
-    assert.match(source,/grid-template-columns: repeat\(7, minmax\(0, 1fr\)\) !important/);
+    assert.match(source,/grid-template-columns: repeat\(var\(--surs-nav-count, 7\), minmax\(0, 1fr\)\) !important/);
 });
 test('compact rules apply only to navigation cards', () => {
     assert.match(source, /\.surs-nav-line--touch \.card--button-compact \{/);
     assert.match(source, /\.surs-nav-line--touch \.card__button-icon \{/);
     assert.doesNotMatch(source, /\n\s*\.card--button-compact\s*\{[^}]*height:\s*4\.5em/);
+});
+test('seven independent visibility triggers exist in SURS settings', () => {
+    const app = boot();
+    const triggers = app.settings.filter(item => item.param.type === 'trigger' &&
+        item.param.name.startsWith('surs_nav_visible_'));
+    const expected = ['surs_main', 'surs_new', 'surs_rus', 'surs_shelf_manager',
+        'surs_bookmarks', 'surs_history', 'surs_settings'];
+    assert.deepEqual(triggers.map(x => x.param.name),
+        expected.map(id => 'surs_nav_visible_' + id));
+    assert.ok(triggers.every(x => x.param.default === true && x.component === 'surs'));
+    assert.ok(triggers.every(x => typeof x.onChange === 'function'));
+    assert.ok(app.settings.some(x => x.param.name === 'surs_nav_refresh'));
+});
+test('hide Home and Settings: five icons remain, order and widths update', () => {
+    const app = boot({saved:[{id:'nav_buttons',enabled:true}],coarse:true});
+    app.stored.set('surs_nav_visible_surs_main',false);
+    app.stored.set('surs_nav_visible_surs_settings',false);
+    const rows = app.getMain();
+    assert.equal(rows.length,1);
+    const bar=rows[0];
+    assert.equal(bar.results.length,5);
+    assert.deepEqual(Array.from(bar.results,x=>x.title),[
+        'Новинки Мир','Новинки Россия','Порядок полок','Закладки','История'
+    ]);
+    assert.equal(bar.params.items.view,5);
+    const html = { addClass: () => {} };
+    bar.params.emit.onCreate.call({html});
+    assert.equal(html.styles['--surs-nav-count'],'5');
+    assert.equal(html.attrs['data-surs-nav-count'],'5');
+});
+test('single remaining button is correctly count-limited and centered', () => {
+    const app = boot({saved:[{id:'nav_buttons',enabled:true}],coarse:true});
+    const all = ['surs_main','surs_new','surs_rus','surs_shelf_manager',
+        'surs_bookmarks','surs_history','surs_settings'];
+    all.forEach(id=>app.stored.set('surs_nav_visible_'+id,id==='surs_bookmarks'));
+    const bar=app.getMain()[0];
+    assert.equal(bar.results.length,1);
+    assert.equal(bar.results[0].title,'Закладки');
+    assert.equal(bar.params.items.view,1);
+    assert.match(source,/\.surs-nav-line\[data-surs-nav-count="1"\] \.scroll__body\.mapping--line \{ max-width: 10em !important/);
+});
+test('hiding all nav buttons omits empty row; restored icon works', () => {
+    const app = boot({saved:[{id:'nav_buttons',enabled:true},{id:'new_movies',enabled:true}]});
+    const names=['surs_main','surs_new','surs_rus','surs_shelf_manager',
+        'surs_bookmarks','surs_history','surs_settings'];
+    names.forEach(id=>app.stored.set('surs_nav_visible_'+id,false));
+    const hidden=app.getMain();
+    assert.ok(hidden.every(x=>x.title!=='Быстрый переход'));
+    app.stored.set('surs_nav_visible_surs_settings',true);
+    const restored=app.getMain();
+    assert.ok(restored.some(x=>x.title==='Быстрый переход'));
+    assert.equal(restored.find(x=>x.title==='Быстрый переход').results.length,1);
+});
+test('navigation preferences are independent from factory shelf reset', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true}]});
+    app.stored.set('surs_nav_visible_surs_settings',false);
+    app.window.LampaShelfManager.resetDefaults();
+    assert.equal(app.stored.get('surs_nav_visible_surs_settings'),false);
+    assert.equal(app.window.LampaShelfManager.getSavedShelves().length,23);
+});
+test('apply button refreshes home while individual toggles leave settings open', () => {
+    const app=boot();
+    const option=app.settings.find(x=>x.param.name==='surs_nav_visible_surs_main');
+    option.onChange(false);
+    assert.equal(app.navigations.length,0);
+    const apply=app.settings.find(x=>x.param.name==='surs_nav_refresh');
+    apply.onChange();
+    const refresh=app.timers.find(x=>x.ms===80);
+    assert.ok(refresh);
+    refresh.fn();
+    assert.equal(app.navigations[0].source,'SURS');
+});
+test('dynamic CSS columns and scoped fallback widths work across viewports', () => {
+    assert.match(source,/grid-template-columns: repeat\(var\(--surs-nav-count, 7\), minmax\(0, 1fr\)\)/);
+    for(let n=1;n<=6;n++){
+        assert.ok(source.includes('.surs-nav-line[data-surs-nav-count="'+n+'"]'));
+    }
+    assert.doesNotMatch(source,/\.items-line\s*\{\s*grid-template-columns:/);
 });
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
