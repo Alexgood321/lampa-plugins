@@ -81,7 +81,7 @@ test('factory profile has 12 active rows in UX order and 10 hidden rows', () => 
         'rus_tv', 'genres_icons', 'streaming_russian', 'streaming_global'
     ];
     assert.equal(rows.length, 22);
-    assert.deepEqual(rows.slice(0, 12).map(x => x.id), expected);
+    assert.deepEqual(Array.from(rows.slice(0, 12), x => x.id), expected);
     assert.equal(rows.filter(x => x.enabled).length, 12);
     assert.equal(rows.filter(x => !x.enabled).length, 10);
     assert.ok(rows.slice(12).every(x => !x.enabled));
@@ -93,8 +93,8 @@ test('custom saved shelf order and visibility survive the update', () => {
         { id: 'core_continue', title: 'Продолжить просмотр', enabled: true }
     ];
     const app = boot({ saved: custom });
-    assert.deepEqual(app.rows().map(x => x.id), custom.map(x => x.id));
-    assert.deepEqual(app.rows().map(x => x.enabled), custom.map(x => x.enabled));
+    assert.deepEqual(Array.from(app.rows(), x => x.id), custom.map(x => x.id));
+    assert.deepEqual(Array.from(app.rows(), x => x.enabled), custom.map(x => x.enabled));
 });
 test('default shelves are retained', () => {
     const app = boot();
