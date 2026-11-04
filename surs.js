@@ -3239,18 +3239,26 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 // Переключение видимости
                 row.find('[data-action="toggle"]').on('hover:enter click', function(e) {
-                    e.stopPropagation();
+                    if (e && e.stopPropagation) e.stopPropagation();
                     item.enabled = !item.enabled;
-                    // Не перестраиваем весь список при одном переключении.
                     row.toggleClass('surs-sm-item--disabled', !item.enabled);
                     row.find('[data-action="toggle"]').toggleClass('active', !!item.enabled)
                         .attr('aria-pressed', item.enabled ? 'true' : 'false')
                         .text(item.enabled ? '✓ Вкл' : '✕ Скрыто');
                     modalHtml.find('.surs-sm-counter').text(
-                        shelves.filter(function(sh) { return sh.enabled; }).length + ' из ' + shelves.length + ' активно'
+                        shelves.filter(function(sh) { return sh.enabled; }).length + ' / ' + shelves.length
                     );
                     if (activeCategory === 'enabled' || activeCategory === 'hidden') {
-                        refreshListFocus(null, 'tab');
+                        var future = shelves.filter(function(sh) {
+                            return activeCategory === 'enabled' ? sh.enabled : !sh.enabled;
+                        });
+                        var closest = future.reduce(function(best, sh) {
+                            var distance = Math.abs(shelves.indexOf(sh) - idx);
+                            return !best || distance < best.distance ? {id: sh.id, distance: distance} : best;
+                        }, null);
+                        refreshListFocus(closest ? closest.id : null, 'toggle');
+                    } else {
+                        updateApplyState();
                     }
                 });
 
@@ -3460,7 +3468,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     <div class="surs-sm-footer-right">
                         <div class="surs-sm-btn surs-sm-btn--reset selector" data-action="reset">Сброс</div>
                         <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="cancel">Отмена</div>
-                        <div class="surs-sm-btn surs-sm-btn--primary selector" data-action="apply">✓ Применить</div>
+                        <div class="surs-sm-btn surs-sm-btn--primary selector ${hasUnsavedChanges() ? '' : 'surs-sm-btn--inactive'}" data-action="apply" aria-disabled="${hasUnsavedChanges() ? 'false' : 'true'}">✓ Применить</div>
                     </div>
                 </div>
             `);
@@ -3516,7 +3524,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             footer.find('[data-action="reset"]').on('hover:enter click', function(e) {
                 if (e && e.stopPropagation) e.stopPropagation();
                 Lampa.Select.show({
-                    title: 'Сбросить порядок полок к начальным 22?',
+                    title: 'Восстановить заводской порядок 23 полок?',
                     items: [
                         { title: 'Да, сбросить порядок и отключить плагины', action: 'confirm' },
                         { title: 'Отмена', action: 'cancel' }
@@ -3539,16 +3547,18 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             // Выход без сохранения, в том числе на смартфоне.
             footer.find('[data-action="cancel"]').on('hover:enter click', function(e) {
-                e.stopPropagation();
-                closeModalSafely(false);
+                if (e && e.stopPropagation) e.stopPropagation();
+                requestCloseEditor();
             });
 
             // Применить
             footer.find('[data-action="apply"]').on('hover:enter click', function(e) {
-                e.stopPropagation();
-                saveShelves(shelves);
-                if (needsPluginMigration) Lampa.Storage.set(migrationKey, 'true');
-                closeModalSafely(true);
+                if (e && e.stopPropagation) e.stopPropagation();
+                if (!hasUnsavedChanges()) {
+                    Lampa.Noty.show('Изменений нет');
+                    return;
+                }
+                applyAndClose();
             });
 
             modalHtml.append(footer);
@@ -3562,7 +3572,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var list = root.find('.surs-sm-list')[0];
             if (!list) return;
 
-            var row = $(elem).closest('.surs-sm-item')[0];
+            var row = $(elem).closest('.surs-sm-item:visible')[0];
             if (!row) {
                 if ($(elem).hasClass('surs-sm-tab')) {
                     list.scrollTop = 0;
@@ -3610,10 +3620,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
 
         function refreshListFocus(targetId, buttonType) {
-            var oldList = $('.surs-sm-wrap .surs-sm-list');
+            var oldList = (modalHtml || $('.surs-sm-wrap')).find('.surs-sm-list');
             var previousScroll = oldList.length ? oldList.scrollTop() : 0;
             var newContent = renderModalContent();
-            $('.surs-sm-wrap').replaceWith(newContent);
+            if (modalHtml) modalHtml.replaceWith(newContent);
+            else $('.surs-sm-wrap').replaceWith(newContent);
             newContent.find('.surs-sm-list').scrollTop(previousScroll);
             modalHtml = newContent;
 
@@ -3690,9 +3701,19 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             html: modalHtml,
             size: 'large',
             onBack: function() {
-                closeModalSafely(false);
+                requestCloseEditor();
             }
         });
+        try {
+            var shell = Lampa.Modal.render && Lampa.Modal.render();
+            if (shell && shell.addClass) {
+                shell.addClass('surs-sm-modal');
+                if (editorPlatform.touch) shell.addClass('surs-sm--touch');
+                if (editorPlatform.tv) shell.addClass('surs-sm--tv');
+            }
+        } catch(e) {
+            console.warn('[SURS] Не удалось пометить окно редактора:', e);
+        }
 
         Lampa.Controller.add('surs_shelf_manager', {
             toggle: function () {
@@ -3707,7 +3728,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 // 1. Из футера -> переход к последней строке списка
                 if (cur.closest('.surs-sm-footer').length) {
-                    var allRows = root.find('.surs-sm-item');
+                    var allRows = root.find('.surs-sm-item:visible');
                     if (allRows.length) {
                         var lastRow = allRows.last();
                         var target = lastRow.find('.surs-sm-toggle')[0] || lastRow.find('.selector')[0];
@@ -3722,7 +3743,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 // 2. В строке списка -> переход к предыдущей строке или к вкладкам
                 var row = cur.closest('.surs-sm-item');
                 if (row.length) {
-                    var allRows = root.find('.surs-sm-item');
+                    var allRows = root.find('.surs-sm-item:visible');
                     var rowIndex = allRows.index(row);
                     var currentAction = cur.data('action');
                     var rowSelectors = row.find('.selector');
@@ -3760,7 +3781,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 // 1. Из вкладок -> переход к первой строке списка
                 if (cur.hasClass('surs-sm-tab')) {
-                    var firstRow = root.find('.surs-sm-item').first();
+                    var firstRow = root.find('.surs-sm-item:visible').first();
                     if (firstRow.length) {
                         var target = firstRow.find('.surs-sm-toggle')[0] || firstRow.find('.selector')[0];
                         setModalFocus(target, true);
@@ -3774,7 +3795,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 // 2. В строке списка -> переход к следующей строке или в футер (только с последней строки!)
                 var row = cur.closest('.surs-sm-item');
                 if (row.length) {
-                    var allRows = root.find('.surs-sm-item');
+                    var allRows = root.find('.surs-sm-item:visible');
                     var rowIndex = allRows.index(row);
                     var currentAction = cur.data('action');
                     var rowSelectors = row.find('.selector');
