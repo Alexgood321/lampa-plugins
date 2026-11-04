@@ -90,7 +90,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.8\.6/);
+    assert.match(source, /Версия: 3\.9\.0/);
 });
 test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
@@ -171,7 +171,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.8.6');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.0');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -274,10 +274,12 @@ test('early load retries without setting ready flag', () => {
     app.timers.find(x => x.ms === 1000).fn();
     assert.equal(app.window.plugin_surs_fixed_ready, true);
 });
-test('small-screen, coarse-pointer and reduced-motion rules exist', () => {
-    assert.match(source, /@media \(max-width: 680px\)/);
-    assert.match(source, /@media \(pointer: coarse\)/);
+test('new editor has phone, tablet, reduced-motion and scoped modal rules', () => {
+    assert.match(source, /@media screen and \(max-width: 700px\)/);
+    assert.match(source, /@media screen and \(min-width: 701px\) and \(max-width: 1100px\)/);
     assert.match(source, /prefers-reduced-motion: reduce/);
+    assert.match(source, /modal\.surs-sm-modal\.surs-sm--touch/);
+    assert.match(source, /modal\.surs-sm-modal\.surs-sm--tv/);
     assert.match(source, /data-action="cancel"/);
     assert.match(source, /data-action="search"/);
 });
@@ -420,6 +422,90 @@ test('dynamic CSS columns and scoped fallback widths work across viewports', () 
         assert.ok(source.includes('.surs-nav-line[data-surs-nav-count="'+n+'"]'));
     }
     assert.doesNotMatch(source,/\.items-line\s*\{\s*grid-template-columns:/);
+});
+test('mobile modal is fullscreen without modifying global Lampa modals', () => {
+    assert.match(source,/\.modal\.surs-sm-modal\.surs-sm--touch \.modal__content\s*\{/);
+    assert.match(source,/height: 100dvh !important/);
+    assert.match(source,/shell\.addClass\('surs-sm-modal'\)/);
+    assert.match(source,/shell\.addClass\('surs-sm--touch'\)/);
+    assert.match(source,/shell\.addClass\('surs-sm--tv'\)/);
+    assert.doesNotMatch(source, /\n\s*\.modal__content\s*\{[^}]*height: 100dvh/);
+});
+test('editor uses dedicated flexible scrolling area and fixed controls', () => {
+    assert.match(source,/\.modal\.surs-sm-modal \.surs-sm-wrap\s*\{[^}]*display: flex;[^}]*flex-direction: column;/);
+    assert.match(source,/\.surs-sm-list\s*\{[^}]*flex: 1 1 0;[^}]*overflow-y: auto;/);
+    assert.match(source,/\.modal\.surs-sm-modal\.surs-sm--touch \.surs-sm-footer\s*\{/);
+    assert.match(source,/env\(safe-area-inset-bottom, 0px\)/);
+    assert.doesNotMatch(source,/@media \(max-width: 680px\)/);
+});
+test('mobile editor has responsive type and 44px touch targets', () => {
+    assert.match(source,/\.surs-sm-name\s*\{[^}]*font-size: 15px !important;/);
+    assert.match(source,/\.surs-sm-desc\s*\{[^}]*font-size: 12px !important;/);
+    assert.match(source,/\.surs-sm-item\s*\{[^}]*min-height: 76px;/);
+    assert.match(source,/\.surs-sm-drag-handle\s*\{[^}]*min-width: 44px !important;/);
+    assert.match(source,/\.surs-sm-toolbar\s*\{[^}]*display: flex;/);
+});
+test('mobile header has close, overflow, summary and accessible actions', () => {
+    assert.match(source,/data-action="back" role="button" aria-label="Закрыть редактор"/);
+    assert.match(source,/data-action="options" role="button" aria-label="Дополнительные действия"/);
+    assert.match(source,/Восстановить заводской порядок 23 полок/);
+    assert.match(source,/data-action="categories"/);
+    assert.match(source,/surs-sm-counter/);
+});
+test('inline live search filters existing list without destroying focused input', () => {
+    assert.match(source,/type="search" class="surs-sm-search-input"/);
+    assert.match(source,/searchInput\.on\('input', function\(\)/);
+    assert.match(source,/filterVisibleRows\(\)/);
+    assert.match(source,/surs-sm-row-filtered/);
+    assert.match(source,/surs-sm-empty-search/);
+    assert.match(source,/openSearchKeyboard\(\)/);
+});
+test('mobile category menu and core tabs are present', () => {
+    assert.match(source,/\{ id: 'all', title: 'Все' \}/);
+    assert.match(source,/\{ id: 'enabled', title: 'Активные' \}/);
+    assert.match(source,/\{ id: 'hidden', title: 'Скрытые' \}/);
+    assert.match(source,/title: 'Категория полок'/);
+    assert.match(source,/surs-sm-tab\[data-cat="plugin"\]/);
+});
+test('exit protects unsaved changes and Apply is disabled if unchanged', () => {
+    assert.match(source,/function hasUnsavedChanges\(\)/);
+    assert.match(source,/title: 'Есть несохранённые изменения'/);
+    assert.match(source,/Сохранить и выйти/);
+    assert.match(source,/Выйти без сохранения/);
+    assert.match(source,/Продолжить редактирование/);
+    assert.match(source,/aria-disabled="[^"]*hasUnsavedChanges\(\)/);
+    assert.match(source,/if \(!hasUnsavedChanges\(\)\) \{/);
+    assert.match(source,/requestCloseEditor\(\)/);
+});
+test('mobile footer includes only Add and Apply with overflow elsewhere', () => {
+    assert.match(source,/\.surs-sm--touch \.surs-sm-footer \[data-action="rescan"\]/);
+    assert.match(source,/\.surs-sm--touch \.surs-sm-footer \[data-action="reset"\]/);
+    assert.match(source,/\.surs-sm--touch \.surs-sm-footer \[data-action="cancel"\]/);
+    assert.match(source,/\.surs-sm--touch \.surs-sm-footer \[data-action="add"\]/);
+    assert.match(source,/\.surs-sm--touch \.surs-sm-footer \[data-action="apply"\]/);
+    assert.match(source,/title: 'Действия с полками'/);
+    assert.match(source,/choice\.action === 'hide-all-plugins'/);
+});
+test('touch reordering waits for hold and cleans up on cancel', () => {
+    assert.match(source,/touchTimer = setTimeout\(function\(\) \{[^}]*touchArmed = true;/);
+    assert.match(source,/220\)/);
+    assert.match(source,/handle\.on\('touchend touchcancel'/);
+    assert.match(source,/if \(!touchArmed\) \{/);
+    assert.match(source,/function clearTouchReorder\(\)/);
+    assert.match(source,/document\.elementFromPoint/);
+});
+test('TV D-pad uses visible filtered rows and fixed accessible focus', () => {
+    assert.match(source,/root\.find\('\.surs-sm-item:visible'\)/);
+    assert.match(source,/surs-sm--tv \.surs-sm-search-trigger/);
+    assert.match(source,/Lampa\.Controller\.collectionSet\(newContent\)/);
+    assert.match(source,/aria-pressed=/);
+    assert.match(source,/aria-label=/);
+});
+test('existing factory configuration and nav buttons are still present', () => {
+    const app = boot();
+    assert.equal(app.rows().length,23);
+    assert.equal(app.rows().filter(x=>x.enabled).length,11);
+    assert.equal(app.settings.filter(x=>x.param.name.startsWith('surs_nav_visible_')).length,7);
 });
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
