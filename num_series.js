@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.2';
+    var VERSION = '2.0.3';
 
     function startPlugin() {
         // Локализация
@@ -61,15 +61,11 @@
         style.id = 'num-series-styles';
         style.textContent = [
             '.num2-bar{display:flex;align-items:center;gap:.36em;max-width:100%;padding:.26em 0;margin:0 0 .46em;background:transparent;border:0;box-sizing:border-box;}',
-            '.num2-tabs{display:flex;flex:1;min-width:0;align-items:center;gap:.35em;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}',
+            '.num2-tabs{display:flex;position:relative;flex:1;min-width:0;max-width:100%;align-items:center;gap:.45em;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;}',
             '.num2-tabs::-webkit-scrollbar{display:none;}',
-            '.num2-mobile{display:none;align-items:center;gap:.65em;flex:1 1 auto;min-width:0;min-height:2.65em;padding:.35em .8em;border-radius:.55em;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.18);color:#fff;box-sizing:border-box;cursor:pointer;}',
-            '.num2-mobile-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:.96em;}',
-            '.num2-mobile-count{flex:0 0 auto;color:rgba(255,255,255,.65);font-variant-numeric:tabular-nums;font-size:.89em;}',
-            '.num2-mobile-chevron{flex:0 0 auto;width:1em;height:1em;opacity:.6;}',
             '.num2-tab,.num2-actions{display:inline-flex;align-items:center;justify-content:center;gap:.34em;flex:0 0 auto;min-height:2.55em;padding:.35em .65em;border:1px solid rgba(255,255,255,.055);border-radius:.46em;background:rgba(255,255,255,.06);color:rgba(255,255,255,.78);font-size:.9em;font-weight:500;white-space:nowrap;box-sizing:border-box;cursor:pointer;}',
             '.num2-tab.active{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.34);color:#fff;font-weight:600;}',
-            '.num2-tab.focus,.num2-actions.focus,.num2-mobile.focus,.num2-resume.focus{background:rgba(255,255,255,.25);outline:2px solid currentColor;outline-offset:1px;color:#fff;}',
+            '.num2-tab.focus,.num2-actions.focus,.num2-resume.focus{background:rgba(255,255,255,.25);outline:2px solid currentColor;outline-offset:1px;color:#fff;}',
             '.num2-tab .num2-count{color:rgba(255,255,255,.63);font-size:.84em;font-variant-numeric:tabular-nums;}',
             '.num2-tab.active .num2-count{color:#fff;}',
             '.num2-tab .num2-done{color:#70d6a0;}',
@@ -87,7 +83,7 @@
             '.num2-progress>div{height:100%;background:#71c99f;}',
             '.num-hidden-item{display:none!important;}',
             '.num-resume-badge{display:inline-block;margin-left:.4em;padding:.08em .35em;border-radius:.25em;font-size:.75em;color:#b6e6c7;background:rgba(83,179,120,.14);font-variant-numeric:tabular-nums;}',
-            '@media(max-width:600px){.num2-bar{gap:.5em;padding:.12em 0;margin-bottom:.52em}.num2-tabs{display:none!important}.num2-mobile{display:flex;min-height:2.85em}.num2-actions{width:2.85em;min-width:2.85em;height:2.85em;min-height:2.85em}.num2-resume{min-height:3.2em;padding:.55em .7em;gap:.65em}.num2-resume-title{font-size:.94em}}',
+            '@media(max-width:600px){.num2-bar{gap:.5em;padding:.3em 0;margin-bottom:.75em}.num2-tabs{display:flex!important;gap:.4em}.num2-tab{min-height:3.35em;padding:.65em 1em;font-size:.96em;border-radius:.52em}.num2-actions{flex:0 0 3.35em;width:3.35em;min-width:3.35em;height:3.35em;min-height:3.35em;border-radius:.52em}.num2-resume{min-height:4.3em;padding:.85em .95em;gap:.8em;border-radius:.7em;margin-bottom:1em}.num2-play{width:2.6em;height:2.6em}.num2-resume-title{font-size:1em}.num2-resume-top{font-size:.85em;margin-bottom:.25em}}',
             '@media(prefers-reduced-motion:reduce){.num2-tab,.num2-resume{scroll-behavior:auto;}}'
         ].join('\n');
         document.head.appendChild(style);
@@ -335,14 +331,6 @@
                 tab.find('.num2-count').text(text).toggleClass('num2-done', stats.total > 0 && stats.watched === stats.total);
                 tab.attr('aria-label', seasonLabel(season) + (text ? ', просмотрено ' + stats.watched + ' из ' + stats.total : ''));
             });
-            var mobile = container.find('.num2-mobile');
-            if (mobile.length) {
-                var active = seasonStats(activeSeason, episodes);
-                var count = setting('counters') ? formatSeasonCount(active.watched, active.total) : '';
-                mobile.find('.num2-mobile-label').text(seasonLabel(activeSeason));
-                mobile.find('.num2-mobile-count').text(count);
-                mobile.attr('aria-label', 'Выбор сезона: ' + seasonLabel(activeSeason) + (count ? ', ' + count : ''));
-            }
         }
 
                 // Различаем старт, следующую серию и реальное продолжение с прогрессом.
@@ -465,37 +453,6 @@
             scheduleRefresh();
             if (Lampa.Noty) Lampa.Noty.show('Предыдущий прогресс восстановлен');
         }
-        function seasonPickerItems() {
-            var listed = groups(), available = [];
-            listed.forEach(function (entry) {
-                if (available.indexOf(entry.season) < 0) available.push(entry.season);
-            });
-            available.sort(function (a,b) { return a-b; });
-            var choices = ['all'].concat(available.map(String));
-            if (currentRows.some(function (row) { return row.season === 0; })) choices.push('unknown');
-            return choices.map(function (season) {
-                var stats = seasonStats(season, listed);
-                var suffix = setting('counters') ? ' · ' + formatSeasonCount(stats.watched, stats.total) : '';
-                return {
-                    title: (String(season) === String(activeSeason) ? '✓  ' : '') + seasonLabel(season) + suffix,
-                    num2_season: String(season)
-                };
-            });
-        }
-        function openSeasonPicker(container) {
-            if (!Lampa.Select || !Lampa.Select.show) return;
-            var activeController = Lampa.Controller && Lampa.Controller.enabled();
-            var returnTo = activeController && activeController.name || 'modal';
-            Lampa.Select.show({
-                title: 'Выбор сезона',
-                items: seasonPickerItems(),
-                onBack: function () { if (Lampa.Controller) Lampa.Controller.toggle(returnTo); },
-                onSelect: function (item) {
-                    if (Lampa.Controller) Lampa.Controller.toggle(returnTo);
-                    if (item && item.num2_season != null) applySeasonFilter(container, item.num2_season);
-                }
-            });
-        }
         function openSeasonActions(container) {
             if (!Lampa.Select || !Lampa.Select.show) return;
             var returnTo = Lampa.Controller && Lampa.Controller.enabled() && Lampa.Controller.enabled().name || 'modal';
@@ -546,25 +503,29 @@
             if (!seasons.length) return; // Не подменяем штатный список при неопределённых сезонах.
             var bar = $('<div class="num2-bar"><div class="num2-tabs selector-box"></div></div>');
             var tabs = bar.find('.num2-tabs');
-            // На телефоне вместо обрезанных вкладок используем один селектор сезона.
-            var mobile = $('<div class="num2-mobile selector" role="button" aria-label="Выбор сезона">' +
-                '<span class="num2-mobile-label"></span><span class="num2-mobile-count"></span>' +
-                '<svg class="num2-mobile-chevron" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5">' +
-                '<path d="m6 9 6 6 6-6"/></svg></div>');
             function addTab(value, title) {
                 var tab = $('<div class="num2-tab selector" role="tab" data-season="' + value + '">' +
                     '<span>' + escapeHtml(title) + '</span><span class="num2-count"></span></div>');
                 safeAction(tab, function () { applySeasonFilter(container, String(value)); });
                 tab.on('hover:focus', function () {
-                    if (this.scrollIntoView) this.scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'});
+                    // На сенсорном экране горизонтальную прокрутку полностью контролирует пользователь.
+                    // На ТВ сдвигаем только ленту, не весь модальный экран.
+                    var mobileScreen = Lampa.Platform && Lampa.Platform.screen &&
+                        Lampa.Platform.screen('mobile');
+                    if (mobileScreen) return;
+                    var track = tabs[0];
+                    if (!track || typeof track.scrollLeft !== 'number') return;
+                    var left = this.offsetLeft, right = left + this.offsetWidth;
+                    if (left < track.scrollLeft) track.scrollLeft = Math.max(0, left - 8);
+                    else if (right > track.scrollLeft + track.clientWidth) {
+                        track.scrollLeft = right - track.clientWidth + 8;
+                    }
                 });
                 tabs.append(tab);
             }
             addTab('all', 'Все');
             seasons.forEach(function (season) { addTab(String(season), 'Сезон ' + season); });
             if (currentRows.some(function (row) { return row.season === 0; })) addTab('unknown', 'Не определено');
-            safeAction(mobile, function () { openSeasonPicker(container); });
-            bar.append(mobile);
             var action = $('<div class="num2-actions selector" role="button" aria-label="Действия с сериями" title="Действия с сериями">' +
                 '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.7"/>' +
                 '<circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></div>');
