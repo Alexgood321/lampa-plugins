@@ -1392,9 +1392,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             });
             // Нельзя оставлять пользователя без доступа к менеджеру полок.
             if (!unique.length) return [getDefaultShelvesList()[0]];
-            if (!unique.some(function(item) { return item.enabled; })) {
-                return [Object.assign({}, getDefaultShelvesList()[0])];
-            }
+            // Скрытые полки остаются в редакторе. Для пустой главной
+            // безопасная навигация добавляется только в загрузчике главной.
             return unique;
         }
 
@@ -2503,7 +2502,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var cat = getShelfCategory(item.id);
                 var desc = item.desc || getShelfDesc(item.id);
                 var live = window.SURS_EXTERNAL_SHELVES[item.id];
-                var unavailable = /^ext_/.test(item.id) && !/^ext_Trakt/.test(item.id) &&
+                var unavailable = (/^ext_/.test(item.id) || /^hdrezka_/i.test(item.id)) && !/^ext_Trakt/.test(item.id) &&
                     (!live || (typeof live.loader !== 'function' && typeof live.call !== 'function'));
                 if (unavailable) desc = 'Источник недоступен: исходный плагин не зарегистрирован';
                 var badgeHtml = getBadgeHtml(cat);
