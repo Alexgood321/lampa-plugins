@@ -3149,8 +3149,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         shelves.filter(function(sh) { return sh.enabled; }).length + ' / ' + shelves.length
                     );
                     if (activeCategory === 'enabled' || activeCategory === 'hidden') {
+                        var needle = searchQuery.trim().toLowerCase();
                         var future = shelves.filter(function(sh) {
-                            return activeCategory === 'enabled' ? sh.enabled : !sh.enabled;
+                            var inTab = activeCategory === 'enabled' ? sh.enabled : !sh.enabled;
+                            if (!inTab || !needle) return inTab;
+                            var desc = sh.desc || getShelfDesc(sh.id);
+                            return ((sh.title || '') + ' ' + (desc || '') + ' ' + sh.id)
+                                .toLowerCase().indexOf(needle) !== -1;
                         });
                         var closest = future.reduce(function(best, sh) {
                             var distance = Math.abs(shelves.indexOf(sh) - idx);
@@ -3524,7 +3529,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
         function getCurrentFocus() {
             var root = modalHtml || $('.surs-sm-wrap');
-            var cur = root.find('.selector.focus');
+            var cur = root.find('.selector.focus:visible');
             if (!cur.length && window.Navigator && window.Navigator._focus) {
                 cur = $(window.Navigator._focus);
             }
@@ -3532,7 +3537,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 cur = root.find('.surs-sm-tab.active');
             }
             if (!cur.length) {
-                cur = root.find('.selector').eq(0);
+                cur = root.find('.selector:visible').eq(0);
             }
             return cur;
         }
@@ -3555,7 +3560,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 focusTarget = newContent.find('[data-action="reset"]')[0] || newContent.find('[data-action="apply"]')[0];
             } else if (targetId) {
                 var row = newContent.find('[data-id="' + targetId + '"]');
-                if (row.length) {
+                if (row.length && !row.hasClass('surs-sm-row-filtered')) {
                     if (buttonType === 'top') focusTarget = row.find('.surs-sm-navbtn--top')[0];
                     else if (buttonType === 'up') focusTarget = row.find('.surs-sm-navbtn--up')[0];
                     else if (buttonType === 'down') focusTarget = row.find('.surs-sm-navbtn--down')[0];
@@ -3569,9 +3574,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             }
 
             if (!focusTarget) {
-                focusTarget = newContent.find('.selector.focus')[0] || 
-                              newContent.find('.surs-sm-item:first .surs-sm-toggle')[0] || 
-                              newContent.find('.selector')[0];
+                focusTarget = newContent.find('.selector.focus:visible')[0] ||
+                              newContent.find('.surs-sm-item:visible .surs-sm-toggle').first()[0] ||
+                              newContent.find('.surs-sm-tab.active:visible')[0] ||
+                              newContent.find('.selector:visible')[0];
             }
 
             if (focusTarget) {
