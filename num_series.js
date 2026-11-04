@@ -1,11 +1,15 @@
 (function () {
     'use strict';
 
-    if (window.plugin_num_series_ready) return;
+    if (window.plugin_num_series_destroy) {
+        try { window.plugin_num_series_destroy(); } catch (error) { console.warn('NUM Series cleanup:', error); }
+    } else if (window.plugin_num_series_ready) {
+        return; // Первая замена 1.3.0 требует перезапуска Lampa
+    }
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '1.3.0';
+    var VERSION = '2.0.0';
 
     function startPlugin() {
         // Локализация
@@ -52,233 +56,36 @@
             }
         });
 
-        // Стили UI
+        // Нативная компактная компоновка. Все стили ограничены префиксом num2.
         var style = document.createElement('style');
         style.id = 'num-series-styles';
-        style.textContent = `
-            /* Панель сезонов */
-            .num-season-bar {
-                display: flex;
-                flex-wrap: nowrap;
-                align-items: center;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                gap: 0.8em;
-                padding: 1em 1.2em;
-                background: linear-gradient(180deg, rgba(22, 22, 26, 0.95) 0%, rgba(14, 14, 17, 0.9) 100%);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-                margin-bottom: 0.8em;
-                position: sticky;
-                top: 0;
-                z-index: 100;
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                scrollbar-width: none;
-            }
-            .num-season-bar::-webkit-scrollbar {
-                display: none;
-            }
-
-            /* Кнопки сезонов */
-            .num-season-tab {
-                flex-shrink: 0;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.6em;
-                min-height: 48px;
-                padding: 0.65em 1.3em;
-                border-radius: 0.85em;
-                background: rgba(255, 255, 255, 0.08);
-                color: #e2e8f0;
-                font-size: 1.15em;
-                font-weight: 600;
-                cursor: pointer;
-                transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                user-select: none;
-                -webkit-user-select: none;
-                -webkit-tap-highlight-color: transparent;
-            }
-
-            /* Чипы счетчиков серий */
-            .num-season-tab span.num-count {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 1.8em;
-                height: 1.6em;
-                padding: 0 0.55em;
-                border-radius: 9999px;
-                background: rgba(255, 255, 255, 0.12);
-                color: #94a3b8;
-                font-size: 0.82em;
-                font-weight: 700;
-                transition: all 0.2s ease;
-            }
-
-            /* Сезон полностью просмотрен (Зеленый бейдж) */
-            .num-season-tab span.num-count--done {
-                background: rgba(16, 185, 129, 0.25) !important;
-                color: #34d399 !important;
-                border: 1px solid rgba(52, 211, 153, 0.35);
-            }
-
-            /* Сезон в процессе просмотра (Янтарный бейдж) */
-            .num-season-tab span.num-count--progress {
-                background: rgba(245, 158, 11, 0.25) !important;
-                color: #fbbf24 !important;
-                border: 1px solid rgba(251, 191, 36, 0.35);
-            }
-
-            .num-season-tab:active {
-                transform: scale(0.96);
-            }
-
-            /* Активный выбранный сезон */
-            .num-season-tab.active {
-                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-                color: #ffffff !important;
-                border-color: rgba(255, 255, 255, 0.4) !important;
-                box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5) !important;
-                font-weight: 700;
-            }
-
-            .num-season-tab.active span.num-count {
-                background: rgba(255, 255, 255, 0.28) !important;
-                color: #ffffff !important;
-            }
-
-            .num-season-tab.active span.num-count--done {
-                background: #10b981 !important;
-                color: #ffffff !important;
-            }
-
-            /* Фокус пульта на ТВ */
-            .num-season-tab.focus, .num-season-action.focus, .num-resume-banner.focus {
-                outline: none !important;
-                transform: scale(1.05);
-                border-color: #60a5fa !important;
-                background: rgba(255, 255, 255, 0.22);
-                color: #ffffff;
-                box-shadow: 0 0 0 3px #3b82f6, 0 8px 24px rgba(0, 0, 0, 0.6) !important;
-                z-index: 5;
-            }
-
-            .num-season-tab.active.focus {
-                background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%) !important;
-                border-color: #ffffff !important;
-                box-shadow: 0 0 0 3px #93c5fd, 0 8px 24px rgba(37, 99, 235, 0.7) !important;
-                color: #ffffff !important;
-            }
-
-            /* Кнопка "Отметить сезон" */
-            .num-season-action {
-                flex-shrink: 0;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5em;
-                min-height: 48px;
-                padding: 0.65em 1.1em;
-                border-radius: 0.85em;
-                background: rgba(16, 185, 129, 0.15);
-                color: #34d399;
-                font-size: 1.05em;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                border: 1px solid rgba(52, 211, 153, 0.3);
-                user-select: none;
-                margin-left: auto;
-            }
-            .num-season-action:hover {
-                background: rgba(16, 185, 129, 0.28);
-                color: #ffffff;
-            }
-
-            /* Баннер быстрого продолжения просмотра */
-            .num-resume-banner {
-                margin: 0 1.2em 1.2em 1.2em;
-                padding: 1em 1.4em;
-                border-radius: 1em;
-                background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-                border: 1px solid rgba(59, 130, 246, 0.4);
-                box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-                display: flex;
-                align-items: center;
-                gap: 1.2em;
-                cursor: pointer;
-                transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-            }
-            .num-resume-banner:hover {
-                border-color: #60a5fa;
-                background: linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%);
-            }
-
-            .num-resume-banner__icon {
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                background: #3b82f6;
-                color: #ffffff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-                box-shadow: 0 4px 14px rgba(59, 130, 246, 0.5);
-            }
-
-            .num-resume-banner__body {
-                flex-grow: 1;
-                min-width: 0;
-            }
-
-            .num-resume-banner__label {
-                font-size: 0.8em;
-                font-weight: 700;
-                letter-spacing: 0.08em;
-                color: #60a5fa;
-                margin-bottom: 0.2em;
-            }
-
-            .num-resume-banner__title {
-                font-size: 1.25em;
-                font-weight: 700;
-                color: #ffffff;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .num-resume-banner__time {
-                font-size: 0.95em;
-                color: #94a3b8;
-                font-weight: 500;
-                background: rgba(255, 255, 255, 0.1);
-                padding: 0.3em 0.8em;
-                border-radius: 0.5em;
-                white-space: nowrap;
-            }
-
-            .num-hidden-item {
-                display: none !important;
-            }
-
-            .num-resume-badge {
-                display: inline-block;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: #ffffff;
-                font-size: 0.75em;
-                font-weight: 700;
-                padding: 0.2em 0.55em;
-                border-radius: 0.4em;
-                margin-left: 0.6em;
-                vertical-align: middle;
-                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-            }
-        `;
+        style.textContent = [
+            '.num2-bar{display:flex;align-items:center;gap:.55em;max-width:100%;padding:.65em .8em;margin:0 0 .55em;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:.65em;box-sizing:border-box;}',
+            '.num2-tabs{display:flex;flex:1;min-width:0;align-items:center;gap:.45em;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}',
+            '.num2-tabs::-webkit-scrollbar{display:none;}',
+            '.num2-tab,.num2-actions{display:inline-flex;align-items:center;justify-content:center;gap:.4em;flex:0 0 auto;min-height:2.6em;padding:.35em .75em;border:1px solid transparent;border-radius:.45em;background:rgba(255,255,255,.07);color:rgba(255,255,255,.78);font-size:.94em;font-weight:500;white-space:nowrap;box-sizing:border-box;cursor:pointer;}',
+            '.num2-tab.active{background:rgba(255,255,255,.19);border-color:rgba(255,255,255,.38);color:#fff;font-weight:600;}',
+            '.num2-tab.focus,.num2-actions.focus,.num2-resume.focus{background:rgba(255,255,255,.25);outline:2px solid currentColor;outline-offset:1px;color:#fff;}',
+            '.num2-tab .num2-count{color:rgba(255,255,255,.63);font-size:.84em;font-variant-numeric:tabular-nums;}',
+            '.num2-tab.active .num2-count{color:#fff;}',
+            '.num2-tab .num2-done{color:#70d6a0;}',
+            '.num2-actions{font-size:1.35em;min-width:2em;padding:0 .4em;}',
+            '.num2-resume{display:flex;gap:.8em;align-items:center;min-height:3.35em;padding:.55em .85em;margin:0 0 .7em;border:1px solid rgba(255,255,255,.12);border-radius:.6em;background:rgba(255,255,255,.055);box-sizing:border-box;cursor:pointer;}',
+            '.num2-play{display:flex;align-items:center;justify-content:center;width:2.25em;height:2.25em;flex:0 0 auto;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;}',
+            '.num2-resume-body{flex:1;min-width:0;}',
+            '.num2-resume-top{font-size:.81em;opacity:.62;margin-bottom:.16em;}',
+            '.num2-resume-title{font-size:1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+            '.num2-resume-percent{flex:0 0 auto;font-size:.85em;opacity:.76;font-variant-numeric:tabular-nums;}',
+            '.num2-progress{height:3px;margin-top:.38em;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;}',
+            '.num2-progress>div{height:100%;background:#71c99f;}',
+            '.num-hidden-item{display:none!important;}',
+            '.num-resume-badge{display:inline-block;margin-left:.4em;padding:.08em .35em;border-radius:.25em;font-size:.75em;color:#b6e6c7;background:rgba(83,179,120,.14);font-variant-numeric:tabular-nums;}',
+            '@media(max-width:600px){.num2-bar{gap:.35em;padding:.4em;margin-bottom:.4em}.num2-tab{min-height:2.45em;padding:.25em .6em;font-size:.88em}.num2-actions{min-width:1.75em}.num2-resume{min-height:3.1em;padding:.55em}.num2-resume-title{font-size:.94em;}}',
+            '@media(prefers-reduced-motion:reduce){.num2-tab,.num2-resume{scroll-behavior:auto;}}'
+        ].join('\n');
         document.head.appendChild(style);
 
-        // Функция безопасного экранирования HTML
+                // Функция безопасного экранирования HTML
         function escapeHtml(text) {
             if (!text) return '';
             return $('<div>').text(text).html();
@@ -353,368 +160,414 @@
             return { season: season, episode: episode };
         }
 
-        var activeSeason = null;
+        var activeSeason = 'all';
         var currentTorrentItems = [];
-
-        Lampa.Listener.follow('torrent_file', function (e) {
-            if (e.type === 'list_open') {
-                currentTorrentItems = e.items || [];
-
-                currentTorrentItems.forEach(function (item) {
-                    var parsed = parseSeasonEpisode(item.path || item.path_human);
-                    item.__num_season = item.season || parsed.season || 0;
-                    item.__num_episode = item.episode || parsed.episode || 0;
-                });
+        var currentRows = [];
+        var currentContainer = null;
+        var lastBulk = null;
+        var refreshTimer = null;
+        var subscriptions = [];
+        var threshold = 85;
+        var preferences = [
+            { id: 'resume', title: 'Показывать продолжение просмотра', value: true },
+            { id: 'autoseason', title: 'Автоматически выбирать сезон', value: true },
+            { id: 'counters', title: 'Показывать счётчики серий', value: true },
+            { id: 'percents', title: 'Показывать проценты просмотра', value: true },
+            { id: 'clean', title: 'Очищать технические названия', value: true },
+            { id: 'iina', title: 'Открытие сезона в IINA на Mac', value: true },
+            { id: 'confirm', title: 'Подтверждать массовые действия', value: true }
+        ];
+        function setting(id) {
+            var descriptor = preferences.filter(function (pref) { return pref.id === id; })[0];
+            var fallback = descriptor ? descriptor.value : true;
+            return Boolean(Lampa.Storage.get('num2_' + id, fallback));
+        }
+        function follow(listener, type, handler) {
+            if (!listener || typeof listener.follow !== 'function') return;
+            listener.follow(type, handler);
+            subscriptions.push({ listener: listener, type: type, handler: handler });
+        }
+        function safeAction(element, handler) {
+            var previous = 0;
+            element.on('hover:enter click', function (event) {
+                if (event && event.preventDefault) event.preventDefault();
+                if (event && event.stopPropagation) event.stopPropagation();
+                if (Date.now() - previous < 280) return;
+                previous = Date.now();
+                handler(event);
+            });
+        }
+        function canUseIINA() {
+            return setting('iina') && Lampa.Platform && typeof Lampa.Platform.macOS === 'function' && Lampa.Platform.macOS();
+        }
+        function setPercent(row, value) {
+            var percent = Math.max(0, Math.min(100, Number(value) || 0));
+            row.element.timeline.percent = percent;
+            row.item.attr('data-num-percent', percent);
+            row.item.attr('data-num-updated', Number(row.element.timeline.updated) || 0);
+            var title = row.item.find('.torrent-serial__title, .torrent-file__title');
+            title.find('.num-resume-badge').remove();
+            if (setting('percents') && percent > 0 && percent < threshold) {
+                title.append('<span class="num-resume-badge">' + Math.round(percent) + '%</span>');
             }
-
-            if (e.type === 'render') {
-                var s = e.element.__num_season || e.element.season || 0;
-                var ep = e.element.__num_episode || e.element.episode || 0;
-
-                e.item.attr('data-num-season', s);
-                e.item.attr('data-num-episode', ep);
-
-                // Сохраняем точный процент просмотра из Timeline на DOM-элементе
-                var percent = (e.element.timeline && e.element.timeline.percent) || 0;
-                e.item.attr('data-num-percent', percent);
-
-                // Очистка грязных названий при отсутствии метаданных TMDB
-                var titleElem = e.item.find('.torrent-serial__title, .torrent-file__title');
-                var currentTitleText = titleElem.text().trim();
-                if (currentTitleText && (currentTitleText.indexOf('1080p') > -1 || currentTitleText.indexOf('WEB-DL') > -1 || currentTitleText.indexOf('.mkv') > -1)) {
-                    var cleaned = cleanTechnicalTitle(currentTitleText, ep);
-                    titleElem.text(cleaned);
-                }
-
-                // Индикатор прогресса на серии
-                if (percent > 0 && percent < 85) {
-                    if (!e.item.find('.num-resume-badge').length) {
-                        titleElem.append('<span class="num-resume-badge">' + percent + '%</span>');
+        }
+        function onTorrentFile(event) {
+            if (!event) return;
+            if (event.type === 'list_open') {
+                currentTorrentItems = event.items || [];
+                currentRows = [];
+                currentContainer = null;
+                activeSeason = 'all';
+                lastBulk = null;
+            }
+            if (event.type === 'render' && event.element && event.item) {
+                var element = event.element;
+                var parsed = parseSeasonEpisode(element.path || element.path_human);
+                var season = Number(element.season) || parsed.season || 0;
+                var episode = Number(element.episode) || parsed.episode || 0;
+                element.__num_season = season;
+                element.__num_episode = episode;
+                event.item.attr('data-num-season', season);
+                event.item.attr('data-num-episode', episode);
+                var row = { element: element, item: event.item, season: season, episode: episode };
+                currentRows.push(row);
+                if (setting('clean')) {
+                    var title = event.item.find('.torrent-serial__title, .torrent-file__title');
+                    var original = title.text().trim();
+                    if (/\.(mkv|mp4|avi)\b|1080p|2160p|WEB-DL|BluRay/i.test(original)) {
+                        title.text(cleanTechnicalTitle(original, episode));
                     }
                 }
+                if (element.timeline) setPercent(row, element.timeline.percent);
             }
+            if (event.type === 'onlong' && canUseIINA() && event.menu && event.items && event.items.length > 1 && event.element && event.element.torrent_hash) {
+                var url = getTorrServerUrl() + '/stream?link=' + encodeURIComponent(event.element.torrent_hash) + '&m3u';
+                event.menu.push({
+                    title: Lampa.Lang.translate('num_open_m3u_iina'),
+                    onSelect: function () {
+                        window.location.href = 'iina://weblink?url=' + encodeURIComponent(url);
+                    }
+                });
+            }
+            if (event.type === 'list_close') {
+                currentContainer = null;
+                currentRows = [];
+            }
+        }
+        follow(Lampa.Listener, 'torrent_file', onTorrentFile);
 
-            if (e.type === 'onlong') {
-                if (e.items && e.items.length > 1 && e.element.torrent_hash) {
-                    var torrUrl = getTorrServerUrl();
-                    var m3uLink = torrUrl + '/stream?link=' + e.element.torrent_hash + '&m3u';
-                    var enabledController = Lampa.Controller.enabled() ? Lampa.Controller.enabled().name : 'modal';
+        // Операции ведутся по оригинальным timeline-объектам Lampa, а не по HTML.
+        function groups() {
+            var map = {};
+            var result = [];
+            currentRows.forEach(function (row) {
+                if (!row.element || !row.element.timeline || row.season <= 0 || row.episode <= 0) return;
+                var key = row.season + ':' + row.episode;
+                var progress = Number(row.element.timeline.percent) || 0;
+                var updated = Number(row.element.timeline.updated) || 0;
+                var group = map[key];
+                if (!group) {
+                    group = map[key] = { key: key, season: row.season, episode: row.episode, percent: 0, updated: 0, row: row, alternatives: [] };
+                    result.push(group);
+                }
+                group.alternatives.push(row);
+                if (progress >= group.percent || (progress > 0 && updated > group.updated)) group.row = row;
+                group.percent = Math.max(group.percent, progress);
+                group.updated = Math.max(group.updated, updated);
+            });
+            result.sort(function (a, b) { return a.season - b.season || a.episode - b.episode; });
+            return result;
+        }
+        function resumeCandidate(list) {
+            if (!list.length) return null;
+            var partial = list.filter(function (entry) { return entry.percent > 0 && entry.percent < threshold; });
+            if (partial.length) {
+                partial.sort(function (a,b) { return b.updated - a.updated || a.season - b.season || a.episode - b.episode; });
+                return partial[0];
+            }
+            var watched = list.filter(function (entry) { return entry.percent >= threshold; });
+            if (watched.length) {
+                watched.sort(function (a,b) { return b.updated - a.updated || b.season - a.season || b.episode - a.episode; });
+                var last = watched[0];
+                var next = list.filter(function (entry) {
+                    return entry.percent < threshold && (entry.season > last.season || (entry.season === last.season && entry.episode > last.episode));
+                })[0];
+                if (next) return next;
+            }
+            return list.filter(function (entry) { return entry.percent < threshold; })[0] || null;
+        }
 
-                    e.menu.push({
-                        title: Lampa.Lang.translate('num_open_m3u_iina'),
-                        num_iina_m3u: true,
-                        url: m3uLink,
-                        onSelect: function () {
-                            if (enabledController) Lampa.Controller.toggle(enabledController);
-                            window.location.href = 'iina://weblink?url=' + encodeURIComponent(m3uLink);
-                            if (Lampa.Noty) Lampa.Noty.show('Запуск плейлиста в IINA...');
+                // Счётчики основаны на логических сериях, дубликаты раздач не удваивают числа.
+        function updateSeasonTabBadges(container) {
+            var episodes = groups();
+            container.find('.num2-tab').each(function () {
+                var tab = $(this), season = tab.attr('data-season');
+                var list = episodes.filter(function (e) { return season === 'all' || String(e.season) === season; });
+                var done = list.filter(function (e) { return e.percent >= threshold; }).length;
+                var label = season === 'all' ? 'Все' : 'Сезон ' + season;
+                var text = '';
+                if (setting('counters')) text = done ? done + '/' + list.length : String(list.length);
+                tab.find('.num2-count').text(text).toggleClass('num2-done', done > 0 && done === list.length);
+                tab.attr('aria-label', label + (text ? ', просмотрено ' + text : ''));
+            });
+        }
+
+                function updateContinueBanner(container) {
+            container.find('.num2-resume').remove();
+            if (!setting('resume')) return;
+            var candidate = resumeCandidate(groups());
+            if (!candidate) return;
+            var row = candidate.row;
+            var label = 'Сезон ' + candidate.season + ' · Серия ' + candidate.episode;
+            var title = row.item.find('.torrent-serial__title, .torrent-file__title').clone();
+            title.find('.num-resume-badge').remove();
+            var name = title.text().trim();
+            var percent = Math.round(Math.max(0, Math.min(100, candidate.percent)));
+            var banner = $('<div class="num2-resume selector">' +
+                '<div class="num2-play">▶</div>' +
+                '<div class="num2-resume-body">' +
+                '<div class="num2-resume-top">Продолжить · ' + escapeHtml(label) + '</div>' +
+                '<div class="num2-resume-title">' + escapeHtml(name || label) + '</div>' +
+                (percent ? '<div class="num2-progress"><div style="width:' + percent + '%"></div></div>' : '') +
+                '</div>' +
+                (percent ? '<div class="num2-resume-percent">' + percent + '%</div>' : '') +
+                '</div>');
+            safeAction(banner, function () {
+                if (String(activeSeason) !== String(candidate.season)) applySeasonFilter(container, String(candidate.season));
+                row.item.trigger('hover:enter');
+            });
+            container.find('.num2-bar').after(banner);
+        }
+
+                function applySeasonFilter(container, season) {
+            activeSeason = String(season);
+            container.find('.num2-tab').each(function () {
+                $(this).toggleClass('active', $(this).attr('data-season') === activeSeason);
+            });
+            container.find('.torrent-serial, .torrent-file').each(function () {
+                var rowSeason = Number($(this).attr('data-num-season')) || 0;
+                var visible = activeSeason === 'all' || (activeSeason === 'unknown' ? rowSeason === 0 : String(rowSeason) === activeSeason);
+                $(this).toggleClass('num-hidden-item', !visible).toggleClass('selector', visible);
+            });
+            container.find('.torrnet-folder-name').each(function () {
+                var visible = $(this).nextUntil('.torrnet-folder-name').filter(':not(.num-hidden-item)').length > 0;
+                $(this).toggle(visible).toggleClass('selector', visible);
+            });
+            updateSeasonTabBadges(container);
+            updateContinueBanner(container);
+            var scrollRoot = Lampa.Modal && Lampa.Modal.scroll ? Lampa.Modal.scroll().render() : container;
+            if (Lampa.Controller && Lampa.Controller.collectionSet && Lampa.Controller.enabled()) {
+                Lampa.Controller.collectionSet(scrollRoot, false, true);
+            }
+        }
+
+                // Массовая отметка затрагивает только выбранный сезон и сохраняет снимок для отмены.
+        function setWatched(season, watched) {
+            var targets = currentRows.filter(function (row) {
+                return row.season > 0 && row.episode > 0 && row.element.timeline &&
+                    (season === 'all' || String(row.season) === String(season));
+            });
+            if (!targets.length) return;
+            var backup = [];
+            targets.forEach(function (row) {
+                var timeline = row.element.timeline;
+                backup.push({ row: row, percent: timeline.percent, time: timeline.time, duration: timeline.duration });
+                timeline.percent = watched ? 100 : 0;
+                timeline.time = watched ? (Number(timeline.duration) || 0) : 0;
+                if (Lampa.Timeline && Lampa.Timeline.update && timeline.hash) Lampa.Timeline.update(timeline);
+                if (Lampa.Storage.field('torrserver_tracktimecode') && Lampa.Torserver &&
+                    typeof Lampa.Torserver.viewedSet === 'function' &&
+                    row.element.torrent_hash && row.element.id != null &&
+                    (!watched || Number(timeline.duration) > 0)) {
+                    Lampa.Torserver.viewedSet(row.element.torrent_hash, row.element.id, timeline.time);
+                }
+                setPercent(row, timeline.percent);
+            });
+            lastBulk = backup;
+            scheduleRefresh();
+            if (Lampa.Noty) Lampa.Noty.show('Обновлено серий: ' + targets.length);
+        }
+        function undoBulk() {
+            if (!lastBulk || !lastBulk.length) return;
+            var snapshots = lastBulk;
+            lastBulk = null;
+            snapshots.forEach(function (entry) {
+                var row = entry.row, timeline = row.element.timeline;
+                if (!timeline) return;
+                timeline.percent = entry.percent;
+                timeline.time = entry.time;
+                timeline.duration = entry.duration;
+                if (timeline.hash && Lampa.Timeline && Lampa.Timeline.update) Lampa.Timeline.update(timeline);
+                if (Lampa.Storage.field('torrserver_tracktimecode') && Lampa.Torserver &&
+                    Lampa.Torserver.viewedSet && row.element.torrent_hash && row.element.id != null &&
+                    (!entry.percent || Number(entry.duration) > 0)) {
+                    Lampa.Torserver.viewedSet(row.element.torrent_hash, row.element.id, Number(entry.time) || 0);
+                }
+                setPercent(row, timeline.percent);
+            });
+            scheduleRefresh();
+            if (Lampa.Noty) Lampa.Noty.show('Предыдущий прогресс восстановлен');
+        }
+        function openSeasonActions(container) {
+            if (!Lampa.Select || !Lampa.Select.show) return;
+            var returnTo = Lampa.Controller && Lampa.Controller.enabled() && Lampa.Controller.enabled().name || 'modal';
+            var selected = activeSeason === 'all' ? 'всех сезонов' : 'сезона ' + activeSeason;
+            var choices = [
+                { title: '✓ Отметить просмотренным: ' + selected, action: 'watched' },
+                { title: '↺ Сбросить просмотр: ' + selected, action: 'clear' }
+            ];
+            if (lastBulk && lastBulk.length) choices.push({ title: 'Отменить последнее действие', action: 'undo' });
+            Lampa.Select.show({
+                title: 'Действия с сериями',
+                items: choices,
+                onBack: function () { if (Lampa.Controller) Lampa.Controller.toggle(returnTo); },
+                onSelect: function (item) {
+                    if (Lampa.Controller) Lampa.Controller.toggle(returnTo);
+                    if (item.action === 'undo') return undoBulk();
+                    var watched = item.action === 'watched';
+                    if (!setting('confirm')) return setWatched(activeSeason, watched);
+                    Lampa.Select.show({
+                        title: 'Подтвердить изменение ' + selected + '?',
+                        items: [
+                            { title: 'Подтвердить', action: 'confirm' },
+                            { title: 'Отмена', action: 'cancel' }
+                        ],
+                        onBack: function () { if (Lampa.Controller) Lampa.Controller.toggle(returnTo); },
+                        onSelect: function (option) {
+                            if (Lampa.Controller) Lampa.Controller.toggle(returnTo);
+                            if (option.action === 'confirm') setWatched(activeSeason, watched);
                         }
                     });
                 }
-            }
-        });
-
-        // Слушатель выбора в SelectBox для IINA (дублирующая надежность)
-        if (Lampa.Select && Lampa.Select.listener) {
-            Lampa.Select.listener.follow('select', function (ev) {
-                if (ev && ev.item && ev.item.num_iina_m3u && ev.item.url) {
-                    window.location.href = 'iina://weblink?url=' + encodeURIComponent(ev.item.url);
-                    if (Lampa.Noty) Lampa.Noty.show('Запуск плейлиста в IINA...');
-                }
             });
         }
 
-        // Обновление бейджей сезонов через реальный процент Timeline
-        function updateSeasonTabBadges(container) {
-            container.find('.num-season-tab').each(function () {
-                var s = $(this).attr('data-season');
-                var total = 0;
-                var watched = 0;
-
-                container.find('.torrent-serial, .torrent-file').each(function () {
-                    var itemSeason = parseInt($(this).attr('data-num-season'), 10) || 0;
-                    var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
-
-                    if (s === 'all' || itemSeason === parseInt(s, 10)) {
-                        total++;
-                        if (percent >= 85) watched++;
-                    }
-                });
-
-                var countSpan = $(this).find('span.num-count');
-                countSpan.removeClass('num-count--done num-count--progress');
-
-                if (s === 'all') {
-                    countSpan.text(watched > 0 ? watched + '/' + total : total);
-                } else {
-                    if (watched === total && total > 0) {
-                        countSpan.addClass('num-count--done').text(total + ' ✓');
-                    } else if (watched > 0) {
-                        countSpan.addClass('num-count--progress').text(watched + '/' + total);
-                    } else {
-                        countSpan.text(total);
-                    }
-                }
+                function checkAndInjectSeasonBar(targetContainer) {
+            var container = targetContainer || currentContainer;
+            if (!container || !container.length || !currentRows.length) return;
+            if (container.find('.num2-bar').length) return;
+            currentContainer = container;
+            var allGroups = groups();
+            var seasons = [];
+            var counts = {};
+            allGroups.forEach(function (group) {
+                counts[group.season] = (counts[group.season] || 0) + 1;
+                if (seasons.indexOf(group.season) < 0) seasons.push(group.season);
             });
-        }
-
-        // Обновление баннера "Продолжить просмотр"
-        function updateContinueBanner(container, currentSeason) {
-            container.find('.num-resume-banner').remove();
-
-            var candidateElem = null;
-            var visibleEpisodes = container.find('.torrent-serial:not(.num-hidden-item), .torrent-file:not(.num-hidden-item)');
-
-            // 1. Ищем серию в процессе просмотра (0 < percent < 85)
-            visibleEpisodes.each(function () {
-                var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
-                if (percent > 0 && percent < 85) {
-                    candidateElem = $(this);
-                    return false;
-                }
-            });
-
-            // 2. Если в процессе нет — ищем первую непросмотренную (percent < 85)
-            if (!candidateElem) {
-                visibleEpisodes.each(function () {
-                    var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
-                    if (percent < 85) {
-                        candidateElem = $(this);
-                        return false;
-                    }
+            seasons.sort(function (a,b) { return a-b; });
+            if (!seasons.length) return; // Не подменяем штатный список при неопределённых сезонах.
+            var bar = $('<div class="num2-bar"><div class="num2-tabs selector-box"></div></div>');
+            var tabs = bar.find('.num2-tabs');
+            function addTab(value, title) {
+                var tab = $('<div class="num2-tab selector" data-season="' + value + '">' +
+                    '<span>' + escapeHtml(title) + '</span><span class="num2-count"></span></div>');
+                safeAction(tab, function () { applySeasonFilter(container, String(value)); });
+                tab.on('hover:focus', function () {
+                    if (this.scrollIntoView) this.scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'});
                 });
+                tabs.append(tab);
             }
-
-            if (candidateElem && candidateElem.length) {
-                var rawTitle = candidateElem.find('.torrent-serial__title, .torrent-file__title').text().replace(/\d+%/g, '').trim();
-                var titleText = escapeHtml(rawTitle);
-                var percent = parseInt(candidateElem.attr('data-num-percent'), 10) || 0;
-                var timeLabel = percent > 0 ? percent + '%' : Lampa.Lang.translate('num_play_now') + ' ▶';
-
-                var banner = $(`
-                    <div class="num-resume-banner selector">
-                        <div class="num-resume-banner__icon">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <polygon points="5 3 19 12 5 21 5 3"/>
-                            </svg>
-                        </div>
-                        <div class="num-resume-banner__body">
-                            <div class="num-resume-banner__label">${escapeHtml(Lampa.Lang.translate('num_continue_watching'))}</div>
-                            <div class="num-resume-banner__title">${titleText}</div>
-                        </div>
-                        <div class="num-resume-banner__time">${escapeHtml(timeLabel)}</div>
-                    </div>
-                `);
-
-                banner.on('hover:enter click', function (ev) {
-                    ev.preventDefault();
-                    candidateElem.trigger('hover:enter');
-                });
-
-                var seasonBar = container.find('.num-season-bar');
-                if (seasonBar.length) {
-                    seasonBar.after(banner);
-                }
-            }
+            addTab('all', 'Все');
+            seasons.forEach(function (season) { addTab(String(season), 'Сезон ' + season); });
+            if (currentRows.some(function (row) { return row.season === 0; })) addTab('unknown', 'Не определено');
+            var action = $('<div class="num2-actions selector" title="Действия с сериями">⋯</div>');
+            safeAction(action, function () { openSeasonActions(container); });
+            bar.append(action);
+            container.prepend(bar);
+            var choice = setting('autoseason') && resumeCandidate(allGroups);
+            applySeasonFilter(container, choice ? String(choice.season) : 'all');
         }
-
-        // Фильтрация сезонов
-        function applySeasonFilter(container, season) {
-            activeSeason = season;
-
-            container.find('.num-season-tab').each(function () {
-                var tabSeason = $(this).attr('data-season');
-                var isCurrent = (season === 'all' && tabSeason === 'all') || (tabSeason === String(season));
-                $(this).toggleClass('active', isCurrent);
-            });
-
-            container.find('.torrent-serial, .torrent-file').each(function () {
-                var itemSeason = parseInt($(this).attr('data-num-season'), 10) || 0;
-                if (season === 'all' || itemSeason === 0 || itemSeason === parseInt(season, 10)) {
-                    $(this).removeClass('num-hidden-item').addClass('selector');
-                } else {
-                    $(this).addClass('num-hidden-item').removeClass('selector');
-                }
-            });
-
-            container.find('.torrnet-folder-name').each(function () {
-                var nextItems = $(this).nextUntil('.torrnet-folder-name', ':not(.num-hidden-item)');
-                $(this).toggle(nextItems.length > 0);
-            });
-
-            updateSeasonTabBadges(container);
-            updateContinueBanner(container, season);
-
-            if (Lampa.Controller && Lampa.Controller.collectionSet) {
-                Lampa.Controller.collectionSet(container);
-            }
+        function scheduleRefresh() {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(function () {
+                refreshTimer = null;
+                if (!currentContainer || !currentContainer.length) return;
+                updateSeasonTabBadges(currentContainer);
+                updateContinueBanner(currentContainer);
+            }, 30);
         }
-
-        // Корректная отметка сезона как просмотренного без выдуманных длительностей
-        function markSeasonWatched(container, targetSeason) {
-            var itemsToMark = [];
-            currentTorrentItems.forEach(function (el) {
-                if (targetSeason === 'all' || el.__num_season === parseInt(targetSeason, 10)) {
-                    itemsToMark.push(el);
-                }
+        function updateTimeline(event) {
+            var entry = event && event.data;
+            if (!entry || !entry.road) return;
+            var changed = false;
+            currentRows.forEach(function (row) {
+                var timeline = row.element.timeline;
+                if (!timeline || timeline.hash !== entry.hash) return;
+                timeline.percent = entry.road.percent;
+                timeline.time = entry.road.time;
+                timeline.duration = entry.road.duration;
+                timeline.updated = entry.road.updated;
+                setPercent(row, timeline.percent);
+                changed = true;
             });
-
-            itemsToMark.forEach(function (el) {
-                if (!el.timeline) el.timeline = {};
-                var duration = el.timeline.duration || 0;
-                el.timeline.percent = 100;
-                el.timeline.time = duration > 0 ? duration : 0;
-
-                if (Lampa.Timeline && Lampa.Timeline.update) {
-                    Lampa.Timeline.update(el.timeline);
-                }
-
-                // Синхронизируем с TorrServer только если известна реальная длительность
-                if (duration > 0 && Lampa.Storage.field('torrserver_tracktimecode') && Lampa.Torserver && Lampa.Torserver.viewedSet) {
-                    Lampa.Torserver.viewedSet(el.torrent_hash, el.id, duration);
-                }
-            });
-
-            // Обновляем атрибуты и таймлайны в DOM
-            container.find('.torrent-serial:not(.num-hidden-item), .torrent-file:not(.num-hidden-item)').each(function () {
-                $(this).attr('data-num-percent', 100);
-                $(this).find('.num-resume-badge').remove();
-                
-                var line = $(this).find('.time-line');
-                if (line.length) {
-                    line.removeClass('hide');
-                    line.find('div').css('width', '100%');
-                }
-            });
-
-            updateSeasonTabBadges(container);
-            updateContinueBanner(container, targetSeason);
-
-            if (Lampa.Noty) {
-                Lampa.Noty.show(Lampa.Lang.translate('num_season_marked'));
-            }
+            if (changed) scheduleRefresh();
         }
-
-        // Внедрение панели сезонов (вызывается после того как все timeline данные готовы)
-        function checkAndInjectSeasonBar(targetContainer) {
-            var container = targetContainer || $('.modal__content .torrent-files');
-            if (!container.length) return;
-            if (container.find('.num-season-bar').length) return;
-
-            var seasonCounts = {};
-            var episodes = container.find('.torrent-serial, .torrent-file');
-            if (!episodes.length) return;
-
-            episodes.each(function () {
-                var s = parseInt($(this).attr('data-num-season'), 10) || 0;
-                if (s > 0) seasonCounts[s] = (seasonCounts[s] || 0) + 1;
+        function readTimeline() {
+            if (!Lampa.Timeline || !Lampa.Timeline.view) return;
+            currentRows.forEach(function (row) {
+                var timeline = row.element.timeline;
+                if (!timeline || !timeline.hash) return;
+                var next = Lampa.Timeline.view(timeline.hash, timeline.card ? {
+                    card: timeline.card, season: timeline.season, episode: timeline.episode
+                } : null);
+                if (!next) return;
+                timeline.percent = next.percent;
+                timeline.time = next.time;
+                timeline.updated = next.updated;
+                setPercent(row, timeline.percent);
             });
+            scheduleRefresh();
+        }
+        follow(Lampa.Timeline && Lampa.Timeline.listener, 'update', updateTimeline);
+        follow(Lampa.Timeline && Lampa.Timeline.listener, 'read', readTimeline);
 
-            var seasons = Object.keys(seasonCounts).map(function (k) { return parseInt(k, 10); }).sort(function (a, b) { return a - b; });
-
-            if (seasons.length > 0) {
-                var bar = $('<div class="num-season-bar selector-box"></div>');
-
-                var totalFiles = episodes.length;
-                var allTab = $('<div class="num-season-tab selector" data-season="all">' + escapeHtml(Lampa.Lang.translate('num_season_all')) + ' <span class="num-count">' + totalFiles + '</span></div>');
-                bar.append(allTab);
-
-                seasons.forEach(function (s) {
-                    var count = seasonCounts[s];
-                    var sTab = $('<div class="num-season-tab selector" data-season="' + s + '">' + escapeHtml(Lampa.Lang.translate('num_season_prefix')) + ' ' + s + ' <span class="num-count">' + count + '</span></div>');
-                    bar.append(sTab);
-                });
-
-                // Кнопка быстрой отметки сезона
-                var markBtn = $('<div class="num-season-action selector">' + escapeHtml(Lampa.Lang.translate('num_mark_season_watched')) + '</div>');
-                markBtn.on('hover:enter click', function (e) {
-                    e.preventDefault();
-                    markSeasonWatched(container, activeSeason || 'all');
-                });
-                bar.append(markBtn);
-
-                container.prepend(bar);
-
-                // Определение сезона с незавершенным просмотром по реальным данным Timeline
-                var determinedSeason = null;
-
-                // 1. Сначала ищем сезон где серия прямо сейчас не досмотрена (0 < percent < 85)
-                episodes.each(function () {
-                    var s = parseInt($(this).attr('data-num-season'), 10) || 0;
-                    var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
-                    if (s > 0 && percent > 0 && percent < 85) {
-                        determinedSeason = s;
-                        return false;
-                    }
-                });
-
-                // 2. Если таких нет — ищем первый сезон с непросмотренными сериями
-                if (!determinedSeason) {
-                    for (var i = 0; i < seasons.length; i++) {
-                        var seasonNum = seasons[i];
-                        var hasUnwatched = false;
-                        episodes.each(function () {
-                            var s = parseInt($(this).attr('data-num-season'), 10) || 0;
-                            var percent = parseInt($(this).attr('data-num-percent'), 10) || 0;
-                            if (s === seasonNum && percent < 85) {
-                                hasUnwatched = true;
-                                return false;
-                            }
-                        });
-                        if (hasUnwatched) {
-                            determinedSeason = seasonNum;
-                            break;
+        function registerSettings() {
+            if (!Lampa.SettingsApi) return;
+            Lampa.SettingsApi.addComponent({
+                component: 'num_series_pro',
+                name: 'NUM Series Pro',
+                icon: '<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m10 8 5 4-5 4z"/></svg>'
+            });
+            preferences.forEach(function (pref) {
+                Lampa.SettingsApi.addParam({
+                    component: 'num_series_pro',
+                    param: {name: 'num2_' + pref.id, type: 'trigger', default: setting(pref.id)},
+                    field: {name: pref.title},
+                    onChange: function (value) {
+                        Lampa.Storage.set('num2_' + pref.id, !!value);
+                        if (currentContainer && currentContainer.length) {
+                            currentContainer.find('.num2-bar,.num2-resume').remove();
+                            checkAndInjectSeasonBar(currentContainer);
                         }
                     }
-                }
-
-                if (!determinedSeason) determinedSeason = seasons[0];
-                activeSeason = determinedSeason;
-
-                // Плавное центрирование активной вкладки при фокусе
-                bar.find('.num-season-tab').on('hover:focus', function () {
-                    if (this.scrollIntoView) {
-                        this.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                    }
                 });
-
-                bar.find('.num-season-tab').on('hover:enter click', function (e) {
-                    e.preventDefault();
-                    var s = $(this).attr('data-season');
-                    applySeasonFilter(container, s);
-                });
-
-                applySeasonFilter(container, activeSeason);
-            }
-        }
-
-        // Подписка на официальное событие Modal.update (без холостой нагрузки на CPU)
-        if (Lampa.Modal && Lampa.Modal.listener) {
-            Lampa.Modal.listener.follow('update', function (e) {
-                if (e && e.new_html && e.new_html.hasClass('torrent-files')) {
-                    setTimeout(function () {
-                        checkAndInjectSeasonBar(e.new_html);
-                    }, 50);
-                }
             });
         }
+        registerSettings();
 
-        // Легковесный оптимизированный MutationObserver с дебаунсом как страховка
-        var debounceTimer = null;
-        var observer = new MutationObserver(function () {
-            if (debounceTimer) return;
-            debounceTimer = setTimeout(function () {
-                debounceTimer = null;
-                checkAndInjectSeasonBar();
-            }, 120);
+                // Обработчик отрабатывает после штатного render и modal.update.
+        follow(Lampa.Modal && Lampa.Modal.listener, 'update', function (event) {
+            if (event && event.new_html && event.new_html.hasClass('torrent-files')) {
+                setTimeout(function () { checkAndInjectSeasonBar(event.new_html); }, 0);
+            }
         });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
+        follow(Lampa.Modal && Lampa.Modal.listener, 'close', function () {
+            currentContainer = null;
+            currentRows = [];
         });
+        window.plugin_num_series_destroy = function () {
+            subscriptions.forEach(function (subscription) {
+                if (subscription.listener.remove) subscription.listener.remove(subscription.type, subscription.handler);
+            });
+            if (refreshTimer) clearTimeout(refreshTimer);
+            $('.num2-bar,.num2-resume').remove();
+            $('#num-series-styles').remove();
+            window.plugin_num_series_ready = false;
+            window.plugin_num_series_destroy = null;
+        };
 
-        console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');
+
+                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');
     }
 
     if (typeof window !== 'undefined') {
