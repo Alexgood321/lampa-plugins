@@ -1,0 +1,26 @@
+name: SURS JavaScript checks
+on:
+  push:
+    branches:
+      - main
+      - feat/surs-v3.8.0
+    paths:
+      - surs.js
+      - tests/**
+      - .github/workflows/surs-ci.yml
+  pull_request:
+    paths:
+      - surs.js
+      - tests/**
+      - .github/workflows/surs-ci.yml
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check surs.js
+      - run: node --check tests/surs-smoke.cjs
+      - run: node tests/surs-smoke.cjs

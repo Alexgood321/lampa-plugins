@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.7.4 (HDRezka Shelves Compatibility)
- * Релиз: исправление загрузки главной страницы, исключение безымянных полок и дублирующихся строк ContentRows.
+ * Версия: 3.8.0 (Adaptive UI & Stable Shelves)
+ * Релиз: стабильные сторонние полки, устойчивый запуск, загрузка Trakt/HDRezka, адаптивный редактор и регрессионные тесты.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -27,20 +27,24 @@
     }
 
     if (window.plugin_surs_fixed_ready) return;
-    window.plugin_surs_fixed_ready = true;
+    window.surs_retry_count = window.surs_retry_count || 0;
 
     // ==========================================
     // 0. ДИНАМИЧЕСКИЙ РЕЕСТР И ПЕРЕХВАТЧИК СТОРОННИХ ПЛАГИНОВ
     // ==========================================
     window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
     var STORAGE_DISCOVERED_KEY = 'surs_discovered_shelves_v2';
+    window.SURS_SHELF_STATUS = window.SURS_SHELF_STATUS || {};
+    function recordShelfStatus(id, state) {
+        if (id) window.SURS_SHELF_STATUS[id] = { state: state, timestamp: Date.now() };
+    }
 
     // В старых сборках каждому неподписанному ContentRow присваивался случайный ID.
     // Такие записи нельзя надежно соотнести с установленным плагином.
     function isAnonymousShelf(item) {
         if (!item || !item.id) return false;
         var title = String(item.title || '');
-        return title === 'Сторонняя полка' || /^Lampa Row #\d+$/.test(title) || /^ext_row_[a-z0-9]{6}$/.test(item.id);
+        return title === 'Сторонняя полка' || /^Lampa Row #\d+$/.test(title) || /^ext_row_[a-z0-9]{6}$/.test(item.id) || /^ext_lampa_row_\d+$/.test(item.id);
     }
 
     function registerDiscoveredShelf(def) {
@@ -65,6 +69,7 @@
             var list = [];
             for (var key in window.SURS_EXTERNAL_SHELVES) {
                 var it = window.SURS_EXTERNAL_SHELVES[key];
+                if (isAnonymousShelf(it)) continue;
                 list.push({
                     id: it.id,
                     title: it.title,
@@ -102,9 +107,9 @@
                     var origAdd = Lampa.ContentRows.add;
                     Lampa.ContentRows.add = function(rowDef) {
                         try {
-                            if (rowDef && typeof rowDef === 'object' && rowDef.call && (rowDef.name || rowDef.title)) {
+                            if (rowDef && typeof rowDef === 'object' && typeof rowDef.call === 'function' && rowDef.name) {
                                 // Не регистрируем анонимные строки под случайными именами.
-                                var rowId = 'ext_' + (rowDef.name || rowDef.title);
+                                var rowId = 'ext_' + String(rowDef.name);
                                 registerDiscoveredShelf({
                                     id: rowId,
                                     title: rowDef.title || rowDef.name || 'Сторонняя полка',
@@ -792,6 +797,74 @@
                         font-size: 0.88em !important;
                     }
                 }
+
+                /* SURS 3.8: понятные состояния, компактный телефон, большие touch-цели */
+                .surs-sm-wrap { width: 100%; max-width: 1040px; }
+                .surs-sm-item--disabled { opacity: 0.68; }
+                .surs-sm-item--unavailable .surs-sm-desc { color: #e5af71; }
+                .surs-sm-footer-left, .surs-sm-footer-right { flex-wrap: wrap; }
+                .surs-sm-search-query {
+                    font-size: 0.82em;
+                    color: #b9d7ec;
+                    margin: -0.3em 0 0.7em;
+                    overflow-wrap: anywhere;
+                }
+                .surs-sm-tabs { min-height: 2.6em; }
+                .surs-sm-tab.focus { transform: none; outline: 2px solid #7dc8fa; outline-offset: -2px; }
+                .surs-sm-name { overflow-wrap: anywhere; }
+                .surs-sm-footer {
+                    padding-bottom: 0;
+                    padding-bottom: env(safe-area-inset-bottom, 0px);
+                }
+                @media (max-width: 680px) {
+                    .surs-sm-title-line { align-items: flex-start; }
+                    .surs-sm-name {
+                        white-space: normal !important;
+                        display: block;
+                        max-height: 2.7em;
+                        line-height: 1.3;
+                        overflow: hidden;
+                    }
+                    .surs-sm-desc {
+                        white-space: normal !important;
+                        max-height: 2.8em;
+                        overflow: hidden;
+                    }
+                    .surs-sm-info { margin-right: 0.2em; }
+                    .surs-sm-actions { flex-shrink: 0; gap: 0.35em !important; }
+                    .surs-sm-navbtn--step, .surs-sm-navbtn--top { display: none !important; }
+                    .surs-sm-navbtn--more, .surs-sm-toggle, .surs-sm-drag-handle {
+                        min-height: 44px !important;
+                        height: 44px !important;
+                    }
+                    .surs-sm-navbtn--more { width: 44px !important; min-width: 44px !important; }
+                    .surs-sm-toggle { min-width: 64px !important; line-height: 42px !important; }
+                    .surs-sm-drag-handle { width: 44px !important; }
+                    .surs-sm-list { max-height: 45vh; max-height: 45dvh; }
+                    .surs-sm-footer-left, .surs-sm-footer-right { flex-wrap: wrap; }
+                    .surs-sm-footer-left .surs-sm-btn, .surs-sm-footer-right .surs-sm-btn {
+                        min-height: 44px;
+                        min-width: 30%;
+                    }
+                }
+                @media (pointer: coarse) {
+                    .surs-sm-tab, .surs-sm-btn, .surs-sm-toggle, .surs-sm-navbtn {
+                        min-height: 44px;
+                        box-sizing: border-box;
+                    }
+                }
+                @media (max-height: 540px) {
+                    .surs-sm-list { max-height: 32vh !important; }
+                    .surs-sm-header { margin-bottom: 0.4em; padding-bottom: 0.4em; }
+                    .surs-sm-footer { padding-top: 0.35em; }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .surs-sm-wrap *, .surs-sm-wrap *:before, .surs-sm-wrap *:after {
+                        transition-duration: 0s !important;
+                        animation-duration: 0s !important;
+                        scroll-behavior: auto !important;
+                    }
+                }
             </style>
         `);
         $('body').append(style);
@@ -1201,61 +1274,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         loadDiscoveredFromStorage();
         var beforeCount = Object.keys(window.SURS_EXTERNAL_SHELVES).length;
 
-        // 1. Проверяем ContentRows - если кто-то зарегистрировал строки в Lampa
-        try {
-            if (typeof Lampa !== 'undefined' && Lampa.ContentRows) {
-                var testItems = [];
-                if (typeof Lampa.ContentRows.call === 'function') {
-                    Lampa.ContentRows.call('main', {}, testItems);
-                    if (testItems && testItems.length) {
-                        testItems.forEach(function(rowFunc, idx) {
-                            if (typeof rowFunc === 'function') {
-                                var baseId = 'ext_lampa_row_' + idx;
-                                var baseTitle = 'Lampa Row #' + (idx + 1);
-                                var fnStr = rowFunc.toString();
-
-                                if (fnStr.indexOf('lenta') >= 0 || fnStr.indexOf('shots') >= 0) {
-                                    baseTitle = 'Shots';
-                                } else if (fnStr.indexOf('recomend') >= 0) {
-                                    baseTitle = 'Рекомендуем посмотреть';
-                                } else if (fnStr.indexOf('timetable_lately') >= 0) {
-                                    baseTitle = 'Ближайшие выходы эпизодов';
-                                } else if (fnStr.indexOf('timetable_recently') >= 0) {
-                                    baseTitle = 'Недавние выходы эпизодов';
-                                } else if (fnStr.indexOf('continue') >= 0) {
-                                    baseTitle = 'Продолжить просмотр';
-                                }
-
-                                // Не запускаем стороннюю полку при обнаружении: это может вызвать сеть и побочные эффекты.
-
-                                // Показ только опознанных ContentRows. Не запускаем их при сканировании.
-                                if (/^Lampa Row #\d+$/.test(baseTitle)) return;
-                                var duplicate = Object.keys(window.SURS_EXTERNAL_SHELVES).some(function(key) {
-                                    var existing = window.SURS_EXTERNAL_SHELVES[key];
-                                    return key !== baseId && existing && existing.title === baseTitle;
-                                });
-                                if (duplicate) return;
-
-                                registerDiscoveredShelf({
-                                    id: baseId,
-                                    title: baseTitle,
-                                    cat: 'plugin',
-                                    desc: 'Строка из Lampa.ContentRows',
-                                    def: false,
-                                    loader: function(callback, pms, own) {
-                                        rowFunc(function(data) {
-                                            callback(data || { results: [] });
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                }
-            }
-        } catch(e) {
-            console.error('[SURS Hub] Error scanning ContentRows:', e);
-        }
+        // 1. Не вызываем ContentRows.call ради обнаружения: этот метод исполняет
+        // сторонние загрузчики, а их функции не имеют стабильных идентификаторов.
+        // Новые полки регистрирует перехватчик ContentRows.add; ранее загруженные
+        // плагины могут зарегистрироваться через window.surs_register_shelf.
 
         // 2. Проверяем Trakt
         try {
@@ -1344,14 +1366,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     function executeBulletproofReset() {
         try {
             Lampa.Storage.set(STORAGE_SHELVES_KEY, []);
-            Lampa.Storage.set(STORAGE_DISCOVERED_KEY, []);
+            // Не удаляем реестр сторонних плагинов при сбросе порядка.
             if (typeof localStorage !== 'undefined') {
                 localStorage.removeItem(STORAGE_SHELVES_KEY);
                 localStorage.removeItem(STORAGE_DISCOVERED_KEY);
             }
         } catch(e) {}
 
-        window.SURS_EXTERNAL_SHELVES = {};
+        // Не удаляем обнаруженные плагины: сбрасывается только пользовательский порядок.
         var cleanDefaults = getDefaultShelvesList();
         saveShelves(cleanDefaults);
         return cleanDefaults;
@@ -1363,7 +1385,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             saved = Lampa.Storage.get(STORAGE_SHELVES_KEY, null);
         } catch(e) {}
 
-        if (Array.isArray(saved) && saved.length > 0) {
+        if (Array.isArray(saved)) {
             var seen = {};
             var unique = [];
             saved.forEach(function(s) {
@@ -1372,6 +1394,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     unique.push(s);
                 }
             });
+            // Нельзя оставлять пользователя без доступа к менеджеру полок.
+            if (!unique.length) return [getDefaultShelvesList()[0]];
+            // Скрытые полки остаются в редакторе. Для пустой главной
+            // безопасная навигация добавляется только в загрузчике главной.
             return unique;
         }
 
@@ -1410,6 +1436,59 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         return Lampa.Maker.make(type, data, function (module) {
             return module.only('Card', 'Callback');
         });
+    }
+
+    // ContentRows.call может вернуть функцию, объект или массив функций/объектов.
+    function resolveExternalPayload(value, callback) {
+        if (value && typeof value.then === 'function') {
+            value.then(function(data) { resolveExternalPayload(data, callback); }, function() {
+                callback({ results: [] });
+            });
+            return;
+        }
+        if (typeof value === 'function') {
+            try { value(function(data) { resolveExternalPayload(data, callback); }); }
+            catch(e) { console.warn('[SURS] Ошибка функции ContentRow:', e); callback({ results: [] }); }
+            return;
+        }
+        if (Array.isArray(value)) {
+            var asRows = value.some(function(entry) {
+                return typeof entry === 'function' || (entry && Array.isArray(entry.results));
+            });
+            if (!asRows) {
+                callback({ results: value.filter(function(card) { return card && typeof card === 'object'; }) });
+                return;
+            }
+            if (!value.length) { callback({ results: [] }); return; }
+            var rows = new Array(value.length);
+            var pending = value.length;
+            value.forEach(function(entry, index) {
+                var completed = false;
+                resolveExternalPayload(entry, function(row) {
+                    if (completed) return;
+                    completed = true;
+                    rows[index] = row && Array.isArray(row.results) ? row : { results: [] };
+                    if (--pending === 0) {
+                        var merged = { results: [] };
+                        rows.forEach(function(part) {
+                            if (!merged.title && part.title) merged.title = part.title;
+                            merged.results = merged.results.concat(part.results);
+                        });
+                        callback(merged);
+                    }
+                });
+            });
+            return;
+        }
+        if (value && Array.isArray(value.results)) { callback(value); return; }
+        callback({ results: [] });
+    }
+
+    function shelfTimeout(id) {
+        if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
+        if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;
+        if (/^ext_/i.test(id)) return 6000;
+        return 5000;
     }
 
     // Генераторы конкретных рядов
@@ -1952,6 +2031,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var timer = setTimeout(function() {
                     if (!called) {
                         called = true;
+                        recordShelfStatus(shelfId, 'timeout');
                         console.warn('[SURS Trakt] Таймаут полки Trakt (3.5с):', shelfId);
                         callback({ results: [] });
                     }
@@ -1973,7 +2053,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                     var year = media.year || (media.released ? ('' + media.released).slice(0, 4) : (media.first_aired ? ('' + media.first_aired).slice(0, 4) : ''));
                     var releaseDate = media.released || media.first_aired || (year ? year + '-01-01' : '');
-                    var tmdbId = (media.ids && media.ids.tmdb) || raw.tmdb_id || media.tmdb_id || media.id;
+                    var tmdbId = (media.ids && media.ids.tmdb) || raw.tmdb_id || media.tmdb_id || (media.source === 'tmdb' ? media.id : null);
+                    if (!tmdbId) return null; // Без TMDB ID карточку нельзя корректно открыть.
                     var traktId = (media.ids && media.ids.trakt) || raw.trakt_id || media.trakt_id;
                     var imdbId = (media.ids && media.ids.imdb) || raw.imdb_id;
 
@@ -2008,14 +2089,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 function enrichCardsWithTMDB(cards, onComplete) {
                     var needEnrich = cards.filter(function(c) {
-                        return c && c.tmdb_id && (!c.poster_path || c.poster_path.indexOf('http') !== 0);
+                        return c && c.tmdb_id && !c.poster_path && !c.img;
                     });
 
                     if (!needEnrich.length || !Lampa.TMDB || !Lampa.TMDB.key || !Lampa.Network) {
                         return onComplete();
                     }
 
-                    var count = Math.min(needEnrich.length, 12);
+                    var count = Math.min(needEnrich.length, 6);
                     var done = 0;
                     var finished = false;
                     var tmdbTimer = setTimeout(function() {
@@ -2025,7 +2106,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         }
                     }, 1200);
 
-                    needEnrich.slice(0, 12).forEach(function(cardItem) {
+                    needEnrich.slice(0, 6).forEach(function(cardItem) {
                         var endpoint = (cardItem.type === 'tv' ? 'tv/' : 'movie/') + cardItem.tmdb_id + '?api_key=' + Lampa.TMDB.key() + '&language=ru';
                         var apiUrl = Lampa.TMDB.api(endpoint);
                         Lampa.Network.silent(apiUrl, function(data) {
@@ -2140,11 +2221,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     var crShelf = window.SURS_EXTERNAL_SHELVES ? (window.SURS_EXTERNAL_SHELVES['ext_' + targetRowName] || window.SURS_EXTERNAL_SHELVES[shelfId]) : null;
                     if (crShelf && typeof crShelf.call === 'function') {
                         var resFunc = crShelf.call(params || {}, 'main');
-                        if (typeof resFunc === 'function') {
-                            resFunc(function(data) { finishTrakt(data); });
-                            return;
-                        } else if (resFunc && typeof resFunc === 'object') {
-                            finishTrakt(resFunc);
+                        if (resFunc) {
+                            resolveExternalPayload(resFunc, finishTrakt);
                             return;
                         }
                     }
@@ -2169,7 +2247,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         for (var i = 0; i < crItems.length; i++) {
                             var fnStr = crItems[i].toString();
                             if (fnStr.indexOf(targetRowName) >= 0 || fnStr.indexOf(apiMethod) >= 0) {
-                                crItems[i](function(d) { finishTrakt(d); });
+                                resolveExternalPayload(crItems[i], finishTrakt);
                                 return;
                             }
                         }
@@ -2189,60 +2267,37 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var extShelf = window.SURS_EXTERNAL_SHELVES ? window.SURS_EXTERNAL_SHELVES[shelfId] : null;
         if (extShelf) {
             return function(callback) {
-                var called = false;
-                // Account shelves may make multiple authenticated requests.
-                var externalTimeout = /^hdrezka_/.test(shelfId) ? 10000 : 2500;
+                var complete = false;
                 var timer = setTimeout(function() {
-                    if (!called) {
-                        called = true;
-                        console.warn('[SURS Hub] Таймаут внешней полки:', shelfId);
-                        callback({ results: [] });
-                    }
-                }, externalTimeout);
+                    if (complete) return;
+                    complete = true;
+                    recordShelfStatus(shelfId, 'timeout');
+                    console.warn('[SURS] Внешняя полка превысила таймаут:', shelfId);
+                    callback({ results: [] });
+                }, shelfTimeout(shelfId) - 500);
+
+                function finish(payload) {
+                    if (complete) return;
+                    complete = true;
+                    clearTimeout(timer);
+                    if (!payload.title) payload.title = extShelf.title || shelfId;
+                    callback(payload);
+                }
 
                 try {
-                    var handler = extShelf.loader;
-                    if (!handler && extShelf.call) {
-                        handler = function(cb) {
-                            var res = extShelf.call(params || {}, 'main');
-                            if (typeof res === 'function') {
-                                res(cb);
-                            } else if (res && typeof res === 'object') {
-                                cb(res);
-                            } else {
-                                cb({ results: [] });
-                            }
-                        };
-                    }
-
-                    if (typeof handler === 'function') {
-                        handler(function(data) {
-                            if (!called) {
-                                called = true;
-                                clearTimeout(timer);
-                                if (!data) return callback({ results: [] });
-                                // Прямой проброс данных стороннего плагина без фильтрации кириллицы TMDB
-                                if (Array.isArray(data)) {
-                                    callback({ results: data, title: extShelf.title || '' });
-                                } else if (data && Array.isArray(data.results)) {
-                                    if (!data.title && extShelf.title) data.title = extShelf.title;
-                                    callback(data);
-                                } else {
-                                    callback(data);
-                                }
-                            }
+                    if (typeof extShelf.loader === 'function') {
+                        extShelf.loader(function(data) {
+                            resolveExternalPayload(data, finish);
                         }, params, owner);
+                    } else if (typeof extShelf.call === 'function') {
+                        resolveExternalPayload(extShelf.call(params || {}, 'main'), finish);
                     } else {
-                        clearTimeout(timer);
-                        callback({ results: [] });
+                        // Полка сохранена, но исходный плагин пока не зарегистрирован.
+                        finish({ results: [], title: extShelf.title || shelfId });
                     }
                 } catch(err) {
-                    clearTimeout(timer);
-                    if (!called) {
-                        called = true;
-                        console.error('[SURS Hub] Ошибка загрузчика внешней полки:', shelfId, err);
-                        callback({ results: [] });
-                    }
+                    console.warn('[SURS] Ошибка стороннего загрузчика:', shelfId, err);
+                    finish({ results: [] });
                 }
             };
         }
@@ -2266,6 +2321,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         // Редактор работает с копией; изменения сохраняются только после «Применить».
         var shelves = getSavedShelves().map(function(item) { return Object.assign({}, item); });
         var activeCategory = 'all';
+        var searchQuery = '';
         var modalHtml = null;
 
         // Миграция: сторонние плагинные полки по умолчанию выключены, пользователь включает только нужные
@@ -2391,6 +2447,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             // Панель вкладок категорий
             var catTabs = [
                 { id: 'all', title: 'Все' },
+                { id: 'enabled', title: 'Активные' },
+                { id: 'hidden', title: 'Скрытые' },
                 { id: 'surs', title: 'SURS' },
                 { id: 'core', title: 'Lampa Core' },
                 { id: 'plugin', title: 'Плагины' },
@@ -2409,13 +2467,24 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 tabsWrap.append(tabBtn);
             });
             modalHtml.append(tabsWrap);
+            if (searchQuery) {
+                var queryLabel = $('<div class="surs-sm-search-query"></div>');
+                queryLabel.text('Поиск: ' + searchQuery);
+                modalHtml.append(queryLabel);
+            }
 
             var list = $('<div class="surs-sm-list"></div>');
 
             var displayEntries = shelves.map(function(item, idx) {
                 return { item: item, originalIndex: idx };
             }).filter(function(entry) {
+                if (searchQuery) {
+                    var haystack = (entry.item.title || '') + ' ' + (entry.item.desc || getShelfDesc(entry.item.id)) + ' ' + entry.item.id;
+                    if (haystack.toLowerCase().indexOf(searchQuery.toLowerCase()) < 0) return false;
+                }
                 if (activeCategory === 'all') return true;
+                if (activeCategory === 'enabled') return !!entry.item.enabled;
+                if (activeCategory === 'hidden') return !entry.item.enabled;
                 var cat = getShelfCategory(entry.item.id);
                 if (activeCategory === 'surs') return cat === 'surs' || cat === 'nav' || cat === 'icons' || cat === 'feed';
                 if (activeCategory === 'core') return cat === 'core';
@@ -2426,7 +2495,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             });
 
             if (!displayEntries.length) {
-                if (activeCategory === 'plugin') {
+                if (activeCategory === 'plugin' && !searchQuery) {
                     list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Сторонние плагины не добавлены.<br>Нажмите кнопку <b>«🔄 Найти плагины»</b> внизу для автоматического поиска установленных плагинов.</div>');
                 } else {
                     list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Нет активных полок в этой категории. Нажмите <b>«+ Добавить полку»</b> ниже.</div>');
@@ -2437,13 +2506,22 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var item = entry.item;
                 var idx = entry.originalIndex;
                 var cat = getShelfCategory(item.id);
-                var desc = getShelfDesc(item.id);
+                var desc = item.desc || getShelfDesc(item.id);
+                var live = window.SURS_EXTERNAL_SHELVES[item.id];
+                var unavailable = (/^ext_/.test(item.id) || /^hdrezka_/i.test(item.id)) && !/^ext_Trakt/.test(item.id) &&
+                    (!live || (typeof live.loader !== 'function' && typeof live.call !== 'function'));
+                if (unavailable) desc = 'Источник недоступен: исходный плагин не зарегистрирован';
+                else if (item.enabled) {
+                    var runtime = window.SURS_SHELF_STATUS[item.id];
+                    var labels = { timeout: 'Таймаут', error: 'Ошибка загрузки', empty: 'Нет контента' };
+                    if (runtime && labels[runtime.state]) desc = (desc ? desc + ' · ' : '') + labels[runtime.state];
+                }
                 var badgeHtml = getBadgeHtml(cat);
                 var isFirst = (idx === 0);
                 var isLast = (idx === shelves.length - 1);
 
                 var row = $(`
-                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${escapeHtml(item.id)}" draggable="true">
+                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'} ${unavailable ? 'surs-sm-item--unavailable' : ''}" data-id="${escapeHtml(item.id)}" draggable="true">
                         <div class="surs-sm-drag-handle selector" data-action="handle" title="Зажмите для перетаскивания или нажмите для меню порядка">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
                         </div>
@@ -2455,7 +2533,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             ${desc ? '<div class="surs-sm-desc">' + escapeHtml(desc) + '</div>' : ''}
                         </div>
                         <div class="surs-sm-actions">
-                            <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle" title="Включить или скрыть полку">
+                            <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" role="button" aria-pressed="${item.enabled ? 'true' : 'false'}" data-action="toggle" title="Включить или скрыть полку">
                                 ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                             </div>
                             <div class="surs-sm-navbtn surs-sm-navbtn--step surs-sm-navbtn--up selector ${isFirst ? 'surs-sm-navbtn--disabled' : ''}" data-action="up" title="Поднять на 1 позицию выше">
@@ -2482,7 +2560,17 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 row.find('[data-action="toggle"]').on('hover:enter click', function(e) {
                     e.stopPropagation();
                     item.enabled = !item.enabled;
-                    refreshListFocus(item.id, 'toggle');
+                    // Не перестраиваем весь список при одном переключении.
+                    row.toggleClass('surs-sm-item--disabled', !item.enabled);
+                    row.find('[data-action="toggle"]').toggleClass('active', !!item.enabled)
+                        .attr('aria-pressed', item.enabled ? 'true' : 'false')
+                        .text(item.enabled ? '✓ Вкл' : '✕ Скрыто');
+                    modalHtml.find('.surs-sm-counter').text(
+                        shelves.filter(function(sh) { return sh.enabled; }).length + ' из ' + shelves.length + ' активно'
+                    );
+                    if (activeCategory === 'enabled' || activeCategory === 'hidden') {
+                        refreshListFocus(null, 'tab');
+                    }
                 });
 
                 // Перемещение на 1 позицию выше (▲)
@@ -2655,17 +2743,33 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 <div class="surs-sm-footer">
                     <div class="surs-sm-footer-left">
                         <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="add">+ Добавить полку</div>
-                        <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Найти плагины</div>
+                        <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Обновить</div>
+                        <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="search">⌕ Поиск</div>
                         ${pluginActionBtn}
                     </div>
                     <div class="surs-sm-footer-right">
                         <div class="surs-sm-btn surs-sm-btn--reset selector" data-action="reset">Сброс</div>
+                        <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="cancel">Отмена</div>
                         <div class="surs-sm-btn surs-sm-btn--primary selector" data-action="apply">✓ Применить</div>
                     </div>
                 </div>
             `);
 
-            // Ресерч внешних полок
+            // Поиск через штатную клавиатуру Lampa (работает и с пульта).
+            footer.find('[data-action="search"]').on('hover:enter click', function(e) {
+                e.stopPropagation();
+                if (!Lampa.Input || typeof Lampa.Input.edit !== 'function') {
+                    Lampa.Noty.show('Поиск недоступен в этой сборке Lampa');
+                    return;
+                }
+                Lampa.Input.edit({ title: 'Поиск полок (пусто = все)', value: searchQuery, free: true, nosave: true }, function(value) {
+                    searchQuery = String(value || '').trim();
+                    Lampa.Controller.toggle('surs_shelf_manager');
+                    refreshListFocus(null, 'tab');
+                });
+            });
+
+            // Повторное обнаружение зарегистрированных источников.
             footer.find('[data-action="rescan"]').on('hover:enter click', function(e) {
                 e.stopPropagation();
                 runAutoDiscovery(true);
@@ -2728,6 +2832,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         Lampa.Controller.toggle('surs_shelf_manager');
                     }
                 });
+            });
+
+            // Выход без сохранения, в том числе на смартфоне.
+            footer.find('[data-action="cancel"]').on('hover:enter click', function(e) {
+                e.stopPropagation();
+                closeModalSafely(false);
             });
 
             // Применить
@@ -2797,8 +2907,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
 
         function refreshListFocus(targetId, buttonType) {
+            var oldList = $('.surs-sm-wrap .surs-sm-list');
+            var previousScroll = oldList.length ? oldList.scrollTop() : 0;
             var newContent = renderModalContent();
             $('.surs-sm-wrap').replaceWith(newContent);
+            newContent.find('.surs-sm-list').scrollTop(previousScroll);
             modalHtml = newContent;
 
             Lampa.Controller.collectionSet(newContent);
@@ -3119,24 +3232,31 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 var savedShelves = getSavedShelves();
                 var combinedData = [];
+                if (!savedShelves.some(function(sh) { return sh.enabled; })) savedShelves = [getDefaultShelvesList()[0]];
 
                 if (mode === 'NEW') {
                     // Режим "Новинки Мир"
-                    var newOrder = ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv'];
+                    var allowedNew = ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv'];
+                    var newOrder = savedShelves.filter(function(sh) { return sh.enabled && allowedNew.indexOf(sh.id) !== -1; })
+                        .map(function(sh) { return sh.id; });
                     newOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
-                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            fn.__sursId = sid;
+                            fn.__sursTimeout = shelfTimeout(sid);
                             combinedData.push(fn);
                         }
                     });
                 } else if (mode === 'RUS') {
                     // Режим "Новинки Россия"
-                    var rusOrder = ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv', 'stream_kinopoisk', 'stream_premier', 'stream_start'];
+                    var allowedRus = ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv', 'stream_kinopoisk', 'stream_premier', 'stream_start'];
+                    var rusOrder = savedShelves.filter(function(sh) { return sh.enabled && allowedRus.indexOf(sh.id) !== -1; })
+                        .map(function(sh) { return sh.id; });
                     rusOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
-                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            fn.__sursId = sid;
+                            fn.__sursTimeout = shelfTimeout(sid);
                             combinedData.push(fn);
                         }
                     });
@@ -3146,32 +3266,42 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (shelf.enabled) {
                             var fn = getShelfLoader(shelf.id, owner, params);
                             if (fn) {
-                                fn.__sursTimeout = /^hdrezka_/.test(shelf.id) ? 11000 :
-                                    /^(trakt_|ext_Trakt)/.test(shelf.id) ? 5500 : 2500;
+                                fn.__sursId = shelf.id;
+                                fn.__sursTimeout = shelfTimeout(shelf.id);
                                 combinedData.push(fn);
                             }
                         }
                     });
                 }
 
-                // Защита от зависаний ТВ (Watchdog 2.5 сек на каждую полку):
+                if (!combinedData.length) {
+                    var nav = getShelfLoader('nav_buttons', owner, params);
+                    if (nav) { nav.__sursId = 'nav_buttons'; nav.__sursTimeout = shelfTimeout('nav_buttons'); combinedData.push(nav); }
+                }
+
+                // Защита от зависаний ТВ (Watchdog для каждой полки):
                 // Если внешний плагин или TMDB задерживается - полка мирно отдает пустой массив,
                 // не блокируя лоадер и не подвешивая интерфейс телевизора!
                 var protectedData = combinedData.map(function(fn, i) {
                     return function(callback) {
                         var finished = false;
+                        var shelfId = fn.__sursId;
+                        recordShelfStatus(shelfId, 'loading');
                         var timer = setTimeout(function() {
                             if (!finished) {
                                 finished = true;
+                                recordShelfStatus(shelfId, 'timeout');
                                 callback({ results: [] });
                             }
-                        }, fn.__sursTimeout || 2500);
+                        }, fn.__sursTimeout || 5000);
 
                         try {
                             fn(function(res) {
                                 if (!finished) {
                                     finished = true;
                                     clearTimeout(timer);
+                                    var old = window.SURS_SHELF_STATUS[shelfId];
+                                    if (!old || old.state !== 'timeout') recordShelfStatus(shelfId, res && res.results && res.results.length ? 'ready' : 'empty');
                                     callback(res || { results: [] });
                                 }
                             });
@@ -3179,6 +3309,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             if (!finished) {
                                 finished = true;
                                 clearTimeout(timer);
+                                recordShelfStatus(shelfId, 'error');
                                 callback({ results: [] });
                             }
                         }
@@ -3206,12 +3337,17 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // 7. РЕГИСТРАЦИЯ И ЗАПУСК ПЛАГИНА
     // ==========================================
     function startPlugin() {
-        addPluginStyles();
-
-        if (!Lampa.Api || !Lampa.Api.sources || !Lampa.Api.sources.tmdb) {
-            console.error('SURS Pro: Lampa.Api.sources.tmdb не найден');
+        if (window.plugin_surs_fixed_ready) return;
+        if (typeof Lampa === 'undefined' || !Lampa.Api || !Lampa.Api.sources || !Lampa.Api.sources.tmdb) {
+            if (window.surs_retry_count++ < 10) {
+                setTimeout(startPlugin, 1000);
+            } else {
+                console.error('SURS: не удалось дождаться источника TMDB');
+            }
             return;
         }
+        window.plugin_surs_fixed_ready = true;
+        addPluginStyles();
 
         var TMDBMain = createSourceTMDB(Lampa.Api.sources.tmdb, 'MAIN');
         var TMDBNew = createSourceTMDB(Lampa.Api.sources.tmdb, 'NEW');
@@ -3289,17 +3425,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 if (!menuList.length) return;
 
                 var mainButton = $('.menu__item[data-action="main"]');
+                // Сохраняем штатный обработчик главного меню Lampa.
                 if (mainButton.length && !mainButton.hasClass('surs-customized')) {
                     mainButton.addClass('surs-customized');
-                    mainButton.off('hover:enter click').on('hover:enter click', function(e) {
-                        if (e && e.stopPropagation) e.stopPropagation();
-                        Lampa.Activity.push({
-                            source: 'SURS',
-                            title: Lampa.Lang.translate('title_main') || 'Главная',
-                            component: 'main',
-                            page: 1
-                        });
-                    });
                 }
 
                 // Добавление быстрого пункта "Порядок полок" в меню
@@ -3332,7 +3460,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.7.4 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.0 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
