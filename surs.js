@@ -793,6 +793,74 @@
                         font-size: 0.88em !important;
                     }
                 }
+
+                /* SURS 3.8: понятные состояния, компактный телефон, большие touch-цели */
+                .surs-sm-wrap { width: 100%; max-width: 1040px; }
+                .surs-sm-item--disabled { opacity: 0.68; }
+                .surs-sm-item--unavailable .surs-sm-desc { color: #e5af71; }
+                .surs-sm-footer-left, .surs-sm-footer-right { flex-wrap: wrap; }
+                .surs-sm-search-query {
+                    font-size: 0.82em;
+                    color: #b9d7ec;
+                    margin: -0.3em 0 0.7em;
+                    overflow-wrap: anywhere;
+                }
+                .surs-sm-tabs { min-height: 2.6em; }
+                .surs-sm-tab.focus { transform: none; outline: 2px solid #7dc8fa; outline-offset: -2px; }
+                .surs-sm-name { overflow-wrap: anywhere; }
+                .surs-sm-footer {
+                    padding-bottom: 0;
+                    padding-bottom: env(safe-area-inset-bottom, 0px);
+                }
+                @media (max-width: 680px) {
+                    .surs-sm-title-line { align-items: flex-start; }
+                    .surs-sm-name {
+                        white-space: normal !important;
+                        display: block;
+                        max-height: 2.7em;
+                        line-height: 1.3;
+                        overflow: hidden;
+                    }
+                    .surs-sm-desc {
+                        white-space: normal !important;
+                        max-height: 2.8em;
+                        overflow: hidden;
+                    }
+                    .surs-sm-info { margin-right: 0.2em; }
+                    .surs-sm-actions { flex-shrink: 0; gap: 0.35em !important; }
+                    .surs-sm-navbtn--step, .surs-sm-navbtn--top { display: none !important; }
+                    .surs-sm-navbtn--more, .surs-sm-toggle, .surs-sm-drag-handle {
+                        min-height: 44px !important;
+                        height: 44px !important;
+                    }
+                    .surs-sm-navbtn--more { width: 44px !important; min-width: 44px !important; }
+                    .surs-sm-toggle { min-width: 64px !important; line-height: 42px !important; }
+                    .surs-sm-drag-handle { width: 44px !important; }
+                    .surs-sm-list { max-height: 45vh; max-height: 45dvh; }
+                    .surs-sm-footer-left, .surs-sm-footer-right { flex-wrap: wrap; }
+                    .surs-sm-footer-left .surs-sm-btn, .surs-sm-footer-right .surs-sm-btn {
+                        min-height: 44px;
+                        min-width: 30%;
+                    }
+                }
+                @media (pointer: coarse) {
+                    .surs-sm-tab, .surs-sm-btn, .surs-sm-toggle, .surs-sm-navbtn {
+                        min-height: 44px;
+                        box-sizing: border-box;
+                    }
+                }
+                @media (max-height: 540px) {
+                    .surs-sm-list { max-height: 32vh !important; }
+                    .surs-sm-header { margin-bottom: 0.4em; padding-bottom: 0.4em; }
+                    .surs-sm-footer { padding-top: 0.35em; }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .surs-sm-wrap *, .surs-sm-wrap *:before, .surs-sm-wrap *:after {
+                        transition-duration: 0s !important;
+                        animation-duration: 0s !important;
+                        scroll-behavior: auto !important;
+                    }
+                }
             </style>
         `);
         $('body').append(style);
@@ -1301,7 +1369,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             }
         } catch(e) {}
 
-        window.SURS_EXTERNAL_SHELVES = {};
+        // Не удаляем обнаруженные плагины: сбрасывается только пользовательский порядок.
         var cleanDefaults = getDefaultShelvesList();
         saveShelves(cleanDefaults);
         return cleanDefaults;
@@ -2246,6 +2314,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         // Редактор работает с копией; изменения сохраняются только после «Применить».
         var shelves = getSavedShelves().map(function(item) { return Object.assign({}, item); });
         var activeCategory = 'all';
+        var searchQuery = '';
         var modalHtml = null;
 
         // Миграция: сторонние плагинные полки по умолчанию выключены, пользователь включает только нужные
@@ -2371,6 +2440,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             // Панель вкладок категорий
             var catTabs = [
                 { id: 'all', title: 'Все' },
+                { id: 'enabled', title: 'Активные' },
+                { id: 'hidden', title: 'Скрытые' },
                 { id: 'surs', title: 'SURS' },
                 { id: 'core', title: 'Lampa Core' },
                 { id: 'plugin', title: 'Плагины' },
@@ -2389,13 +2460,24 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 tabsWrap.append(tabBtn);
             });
             modalHtml.append(tabsWrap);
+            if (searchQuery) {
+                var queryLabel = $('<div class="surs-sm-search-query"></div>');
+                queryLabel.text('Поиск: ' + searchQuery);
+                modalHtml.append(queryLabel);
+            }
 
             var list = $('<div class="surs-sm-list"></div>');
 
             var displayEntries = shelves.map(function(item, idx) {
                 return { item: item, originalIndex: idx };
             }).filter(function(entry) {
+                if (searchQuery) {
+                    var haystack = (entry.item.title || '') + ' ' + (entry.item.desc || getShelfDesc(entry.item.id)) + ' ' + entry.item.id;
+                    if (haystack.toLowerCase().indexOf(searchQuery.toLowerCase()) < 0) return false;
+                }
                 if (activeCategory === 'all') return true;
+                if (activeCategory === 'enabled') return !!entry.item.enabled;
+                if (activeCategory === 'hidden') return !entry.item.enabled;
                 var cat = getShelfCategory(entry.item.id);
                 if (activeCategory === 'surs') return cat === 'surs' || cat === 'nav' || cat === 'icons' || cat === 'feed';
                 if (activeCategory === 'core') return cat === 'core';
@@ -2417,13 +2499,17 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var item = entry.item;
                 var idx = entry.originalIndex;
                 var cat = getShelfCategory(item.id);
-                var desc = getShelfDesc(item.id);
+                var desc = item.desc || getShelfDesc(item.id);
+                var live = window.SURS_EXTERNAL_SHELVES[item.id];
+                var unavailable = /^ext_/.test(item.id) && !/^ext_Trakt/.test(item.id) &&
+                    (!live || (typeof live.loader !== 'function' && typeof live.call !== 'function'));
+                if (unavailable) desc = 'Источник недоступен: исходный плагин не зарегистрирован';
                 var badgeHtml = getBadgeHtml(cat);
                 var isFirst = (idx === 0);
                 var isLast = (idx === shelves.length - 1);
 
                 var row = $(`
-                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${escapeHtml(item.id)}" draggable="true">
+                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'} ${unavailable ? 'surs-sm-item--unavailable' : ''}" data-id="${escapeHtml(item.id)}" draggable="true">
                         <div class="surs-sm-drag-handle selector" data-action="handle" title="Зажмите для перетаскивания или нажмите для меню порядка">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
                         </div>
@@ -2435,7 +2521,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             ${desc ? '<div class="surs-sm-desc">' + escapeHtml(desc) + '</div>' : ''}
                         </div>
                         <div class="surs-sm-actions">
-                            <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle" title="Включить или скрыть полку">
+                            <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" role="button" aria-pressed="${item.enabled ? 'true' : 'false'}" data-action="toggle" title="Включить или скрыть полку">
                                 ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                             </div>
                             <div class="surs-sm-navbtn surs-sm-navbtn--step surs-sm-navbtn--up selector ${isFirst ? 'surs-sm-navbtn--disabled' : ''}" data-action="up" title="Поднять на 1 позицию выше">
@@ -2462,7 +2548,17 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 row.find('[data-action="toggle"]').on('hover:enter click', function(e) {
                     e.stopPropagation();
                     item.enabled = !item.enabled;
-                    refreshListFocus(item.id, 'toggle');
+                    // Не перестраиваем весь список при одном переключении.
+                    row.toggleClass('surs-sm-item--disabled', !item.enabled);
+                    row.find('[data-action="toggle"]').toggleClass('active', !!item.enabled)
+                        .attr('aria-pressed', item.enabled ? 'true' : 'false')
+                        .text(item.enabled ? '✓ Вкл' : '✕ Скрыто');
+                    modalHtml.find('.surs-sm-counter').text(
+                        shelves.filter(function(sh) { return sh.enabled; }).length + ' из ' + shelves.length + ' активно'
+                    );
+                    if (activeCategory === 'enabled' || activeCategory === 'hidden') {
+                        refreshListFocus(null, 'tab');
+                    }
                 });
 
                 // Перемещение на 1 позицию выше (▲)
@@ -2635,7 +2731,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 <div class="surs-sm-footer">
                     <div class="surs-sm-footer-left">
                         <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="add">+ Добавить полку</div>
-                        <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Найти плагины</div>
+                        <div class="surs-sm-btn surs-sm-btn--rescan selector" data-action="rescan">🔄 Обновить</div>
+                        <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="search">⌕ Поиск</div>
                         ${pluginActionBtn}
                     </div>
                     <div class="surs-sm-footer-right">
@@ -2645,7 +2742,21 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 </div>
             `);
 
-            // Ресерч внешних полок
+            // Поиск через штатную клавиатуру Lampa (работает и с пульта).
+            footer.find('[data-action="search"]').on('hover:enter click', function(e) {
+                e.stopPropagation();
+                if (!Lampa.Input || typeof Lampa.Input.edit !== 'function') {
+                    Lampa.Noty.show('Поиск недоступен в этой сборке Lampa');
+                    return;
+                }
+                Lampa.Input.edit({ title: 'Поиск полок (пусто = все)', value: searchQuery, free: true, nosave: true }, function(value) {
+                    searchQuery = String(value || '').trim();
+                    Lampa.Controller.toggle('surs_shelf_manager');
+                    refreshListFocus(null, 'tab');
+                });
+            });
+
+            // Повторное обнаружение зарегистрированных источников.
             footer.find('[data-action="rescan"]').on('hover:enter click', function(e) {
                 e.stopPropagation();
                 runAutoDiscovery(true);
@@ -2777,8 +2888,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
 
         function refreshListFocus(targetId, buttonType) {
+            var oldList = $('.surs-sm-wrap .surs-sm-list');
+            var previousScroll = oldList.length ? oldList.scrollTop() : 0;
             var newContent = renderModalContent();
             $('.surs-sm-wrap').replaceWith(newContent);
+            newContent.find('.surs-sm-list').scrollTop(previousScroll);
             modalHtml = newContent;
 
             Lampa.Controller.collectionSet(newContent);
