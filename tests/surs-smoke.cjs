@@ -448,7 +448,7 @@ test('mobile editor has responsive type and 44px touch targets', () => {
 test('mobile header has close, overflow, summary and accessible actions', () => {
     assert.match(source,/data-action="back" role="button" aria-label="Закрыть редактор"/);
     assert.match(source,/data-action="options" role="button" aria-label="Дополнительные действия"/);
-    assert.match(source,/Восстановить заводской порядок 23 полок/);
+    assert.match(source,/Сбросить полки раздела/);
     assert.doesNotMatch(source,/data-action="categories"/);
     assert.match(source,/surs-sm-counter/);
 });
