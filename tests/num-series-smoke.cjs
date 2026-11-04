@@ -78,16 +78,18 @@ function boot({mac = false, appready = true} = {}) {
         setTimeout: fn => { fn(); return 1; },
         clearTimeout() {}
     };
-    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, setWatched, undoBulk}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
+    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, resumePresentation, formatSeasonCount, setWatched, undoBulk}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
     if (runtime === source) throw new Error('QA injection anchor missing');
     vm.runInNewContext(runtime, ctx, {filename:'num_series.js'});
     return {...ctx, stream, modal, timeline, storage, settings, components, logs};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.0'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.1'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
+    const previous = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_0.js'), 'utf8');
+    assert.match(previous, /var VERSION = '2\.0\.0'/);
 });
 test('boot and native subscriptions', () => {
     const p = boot();
@@ -96,7 +98,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.0')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.1')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
@@ -197,6 +199,37 @@ test('timeline updates refresh current row state', () => {
     p.timeline.send('update',{data:{hash:'hash',road:{percent:46,time:46,duration:100,updated:333}}});
     assert.equal(a.timeline.percent,46);
     assert.equal(a.timeline.updated,333);
+});
+
+test('season counters always show watched/total including zero', () => {
+    const p=boot(), count=p.window.__num2Qa.formatSeasonCount;
+    assert.equal(count(0,7),'0/7');
+    assert.equal(count(4,13),'4/13');
+    assert.equal(count(7,7),'7/7');
+});
+test('resume label distinguishes first episode, next and partial playback', () => {
+    const p=boot(), display=p.window.__num2Qa.resumePresentation;
+    const first={season:1,episode:1,percent:0,updated:0};
+    const done={season:1,episode:1,percent:100,updated:100};
+    const next={season:1,episode:2,percent:0,updated:0};
+    const part={season:1,episode:3,percent:37,updated:120};
+    assert.equal(display(first,[first]).status,'Начать просмотр');
+    assert.equal(display(next,[done,next]).status,'Следующая серия');
+    assert.equal(display(part,[done,next,part]).status,'Продолжить просмотр');
+    assert.equal(display(part,[part]).percent,37);
+    assert.equal(display(first,[first]).percent,0);
+    assert.equal(display(next,[done,next]).meta,'С1 · Е2');
+});
+test('progress threshold is based on raw value rather than rounding', () => {
+    const p=boot(), display=p.window.__num2Qa.resumePresentation;
+    const near={season:1,episode:4,percent:84.9,updated:123};
+    assert.equal(display(near,[near]).status,'Продолжить просмотр');
+});
+test('compact mobile toolbar has accessible action icon', () => {
+    assert.match(source, /\.num2-bar\{display:flex;align-items:center;gap:\.36em/);
+    assert.match(source, /num2-actions svg/);
+    assert.ok(source.includes('aria-label="Действия с сериями"'));
+    assert.match(source, /aria-selected/);
 });
 
 process.stdout.write('\nNUM Series Pro: ' + total + ' smoke checks passed\n');
