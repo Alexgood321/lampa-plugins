@@ -1717,8 +1717,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                 try {
                                     tv = !!(Lampa.Platform && Lampa.Platform.screen &&
                                         Lampa.Platform.screen('tv'));
-                                    touch = !tv && !!(window.matchMedia &&
-                                        window.matchMedia('(pointer: coarse)').matches);
+                                    touch = !tv && (
+                                        !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+                                        !!(window.navigator && window.navigator.maxTouchPoints > 0)
+                                    );
                                 } catch(e) {}
                                 if (touch) line.addClass('surs-nav-line--touch');
                             }
