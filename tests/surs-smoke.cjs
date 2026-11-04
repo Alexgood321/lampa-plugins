@@ -90,7 +90,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.1/);
+    assert.match(source, /Версия: 3\.9\.2/);
 });
 test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
@@ -171,7 +171,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.1');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.2');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -532,6 +532,118 @@ test('existing factory configuration and nav buttons are still present', () => {
     assert.equal(app.rows().length,23);
     assert.equal(app.rows().filter(x=>x.enabled).length,11);
     assert.equal(app.settings.filter(x=>x.param.name && x.param.name.startsWith('surs_nav_visible_')).length,7);
+});
+test('three independent screen profiles have the expected factory defaults', () => {
+    const app=boot();
+    const manager=app.window.LampaShelfManager;
+    const main=manager.getSavedShelves();
+    const world=manager.getSavedShelves('NEW');
+    const russia=manager.getSavedShelves('RUS');
+    assert.equal(main.length,23);
+    assert.equal(main.filter(x=>x.enabled).length,11);
+    assert.equal(main.find(x=>x.id==='rus_movies').enabled,false);
+    assert.equal(main.find(x=>x.id==='rus_tv').enabled,false);
+    assert.deepEqual(Array.from(world,x=>x.id),[
+        'nav_buttons','streaming_global','new_movies','new_tv','trend_movies','trend_tv'
+    ]);
+    assert.ok(world.every(x=>x.enabled));
+    assert.deepEqual(Array.from(russia,x=>x.id),[
+        'nav_buttons','streaming_russian','rus_movies','rus_tv',
+        'stream_kinopoisk','stream_premier','stream_start'
+    ]);
+    assert.deepEqual(Array.from(russia,x=>x.enabled),[true,true,true,true,false,false,false]);
+    assert.equal(app.stored.has('surs_shelves_world_v1'),false);
+    assert.equal(app.stored.has('surs_shelves_russia_v1'),false);
+});
+test('Russian screen displays cinema and series although both are hidden on main', () => {
+    const app=boot();
+    const main=app.getMain('SURS');
+    const russian=app.getMain('SURS RUS');
+    const mainTitles=main.map(x=>x.title);
+    const russianTitles=russian.map(x=>x.title);
+    assert.equal(mainTitles.includes('Российские фильмы (Новинки)'),false);
+    assert.equal(mainTitles.includes('Российские сериалы (Новинки)'),false);
+    assert.equal(russianTitles.includes('Российские фильмы (Новинки)'),true);
+    assert.equal(russianTitles.includes('Российские сериалы (Новинки)'),true);
+    assert.equal(russianTitles.includes('Российские стриминги'),true);
+});
+test('World screen displays its own premieres regardless of main visibility', () => {
+    const app=boot({saved:[
+        {id:'nav_buttons',enabled:true},
+        {id:'new_movies',enabled:false},
+        {id:'new_tv',enabled:false}
+    ]});
+    const main=app.getMain('SURS'),world=app.getMain('SURS NEW');
+    assert.equal(main.some(x=>x.title==='Свежие новинки кино'),false);
+    assert.equal(world.some(x=>x.title==='Свежие новинки кино'),true);
+    assert.equal(world.some(x=>x.title==='Свежие новинки сериалов'),true);
+});
+test('Russia profile updates never mutate home or world', () => {
+    const app=boot();
+    const manager=app.window.LampaShelfManager;
+    const mainBefore=JSON.stringify(manager.getSavedShelves());
+    const worldBefore=JSON.stringify(manager.getSavedShelves('NEW'));
+    manager.saveShelves([
+        {id:'rus_tv',enabled:true,title:'Сериалы России'},
+        {id:'rus_movies',enabled:false,title:'Фильмы России'}
+    ],'RUS');
+    assert.equal(manager.getSavedShelves('RUS')[0].id,'rus_tv');
+    assert.equal(manager.getSavedShelves('RUS')[1].enabled,false);
+    assert.equal(JSON.stringify(manager.getSavedShelves()),mainBefore);
+    assert.equal(JSON.stringify(manager.getSavedShelves('NEW')),worldBefore);
+    assert.equal(app.stored.has('surs_fixed_shelves_v2'),false);
+    assert.equal(app.stored.has('surs_shelves_world_v1'),false);
+});
+test('World profile updates do not change Russia or home', () => {
+    const app=boot();
+    const manager=app.window.LampaShelfManager;
+    manager.saveShelves([{id:'new_tv',enabled:true,title:'Сериалы'}],'NEW');
+    assert.equal(manager.getSavedShelves('NEW').length,1);
+    assert.equal(manager.getSavedShelves('RUS').filter(x=>x.enabled).length,4);
+    assert.equal(manager.getSavedShelves().filter(x=>x.enabled).length,11);
+});
+test('scope reset restores only that section, source and visible defaults', () => {
+    const app=boot({saved:[{id:'rus_movies',enabled:false},{id:'nav_buttons',enabled:true}]});
+    const manager=app.window.LampaShelfManager;
+    manager.saveShelves([{id:'rus_movies',enabled:false}],'RUS');
+    manager.saveShelves([{id:'new_movies',enabled:false}],'NEW');
+    const originalHome=JSON.stringify(manager.getSavedShelves());
+    const originalWorld=JSON.stringify(manager.getSavedShelves('NEW'));
+    const defaults=manager.resetDefaults('RUS');
+    assert.equal(defaults.filter(x=>x.enabled).length,4);
+    assert.equal(defaults.find(x=>x.id==='rus_movies').enabled,true);
+    assert.equal(JSON.stringify(manager.getSavedShelves()),originalHome);
+    assert.equal(JSON.stringify(manager.getSavedShelves('NEW')),originalWorld);
+    const job=app.timers.find(t=>t.ms===80);
+    assert.ok(job);
+    job.fn();
+    assert.equal(app.navigations[0].source,'SURS RUS');
+});
+test('separate settings buttons and editor tabs exist for both sections', () => {
+    const app=boot();
+    const buttons=app.settings.filter(x=>x.param && x.param.name && x.param.name.indexOf('surs_open_')===0);
+    assert.ok(buttons.some(x=>x.param.name==='surs_open_editor'));
+    assert.ok(buttons.some(x=>x.param.name==='surs_open_world_editor'));
+    assert.ok(buttons.some(x=>x.param.name==='surs_open_russia_editor'));
+    assert.match(source,/data-surs-screen=/);
+    assert.match(source,/role="tablist" aria-label="Настраиваемый экран"/);
+    assert.match(source,/function switchEditorScope\(nextScope\)/);
+    assert.match(source,/Сохранить и перейти/);
+    assert.match(source,/Перейти без сохранения/);
+});
+test('responsive independent screen tabs remain touch-friendly', () => {
+    assert.match(source,/\.modal\.surs-sm-modal \.surs-sm-screen-tab \{/);
+    assert.match(source,/min-height: 44px/);
+    assert.match(source,/\.modal\.surs-sm-modal\.surs-sm--touch \.surs-sm-screen-tab \{/);
+    assert.match(source,/\.surs-sm-screen-tab\.active/);
+});
+test('saved home profile uses the original storage key after update', () => {
+    const custom=[{id:'nav_buttons',enabled:true},{id:'rus_movies',enabled:false}];
+    const app=boot({saved:custom});
+    const manager=app.window.LampaShelfManager;
+    manager.saveShelves([{id:'rus_movies',enabled:false}],'RUS');
+    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),custom.map(x=>x.id));
+    assert.equal(app.stored.get('surs_fixed_shelves_v2'),custom);
 });
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
