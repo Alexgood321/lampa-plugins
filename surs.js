@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.7.4 (HDRezka Shelves Compatibility)
- * Релиз: исправление загрузки главной страницы, исключение безымянных полок и дублирующихся строк ContentRows.
+ * Версия: 3.8.0 (Adaptive UI & Stable Shelves)
+ * Релиз: стабильные сторонние полки, устойчивый запуск, загрузка Trakt/HDRezka, адаптивный редактор и регрессионные тесты.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -27,7 +27,7 @@
     }
 
     if (window.plugin_surs_fixed_ready) return;
-    window.plugin_surs_fixed_ready = true;
+    window.surs_retry_count = window.surs_retry_count || 0;
 
     // ==========================================
     // 0. ДИНАМИЧЕСКИЙ РЕЕСТР И ПЕРЕХВАТЧИК СТОРОННИХ ПЛАГИНОВ
@@ -40,7 +40,7 @@
     function isAnonymousShelf(item) {
         if (!item || !item.id) return false;
         var title = String(item.title || '');
-        return title === 'Сторонняя полка' || /^Lampa Row #\d+$/.test(title) || /^ext_row_[a-z0-9]{6}$/.test(item.id);
+        return title === 'Сторонняя полка' || /^Lampa Row #\d+$/.test(title) || /^ext_row_[a-z0-9]{6}$/.test(item.id) || /^ext_lampa_row_\d+$/.test(item.id);
     }
 
     function registerDiscoveredShelf(def) {
@@ -65,6 +65,7 @@
             var list = [];
             for (var key in window.SURS_EXTERNAL_SHELVES) {
                 var it = window.SURS_EXTERNAL_SHELVES[key];
+                if (isAnonymousShelf(it)) continue;
                 list.push({
                     id: it.id,
                     title: it.title,
@@ -102,9 +103,9 @@
                     var origAdd = Lampa.ContentRows.add;
                     Lampa.ContentRows.add = function(rowDef) {
                         try {
-                            if (rowDef && typeof rowDef === 'object' && rowDef.call && (rowDef.name || rowDef.title)) {
+                            if (rowDef && typeof rowDef === 'object' && typeof rowDef.call === 'function' && rowDef.name) {
                                 // Не регистрируем анонимные строки под случайными именами.
-                                var rowId = 'ext_' + (rowDef.name || rowDef.title);
+                                var rowId = 'ext_' + String(rowDef.name);
                                 registerDiscoveredShelf({
                                     id: rowId,
                                     title: rowDef.title || rowDef.name || 'Сторонняя полка',
@@ -1201,61 +1202,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         loadDiscoveredFromStorage();
         var beforeCount = Object.keys(window.SURS_EXTERNAL_SHELVES).length;
 
-        // 1. Проверяем ContentRows - если кто-то зарегистрировал строки в Lampa
-        try {
-            if (typeof Lampa !== 'undefined' && Lampa.ContentRows) {
-                var testItems = [];
-                if (typeof Lampa.ContentRows.call === 'function') {
-                    Lampa.ContentRows.call('main', {}, testItems);
-                    if (testItems && testItems.length) {
-                        testItems.forEach(function(rowFunc, idx) {
-                            if (typeof rowFunc === 'function') {
-                                var baseId = 'ext_lampa_row_' + idx;
-                                var baseTitle = 'Lampa Row #' + (idx + 1);
-                                var fnStr = rowFunc.toString();
-
-                                if (fnStr.indexOf('lenta') >= 0 || fnStr.indexOf('shots') >= 0) {
-                                    baseTitle = 'Shots';
-                                } else if (fnStr.indexOf('recomend') >= 0) {
-                                    baseTitle = 'Рекомендуем посмотреть';
-                                } else if (fnStr.indexOf('timetable_lately') >= 0) {
-                                    baseTitle = 'Ближайшие выходы эпизодов';
-                                } else if (fnStr.indexOf('timetable_recently') >= 0) {
-                                    baseTitle = 'Недавние выходы эпизодов';
-                                } else if (fnStr.indexOf('continue') >= 0) {
-                                    baseTitle = 'Продолжить просмотр';
-                                }
-
-                                // Не запускаем стороннюю полку при обнаружении: это может вызвать сеть и побочные эффекты.
-
-                                // Показ только опознанных ContentRows. Не запускаем их при сканировании.
-                                if (/^Lampa Row #\d+$/.test(baseTitle)) return;
-                                var duplicate = Object.keys(window.SURS_EXTERNAL_SHELVES).some(function(key) {
-                                    var existing = window.SURS_EXTERNAL_SHELVES[key];
-                                    return key !== baseId && existing && existing.title === baseTitle;
-                                });
-                                if (duplicate) return;
-
-                                registerDiscoveredShelf({
-                                    id: baseId,
-                                    title: baseTitle,
-                                    cat: 'plugin',
-                                    desc: 'Строка из Lampa.ContentRows',
-                                    def: false,
-                                    loader: function(callback, pms, own) {
-                                        rowFunc(function(data) {
-                                            callback(data || { results: [] });
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                }
-            }
-        } catch(e) {
-            console.error('[SURS Hub] Error scanning ContentRows:', e);
-        }
+        // 1. Не вызываем ContentRows.call ради обнаружения: этот метод исполняет
+        // сторонние загрузчики, а их функции не имеют стабильных идентификаторов.
+        // Новые полки регистрирует перехватчик ContentRows.add; ранее загруженные
+        // плагины могут зарегистрироваться через window.surs_register_shelf.
 
         // 2. Проверяем Trakt
         try {
@@ -1363,7 +1313,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             saved = Lampa.Storage.get(STORAGE_SHELVES_KEY, null);
         } catch(e) {}
 
-        if (Array.isArray(saved) && saved.length > 0) {
+        if (Array.isArray(saved)) {
             var seen = {};
             var unique = [];
             saved.forEach(function(s) {
@@ -1372,7 +1322,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     unique.push(s);
                 }
             });
-            return unique;
+            // Нельзя оставлять пользователя без доступа к менеджеру полок.
+            return unique.length ? unique : [getDefaultShelvesList()[0]];
         }
 
         return getDefaultShelvesList();
@@ -1410,6 +1361,59 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         return Lampa.Maker.make(type, data, function (module) {
             return module.only('Card', 'Callback');
         });
+    }
+
+    // ContentRows.call может вернуть функцию, объект или массив функций/объектов.
+    function resolveExternalPayload(value, callback) {
+        if (value && typeof value.then === 'function') {
+            value.then(function(data) { resolveExternalPayload(data, callback); }, function() {
+                callback({ results: [] });
+            });
+            return;
+        }
+        if (typeof value === 'function') {
+            try { value(function(data) { resolveExternalPayload(data, callback); }); }
+            catch(e) { console.warn('[SURS] Ошибка функции ContentRow:', e); callback({ results: [] }); }
+            return;
+        }
+        if (Array.isArray(value)) {
+            var asRows = value.some(function(entry) {
+                return typeof entry === 'function' || (entry && Array.isArray(entry.results));
+            });
+            if (!asRows) {
+                callback({ results: value.filter(function(card) { return card && typeof card === 'object'; }) });
+                return;
+            }
+            if (!value.length) { callback({ results: [] }); return; }
+            var rows = new Array(value.length);
+            var pending = value.length;
+            value.forEach(function(entry, index) {
+                var completed = false;
+                resolveExternalPayload(entry, function(row) {
+                    if (completed) return;
+                    completed = true;
+                    rows[index] = row && Array.isArray(row.results) ? row : { results: [] };
+                    if (--pending === 0) {
+                        var merged = { results: [] };
+                        rows.forEach(function(part) {
+                            if (!merged.title && part.title) merged.title = part.title;
+                            merged.results = merged.results.concat(part.results);
+                        });
+                        callback(merged);
+                    }
+                });
+            });
+            return;
+        }
+        if (value && Array.isArray(value.results)) { callback(value); return; }
+        callback({ results: [] });
+    }
+
+    function shelfTimeout(id) {
+        if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
+        if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;
+        if (/^ext_/i.test(id)) return 6000;
+        return 5000;
     }
 
     // Генераторы конкретных рядов
@@ -1973,7 +1977,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                     var year = media.year || (media.released ? ('' + media.released).slice(0, 4) : (media.first_aired ? ('' + media.first_aired).slice(0, 4) : ''));
                     var releaseDate = media.released || media.first_aired || (year ? year + '-01-01' : '');
-                    var tmdbId = (media.ids && media.ids.tmdb) || raw.tmdb_id || media.tmdb_id || media.id;
+                    var tmdbId = (media.ids && media.ids.tmdb) || raw.tmdb_id || media.tmdb_id || (media.source === 'tmdb' ? media.id : null);
                     var traktId = (media.ids && media.ids.trakt) || raw.trakt_id || media.trakt_id;
                     var imdbId = (media.ids && media.ids.imdb) || raw.imdb_id;
 
@@ -2008,14 +2012,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 function enrichCardsWithTMDB(cards, onComplete) {
                     var needEnrich = cards.filter(function(c) {
-                        return c && c.tmdb_id && (!c.poster_path || c.poster_path.indexOf('http') !== 0);
+                        return c && c.tmdb_id && !c.poster_path && !c.img;
                     });
 
                     if (!needEnrich.length || !Lampa.TMDB || !Lampa.TMDB.key || !Lampa.Network) {
                         return onComplete();
                     }
 
-                    var count = Math.min(needEnrich.length, 12);
+                    var count = Math.min(needEnrich.length, 6);
                     var done = 0;
                     var finished = false;
                     var tmdbTimer = setTimeout(function() {
@@ -2025,7 +2029,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         }
                     }, 1200);
 
-                    needEnrich.slice(0, 12).forEach(function(cardItem) {
+                    needEnrich.slice(0, 6).forEach(function(cardItem) {
                         var endpoint = (cardItem.type === 'tv' ? 'tv/' : 'movie/') + cardItem.tmdb_id + '?api_key=' + Lampa.TMDB.key() + '&language=ru';
                         var apiUrl = Lampa.TMDB.api(endpoint);
                         Lampa.Network.silent(apiUrl, function(data) {
@@ -2189,60 +2193,36 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var extShelf = window.SURS_EXTERNAL_SHELVES ? window.SURS_EXTERNAL_SHELVES[shelfId] : null;
         if (extShelf) {
             return function(callback) {
-                var called = false;
-                // Account shelves may make multiple authenticated requests.
-                var externalTimeout = /^hdrezka_/.test(shelfId) ? 10000 : 2500;
+                var complete = false;
                 var timer = setTimeout(function() {
-                    if (!called) {
-                        called = true;
-                        console.warn('[SURS Hub] Таймаут внешней полки:', shelfId);
-                        callback({ results: [] });
-                    }
-                }, externalTimeout);
+                    if (complete) return;
+                    complete = true;
+                    console.warn('[SURS] Внешняя полка превысила таймаут:', shelfId);
+                    callback({ results: [] });
+                }, shelfTimeout(shelfId) - 500);
+
+                function finish(payload) {
+                    if (complete) return;
+                    complete = true;
+                    clearTimeout(timer);
+                    if (!payload.title) payload.title = extShelf.title || shelfId;
+                    callback(payload);
+                }
 
                 try {
-                    var handler = extShelf.loader;
-                    if (!handler && extShelf.call) {
-                        handler = function(cb) {
-                            var res = extShelf.call(params || {}, 'main');
-                            if (typeof res === 'function') {
-                                res(cb);
-                            } else if (res && typeof res === 'object') {
-                                cb(res);
-                            } else {
-                                cb({ results: [] });
-                            }
-                        };
-                    }
-
-                    if (typeof handler === 'function') {
-                        handler(function(data) {
-                            if (!called) {
-                                called = true;
-                                clearTimeout(timer);
-                                if (!data) return callback({ results: [] });
-                                // Прямой проброс данных стороннего плагина без фильтрации кириллицы TMDB
-                                if (Array.isArray(data)) {
-                                    callback({ results: data, title: extShelf.title || '' });
-                                } else if (data && Array.isArray(data.results)) {
-                                    if (!data.title && extShelf.title) data.title = extShelf.title;
-                                    callback(data);
-                                } else {
-                                    callback(data);
-                                }
-                            }
+                    if (typeof extShelf.loader === 'function') {
+                        extShelf.loader(function(data) {
+                            resolveExternalPayload(data, finish);
                         }, params, owner);
+                    } else if (typeof extShelf.call === 'function') {
+                        resolveExternalPayload(extShelf.call(params || {}, 'main'), finish);
                     } else {
-                        clearTimeout(timer);
-                        callback({ results: [] });
+                        // Полка сохранена, но исходный плагин пока не зарегистрирован.
+                        finish({ results: [], title: extShelf.title || shelfId });
                     }
                 } catch(err) {
-                    clearTimeout(timer);
-                    if (!called) {
-                        called = true;
-                        console.error('[SURS Hub] Ошибка загрузчика внешней полки:', shelfId, err);
-                        callback({ results: [] });
-                    }
+                    console.warn('[SURS] Ошибка стороннего загрузчика:', shelfId, err);
+                    finish({ results: [] });
                 }
             };
         }
@@ -3126,7 +3106,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     newOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
-                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            fn.__sursTimeout = shelfTimeout(sid);
                             combinedData.push(fn);
                         }
                     });
@@ -3136,7 +3116,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     rusOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
-                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            fn.__sursTimeout = shelfTimeout(sid);
                             combinedData.push(fn);
                         }
                     });
@@ -3146,8 +3126,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (shelf.enabled) {
                             var fn = getShelfLoader(shelf.id, owner, params);
                             if (fn) {
-                                fn.__sursTimeout = /^hdrezka_/.test(shelf.id) ? 11000 :
-                                    /^(trakt_|ext_Trakt)/.test(shelf.id) ? 5500 : 2500;
+                                fn.__sursTimeout = shelfTimeout(shelf.id);
                                 combinedData.push(fn);
                             }
                         }
@@ -3165,7 +3144,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                 finished = true;
                                 callback({ results: [] });
                             }
-                        }, fn.__sursTimeout || 2500);
+                        }, fn.__sursTimeout || 5000);
 
                         try {
                             fn(function(res) {
@@ -3206,12 +3185,17 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // 7. РЕГИСТРАЦИЯ И ЗАПУСК ПЛАГИНА
     // ==========================================
     function startPlugin() {
-        addPluginStyles();
-
-        if (!Lampa.Api || !Lampa.Api.sources || !Lampa.Api.sources.tmdb) {
-            console.error('SURS Pro: Lampa.Api.sources.tmdb не найден');
+        if (window.plugin_surs_fixed_ready) return;
+        if (typeof Lampa === 'undefined' || !Lampa.Api || !Lampa.Api.sources || !Lampa.Api.sources.tmdb) {
+            if (window.surs_retry_count++ < 10) {
+                setTimeout(startPlugin, 1000);
+            } else {
+                console.error('SURS: не удалось дождаться источника TMDB');
+            }
             return;
         }
+        window.plugin_surs_fixed_ready = true;
+        addPluginStyles();
 
         var TMDBMain = createSourceTMDB(Lampa.Api.sources.tmdb, 'MAIN');
         var TMDBNew = createSourceTMDB(Lampa.Api.sources.tmdb, 'NEW');
@@ -3332,7 +3316,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.7.4 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.0 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
