@@ -34,6 +34,10 @@
     // ==========================================
     window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
     var STORAGE_DISCOVERED_KEY = 'surs_discovered_shelves_v2';
+    window.SURS_SHELF_STATUS = window.SURS_SHELF_STATUS || {};
+    function recordShelfStatus(id, state) {
+        if (id) window.SURS_SHELF_STATUS[id] = { state: state, timestamp: Date.now() };
+    }
 
     // В старых сборках каждому неподписанному ContentRow присваивался случайный ID.
     // Такие записи нельзя надежно соотнести с установленным плагином.
@@ -2027,6 +2031,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var timer = setTimeout(function() {
                     if (!called) {
                         called = true;
+                        recordShelfStatus(shelfId, 'timeout');
                         console.warn('[SURS Trakt] Таймаут полки Trakt (3.5с):', shelfId);
                         callback({ results: [] });
                     }
@@ -2266,6 +2271,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var timer = setTimeout(function() {
                     if (complete) return;
                     complete = true;
+                    recordShelfStatus(shelfId, 'timeout');
                     console.warn('[SURS] Внешняя полка превысила таймаут:', shelfId);
                     callback({ results: [] });
                 }, shelfTimeout(shelfId) - 500);
@@ -2505,6 +2511,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var unavailable = (/^ext_/.test(item.id) || /^hdrezka_/i.test(item.id)) && !/^ext_Trakt/.test(item.id) &&
                     (!live || (typeof live.loader !== 'function' && typeof live.call !== 'function'));
                 if (unavailable) desc = 'Источник недоступен: исходный плагин не зарегистрирован';
+                else if (item.enabled) {
+                    var runtime = window.SURS_SHELF_STATUS[item.id];
+                    var labels = { timeout: 'Таймаут', error: 'Ошибка загрузки', empty: 'Нет контента' };
+                    if (runtime && labels[runtime.state]) desc = (desc ? desc + ' · ' : '') + labels[runtime.state];
+                }
                 var badgeHtml = getBadgeHtml(cat);
                 var isFirst = (idx === 0);
                 var isLast = (idx === shelves.length - 1);
@@ -3231,6 +3242,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     newOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
+                            fn.__sursId = sid;
                             fn.__sursTimeout = shelfTimeout(sid);
                             combinedData.push(fn);
                         }
@@ -3243,6 +3255,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     rusOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
+                            fn.__sursId = sid;
                             fn.__sursTimeout = shelfTimeout(sid);
                             combinedData.push(fn);
                         }
@@ -3253,6 +3266,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (shelf.enabled) {
                             var fn = getShelfLoader(shelf.id, owner, params);
                             if (fn) {
+                                fn.__sursId = shelf.id;
                                 fn.__sursTimeout = shelfTimeout(shelf.id);
                                 combinedData.push(fn);
                             }
@@ -3260,15 +3274,23 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     });
                 }
 
-                // Защита от зависаний ТВ (Watchdog 2.5 сек на каждую полку):
+                if (!combinedData.length) {
+                    var nav = getShelfLoader('nav_buttons', owner, params);
+                    if (nav) { nav.__sursId = 'nav_buttons'; nav.__sursTimeout = shelfTimeout('nav_buttons'); combinedData.push(nav); }
+                }
+
+                // Защита от зависаний ТВ (Watchdog для каждой полки):
                 // Если внешний плагин или TMDB задерживается - полка мирно отдает пустой массив,
                 // не блокируя лоадер и не подвешивая интерфейс телевизора!
                 var protectedData = combinedData.map(function(fn, i) {
                     return function(callback) {
                         var finished = false;
+                        var shelfId = fn.__sursId;
+                        recordShelfStatus(shelfId, 'loading');
                         var timer = setTimeout(function() {
                             if (!finished) {
                                 finished = true;
+                                recordShelfStatus(shelfId, 'timeout');
                                 callback({ results: [] });
                             }
                         }, fn.__sursTimeout || 5000);
@@ -3278,6 +3300,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                 if (!finished) {
                                     finished = true;
                                     clearTimeout(timer);
+                                    var old = window.SURS_SHELF_STATUS[shelfId];
+                                    if (!old || old.state !== 'timeout') recordShelfStatus(shelfId, res && res.results && res.results.length ? 'ready' : 'empty');
                                     callback(res || { results: [] });
                                 }
                             });
@@ -3285,6 +3309,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             if (!finished) {
                                 finished = true;
                                 clearTimeout(timer);
+                                recordShelfStatus(shelfId, 'error');
                                 callback({ results: [] });
                             }
                         }
