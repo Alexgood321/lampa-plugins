@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.7.1 (Trakt Normalization & Direct Reorder Controls)
- * Релиз: Исправление отображения карточек Trakt и добавление прямых кнопок перетаскивания.
+ * Версия: 3.7.2 (Stability & Trakt Fixes)
+ * Релиз: корректные таймауты Trakt, безопасный вывод названий, транзакционное редактирование и исправления управления.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -18,6 +18,13 @@
 
 (function () {
     'use strict';
+
+    // Экранирование подписей сторонних полок при формировании DOM-разметки.
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+        });
+    }
 
     if (window.plugin_surs_fixed_ready) return;
     window.plugin_surs_fixed_ready = true;
@@ -1210,19 +1217,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                     baseTitle = 'Продолжить просмотр';
                                 }
 
-                                // Быстрый опрос для извлечения настоящего заголовка
-                                try {
-                                    rowFunc(function(probeData) {
-                                        if (probeData && (probeData.title || probeData.name)) {
-                                            var pTitle = probeData.title || probeData.name;
-                                            baseTitle = pTitle;
-                                            if (window.SURS_EXTERNAL_SHELVES && window.SURS_EXTERNAL_SHELVES[baseId]) {
-                                                window.SURS_EXTERNAL_SHELVES[baseId].title = pTitle;
-                                                saveDiscoveredToStorage();
-                                            }
-                                        }
-                                    });
-                                } catch(e){}
+                                // Не запускаем стороннюю полку при обнаружении: это может вызвать сеть и побочные эффекты.
 
                                 registerDiscoveredShelf({
                                     id: baseId,
@@ -1960,7 +1955,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     }
 
                     var year = media.year || (media.released ? ('' + media.released).slice(0, 4) : (media.first_aired ? ('' + media.first_aired).slice(0, 4) : ''));
-                    var releaseDate = media.released || media.first_aired || (year ? year + '-01-01' : '2024-01-01');
+                    var releaseDate = media.released || media.first_aired || (year ? year + '-01-01' : '');
                     var tmdbId = (media.ids && media.ids.tmdb) || raw.tmdb_id || media.tmdb_id || media.id;
                     var traktId = (media.ids && media.ids.trakt) || raw.trakt_id || media.trakt_id;
                     var imdbId = (media.ids && media.ids.imdb) || raw.imdb_id;
@@ -1982,8 +1977,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         original_name: media.original_name || media.name || '',
                         release_date: releaseDate,
                         first_air_date: releaseDate,
-                        release_year: year ? ('' + year) : (releaseDate ? releaseDate.slice(0, 4) : '2024'),
-                        vote_average: media.rating ? Math.round(media.rating * 10) / 10 : (raw.vote_average || 7.2),
+                        release_year: year ? ('' + year) : (releaseDate ? releaseDate.slice(0, 4) : ''),
+                        vote_average: media.rating != null ? Math.round(media.rating * 10) / 10 : (raw.vote_average != null ? raw.vote_average : undefined),
                         overview: (ep && ep.overview) || media.overview || '',
                         poster_path: posterPath,
                         backdrop_path: backdropPath,
@@ -2249,25 +2244,21 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         isModalOpen = true;
 
         var prevController = (Lampa.Controller && Lampa.Controller.enabled) ? Lampa.Controller.enabled().name : 'content';
-        var shelves = getSavedShelves().slice();
+        // Редактор работает с копией; изменения сохраняются только после «Применить».
+        var shelves = getSavedShelves().map(function(item) { return Object.assign({}, item); });
         var activeCategory = 'all';
         var modalHtml = null;
 
         // Миграция: сторонние плагинные полки по умолчанию выключены, пользователь включает только нужные
         var migrationKey = 'surs_plugins_default_off_v2';
-        if (!Lampa.Storage.get(migrationKey)) {
-            var hadChange = false;
+        var needsPluginMigration = !Lampa.Storage.get(migrationKey);
+        if (needsPluginMigration) {
             shelves.forEach(function(s) {
                 var cat = getShelfCategory(s.id);
-                if (cat === 'plugin' || (s.id && s.id.indexOf('ext_lampa_row_') === 0) || (s.id && s.id.indexOf('ext_') === 0)) {
+                if (cat === 'plugin' || cat === 'trakt' || (s.id && s.id.indexOf('ext_') === 0)) {
                     s.enabled = false;
-                    hadChange = true;
                 }
             });
-            if (hadChange) {
-                saveShelves(shelves);
-            }
-            Lampa.Storage.set(migrationKey, 'true');
         }
 
         function closeModalSafely(needRefresh) {
@@ -2319,13 +2310,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 onSelect: function(a) {
                     if (a.action === 'toggle') {
                         item.enabled = !item.enabled;
-                        saveShelves(shelves);
                         refreshListFocus(item.id, 'toggle');
                     } else if (a.action === 'top') {
                         if (idx > 0) {
                             var moved = shelves.splice(idx, 1)[0];
                             shelves.unshift(moved);
-                            saveShelves(shelves);
                             refreshListFocus(item.id, 'top');
                             Lampa.Noty.show('Полка «' + moved.title + '» перемещена на 1-е место!');
                         }
@@ -2334,7 +2323,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             var temp = shelves[idx - 1];
                             shelves[idx - 1] = shelves[idx];
                             shelves[idx] = temp;
-                            saveShelves(shelves);
                             refreshListFocus(item.id, 'up');
                             Lampa.Noty.show('Полка «' + item.title + '» поднята выше');
                         }
@@ -2343,7 +2331,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             var temp = shelves[idx + 1];
                             shelves[idx + 1] = shelves[idx];
                             shelves[idx] = temp;
-                            saveShelves(shelves);
                             refreshListFocus(item.id, 'down');
                             Lampa.Noty.show('Полка «' + item.title + '» опущена ниже');
                         }
@@ -2351,13 +2338,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (idx < shelves.length - 1) {
                             var movedBottom = shelves.splice(idx, 1)[0];
                             shelves.push(movedBottom);
-                            saveShelves(shelves);
                             refreshListFocus(item.id, 'down');
                             Lampa.Noty.show('Полка «' + movedBottom.title + '» перемещена в самый низ');
                         }
                     } else if (a.action === 'remove') {
                         var removed = shelves.splice(idx, 1)[0];
-                        saveShelves(shelves);
                         refreshListFocus(null, 'remove');
                         Lampa.Noty.show('Полка «' + removed.title + '» убрана из списка');
                     }
@@ -2439,16 +2424,16 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var isLast = (idx === shelves.length - 1);
 
                 var row = $(`
-                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${item.id}" draggable="true">
+                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'}" data-id="${escapeHtml(item.id)}" draggable="true">
                         <div class="surs-sm-drag-handle selector" data-action="handle" title="Зажмите для перетаскивания или нажмите для меню порядка">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
                         </div>
                         <div class="surs-sm-info">
                             <div class="surs-sm-title-line">
                                 ${badgeHtml}
-                                <span class="surs-sm-name">${item.title}</span>
+                                <span class="surs-sm-name">${escapeHtml(item.title)}</span>
                             </div>
-                            ${desc ? '<div class="surs-sm-desc">' + desc + '</div>' : ''}
+                            ${desc ? '<div class="surs-sm-desc">' + escapeHtml(desc) + '</div>' : ''}
                         </div>
                         <div class="surs-sm-actions">
                             <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" data-action="toggle" title="Включить или скрыть полку">
@@ -2478,7 +2463,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 row.find('[data-action="toggle"]').on('hover:enter click', function(e) {
                     e.stopPropagation();
                     item.enabled = !item.enabled;
-                    saveShelves(shelves);
                     refreshListFocus(item.id, 'toggle');
                 });
 
@@ -2489,7 +2473,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         var temp = shelves[idx - 1];
                         shelves[idx - 1] = shelves[idx];
                         shelves[idx] = temp;
-                        saveShelves(shelves);
                         refreshListFocus(item.id, 'up');
                         Lampa.Noty.show('Полка «' + item.title + '» поднята выше');
                     }
@@ -2502,7 +2485,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         var temp = shelves[idx + 1];
                         shelves[idx + 1] = shelves[idx];
                         shelves[idx] = temp;
-                        saveShelves(shelves);
                         refreshListFocus(item.id, 'down');
                         Lampa.Noty.show('Полка «' + item.title + '» опущена ниже');
                     }
@@ -2514,7 +2496,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     if (idx > 0) {
                         var moved = shelves.splice(idx, 1)[0];
                         shelves.unshift(moved);
-                        saveShelves(shelves);
                         refreshListFocus(item.id, 'top');
                         Lampa.Noty.show('Полка «' + moved.title + '» перемещена на 1-е место!');
                     }
@@ -2565,7 +2546,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     if (srcIdx >= 0 && targetIdx >= 0) {
                         var moved = shelves.splice(srcIdx, 1)[0];
                         shelves.splice(targetIdx, 0, moved);
-                        saveShelves(shelves);
                         refreshListFocus(moved.id, 'toggle');
                         if (targetIdx === 0) {
                             Lampa.Noty.show('Полка «' + moved.title + '» перемещена в самый верх!');
@@ -2630,7 +2610,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (sIdx >= 0 && tIdx >= 0) {
                             var movedItem = shelves.splice(sIdx, 1)[0];
                             shelves.splice(tIdx, 0, movedItem);
-                            saveShelves(shelves);
                             refreshListFocus(movedItem.id, 'toggle');
                             if (tIdx === 0) {
                                 Lampa.Noty.show('Полка «' + movedItem.title + '» перемещена в самый верх!');
@@ -2682,7 +2661,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     }
                 });
                 if (newAdded > 0) {
-                    saveShelves(shelves);
                     Lampa.Noty.show('Найдено новых полок: ' + newAdded + ' (выключены по умолчанию)');
                 }
                 refreshListFocus('rescan_btn', 'rescan');
@@ -2700,7 +2678,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         count++;
                     }
                 });
-                saveShelves(shelves);
                 refreshListFocus(null, 'tab');
                 Lampa.Noty.show('Все сторонние плагины выключены (' + count + ')');
             });
@@ -2722,8 +2699,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     ],
                     onSelect: function(a) {
                         if (a.action === 'confirm') {
-                            var clean = executeBulletproofReset();
-                            shelves = clean.slice();
+                            // Сброс остаётся черновиком до подтверждения изменений.
+                            shelves = getDefaultShelvesList();
                             refreshListFocus(null, 'reset');
                             Lampa.Noty.show('Полки сброшены по умолчанию. Сторонние плагины отключены');
                         }
@@ -2738,6 +2715,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             footer.find('[data-action="apply"]').on('hover:enter click', function(e) {
                 e.stopPropagation();
                 saveShelves(shelves);
+                if (needsPluginMigration) Lampa.Storage.set(migrationKey, 'true');
                 closeModalSafely(true);
             });
 
@@ -2854,7 +2832,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     title: prefix + ' ' + u.title + (u.desc ? ' · ' + u.desc : ''),
                     action: function() {
                         shelves.push({ id: u.id, title: u.title, enabled: true, cat: u.cat, desc: u.desc });
-                        saveShelves(shelves);
                         refreshListFocus(u.id, 'toggle');
                         Lampa.Noty.show('Полка «' + u.title + '» добавлена!');
                     }
@@ -3073,8 +3050,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             enter: function () {
                 var cur = getCurrentFocus();
                 if (cur && cur.length) {
+                    // Кнопки слушают оба события; одного достаточно, иначе действие дублируется.
                     cur.trigger('hover:enter');
-                    cur.trigger('click');
                 }
             },
             back: function () {
@@ -3129,21 +3106,30 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     var newOrder = ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv'];
                     newOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
-                        if (fn) combinedData.push(fn);
+                        if (fn) {
+                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            combinedData.push(fn);
+                        }
                     });
                 } else if (mode === 'RUS') {
                     // Режим "Новинки Россия"
                     var rusOrder = ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv', 'stream_kinopoisk', 'stream_premier', 'stream_start'];
                     rusOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
-                        if (fn) combinedData.push(fn);
+                        if (fn) {
+                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            combinedData.push(fn);
+                        }
                     });
                 } else {
                     // Стандартный настраиваемый Главный экран
                     savedShelves.forEach(function(shelf) {
                         if (shelf.enabled) {
                             var fn = getShelfLoader(shelf.id, owner, params);
-                            if (fn) combinedData.push(fn);
+                            if (fn) {
+                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            combinedData.push(fn);
+                        }
                         }
                     });
                 }
@@ -3159,7 +3145,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                 finished = true;
                                 callback({ results: [] });
                             }
-                        }, 2500);
+                        }, fn.__sursTimeout || 2500);
 
                         try {
                             fn(function(res) {
@@ -3254,8 +3240,20 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     description: 'Вернуть исходную структуру полок'
                 },
                 onChange: function() {
-                    executeBulletproofReset();
-                    Lampa.Noty.show('Настройки полок сброшены! Сторонние плагины отключены');
+                    Lampa.Select.show({
+                        title: 'Сбросить полки SURS по умолчанию?',
+                        items: [
+                            { title: 'Да, сбросить и отключить сторонние полки', action: 'confirm' },
+                            { title: 'Отмена', action: 'cancel' }
+                        ],
+                        onSelect: function(choice) {
+                            if (choice.action === 'confirm') {
+                                executeBulletproofReset();
+                                Lampa.Noty.show('Настройки полок сброшены! Сторонние плагины отключены');
+                            }
+                        },
+                        onBack: function() { Lampa.Controller.toggle('settings'); }
+                    });
                 }
             });
         }
@@ -3314,7 +3312,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.7.1 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.7.2 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
