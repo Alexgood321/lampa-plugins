@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.8.4 (Responsive Navigation Row)
- * Релиз: адаптивная панель навигации для ТВ, Mac, iPhone и iPad; чистые кнопки без меток фильмов.
+ * Версия: 3.8.5 (Compact Mobile Navigation)
+ * Релиз: семь навигационных кнопок в одну строку на iPhone с компактными подписями; TV/Mac/iPad без изменений.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -949,18 +949,53 @@
                     box-shadow: 0 0 0 0.12em rgba(255,255,255,0.18) !important;
                     transform: none !important;
                 }
-                /* Only touch interfaces wrap: keep one-row DPAD navigation on TV. */
+                /* Touch layouts: all seven icons are always in ONE row, including
+                   iPhone portrait and narrow iPad Split View. Film rows are unaffected. */
+                .surs-nav-line .card__button-label--mobile {
+                    display: none !important;
+                }
                 @media screen and (max-width: 820px) {
+                    .surs-nav-line--touch .scroll__content {
+                        padding-left: 0.2em !important;
+                        padding-right: 0.2em !important;
+                    }
                     .surs-nav-line--touch .scroll__body.mapping--line {
-                        grid-template-columns: repeat(4, minmax(0, 1fr));
+                        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+                        column-gap: clamp(2px, 0.65vw, 5px) !important;
+                        row-gap: 0 !important;
+                        max-width: 100% !important;
                     }
                     .surs-nav-line--touch .card--button-compact {
-                        height: 5.8em !important;
+                        height: 4.5em !important;
+                        min-width: 0 !important;
+                        max-width: none !important;
+                    }
+                    .surs-nav-line--touch .card--button-compact .card__view {
+                        padding: 0.2em 0.05em !important;
+                        gap: 0.15em !important;
+                    }
+                    .surs-nav-line--touch .card__button-icon {
+                        width: clamp(20px, 5.2vw, 27px) !important;
+                        height: clamp(20px, 5.2vw, 27px) !important;
+                    }
+                    .surs-nav-line--touch .card__button-label:not(.card__button-label--mobile) {
+                        display: none !important;
+                    }
+                    .surs-nav-line--touch .card__button-label--mobile {
+                        display: block !important;
+                        font-size: clamp(9px, 2.5vw, 11px) !important;
+                        line-height: 1.1 !important;
+                        white-space: nowrap !important;
+                        overflow: hidden !important;
+                        text-overflow: clip !important;
                     }
                 }
-                @media screen and (max-width: 360px) {
-                    .surs-nav-line--touch .scroll__body.mapping--line {
-                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                @media screen and (max-width: 350px) {
+                    .surs-nav-line--touch .card--button-compact {
+                        height: 3.65em !important;
+                    }
+                    .surs-nav-line--touch .card__button-label--mobile {
+                        display: none !important;
                     }
                 }
                 @media screen and (max-width: 690px) and (hover: hover) {
@@ -1674,6 +1709,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     } }
                 ];
 
+                var mobileLabels = {
+                    surs_main: 'Главная', surs_new: 'Мир', surs_rus: 'Россия',
+                    surs_shelf_manager: 'Полки', surs_bookmarks: 'Избр.',
+                    surs_history: 'История', surs_settings: 'Настр.'
+                };
                 var results = baseButtons.map(function(b) {
                     return {
                         source: 'custom',
@@ -1685,6 +1725,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                     var $h = $(this.html);
                                     $h.addClass('card--button-compact');
                                     $h.attr('data-nav-id', b.id);
+                                    $h.attr('aria-label', b.title);
+                                    $h.attr('title', b.title);
                                     // Lampa's Callback module handles remote OK (onlyEnter).
                                     // Click is touch/mouse only; avoid double activation on OK.
                                     $h.on('click', function(e) {
@@ -1696,7 +1738,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                     imgElement.replaceWith(iconContainer);
 
                                     var label = $('<div class="card__button-label">' + b.title + '</div>');
-                                    $h.find('.card__view').append(label);
+                                    var mobileLabel = $('<div class="card__button-label card__button-label--mobile">' +
+                                        (mobileLabels[b.id] || b.title) + '</div>');
+                                    $h.find('.card__view').append(label).append(mobileLabel);
                                 },
                                 onlyEnter: b.action
                             }
@@ -2595,7 +2639,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.4</span></div>
+                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.5</span></div>
                         <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
@@ -3622,7 +3666,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.8.4 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.5 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -3639,7 +3683,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             refreshSursHome();
             return defaults;
         },
-        version: '3.8.4'
+        version: '3.8.5'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
