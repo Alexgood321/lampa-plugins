@@ -1376,6 +1376,34 @@
                     .modal.surs-sm-modal .surs-sm-toggle { transition: none !important; }
                 }
 
+                /* Search and categories for different input methods. */
+                .modal.surs-sm-modal .surs-sm-toolbar-btn--category { display: none; }
+                .modal.surs-sm-modal.surs-sm--tv .surs-sm-search-field { display: none; }
+                .modal.surs-sm-modal.surs-sm--tv .surs-sm-search-trigger { display: inline-flex; }
+                .modal.surs-sm-modal.surs-sm--tv .surs-sm-toolbar { justify-content: space-between; }
+                .modal.surs-sm-modal.surs-sm--tv .surs-sm-tab.focus,
+                .modal.surs-sm-modal.surs-sm--tv .surs-sm-btn.focus,
+                .modal.surs-sm-modal.surs-sm--tv .surs-sm-toggle.focus {
+                    outline: 3px solid #9ad3ff !important;
+                    outline-offset: -2px !important;
+                    transform: none !important;
+                }
+                @media screen and (max-width: 700px) {
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toolbar-btn--category { display: inline-flex; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-search-field { display: flex; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-title-group {
+                        min-width: 0; flex-wrap: wrap; gap: 3px 8px !important;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-counter { font-size: 11px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-list-heading span:last-child { display: none; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-title { max-width: 100%; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-header { flex-wrap: nowrap; }
+                }
+                @media screen and (max-width: 440px) {
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-title { font-size: 18px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-header-btn { padding: 0 8px; }
+                }
+
             </style>
         `);
         $('body').append(style);
@@ -3089,8 +3117,22 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         { title: 'Скрыть все сторонние полки', action: 'hide-all-plugins' }
                     ],
                     onSelect: function(choice) {
-                        var target = modalHtml.find('[data-action="' + choice.action + '"]');
-                        if (target.length) target.trigger('click');
+                        if (choice.action === 'hide-all-plugins') {
+                            var changed = 0;
+                            shelves.forEach(function(sh) {
+                                var type = getShelfCategory(sh.id);
+                                if ((type === 'plugin' || type === 'trakt' ||
+                                     sh.cat === 'plugin' || sh.cat === 'trakt' ||
+                                     /^ext_|^cr_/.test(sh.id || '')) && sh.enabled) {
+                                    sh.enabled = false; changed++;
+                                }
+                            });
+                            refreshListFocus(null, 'tab');
+                            Lampa.Noty.show('Скрыто сторонних полок: ' + changed);
+                        } else {
+                            var target = modalHtml.find('.surs-sm-footer [data-action="' + choice.action + '"]');
+                            if (target.length) target.trigger('click');
+                        }
                     },
                     onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
                 });
@@ -3213,7 +3255,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             ${desc ? '<div class="surs-sm-desc">' + escapeHtml(desc) + '</div>' : ''}
                         </div>
                         <div class="surs-sm-actions">
-                            <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" role="button" aria-pressed="${item.enabled ? 'true' : 'false'}" data-action="toggle" title="Включить или скрыть полку">
+                            <div class="surs-sm-toggle selector ${item.enabled ? 'active' : ''}" role="button" aria-pressed="${item.enabled ? 'true' : 'false'}" aria-label="${escapeHtml(item.title)}: ${item.enabled ? 'показана' : 'скрыта'}" data-action="toggle" title="Включить или скрыть полку">
                                 ${item.enabled ? '✓ Вкл' : '✕ Скрыто'}
                             </div>
                             <div class="surs-sm-navbtn surs-sm-navbtn--step surs-sm-navbtn--up selector ${isFirst ? 'surs-sm-navbtn--disabled' : ''}" data-action="up" title="Поднять на 1 позицию выше">
@@ -3244,6 +3286,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     row.toggleClass('surs-sm-item--disabled', !item.enabled);
                     row.find('[data-action="toggle"]').toggleClass('active', !!item.enabled)
                         .attr('aria-pressed', item.enabled ? 'true' : 'false')
+                        .attr('aria-label', item.title + ': ' + (item.enabled ? 'показана' : 'скрыта'))
                         .text(item.enabled ? '✓ Вкл' : '✕ Скрыто');
                     modalHtml.find('.surs-sm-counter').text(
                         shelves.filter(function(sh) { return sh.enabled; }).length + ' / ' + shelves.length
