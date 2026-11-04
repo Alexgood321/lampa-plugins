@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.8.1 (Optimized Default Shelves)
- * Релиз: заводской порядок с 12 основными полками и 10 скрытыми; существующие настройки сохраняются.
+ * Версия: 3.8.2 (Reset & Card Year Fix)
+ * Релиз: исправлен год у карточек продолжения, надёжный сброс и миграция старого заводского порядка.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1366,25 +1366,58 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     }
 
     function executeBulletproofReset() {
-        try {
-            Lampa.Storage.set(STORAGE_SHELVES_KEY, []);
-            // Не удаляем реестр сторонних плагинов при сбросе порядка.
-            if (typeof localStorage !== 'undefined') {
-                localStorage.removeItem(STORAGE_SHELVES_KEY);
-                localStorage.removeItem(STORAGE_DISCOVERED_KEY);
-            }
-        } catch(e) {}
-
-        // Не удаляем обнаруженные плагины: сбрасывается только пользовательский порядок.
+        // Сохраняем непосредственно новый профиль. Промежуточная запись [] и
+        // removeItem могли конфликтовать с кэшем Lampa.Storage.
         var cleanDefaults = getDefaultShelvesList();
         saveShelves(cleanDefaults);
+        Lampa.Storage.set('surs_plugins_default_off_v2', 'true');
         return cleanDefaults;
+    }
+
+    function refreshSursHome() {
+        setTimeout(function() {
+            try {
+                var activity = {
+                    title: 'Главная', component: 'main',
+                    source: 'SURS', page: 1
+                };
+                if (Lampa.Activity && typeof Lampa.Activity.replace === 'function') {
+                    Lampa.Activity.replace(activity);
+                } else if (Lampa.Activity && typeof Lampa.Activity.push === 'function') {
+                    Lampa.Activity.push(activity);
+                }
+            } catch(err) {
+                console.error('[SURS] Ошибка обновления главного экрана после сброса:', err);
+            }
+        }, 80);
+    }
+
+    // Переносим только точную заводскую конфигурацию до версии 3.8.1.
+    // Любые пользовательские перестановки, отключения и добавления не трогаем.
+    function migrateLegacyFactoryOrder(saved) {
+        if (!Array.isArray(saved) || saved.length !== 22) return saved;
+        var legacyIds = [
+            'nav_buttons', 'core_continue', 'streaming_russian', 'streaming_global',
+            'genres_icons', 'trend_movies', 'trend_tv', 'upcoming_episodes',
+            'new_movies', 'new_tv', 'rus_movies', 'rus_tv',
+            'stream_kinopoisk', 'stream_premier', 'stream_netflix', 'stream_apple',
+            'turkish_tv', 'korean_tv', 'genre_comedy', 'genre_action',
+            'genre_scifi', 'period_00s'
+        ];
+        var originalFactory = saved.every(function(item, index) {
+            return item && item.id === legacyIds[index] && item.enabled === true;
+        });
+        if (!originalFactory) return saved;
+        var defaults = getDefaultShelvesList();
+        saveShelves(defaults);
+        return defaults;
     }
 
     function getSavedShelves() {
         var saved = null;
         try {
             saved = Lampa.Storage.get(STORAGE_SHELVES_KEY, null);
+            saved = migrateLegacyFactoryOrder(saved);
         } catch(e) {}
 
         if (Array.isArray(saved)) {
@@ -1903,11 +1936,16 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     }
 
                     items.forEach(function(item) {
+                        // Release использует release_date и скрывает год, когда дата неизвестна.
+                        // В избранном Lampa у сериалов дата обычно находится в first_air_date.
+                        if (!item.release_date && item.first_air_date) {
+                            item.release_date = item.first_air_date;
+                        }
                         if (!item.params) {
                             item.params = {
                                 createInstance: function(data) {
                                     return Lampa.Maker.make('Card', data, function(mod) {
-                                        return mod.only('Card', 'Callback');
+                                        return mod.only('Card', 'Release', 'Callback');
                                     });
                                 },
                                 emit: {
@@ -2348,28 +2386,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             } catch(e) {}
 
             if (needRefresh) {
-                setTimeout(function() {
-                    Lampa.Noty.show('Порядок полок сохранён и применён!');
-                    try {
-                        if (Lampa.Activity.replace) {
-                            Lampa.Activity.replace({
-                                title: 'Главная',
-                                component: 'main',
-                                source: Lampa.Storage.get('source') || 'SURS',
-                                page: 1
-                            });
-                        } else {
-                            Lampa.Activity.push({
-                                title: 'Главная',
-                                component: 'main',
-                                source: Lampa.Storage.get('source') || 'SURS',
-                                page: 1
-                            });
-                        }
-                    } catch(e) {
-                        console.error('[SURS] Ошибка обновления Главной страницы:', e);
-                    }
-                }, 80);
+                Lampa.Noty.show('Порядок полок сохранён и применён!');
+                refreshSursHome();
             }
         }
 
@@ -2438,7 +2456,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки Главного экрана</div>
+                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.2</span></div>
                         <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
@@ -2824,10 +2842,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     ],
                     onSelect: function(a) {
                         if (a.action === 'confirm') {
-                            // Сброс остаётся черновиком до подтверждения изменений.
-                            shelves = getDefaultShelvesList();
-                            refreshListFocus(null, 'reset');
-                            Lampa.Noty.show('Полки сброшены по умолчанию. Сторонние плагины отключены');
+                            // Сброс выполняется сразу после подтверждения, без второго «Применить».
+                            shelves = executeBulletproofReset();
+                            activeCategory = 'all';
+                            searchQuery = '';
+                            closeModalSafely(true);
+                            Lampa.Noty.show('Восстановлены 12 активных полок из 22');
                         }
                     },
                     onBack: function() {
@@ -3407,7 +3427,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         onSelect: function(choice) {
                             if (choice.action === 'confirm') {
                                 executeBulletproofReset();
-                                Lampa.Noty.show('Настройки полок сброшены! Сторонние плагины отключены');
+                                Lampa.Noty.show('Восстановлены 12 активных полок из 22');
+                                refreshSursHome();
                             }
                         },
                         onBack: function() { Lampa.Controller.toggle('settings'); }
@@ -3462,7 +3483,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.8.1 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.2 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -3473,7 +3494,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         rescan: function(notify) { return runAutoDiscovery(notify !== false); },
         getAllShelves: getAllAvailableShelves,
         getSavedShelves: getSavedShelves,
-        saveShelves: saveShelves
+        saveShelves: saveShelves,
+        resetDefaults: function() {
+            var defaults = executeBulletproofReset();
+            refreshSursHome();
+            return defaults;
+        },
+        version: '3.8.2'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
