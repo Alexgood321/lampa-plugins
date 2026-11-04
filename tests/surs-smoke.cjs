@@ -20,6 +20,7 @@ function boot({ ready = true, saved = null } = {}) {
     const warnings = [];
     let contentRowsCalls = 0;
     const added = [];
+    const navigations = [];
     const window = { appready: true };
     const Lampa = {
         Reguest: function () {},
@@ -46,10 +47,14 @@ function boot({ ready = true, saved = null } = {}) {
             get: (key, fallback) => stored.has(key) ? stored.get(key) : fallback,
             set: (key, value) => stored.set(key, value)
         },
-        Activity: { active: () => true },
+        Activity: { active: () => true, replace: value => navigations.push(value) },
         Listener: { follow: () => {} },
         Noty: { show: () => {} },
-        Favorite: { continues: () => [] }
+        Favorite: { continues: () => [] },
+        Maker: { make: (type, data, choose) => {
+            if (typeof choose === 'function') return choose({only: (...selected) => selected});
+            return { type, data };
+        }}
     };
     const $ = () => ({ length: 1, append: () => {} });
     const ctx = {
@@ -65,12 +70,12 @@ function boot({ ready = true, saved = null } = {}) {
         Lampa.Api.sources[sourceId].main({ source: sourceId }, x => { result = x; }, () => { result = []; });
         return result;
     };
-    return { stored, timers, warnings, window, Lampa, added, rows, getMain,
+    return { stored, timers, warnings, window, Lampa, added, navigations, rows, getMain,
         contentRowsCalls: () => contentRowsCalls };
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.8\.1/);
+    assert.match(source, /Версия: 3\.8\.2/);
 });
 test('factory profile has 12 active rows in UX order and 10 hidden rows', () => {
     const app = boot();
@@ -95,6 +100,65 @@ test('custom saved shelf order and visibility survive the update', () => {
     const app = boot({ saved: custom });
     assert.deepEqual(Array.from(app.rows(), x => x.id), custom.map(x => x.id));
     assert.deepEqual(Array.from(app.rows(), x => x.enabled), custom.map(x => x.enabled));
+});
+test('legacy factory 22-enabled configuration automatically migrates to 12 active', () => {
+    const legacy = [
+        'nav_buttons','core_continue','streaming_russian','streaming_global',
+        'genres_icons','trend_movies','trend_tv','upcoming_episodes',
+        'new_movies','new_tv','rus_movies','rus_tv',
+        'stream_kinopoisk','stream_premier','stream_netflix','stream_apple',
+        'turkish_tv','korean_tv','genre_comedy','genre_action',
+        'genre_scifi','period_00s'
+    ].map(id => ({ id, enabled: true }));
+    const app = boot({ saved: legacy });
+    assert.equal(app.rows().filter(x => x.enabled).length, 12);
+    assert.equal(app.rows()[2].id, 'new_movies');
+    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 22);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2')[2].id, 'new_movies');
+});
+test('custom rearrangement of legacy profile is not migrated', () => {
+    const legacy = [
+        'nav_buttons','core_continue','streaming_russian','streaming_global',
+        'genres_icons','trend_movies','trend_tv','upcoming_episodes',
+        'new_movies','new_tv','rus_movies','rus_tv',
+        'stream_kinopoisk','stream_premier','stream_netflix','stream_apple',
+        'turkish_tv','korean_tv','genre_comedy','genre_action',
+        'genre_scifi','period_00s'
+    ].map(id => ({ id, enabled: true }));
+    const swapped = legacy.splice(3,1)[0];
+    legacy.splice(2,0,swapped);
+    const app = boot({ saved: legacy });
+    assert.equal(app.rows()[2].id, 'streaming_global');
+    assert.equal(app.rows().filter(x => x.enabled).length, 22);
+});
+test('reset immediately persists factory defaults and schedules screen refresh', () => {
+    const app = boot({ saved: [
+        { id: 'stream_netflix', enabled: true },
+        { id: 'genre_action', enabled: true }
+    ]});
+    assert.equal(app.window.LampaShelfManager.version, '3.8.2');
+    const defaults = app.window.LampaShelfManager.resetDefaults();
+    assert.equal(defaults.length, 22);
+    assert.equal(defaults.filter(x => x.enabled).length, 12);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 22);
+    assert.equal(app.rows()[2].id, 'new_movies');
+    const refresh = app.timers.find(t => t.ms === 80);
+    assert.ok(refresh);
+    refresh.fn();
+    assert.equal(app.navigations[0].source, 'SURS');
+});
+test('continue watching cards load Release module and use first_air_date for TV', () => {
+    const app = boot({ saved: [{ id: 'core_continue', enabled: true }] });
+    const tv = { id: 10, title: 'Сериал', first_air_date: '2022-09-08' };
+    const film = { id: 11, title: 'Фильм', release_date: '2023-05-20' };
+    app.Lampa.Favorite.continues = type => type === 'tv' ? [tv] : [film];
+    const rows = app.getMain();
+    assert.equal(rows.length, 1);
+    const cards = rows[0].results;
+    assert.equal(cards.length, 2);
+    assert.equal(cards[0].release_date, '2022-09-08');
+    assert.deepEqual(Array.from(cards[0].params.createInstance(cards[0])), ['Card','Release','Callback']);
+    assert.deepEqual(Array.from(cards[1].params.createInstance(cards[1])), ['Card','Release','Callback']);
 });
 test('default shelves are retained', () => {
     const app = boot();
