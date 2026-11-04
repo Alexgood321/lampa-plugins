@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.8.0 (Adaptive UI & Stable Shelves)
- * Релиз: стабильные сторонние полки, устойчивый запуск, загрузка Trakt/HDRezka, адаптивный редактор и регрессионные тесты.
+ * Версия: 3.8.1 (Optimized Default Shelves)
+ * Релиз: заводской порядок с 12 основными полками и 10 скрытыми; существующие настройки сохраняются.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1336,30 +1336,32 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         };
     }
 
+    // Заводской профиль: личный контент → премьеры → тренды → навигация.
+    // Применяется при первой установке или явном сбросе. Сохранённый порядок не меняем.
     function getDefaultShelvesList() {
         return [
             { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
             { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
-            { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', enabled: true, cat: 'surs' },
-            { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', enabled: true, cat: 'surs' },
-            { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'new_movies', title: 'Новинки мирового кино', enabled: true, cat: 'surs' },
+            { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: true, cat: 'surs' },
             { id: 'trend_movies', title: 'В тренде: Фильмы недели', enabled: true, cat: 'surs' },
             { id: 'trend_tv', title: 'В тренде: Сериалы недели', enabled: true, cat: 'surs' },
             { id: 'upcoming_episodes', title: 'Расписание новых серий (Выходят скоро)', enabled: true, cat: 'surs' },
-            { id: 'new_movies', title: 'Новинки мирового кино', enabled: true, cat: 'surs' },
-            { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: true, cat: 'surs' },
             { id: 'rus_movies', title: 'Российские фильмы (Новинки)', enabled: true, cat: 'surs' },
             { id: 'rus_tv', title: 'Российские сериалы (Новинки)', enabled: true, cat: 'surs' },
-            { id: 'stream_kinopoisk', title: 'Кинопоиск (Популярное)', enabled: true, cat: 'streaming' },
-            { id: 'stream_premier', title: 'Premier (Популярное)', enabled: true, cat: 'streaming' },
-            { id: 'stream_netflix', title: 'Netflix (Популярное)', enabled: true, cat: 'streaming' },
-            { id: 'stream_apple', title: 'Apple TV+ (Популярное)', enabled: true, cat: 'streaming' },
-            { id: 'turkish_tv', title: 'Турецкие сериалы', enabled: true, cat: 'regional' },
-            { id: 'korean_tv', title: 'Корейские дорамы', enabled: true, cat: 'regional' },
-            { id: 'genre_comedy', title: 'Комедии (Популярные)', enabled: true, cat: 'genre' },
-            { id: 'genre_action', title: 'Боевики (Популярные)', enabled: true, cat: 'genre' },
-            { id: 'genre_scifi', title: 'Фантастика (Популярное)', enabled: true, cat: 'genre' },
-            { id: 'period_00s', title: 'Лучшие фильмы 2000-х', enabled: true, cat: 'period' }
+            { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'stream_kinopoisk', title: 'Кинопоиск (Популярное)', enabled: false, cat: 'streaming' },
+            { id: 'stream_premier', title: 'Premier (Популярное)', enabled: false, cat: 'streaming' },
+            { id: 'stream_netflix', title: 'Netflix (Популярное)', enabled: false, cat: 'streaming' },
+            { id: 'stream_apple', title: 'Apple TV+ (Популярное)', enabled: false, cat: 'streaming' },
+            { id: 'turkish_tv', title: 'Турецкие сериалы', enabled: false, cat: 'regional' },
+            { id: 'korean_tv', title: 'Корейские дорамы', enabled: false, cat: 'regional' },
+            { id: 'genre_comedy', title: 'Комедии (Популярные)', enabled: false, cat: 'genre' },
+            { id: 'genre_action', title: 'Боевики (Популярные)', enabled: false, cat: 'genre' },
+            { id: 'genre_scifi', title: 'Фантастика (Популярное)', enabled: false, cat: 'genre' },
+            { id: 'period_00s', title: 'Лучшие фильмы 2000-х', enabled: false, cat: 'period' }
         ];
     }
 
@@ -3460,7 +3462,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.8.0 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.1 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
