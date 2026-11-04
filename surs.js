@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.0 (Responsive Shelf Editor UX)
- * Релиз: переработан редактор полок для iPhone, iPad, Mac и TV: компоновка, поиск, управление и сохранение.
+ * Версия: 3.9.1 (Swipeable Category Tabs)
+ * Релиз: все категории доступны в горизонтальной ленте свайпом без выпадающего меню, с сохранением позиции.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1154,19 +1154,33 @@
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-legend { display: none !important; }
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-counter { white-space: nowrap; }
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-toolbar { flex-wrap: wrap; gap: 8px; }
+                    /* Every category stays visible inside one swipeable horizontal rail. */
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-tabs {
-                        flex: 1 1 auto; overflow: visible !important; padding: 0 !important;
-                        display: flex; gap: 6px !important;
+                        display: flex !important;
+                        flex: 0 0 100% !important;
+                        width: 100% !important;
+                        max-width: 100%;
+                        min-width: 0;
+                        gap: 6px !important;
+                        padding: 0 2px 5px !important;
+                        margin: 0 !important;
+                        overflow-x: auto !important;
+                        overflow-y: hidden !important;
+                        -webkit-overflow-scrolling: touch;
+                        overscroll-behavior-x: contain;
+                        touch-action: pan-x;
+                        scroll-snap-type: x proximity;
                     }
-                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="surs"],
-                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="core"],
-                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="plugin"],
-                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="streaming"],
-                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="genre"] { display: none !important; }
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab {
-                        flex: 1 1 0; justify-content: center;
-                        padding: 0 6px !important; white-space: nowrap;
-                        font-size: 12px !important;
+                        display: inline-flex !important;
+                        flex: 0 0 auto !important;
+                        justify-content: center;
+                        min-width: 0 !important;
+                        min-height: 44px !important;
+                        padding: 0 13px !important;
+                        font-size: 13px !important;
+                        white-space: nowrap;
+                        scroll-snap-align: start;
                     }
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-toolbar-btn { min-width: 44px; }
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-search-field {
@@ -1234,7 +1248,7 @@
                 }
 
                 /* Search and categories for different input methods. */
-                .modal.surs-sm-modal .surs-sm-toolbar-btn--category { display: none; }
+                /* Categories are shown as chips; no separate category picker. */
                 .modal.surs-sm-modal.surs-sm--tv .surs-sm-search-field { display: none; }
                 .modal.surs-sm-modal.surs-sm--tv .surs-sm-search-trigger { display: inline-flex; }
                 .modal.surs-sm-modal.surs-sm--tv .surs-sm-toolbar { justify-content: space-between; }
@@ -1246,7 +1260,6 @@
                     transform: none !important;
                 }
                 @media screen and (max-width: 700px) {
-                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toolbar-btn--category { display: inline-flex; }
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-search-field { display: flex; }
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-title-group {
                         min-width: 0; flex-wrap: wrap; gap: 3px 8px !important;
@@ -2951,7 +2964,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки главного экрана <span class="surs-sm-version">v3.9.0</span></div>
+                        <div class="surs-sm-title">Полки главного экрана <span class="surs-sm-version">v3.9.1</span></div>
                         <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
@@ -3019,23 +3032,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             });
             var toolbar = $('<div class="surs-sm-toolbar"></div>');
             toolbar.append(tabsWrap);
-            var categoryName = catTabs.filter(function(t) { return t.id === activeCategory; })[0];
-            var categoryBtn = $('<div class="surs-sm-toolbar-btn surs-sm-toolbar-btn--category selector" data-action="categories">Категории' +
-                (categoryName && ['all','enabled','hidden'].indexOf(activeCategory) < 0 ? ': ' + categoryName.title : '') + '</div>');
-            categoryBtn.on('hover:enter click', function(e) {
-                if (e && e.stopPropagation) e.stopPropagation();
-                Lampa.Select.show({
-                    title: 'Категория полок',
-                    items: catTabs.map(function(t) { return { title: t.title, action: t.id }; }),
-                    onSelect: function(chosen) {
-                        activeCategory = chosen.action;
-                        refreshListFocus(null, 'tab');
-                    },
-                    onBack: function() { Lampa.Controller.toggle('surs_shelf_manager'); }
-                });
-            });
-            toolbar.append(categoryBtn);
-
             var searchField = $('<div class="surs-sm-search-field"></div>');
             var searchInput = $('<input type="search" class="surs-sm-search-input" placeholder="Найти полку..." aria-label="Поиск полок" autocomplete="off">');
             searchInput.val(searchQuery);
@@ -3543,15 +3539,34 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
 
         function refreshListFocus(targetId, buttonType) {
-            var oldList = (modalHtml || $('.surs-sm-wrap')).find('.surs-sm-list');
+            var oldRoot = modalHtml || $('.surs-sm-wrap');
+            var oldList = oldRoot.find('.surs-sm-list');
             var previousScroll = oldList.length ? oldList.scrollTop() : 0;
+            // Persist horizontal rail position across category changes and list reorders.
+            var oldTabs = oldRoot.find('.surs-sm-tabs');
+            var previousTabScroll = oldTabs.length ? oldTabs.scrollLeft() : 0;
             var newContent = renderModalContent();
             if (modalHtml) modalHtml.replaceWith(newContent);
             else $('.surs-sm-wrap').replaceWith(newContent);
             newContent.find('.surs-sm-list').scrollTop(previousScroll);
+            newContent.find('.surs-sm-tabs').scrollLeft(previousTabScroll);
             modalHtml = newContent;
 
             Lampa.Controller.collectionSet(newContent);
+
+            // Keep the selected tab visible on small screens and for D-pad navigation.
+            var tabViewport = newContent.find('.surs-sm-tabs')[0];
+            var selectedTab = newContent.find('.surs-sm-tab.active')[0];
+            if (tabViewport && selectedTab && tabViewport.getBoundingClientRect &&
+                selectedTab.getBoundingClientRect) {
+                var viewportRect = tabViewport.getBoundingClientRect();
+                var selectedRect = selectedTab.getBoundingClientRect();
+                if (selectedRect.left < viewportRect.left + 4) {
+                    tabViewport.scrollLeft -= (viewportRect.left + 4 - selectedRect.left);
+                } else if (selectedRect.right > viewportRect.right - 4) {
+                    tabViewport.scrollLeft += (selectedRect.right - viewportRect.right + 4);
+                }
+            }
 
             var focusTarget = null;
             if (targetId === 'rescan_btn') {
@@ -4151,7 +4166,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.9.0 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.9.1 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -4168,7 +4183,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             refreshSursHome();
             return defaults;
         },
-        version: '3.9.0'
+        version: '3.9.1'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки

@@ -90,7 +90,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.0/);
+    assert.match(source, /Версия: 3\.9\.1/);
 });
 test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
@@ -171,7 +171,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.0');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.1');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -449,7 +449,7 @@ test('mobile header has close, overflow, summary and accessible actions', () => 
     assert.match(source,/data-action="back" role="button" aria-label="Закрыть редактор"/);
     assert.match(source,/data-action="options" role="button" aria-label="Дополнительные действия"/);
     assert.match(source,/Восстановить заводской порядок 23 полок/);
-    assert.match(source,/data-action="categories"/);
+    assert.doesNotMatch(source,/data-action="categories"/);
     assert.match(source,/surs-sm-counter/);
 });
 test('inline live search filters existing list without destroying focused input', () => {
@@ -460,12 +460,38 @@ test('inline live search filters existing list without destroying focused input'
     assert.match(source,/surs-sm-empty-search/);
     assert.match(source,/openSearchKeyboard\(\)/);
 });
-test('mobile category menu and core tabs are present', () => {
-    assert.match(source,/\{ id: 'all', title: 'Все' \}/);
-    assert.match(source,/\{ id: 'enabled', title: 'Активные' \}/);
-    assert.match(source,/\{ id: 'hidden', title: 'Скрытые' \}/);
-    assert.match(source,/title: 'Категория полок'/);
-    assert.match(source,/surs-sm-tab\[data-cat="plugin"\]/);
+test('all categories remain in the horizontal tab strip', () => {
+    [
+        ["all", "Все"], ["enabled", "Активные"], ["hidden", "Скрытые"],
+        ["surs", "SURS"], ["core", "Lampa Core"], ["plugin", "Плагины"],
+        ["streaming", "Стриминги"], ["genre", "Жанры"]
+    ].forEach(([id, label]) => {
+        assert.ok(source.includes("{ id: '" + id + "', title: '" + label + "' }"));
+    });
+    assert.doesNotMatch(source,/title: 'Категория полок'/);
+    assert.doesNotMatch(source,/data-action="categories"/);
+});
+test('mobile tabs scroll horizontally with native inertial touch', () => {
+    assert.match(source,/\.modal\.surs-sm-modal\.surs-sm--touch \.surs-sm-tabs\s*\{[^}]*overflow-x: auto !important;/);
+    assert.match(source,/-webkit-overflow-scrolling: touch/);
+    assert.match(source,/touch-action: pan-x/);
+    assert.match(source,/scroll-snap-type: x proximity/);
+    assert.match(source,/\.modal\.surs-sm-modal\.surs-sm--touch \.surs-sm-tab\s*\{[^}]*flex: 0 0 auto !important;/);
+    assert.match(source,/\.modal\.surs-sm-modal\.surs-sm--touch \.surs-sm-tab\s*\{[^}]*min-height: 44px !important;/);
+    assert.doesNotMatch(source,/\.surs-sm-tab\[data-cat="plugin"\][^}]*display: none/);
+});
+test('selected category stays visible after a filter or reorder redraw', () => {
+    assert.match(source,/var previousTabScroll = oldTabs\.length \? oldTabs\.scrollLeft\(\) : 0;/);
+    assert.match(source,/newContent\.find\('\.surs-sm-tabs'\)\.scrollLeft\(previousTabScroll\);/);
+    assert.match(source,/selectedTab\.getBoundingClientRect/);
+    assert.match(source,/tabViewport\.scrollLeft \+=/);
+    assert.match(source,/tabViewport\.scrollLeft -=/);
+});
+test('swipeable filters retain native selection and do not affect content search', () => {
+    assert.match(source,/activeCategory = t\.id;/);
+    assert.match(source,/refreshListFocus\(null, 'tab'\)/);
+    assert.match(source,/searchInput\.on\('input', function\(\)/);
+    assert.match(source,/Lampa\.Controller\.collectionSet\(newContent\)/);
 });
 test('exit protects unsaved changes and Apply is disabled if unchanged', () => {
     assert.match(source,/function hasUnsavedChanges\(\)/);
