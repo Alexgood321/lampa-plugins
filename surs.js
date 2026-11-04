@@ -1362,7 +1362,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     function executeBulletproofReset() {
         try {
             Lampa.Storage.set(STORAGE_SHELVES_KEY, []);
-            Lampa.Storage.set(STORAGE_DISCOVERED_KEY, []);
+            // Не удаляем реестр сторонних плагинов при сбросе порядка.
             if (typeof localStorage !== 'undefined') {
                 localStorage.removeItem(STORAGE_SHELVES_KEY);
                 localStorage.removeItem(STORAGE_DISCOVERED_KEY);
@@ -1391,7 +1391,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 }
             });
             // Нельзя оставлять пользователя без доступа к менеджеру полок.
-            return unique.length ? unique : [getDefaultShelvesList()[0]];
+            if (!unique.length) return [getDefaultShelvesList()[0]];
+            if (!unique.some(function(item) { return item.enabled; })) {
+                return [Object.assign({}, getDefaultShelvesList()[0])];
+            }
+            return unique;
         }
 
         return getDefaultShelvesList();
@@ -2046,6 +2050,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     var year = media.year || (media.released ? ('' + media.released).slice(0, 4) : (media.first_aired ? ('' + media.first_aired).slice(0, 4) : ''));
                     var releaseDate = media.released || media.first_aired || (year ? year + '-01-01' : '');
                     var tmdbId = (media.ids && media.ids.tmdb) || raw.tmdb_id || media.tmdb_id || (media.source === 'tmdb' ? media.id : null);
+                    if (!tmdbId) return null; // Без TMDB ID карточку нельзя корректно открыть.
                     var traktId = (media.ids && media.ids.trakt) || raw.trakt_id || media.trakt_id;
                     var imdbId = (media.ids && media.ids.imdb) || raw.imdb_id;
 
@@ -2212,11 +2217,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     var crShelf = window.SURS_EXTERNAL_SHELVES ? (window.SURS_EXTERNAL_SHELVES['ext_' + targetRowName] || window.SURS_EXTERNAL_SHELVES[shelfId]) : null;
                     if (crShelf && typeof crShelf.call === 'function') {
                         var resFunc = crShelf.call(params || {}, 'main');
-                        if (typeof resFunc === 'function') {
-                            resFunc(function(data) { finishTrakt(data); });
-                            return;
-                        } else if (resFunc && typeof resFunc === 'object') {
-                            finishTrakt(resFunc);
+                        if (resFunc) {
+                            resolveExternalPayload(resFunc, finishTrakt);
                             return;
                         }
                     }
@@ -2241,7 +2243,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         for (var i = 0; i < crItems.length; i++) {
                             var fnStr = crItems[i].toString();
                             if (fnStr.indexOf(targetRowName) >= 0 || fnStr.indexOf(apiMethod) >= 0) {
-                                crItems[i](function(d) { finishTrakt(d); });
+                                resolveExternalPayload(crItems[i], finishTrakt);
                                 return;
                             }
                         }
@@ -2488,7 +2490,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             });
 
             if (!displayEntries.length) {
-                if (activeCategory === 'plugin') {
+                if (activeCategory === 'plugin' && !searchQuery) {
                     list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Сторонние плагины не добавлены.<br>Нажмите кнопку <b>«🔄 Найти плагины»</b> внизу для автоматического поиска установленных плагинов.</div>');
                 } else {
                     list.append('<div style="text-align:center;padding:2em;color:rgba(255,255,255,0.4);">Нет активных полок в этой категории. Нажмите <b>«+ Добавить полку»</b> ниже.</div>');
@@ -2737,6 +2739,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     </div>
                     <div class="surs-sm-footer-right">
                         <div class="surs-sm-btn surs-sm-btn--reset selector" data-action="reset">Сброс</div>
+                        <div class="surs-sm-btn surs-sm-btn--ghost selector" data-action="cancel">Отмена</div>
                         <div class="surs-sm-btn surs-sm-btn--primary selector" data-action="apply">✓ Применить</div>
                     </div>
                 </div>
@@ -2819,6 +2822,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         Lampa.Controller.toggle('surs_shelf_manager');
                     }
                 });
+            });
+
+            // Выход без сохранения, в том числе на смартфоне.
+            footer.find('[data-action="cancel"]').on('hover:enter click', function(e) {
+                e.stopPropagation();
+                closeModalSafely(false);
             });
 
             // Применить
@@ -3213,10 +3222,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                 var savedShelves = getSavedShelves();
                 var combinedData = [];
+                if (!savedShelves.some(function(sh) { return sh.enabled; })) savedShelves = [getDefaultShelvesList()[0]];
 
                 if (mode === 'NEW') {
                     // Режим "Новинки Мир"
-                    var newOrder = ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv'];
+                    var allowedNew = ['nav_buttons', 'streaming_global', 'new_movies', 'new_tv', 'trend_movies', 'trend_tv'];
+                    var newOrder = savedShelves.filter(function(sh) { return sh.enabled && allowedNew.indexOf(sh.id) !== -1; })
+                        .map(function(sh) { return sh.id; });
                     newOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
@@ -3226,7 +3238,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     });
                 } else if (mode === 'RUS') {
                     // Режим "Новинки Россия"
-                    var rusOrder = ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv', 'stream_kinopoisk', 'stream_premier', 'stream_start'];
+                    var allowedRus = ['nav_buttons', 'streaming_russian', 'rus_movies', 'rus_tv', 'stream_kinopoisk', 'stream_premier', 'stream_start'];
+                    var rusOrder = savedShelves.filter(function(sh) { return sh.enabled && allowedRus.indexOf(sh.id) !== -1; })
+                        .map(function(sh) { return sh.id; });
                     rusOrder.forEach(function(sid) {
                         var fn = getShelfLoader(sid, owner, params);
                         if (fn) {
@@ -3387,17 +3401,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 if (!menuList.length) return;
 
                 var mainButton = $('.menu__item[data-action="main"]');
+                // Сохраняем штатный обработчик главного меню Lampa.
                 if (mainButton.length && !mainButton.hasClass('surs-customized')) {
                     mainButton.addClass('surs-customized');
-                    mainButton.off('hover:enter click').on('hover:enter click', function(e) {
-                        if (e && e.stopPropagation) e.stopPropagation();
-                        Lampa.Activity.push({
-                            source: 'SURS',
-                            title: Lampa.Lang.translate('title_main') || 'Главная',
-                            component: 'main',
-                            page: 1
-                        });
-                    });
                 }
 
                 // Добавление быстрого пункта "Порядок полок" в меню
