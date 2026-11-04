@@ -53,7 +53,7 @@ function boot({mac = false, appready = true} = {}) {
     const components = [];
     const logs = [];
     const ctx = {
-        window: {appready},
+        window: {appready, location: {}},
         document: {createElement: () => ({style: {}}), head: {appendChild() {}}},
         navigator: {},
         $: () => element(),
