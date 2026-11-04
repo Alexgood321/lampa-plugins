@@ -90,7 +90,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.0/);
+    assert.match(source, /Версия: 3\.9\.1/);
 });
 test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
