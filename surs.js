@@ -950,7 +950,7 @@
                     transform: none !important;
                 }
                 /* Only touch interfaces wrap: keep one-row DPAD navigation on TV. */
-                @media screen and (max-width: 1100px) {
+                @media screen and (max-width: 820px) {
                     .surs-nav-line--touch .scroll__body.mapping--line {
                         grid-template-columns: repeat(4, minmax(0, 1fr));
                     }
