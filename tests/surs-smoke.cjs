@@ -505,7 +505,7 @@ test('existing factory configuration and nav buttons are still present', () => {
     const app = boot();
     assert.equal(app.rows().length,23);
     assert.equal(app.rows().filter(x=>x.enabled).length,11);
-    assert.equal(app.settings.filter(x=>x.param.name.startsWith('surs_nav_visible_')).length,7);
+    assert.equal(app.settings.filter(x=>x.param.name && x.param.name.startsWith('surs_nav_visible_')).length,7);
 });
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
