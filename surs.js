@@ -3127,7 +3127,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (shelf.enabled) {
                             var fn = getShelfLoader(shelf.id, owner, params);
                             if (fn) {
-                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
+                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(shelf.id) ? 5500 : 2500;
                             combinedData.push(fn);
                         }
                         }
