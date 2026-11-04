@@ -3100,7 +3100,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var isLast = (idx === shelves.length - 1);
 
                 var row = $(`
-                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'} ${unavailable ? 'surs-sm-item--unavailable' : ''}" data-id="${escapeHtml(item.id)}" draggable="true">
+                    <div class="surs-sm-item ${item.enabled ? '' : 'surs-sm-item--disabled'} ${unavailable ? 'surs-sm-item--unavailable' : ''}" data-id="${escapeHtml(item.id)}" draggable="${editorPlatform.touch ? 'false' : 'true'}">
                         <div class="surs-sm-drag-handle selector" data-action="handle" title="Зажмите для перетаскивания или нажмите для меню порядка">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
                         </div>
