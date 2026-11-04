@@ -923,6 +923,13 @@
                     margin-right: auto;
                     box-sizing: border-box;
                 }
+                /* Fixed fallback widths for browsers without calc() multiplication. */
+                .surs-nav-line[data-surs-nav-count="1"] .scroll__body.mapping--line { max-width: 10em !important; }
+                .surs-nav-line[data-surs-nav-count="2"] .scroll__body.mapping--line { max-width: 20em !important; }
+                .surs-nav-line[data-surs-nav-count="3"] .scroll__body.mapping--line { max-width: 30em !important; }
+                .surs-nav-line[data-surs-nav-count="4"] .scroll__body.mapping--line { max-width: 40em !important; }
+                .surs-nav-line[data-surs-nav-count="5"] .scroll__body.mapping--line { max-width: 50em !important; }
+                .surs-nav-line[data-surs-nav-count="6"] .scroll__body.mapping--line { max-width: 60em !important; }
                 .surs-nav-line .card--button-compact {
                     width: 100% !important;
                     min-width: 0 !important;
@@ -994,6 +1001,7 @@
                         grid-template-columns: repeat(var(--surs-nav-count, 7), minmax(0, 1fr)) !important;
                         column-gap: clamp(2px, 0.65vw, 5px) !important;
                         row-gap: 0 !important;
+                        max-width: 100%;
                         max-width: min(100%, calc(var(--surs-nav-count, 7) * 7.8em)) !important;
                     }
                     .surs-nav-line--touch .card--button-compact {
