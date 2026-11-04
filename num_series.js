@@ -487,7 +487,15 @@
             });
         }
 
-                function checkAndInjectSeasonBar(targetContainer) {
+                function alignSeasonTab(track, tab, mobileScreen) {
+            if (mobileScreen || !track || !tab || typeof track.scrollLeft !== 'number') return;
+            var left = Number(tab.offsetLeft) || 0;
+            var right = left + (Number(tab.offsetWidth) || 0);
+            var visibleEnd = track.scrollLeft + (Number(track.clientWidth) || 0);
+            if (left < track.scrollLeft) track.scrollLeft = Math.max(0, left - 8);
+            else if (right > visibleEnd) track.scrollLeft = right - track.clientWidth + 8;
+        }
+        function checkAndInjectSeasonBar(targetContainer) {
             var container = targetContainer || currentContainer;
             if (!container || !container.length || !currentRows.length) return;
             if (container.find('.num2-bar').length) return;
@@ -508,18 +516,10 @@
                     '<span>' + escapeHtml(title) + '</span><span class="num2-count"></span></div>');
                 safeAction(tab, function () { applySeasonFilter(container, String(value)); });
                 tab.on('hover:focus', function () {
-                    // На сенсорном экране горизонтальную прокрутку полностью контролирует пользователь.
-                    // На ТВ сдвигаем только ленту, не весь модальный экран.
-                    var mobileScreen = Lampa.Platform && Lampa.Platform.screen &&
-                        Lampa.Platform.screen('mobile');
-                    if (mobileScreen) return;
-                    var track = tabs[0];
-                    if (!track || typeof track.scrollLeft !== 'number') return;
-                    var left = this.offsetLeft, right = left + this.offsetWidth;
-                    if (left < track.scrollLeft) track.scrollLeft = Math.max(0, left - 8);
-                    else if (right > track.scrollLeft + track.clientWidth) {
-                        track.scrollLeft = right - track.clientWidth + 8;
-                    }
+                    // Пульт скроллит только ленту. На iPhone свайп остаётся нативным.
+                    var mobileScreen = !!(Lampa.Platform && Lampa.Platform.screen &&
+                        Lampa.Platform.screen('mobile'));
+                    alignSeasonTab(tabs[0], this, mobileScreen);
                 });
                 tabs.append(tab);
             }
