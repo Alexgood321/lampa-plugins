@@ -1274,6 +1274,36 @@
                     .modal.surs-sm-modal.surs-sm--touch .surs-sm-header-btn { padding: 0 8px; }
                 }
 
+                /* Independent screen profiles; category chips remain below. */
+                .modal.surs-sm-modal .surs-sm-screen-tabs {
+                    display: flex; flex: 0 0 auto; width: 100%; min-width: 0;
+                    align-items: stretch; gap: 8px; padding: 0 0 12px;
+                    margin: 0 0 10px; border-bottom: 1px solid var(--sm-border);
+                    overflow-x: auto; -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none; overscroll-behavior-x: contain;
+                }
+                .modal.surs-sm-modal .surs-sm-screen-tabs::-webkit-scrollbar { display: none; }
+                .modal.surs-sm-modal .surs-sm-screen-tab {
+                    display: inline-flex; flex: 1 1 0; min-width: 0;
+                    min-height: 44px; padding: 8px 10px; box-sizing: border-box;
+                    align-items: center; justify-content: center; text-align: center;
+                    border-radius: 10px; background: rgba(255,255,255,.06);
+                    border: 1px solid var(--sm-border); color: var(--sm-muted);
+                    font-size: 13px; font-weight: 600; line-height: 1.2;
+                    cursor: pointer;
+                }
+                .modal.surs-sm-modal .surs-sm-screen-tab.active {
+                    color: #fff; background: rgba(65,138,196,.4); border-color: #6eb4e9;
+                }
+                .modal.surs-sm-modal .surs-sm-screen-tab.focus {
+                    outline: 2px solid #9ad3ff; outline-offset: -2px;
+                }
+                @media screen and (max-width: 700px) {
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-screen-tabs { gap: 5px; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-screen-tab {
+                        font-size: 12px; padding: 7px 5px; min-height: 44px;
+                    }
+                }
             </style>
         `);
         $('body').append(style);
@@ -4144,6 +4174,25 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             Lampa.SettingsApi.addParam({
                 component: 'surs',
+                param: { name: 'surs_open_world_editor', type: 'button' },
+                field: {
+                    name: 'Настроить «Новинки Мир»',
+                    description: 'Отдельные полки мировых новинок, независимо от главной'
+                },
+                onChange: function() { openShelfManagerModal('NEW'); }
+            });
+            Lampa.SettingsApi.addParam({
+                component: 'surs',
+                param: { name: 'surs_open_russia_editor', type: 'button' },
+                field: {
+                    name: 'Настроить «Новинки Россия»',
+                    description: 'Отдельные российские фильмы и сериалы, не меняя главную'
+                },
+                onChange: function() { openShelfManagerModal('RUS'); }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: 'surs',
                 param: { type: 'title' },
                 field: {
                     name: 'Кнопки быстрого перехода'
@@ -4269,11 +4318,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         getAllShelves: getAllAvailableShelves,
         getSavedShelves: getSavedShelves,
         saveShelves: saveShelves,
-        resetDefaults: function() {
-            var defaults = executeBulletproofReset();
-            refreshSursHome();
+        resetDefaults: function(scope) {
+            var name = normalizeShelfScope(scope);
+            var defaults = executeBulletproofReset(name);
+            refreshSursHome(name);
             return defaults;
         },
+        getDefaultSectionShelves: getDefaultSectionShelves,
         version: '3.9.2'
     };
 
