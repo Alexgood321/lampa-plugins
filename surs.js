@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.8.5 (Compact Mobile Navigation)
- * Релиз: семь навигационных кнопок в одну строку на iPhone с компактными подписями; TV/Mac/iPad без изменений.
+ * Версия: 3.8.6 (Customizable Navigation Buttons)
+ * Релиз: отдельная настройка видимости каждой кнопки SURS и адаптивное центрирование при любом количестве.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -28,6 +28,37 @@
 
     if (window.plugin_surs_fixed_ready) return;
     window.surs_retry_count = window.surs_retry_count || 0;
+
+    // Персональные кнопки быстрого перехода. Отдельное хранилище, не
+    // связанное с порядком и видимостью полок на главной странице.
+    var SURS_NAV_SETTINGS = [
+        { id: 'surs_main', title: 'Главная' },
+        { id: 'surs_new', title: 'Новинки Мир' },
+        { id: 'surs_rus', title: 'Новинки Россия' },
+        { id: 'surs_shelf_manager', title: 'Порядок полок' },
+        { id: 'surs_bookmarks', title: 'Закладки' },
+        { id: 'surs_history', title: 'История' },
+        { id: 'surs_settings', title: 'Настройки' }
+    ];
+
+    function navButtonSettingKey(id) {
+        return 'surs_nav_visible_' + id;
+    }
+
+    function navButtonVisible(id) {
+        var found = SURS_NAV_SETTINGS.some(function(option) { return option.id === id; });
+        if (!found) return false;
+        try {
+            var key = navButtonSettingKey(id);
+            var value = Lampa.Storage && typeof Lampa.Storage.field === 'function' ?
+                Lampa.Storage.field(key) :
+                Lampa.Storage.get(key, true);
+            // При первом запуске настроек ещё нет: показываем все семь кнопок.
+            return value !== false && value !== 0 && value !== 'false' && value !== '0';
+        } catch(e) {
+            return true;
+        }
+    }
 
     // ==========================================
     // 0. ДИНАМИЧЕСКИЙ РЕЕСТР И ПЕРЕХВАТЧИК СТОРОННИХ ПЛАГИНОВ
@@ -881,12 +912,12 @@
                 }
                 .surs-nav-line .scroll__body.mapping--line {
                     display: grid !important;
-                    grid-template-columns: repeat(7, minmax(0, 1fr));
+                    grid-template-columns: repeat(var(--surs-nav-count, 7), minmax(0, 1fr));
                     column-gap: 0.7em;
                     row-gap: 0.7em;
                     align-items: stretch;
                     width: 100% !important;
-                    max-width: 100em;
+                    max-width: calc(var(--surs-nav-count, 7) * 10em);
                     min-width: 0;
                     margin-left: auto;
                     margin-right: auto;
@@ -960,10 +991,10 @@
                         padding-right: 0.2em !important;
                     }
                     .surs-nav-line--touch .scroll__body.mapping--line {
-                        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+                        grid-template-columns: repeat(var(--surs-nav-count, 7), minmax(0, 1fr)) !important;
                         column-gap: clamp(2px, 0.65vw, 5px) !important;
                         row-gap: 0 !important;
-                        max-width: 100% !important;
+                        max-width: min(100%, calc(var(--surs-nav-count, 7) * 7.8em)) !important;
                     }
                     .surs-nav-line--touch .card--button-compact {
                         height: 4.5em !important;
@@ -1714,7 +1745,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     surs_shelf_manager: 'Полки', surs_bookmarks: 'Избр.',
                     surs_history: 'История', surs_settings: 'Настр.'
                 };
-                var results = baseButtons.map(function(b) {
+                var visibleButtons = baseButtons.filter(function(b) { return navButtonVisible(b.id); });
+                var results = visibleButtons.map(function(b) {
                     return {
                         source: 'custom',
                         title: b.title,
@@ -1748,15 +1780,23 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     };
                 });
 
+                // Не создаём пустую полку, когда пользователь отключил все кнопки.
+                if (!results.length) {
+                    callback({ results: [] });
+                    return;
+                }
+
                 callback({
                     results: results,
                     title: 'Быстрый переход',
                     params: {
-                        items: { view: 7, mapping: 'line', align_left: true },
+                        items: { view: visibleButtons.length, mapping: 'line', align_left: true },
                         emit: {
                             onCreate: function() {
                                 var line = $(this.html);
                                 line.addClass('surs-nav-line');
+                                line.css('--surs-nav-count', String(visibleButtons.length));
+                                line.attr('data-surs-nav-count', String(visibleButtons.length));
                                 var touch = false, tv = false;
                                 try {
                                     tv = !!(Lampa.Platform && Lampa.Platform.screen &&
@@ -2639,7 +2679,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.5</span></div>
+                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.6</span></div>
                         <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
@@ -3595,6 +3635,48 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
             Lampa.SettingsApi.addParam({
                 component: 'surs',
+                param: { type: 'title' },
+                field: {
+                    name: 'Кнопки быстрого перехода'
+                }
+            });
+
+            SURS_NAV_SETTINGS.forEach(function(option) {
+                Lampa.SettingsApi.addParam({
+                    component: 'surs',
+                    param: {
+                        name: navButtonSettingKey(option.id),
+                        type: 'trigger',
+                        default: true
+                    },
+                    field: {
+                        name: 'Показывать: ' + option.title,
+                        description: 'Отображение кнопки на главном экране SURS'
+                    },
+                    onChange: function() {
+                        // Lampa сохраняет trigger. Не закрываем настройки при
+                        // каждом нажатии, чтобы можно было изменить сразу несколько.
+                        if (Lampa.Noty && typeof Lampa.Noty.show === 'function') {
+                            Lampa.Noty.show('Кнопки сохранены. Откройте главную SURS для обновления.');
+                        }
+                    }
+                });
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: 'surs',
+                param: { name: 'surs_nav_refresh', type: 'button' },
+                field: {
+                    name: 'Применить расположение кнопок',
+                    description: 'Обновить главный экран после изменения видимости'
+                },
+                onChange: function() {
+                    refreshSursHome();
+                }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: 'surs',
                 param: { name: 'surs_reset_order', type: 'button' },
                 field: {
                     name: 'Сбросить порядок по умолчанию',
@@ -3666,7 +3748,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.8.5 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.6 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -3683,7 +3765,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             refreshSursHome();
             return defaults;
         },
-        version: '3.8.5'
+        version: '3.8.6'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
