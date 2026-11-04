@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.8.2 (Reset & Card Year Fix)
- * Релиз: исправлен год у карточек продолжения, надёжный сброс и миграция старого заводского порядка.
+ * Версия: 3.8.3 (Factory Shelf Layout)
+ * Релиз: заводской профиль из 11 активных полок в порядке пользователя; остальные выключены, прежние настройки сохраняются.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1338,6 +1338,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     // Заводской профиль: личный контент → премьеры → тренды → навигация.
     // Применяется при первой установке или явном сбросе. Сохранённый порядок не меняем.
+    // Порядок заводского профиля по скриншоту пользователя (11 видимых строк).
+    // Оставшиеся полки зарегистрированы, но не показываются до ручного включения.
     function getDefaultShelvesList() {
         return [
             { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
@@ -1346,12 +1348,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: true, cat: 'surs' },
             { id: 'trend_movies', title: 'В тренде: Фильмы недели', enabled: true, cat: 'surs' },
             { id: 'trend_tv', title: 'В тренде: Сериалы недели', enabled: true, cat: 'surs' },
-            { id: 'upcoming_episodes', title: 'Расписание новых серий (Выходят скоро)', enabled: true, cat: 'surs' },
-            { id: 'rus_movies', title: 'Российские фильмы (Новинки)', enabled: true, cat: 'surs' },
-            { id: 'rus_tv', title: 'Российские сериалы (Новинки)', enabled: true, cat: 'surs' },
+            { id: 'period_10s', title: 'Хиты 2010-х годов', enabled: true, cat: 'period' },
+            { id: 'period_00s', title: 'Лучшие фильмы 2000-х', enabled: true, cat: 'period' },
             { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', enabled: true, cat: 'surs' },
-            { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', enabled: true, cat: 'surs' },
             { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', enabled: true, cat: 'surs' },
+            { id: 'upcoming_episodes', title: 'Расписание новых серий (Выходят скоро)', enabled: false, cat: 'surs' },
+            { id: 'rus_movies', title: 'Российские фильмы (Новинки)', enabled: false, cat: 'surs' },
+            { id: 'rus_tv', title: 'Российские сериалы (Новинки)', enabled: false, cat: 'surs' },
             { id: 'stream_kinopoisk', title: 'Кинопоиск (Популярное)', enabled: false, cat: 'streaming' },
             { id: 'stream_premier', title: 'Premier (Популярное)', enabled: false, cat: 'streaming' },
             { id: 'stream_netflix', title: 'Netflix (Популярное)', enabled: false, cat: 'streaming' },
@@ -1360,8 +1364,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             { id: 'korean_tv', title: 'Корейские дорамы', enabled: false, cat: 'regional' },
             { id: 'genre_comedy', title: 'Комедии (Популярные)', enabled: false, cat: 'genre' },
             { id: 'genre_action', title: 'Боевики (Популярные)', enabled: false, cat: 'genre' },
-            { id: 'genre_scifi', title: 'Фантастика (Популярное)', enabled: false, cat: 'genre' },
-            { id: 'period_00s', title: 'Лучшие фильмы 2000-х', enabled: false, cat: 'period' }
+            { id: 'genre_scifi', title: 'Фантастика (Популярное)', enabled: false, cat: 'genre' }
         ];
     }
 
@@ -1392,8 +1395,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }, 80);
     }
 
-    // Переносим только точную заводскую конфигурацию до версии 3.8.1.
-    // Любые пользовательские перестановки, отключения и добавления не трогаем.
+    // Только неизменённые заводские конфигурации 3.7.x и 3.8.1/3.8.2
+    // переводим на новый профиль. Любой пользовательский порядок остаётся как есть.
     function migrateLegacyFactoryOrder(saved) {
         if (!Array.isArray(saved) || saved.length !== 22) return saved;
         var legacyIds = [
@@ -1404,10 +1407,21 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             'turkish_tv', 'korean_tv', 'genre_comedy', 'genre_action',
             'genre_scifi', 'period_00s'
         ];
+        var lastFactoryIds = [
+            'nav_buttons', 'core_continue', 'new_movies', 'new_tv',
+            'trend_movies', 'trend_tv', 'upcoming_episodes', 'rus_movies',
+            'rus_tv', 'genres_icons', 'streaming_russian', 'streaming_global',
+            'stream_kinopoisk', 'stream_premier', 'stream_netflix', 'stream_apple',
+            'turkish_tv', 'korean_tv', 'genre_comedy', 'genre_action',
+            'genre_scifi', 'period_00s'
+        ];
         var originalFactory = saved.every(function(item, index) {
             return item && item.id === legacyIds[index] && item.enabled === true;
         });
-        if (!originalFactory) return saved;
+        var lastFactory = saved.every(function(item, index) {
+            return item && item.id === lastFactoryIds[index] && item.enabled === (index < 12);
+        });
+        if (!originalFactory && !lastFactory) return saved;
         var defaults = getDefaultShelvesList();
         saveShelves(defaults);
         return defaults;
@@ -2456,7 +2470,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.2</span></div>
+                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.3</span></div>
                         <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
@@ -2847,7 +2861,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             activeCategory = 'all';
                             searchQuery = '';
                             closeModalSafely(true);
-                            Lampa.Noty.show('Восстановлены 12 активных полок из 22');
+                            Lampa.Noty.show('Восстановлены 11 активных полок из 23');
                         }
                     },
                     onBack: function() {
@@ -3427,7 +3441,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         onSelect: function(choice) {
                             if (choice.action === 'confirm') {
                                 executeBulletproofReset();
-                                Lampa.Noty.show('Восстановлены 12 активных полок из 22');
+                                Lampa.Noty.show('Восстановлены 11 активных полок из 23');
                                 refreshSursHome();
                             }
                         },
@@ -3483,7 +3497,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.8.2 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.3 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -3500,7 +3514,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             refreshSursHome();
             return defaults;
         },
-        version: '3.8.2'
+        version: '3.8.3'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
