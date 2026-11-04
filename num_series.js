@@ -330,8 +330,9 @@
                 // Различаем старт, следующую серию и реальное продолжение с прогрессом.
         function resumePresentation(candidate, list) {
             if (!candidate) return null;
-            var percent = Math.round(Math.max(0, Math.min(100, Number(candidate.percent) || 0)));
-            var partial = percent > 0 && percent < threshold;
+            var rawPercent = Math.max(0, Math.min(100, Number(candidate.percent) || 0));
+            var percent = Math.round(rawPercent);
+            var partial = rawPercent > 0 && rawPercent < threshold;
             var hasPreviousWatched = !partial && list.some(function (entry) {
                 return entry.percent >= threshold && (
                     entry.season < candidate.season ||
