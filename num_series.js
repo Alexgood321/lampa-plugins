@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.0';
+    var VERSION = '2.0.1';
 
     function startPlugin() {
         // Локализация
@@ -60,27 +60,30 @@
         var style = document.createElement('style');
         style.id = 'num-series-styles';
         style.textContent = [
-            '.num2-bar{display:flex;align-items:center;gap:.55em;max-width:100%;padding:.65em .8em;margin:0 0 .55em;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:.65em;box-sizing:border-box;}',
-            '.num2-tabs{display:flex;flex:1;min-width:0;align-items:center;gap:.45em;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}',
+            '.num2-bar{display:flex;align-items:center;gap:.36em;max-width:100%;padding:.26em 0;margin:0 0 .46em;background:transparent;border:0;box-sizing:border-box;}',
+            '.num2-tabs{display:flex;flex:1;min-width:0;align-items:center;gap:.35em;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}',
             '.num2-tabs::-webkit-scrollbar{display:none;}',
-            '.num2-tab,.num2-actions{display:inline-flex;align-items:center;justify-content:center;gap:.4em;flex:0 0 auto;min-height:2.6em;padding:.35em .75em;border:1px solid transparent;border-radius:.45em;background:rgba(255,255,255,.07);color:rgba(255,255,255,.78);font-size:.94em;font-weight:500;white-space:nowrap;box-sizing:border-box;cursor:pointer;}',
-            '.num2-tab.active{background:rgba(255,255,255,.19);border-color:rgba(255,255,255,.38);color:#fff;font-weight:600;}',
+            '.num2-tab,.num2-actions{display:inline-flex;align-items:center;justify-content:center;gap:.34em;flex:0 0 auto;min-height:2.55em;padding:.35em .65em;border:1px solid rgba(255,255,255,.055);border-radius:.46em;background:rgba(255,255,255,.06);color:rgba(255,255,255,.78);font-size:.9em;font-weight:500;white-space:nowrap;box-sizing:border-box;cursor:pointer;}',
+            '.num2-tab.active{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.34);color:#fff;font-weight:600;}',
             '.num2-tab.focus,.num2-actions.focus,.num2-resume.focus{background:rgba(255,255,255,.25);outline:2px solid currentColor;outline-offset:1px;color:#fff;}',
             '.num2-tab .num2-count{color:rgba(255,255,255,.63);font-size:.84em;font-variant-numeric:tabular-nums;}',
             '.num2-tab.active .num2-count{color:#fff;}',
             '.num2-tab .num2-done{color:#70d6a0;}',
-            '.num2-actions{font-size:1.35em;min-width:2em;padding:0 .4em;}',
+            '.num2-actions{width:2.45em;min-width:2.45em;height:2.45em;min-height:2.45em;padding:0;opacity:.88;background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.09);}',
+            '.num2-actions svg{display:block;width:1.25em;height:1.25em;pointer-events:none;}',
             '.num2-resume{display:flex;gap:.8em;align-items:center;min-height:3.35em;padding:.55em .85em;margin:0 0 .7em;border:1px solid rgba(255,255,255,.12);border-radius:.6em;background:rgba(255,255,255,.055);box-sizing:border-box;cursor:pointer;}',
             '.num2-play{display:flex;align-items:center;justify-content:center;width:2.25em;height:2.25em;flex:0 0 auto;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;}',
             '.num2-resume-body{flex:1;min-width:0;}',
-            '.num2-resume-top{font-size:.81em;opacity:.62;margin-bottom:.16em;}',
+            '.num2-resume-top{display:flex;align-items:center;gap:.55em;min-width:0;font-size:.81em;margin-bottom:.16em;}',
+            '.num2-resume-status{flex:0 0 auto;color:rgba(255,255,255,.8);font-weight:600;}',
+            '.num2-resume-meta{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.55;}',
             '.num2-resume-title{font-size:1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
             '.num2-resume-percent{flex:0 0 auto;font-size:.85em;opacity:.76;font-variant-numeric:tabular-nums;}',
             '.num2-progress{height:3px;margin-top:.38em;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;}',
             '.num2-progress>div{height:100%;background:#71c99f;}',
             '.num-hidden-item{display:none!important;}',
             '.num-resume-badge{display:inline-block;margin-left:.4em;padding:.08em .35em;border-radius:.25em;font-size:.75em;color:#b6e6c7;background:rgba(83,179,120,.14);font-variant-numeric:tabular-nums;}',
-            '@media(max-width:600px){.num2-bar{gap:.35em;padding:.4em;margin-bottom:.4em}.num2-tab{min-height:2.45em;padding:.25em .6em;font-size:.88em}.num2-actions{min-width:1.75em}.num2-resume{min-height:3.1em;padding:.55em}.num2-resume-title{font-size:.94em;}}',
+            '@media(max-width:600px){.num2-bar{gap:.3em;padding:.18em 0;margin-bottom:.38em}.num2-tabs{gap:.3em}.num2-tab{min-height:2.55em;padding:.32em .55em;font-size:.87em}.num2-actions{width:2.35em;min-width:2.35em;height:2.35em;min-height:2.35em}.num2-resume{min-height:3.1em;padding:.52em .65em;gap:.55em}.num2-resume-title{font-size:.94em}}',
             '@media(prefers-reduced-motion:reduce){.num2-tab,.num2-resume{scroll-behavior:auto;}}'
         ].join('\n');
         document.head.appendChild(style);
@@ -297,37 +300,71 @@
             return list.filter(function (entry) { return entry.percent < threshold; })[0] || null;
         }
 
-                // Счётчики основаны на логических сериях, дубликаты раздач не удваивают числа.
+                // Числитель всегда показывает просмотренные серии, включая ноль.
+        function formatSeasonCount(watched, total) {
+            return String(watched) + '/' + String(total);
+        }
         function updateSeasonTabBadges(container) {
             var episodes = groups();
             container.find('.num2-tab').each(function () {
                 var tab = $(this), season = tab.attr('data-season');
-                var list = episodes.filter(function (e) { return season === 'all' || String(e.season) === season; });
+                var list = season === 'unknown' ? [] : episodes.filter(function (e) {
+                    return season === 'all' || String(e.season) === season;
+                });
+                var total = list.length;
                 var done = list.filter(function (e) { return e.percent >= threshold; }).length;
-                var label = season === 'all' ? 'Все' : 'Сезон ' + season;
-                var text = '';
-                if (setting('counters')) text = done ? done + '/' + list.length : String(list.length);
-                tab.find('.num2-count').text(text).toggleClass('num2-done', done > 0 && done === list.length);
-                tab.attr('aria-label', label + (text ? ', просмотрено ' + text : ''));
+                if (season === 'unknown') {
+                    var unknownRows = currentRows.filter(function (row) { return row.season === 0; });
+                    total = unknownRows.length;
+                    done = unknownRows.filter(function (row) {
+                        return row.element.timeline && Number(row.element.timeline.percent) >= threshold;
+                    }).length;
+                }
+                var label = season === 'all' ? 'Все' : season === 'unknown' ? 'Не определено' : 'Сезон ' + season;
+                var text = setting('counters') ? formatSeasonCount(done, total) : '';
+                tab.find('.num2-count').text(text).toggleClass('num2-done', total > 0 && done === total);
+                tab.attr('aria-label', label + (text ? ', просмотрено ' + done + ' из ' + total : ''));
             });
         }
 
-                function updateContinueBanner(container) {
+                // Различаем старт, следующую серию и реальное продолжение с прогрессом.
+        function resumePresentation(candidate, list) {
+            if (!candidate) return null;
+            var percent = Math.round(Math.max(0, Math.min(100, Number(candidate.percent) || 0)));
+            var partial = percent > 0 && percent < threshold;
+            var hasPreviousWatched = !partial && list.some(function (entry) {
+                return entry.percent >= threshold && (
+                    entry.season < candidate.season ||
+                    (entry.season === candidate.season && entry.episode < candidate.episode)
+                );
+            });
+            return {
+                status: partial ? 'Продолжить просмотр' : hasPreviousWatched ? 'Следующая серия' : 'Начать просмотр',
+                meta: 'С' + candidate.season + ' · Е' + candidate.episode,
+                percent: partial ? percent : 0
+            };
+        }
+        function updateContinueBanner(container) {
             container.find('.num2-resume').remove();
             if (!setting('resume')) return;
-            var candidate = resumeCandidate(groups());
+            var list = groups().filter(function (entry) {
+                return activeSeason === 'all' || String(entry.season) === String(activeSeason);
+            });
+            var candidate = resumeCandidate(list);
             if (!candidate) return;
+            var display = resumePresentation(candidate, list);
             var row = candidate.row;
-            var label = 'Сезон ' + candidate.season + ' · Серия ' + candidate.episode;
             var title = row.item.find('.torrent-serial__title, .torrent-file__title').clone();
             title.find('.num-resume-badge').remove();
-            var name = title.text().trim();
-            var percent = Math.round(Math.max(0, Math.min(100, candidate.percent)));
-            var banner = $('<div class="num2-resume selector">' +
-                '<div class="num2-play">▶</div>' +
+            var name = title.text().trim() || 'Серия ' + candidate.episode;
+            var percent = display.percent;
+            var banner = $('<div class="num2-resume selector" role="button" aria-label="' +
+                escapeHtml(display.status + ', ' + display.meta + ', ' + name) + '">' +
+                '<div class="num2-play" aria-hidden="true">▶</div>' +
                 '<div class="num2-resume-body">' +
-                '<div class="num2-resume-top">Продолжить · ' + escapeHtml(label) + '</div>' +
-                '<div class="num2-resume-title">' + escapeHtml(name || label) + '</div>' +
+                '<div class="num2-resume-top"><span class="num2-resume-status">' + escapeHtml(display.status) + '</span>' +
+                '<span class="num2-resume-meta">' + escapeHtml(display.meta) + '</span></div>' +
+                '<div class="num2-resume-title">' + escapeHtml(name) + '</div>' +
                 (percent ? '<div class="num2-progress"><div style="width:' + percent + '%"></div></div>' : '') +
                 '</div>' +
                 (percent ? '<div class="num2-resume-percent">' + percent + '%</div>' : '') +
@@ -342,7 +379,8 @@
                 function applySeasonFilter(container, season) {
             activeSeason = String(season);
             container.find('.num2-tab').each(function () {
-                $(this).toggleClass('active', $(this).attr('data-season') === activeSeason);
+                var selected = $(this).attr('data-season') === activeSeason;
+                $(this).toggleClass('active', selected).attr('aria-selected', selected ? 'true' : 'false');
             });
             container.find('.torrent-serial, .torrent-file').each(function () {
                 var rowSeason = Number($(this).attr('data-num-season')) || 0;
@@ -459,7 +497,7 @@
             var bar = $('<div class="num2-bar"><div class="num2-tabs selector-box"></div></div>');
             var tabs = bar.find('.num2-tabs');
             function addTab(value, title) {
-                var tab = $('<div class="num2-tab selector" data-season="' + value + '">' +
+                var tab = $('<div class="num2-tab selector" role="tab" data-season="' + value + '">' +
                     '<span>' + escapeHtml(title) + '</span><span class="num2-count"></span></div>');
                 safeAction(tab, function () { applySeasonFilter(container, String(value)); });
                 tab.on('hover:focus', function () {
@@ -470,7 +508,9 @@
             addTab('all', 'Все');
             seasons.forEach(function (season) { addTab(String(season), 'Сезон ' + season); });
             if (currentRows.some(function (row) { return row.season === 0; })) addTab('unknown', 'Не определено');
-            var action = $('<div class="num2-actions selector" title="Действия с сериями">⋯</div>');
+            var action = $('<div class="num2-actions selector" role="button" aria-label="Действия с сериями" title="Действия с сериями">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.7"/>' +
+                '<circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></div>');
             safeAction(action, function () { openSeasonActions(container); });
             bar.append(action);
             container.prepend(bar);
