@@ -123,7 +123,7 @@ test('ContentRows arrays of callbacks are flattened as cards', () => {
     const data = app.getMain();
     assert.equal(data.length, 1);
     assert.equal(data[0].results.length, 2);
-    assert.deepEqual(data[0].results.map(x => x.id), [1,2]);
+    assert.deepEqual(Array.from(data[0].results, x => x.id), [1,2]);
 });
 test('named plugin is not duplicated during discovery', () => {
     const app = boot();
