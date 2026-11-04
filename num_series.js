@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.4';
+    var VERSION = '2.0.5';
 
     function startPlugin() {
         // Локализация
@@ -201,6 +201,18 @@
                 handler(event);
             });
         }
+        // Lampa.Modal.bind() срабатывает до внедрения наших контролов.
+        // Без отдельного hover:focus фокус пульта перемещается к вкладке,
+        // но модальное окно оставляет её за верхней границей скролла.
+        function scrollHeaderIntoView(element) {
+            if (!element || !currentContainer || !currentContainer.length) return;
+            if (!Lampa.Platform || typeof Lampa.Platform.screen !== 'function' ||
+                !Lampa.Platform.screen('tv')) return;
+            if (currentContainer[0] && typeof currentContainer[0].contains === 'function' &&
+                !currentContainer[0].contains(element)) return;
+            var scroll = Lampa.Modal && Lampa.Modal.scroll && Lampa.Modal.scroll();
+            if (scroll && typeof scroll.update === 'function') scroll.update($(element), false);
+        }
         function canUseIINA() {
             return setting('iina') && Lampa.Platform && typeof Lampa.Platform.macOS === 'function' && Lampa.Platform.macOS();
         }
@@ -382,10 +394,11 @@
                 if (String(activeSeason) !== String(candidate.season)) applySeasonFilter(container, String(candidate.season));
                 row.item.trigger('hover:enter');
             });
+            banner.on('hover:focus', function () { scrollHeaderIntoView(this); });
             container.find('.num2-bar').after(banner);
         }
 
-                function applySeasonFilter(container, season) {
+                function applySeasonFilter(container, season, skipController) {
             activeSeason = String(season);
             container.find('.num2-tab').each(function () {
                 var selected = $(this).attr('data-season') === activeSeason;
@@ -402,9 +415,17 @@
             });
             updateSeasonTabBadges(container);
             updateContinueBanner(container);
-            var scrollRoot = Lampa.Modal && Lampa.Modal.scroll ? Lampa.Modal.scroll().render() : container;
-            if (Lampa.Controller && Lampa.Controller.collectionSet && Lampa.Controller.enabled()) {
-                Lampa.Controller.collectionSet(scrollRoot, false, true);
+            // При Modal.update() штатный toggle() сам построит коллекцию и назначит фокус.
+            // При ручном выборе сезона не теряем выделенную вкладку после перестройки списка.
+            var controller = Lampa.Controller;
+            var enabled = controller && controller.enabled && controller.enabled();
+            if (!skipController && enabled && enabled.name === 'modal' &&
+                controller.collectionSet && controller.collectionFocus) {
+                var focus = container.find('.selector.focus').first();
+                var target = focus.length && focus.is(':visible') ? focus[0] : container.find('.num2-tab.active').first()[0];
+                var scrollRoot = Lampa.Modal && Lampa.Modal.scroll ? Lampa.Modal.scroll().render() : container;
+                controller.collectionSet(scrollRoot, false, true);
+                controller.collectionFocus(target || false, scrollRoot, true);
             }
         }
 
@@ -518,7 +539,8 @@
                     '<span>' + escapeHtml(title) + '</span><span class="num2-count"></span></div>');
                 safeAction(tab, function () { applySeasonFilter(container, String(value)); });
                 tab.on('hover:focus', function () {
-                    // Пульт скроллит только ленту. На iPhone свайп остаётся нативным.
+                    // Вертикальный скролл TV и горизонтальный скролл вкладок независимы.
+                    scrollHeaderIntoView(this);
                     var mobileScreen = !!(Lampa.Platform && Lampa.Platform.screen &&
                         Lampa.Platform.screen('mobile'));
                     alignSeasonTab(tabs[0], this, mobileScreen);
@@ -532,10 +554,11 @@
                 '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.7"/>' +
                 '<circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></div>');
             safeAction(action, function () { openSeasonActions(container); });
+            action.on('hover:focus', function () { scrollHeaderIntoView(this); });
             bar.append(action);
             container.prepend(bar);
             var choice = setting('autoseason') && resumeCandidate(allGroups);
-            applySeasonFilter(container, choice ? String(choice.season) : 'all');
+            applySeasonFilter(container, choice ? String(choice.season) : 'all', true);
         }
         function scheduleRefresh() {
             if (refreshTimer) clearTimeout(refreshTimer);
@@ -608,7 +631,9 @@
                 // Обработчик отрабатывает после штатного render и modal.update.
         follow(Lampa.Modal && Lampa.Modal.listener, 'update', function (event) {
             if (event && event.new_html && event.new_html.hasClass('torrent-files')) {
-                setTimeout(function () { checkAndInjectSeasonBar(event.new_html); }, 0);
+                // Делаем это синхронно до Modal.toggle(), чтобы навигатор TV
+                // сразу увидел вкладки и баннер в итоговом списке .selector.
+                checkAndInjectSeasonBar(event.new_html);
             }
         });
         follow(Lampa.Modal && Lampa.Modal.listener, 'close', function () {
