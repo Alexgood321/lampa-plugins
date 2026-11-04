@@ -84,7 +84,7 @@ function boot({mac = false, appready = true} = {}) {
     return {...ctx, stream, modal, timeline, storage, settings, components, logs};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.3'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.4'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
@@ -94,6 +94,8 @@ test('rollback version archived', () => {
     assert.match(mobileV1, /var VERSION = '2\.0\.1'/);
     const archived = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_2.js'), 'utf8');
     assert.match(archived, /var VERSION = '2\.0\.2'/);
+    const prior = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_3.js'), 'utf8');
+    assert.match(prior, /var VERSION = '2\.0\.3'/);
 });
 test('boot and native subscriptions', () => {
     const p = boot();
@@ -102,7 +104,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.3')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.4')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
@@ -267,6 +269,13 @@ test('TV directional focus scrolls tabs, not entire page', () => {
     p.window.__num2Qa.alignSeasonTab(track,{offsetLeft:60,offsetWidth:60},false);
     assert.equal(track.scrollLeft,42);
     assert.doesNotMatch(source,/scrollIntoView/);
+});
+
+test('play icon is resolution independent SVG, not a narrow Unicode glyph', () => {
+    assert.ok(source.includes('.num2-play svg{display:block;width:1.2em;height:1.2em'));
+    assert.ok(source.includes('<svg viewBox="0 0 24 24" focusable="false"'));
+    assert.ok(source.includes('fill:currentColor;transform:translateX(.08em)'));
+    assert.doesNotMatch(source, /num2-play" aria-hidden="true">▶/);
 });
 
 process.stdout.write('\nNUM Series Pro: ' + total + ' smoke checks passed\n');
