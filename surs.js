@@ -3399,66 +3399,84 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
                 });
 
-                // Сенсорное перетаскивание (Touch Drag) через три полоски на смартфонах/планшетах
+                // Перетаскивание только после короткого удержания рукоятки.
+                // Случайное касание не должно немедленно превращаться в сортировку.
                 var handle = row.find('.surs-sm-drag-handle');
                 var touchSourceId = null;
                 var touchTargetId = null;
+                var touchArmed = false;
+                var touchTimer = null;
+                var touchStartY = 0;
+
+                function clearTouchReorder() {
+                    if (touchTimer) clearTimeout(touchTimer);
+                    touchTimer = null;
+                    touchSourceId = null;
+                    touchTargetId = null;
+                    touchArmed = false;
+                    $('.surs-sm-item--dragging').removeClass('surs-sm-item--dragging');
+                    $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
+                }
 
                 handle.on('touchstart', function(e) {
+                    var touch = e.originalEvent && e.originalEvent.touches && e.originalEvent.touches[0];
+                    if (!touch) return;
                     touchSourceId = item.id;
-                    row.addClass('surs-sm-item--dragging');
+                    touchTargetId = null;
+                    touchStartY = touch.clientY;
+                    touchArmed = false;
+                    if (touchTimer) clearTimeout(touchTimer);
+                    touchTimer = setTimeout(function() {
+                        touchArmed = true;
+                        row.addClass('surs-sm-item--dragging');
+                    }, 220);
                 });
 
                 handle.on('touchmove', function(e) {
-                    e.preventDefault();
-                    var touch = e.originalEvent.touches[0];
+                    var touch = e.originalEvent && e.originalEvent.touches && e.originalEvent.touches[0];
+                    if (!touch || !touchSourceId) return;
+                    if (!touchArmed) {
+                        if (Math.abs(touch.clientY - touchStartY) > 8) clearTouchReorder();
+                        return;
+                    }
+                    if (e.cancelable !== false) e.preventDefault();
 
-                    // Плавный автоскролл при приближении пальца к верхнему или нижнему краю
-                    var listElem = $('.surs-sm-list')[0];
+                    var listElem = modalHtml && modalHtml.find('.surs-sm-list')[0];
                     if (listElem) {
                         var listRect = listElem.getBoundingClientRect();
-                        if (touch.clientY < listRect.top + 60) {
-                            listElem.scrollTop -= 14;
-                        } else if (touch.clientY > listRect.bottom - 60) {
-                            listElem.scrollTop += 14;
-                        }
+                        if (touch.clientY < listRect.top + 60) listElem.scrollTop -= 14;
+                        else if (touch.clientY > listRect.bottom - 60) listElem.scrollTop += 14;
                     }
 
                     var elem = document.elementFromPoint(touch.clientX, touch.clientY);
-                    if (elem) {
-                        var trg = $(elem).closest('.surs-sm-item');
-                        if (trg.length && trg.attr('data-id') !== touchSourceId) {
-                            $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
-                            trg.addClass('surs-sm-item--drag-over');
-                            touchTargetId = trg.attr('data-id');
-                        }
+                    if (!elem) return;
+                    var trg = $(elem).closest('.surs-sm-item:visible');
+                    if (trg.length && trg.attr('data-id') !== touchSourceId) {
+                        $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
+                        trg.addClass('surs-sm-item--drag-over');
+                        touchTargetId = trg.attr('data-id');
+                    } else {
+                        $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
+                        touchTargetId = null;
                     }
                 });
 
-                handle.on('touchend', function(e) {
-                    $('.surs-sm-item--dragging').removeClass('surs-sm-item--dragging');
-                    $('.surs-sm-item--drag-over').removeClass('surs-sm-item--drag-over');
-
-                    if (touchTargetId && touchTargetId !== touchSourceId) {
-                        var sIdx = -1, tIdx = -1;
-                        for (var sI = 0; sI < shelves.length; sI++) {
-                            if (shelves[sI].id === touchSourceId) sIdx = sI;
-                            if (shelves[sI].id === touchTargetId) tIdx = sI;
-                        }
-
-                        if (sIdx >= 0 && tIdx >= 0) {
-                            var movedItem = shelves.splice(sIdx, 1)[0];
-                            shelves.splice(tIdx, 0, movedItem);
-                            refreshListFocus(movedItem.id, 'toggle');
-                            if (tIdx === 0) {
-                                Lampa.Noty.show('Полка «' + movedItem.title + '» перемещена в самый верх!');
-                            } else {
-                                Lampa.Noty.show('Полка «' + movedItem.title + '» перемещена на позицию ' + (tIdx + 1));
-                            }
-                        }
+                handle.on('touchend touchcancel', function(e) {
+                    var fromId = touchSourceId, toId = touchTargetId;
+                    var shouldMove = e.type === 'touchend' && touchArmed &&
+                        fromId && toId && fromId !== toId;
+                    clearTouchReorder();
+                    if (!shouldMove) return;
+                    var from = -1, to = -1;
+                    for (var index = 0; index < shelves.length; index++) {
+                        if (shelves[index].id === fromId) from = index;
+                        if (shelves[index].id === toId) to = index;
                     }
-                    touchSourceId = null;
-                    touchTargetId = null;
+                    if (from < 0 || to < 0) return;
+                    var moved = shelves.splice(from, 1)[0];
+                    shelves.splice(to, 0, moved);
+                    refreshListFocus(moved.id, 'handle');
+                    Lampa.Noty.show('Полка перемещена на позицию ' + (to + 1));
                 });
 
                 list.append(row);
