@@ -44,7 +44,7 @@ function element() {
     };
     return value;
 }
-function boot({mac = false, appready = true} = {}) {
+function boot({mac = false, appready = true, tv = false} = {}) {
     const stream = listener();
     const modal = listener();
     const timeline = listener();
@@ -52,6 +52,7 @@ function boot({mac = false, appready = true} = {}) {
     const settings = [];
     const components = [];
     const logs = [];
+    const scrollUpdates = [];
     const ctx = {
         window: {appready, location: {}},
         document: {createElement: () => ({style: {}}), head: {appendChild() {}}},
@@ -59,7 +60,7 @@ function boot({mac = false, appready = true} = {}) {
         $: () => element(),
         Lampa: {
             Listener: stream,
-            Modal: {listener: modal, scroll: () => ({render: () => element()})},
+            Modal: {listener: modal, scroll: () => ({render: () => element(), update: (target, center) => scrollUpdates.push({target, center})})},
             Timeline: {listener: timeline, update() {}, view: () => ({percent: 0, time: 0, updated: 0})},
             SettingsApi: {addComponent: c => components.push(c), addParam: p => settings.push(p)},
             Storage: {
@@ -69,7 +70,7 @@ function boot({mac = false, appready = true} = {}) {
             },
             Controller: {enabled: () => ({name: 'modal'}), collectionSet() {}, toggle() {}},
             Lang: {add() {}, translate: s => s},
-            Platform: {macOS: () => mac},
+            Platform: {macOS: () => mac, screen: kind => kind === 'tv' ? tv : !tv},
             Select: {show() {}},
             Noty: {show() {}},
             Torserver: {url: () => 'http://127.0.0.1:8090'}
@@ -78,13 +79,13 @@ function boot({mac = false, appready = true} = {}) {
         setTimeout: fn => { fn(); return 1; },
         clearTimeout() {}
     };
-    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, resumePresentation, formatSeasonCount, setWatched, undoBulk, seasonStats, alignSeasonTab}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
+    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, resumePresentation, formatSeasonCount, setWatched, undoBulk, seasonStats, alignSeasonTab, scrollHeaderIntoView, setCurrentContainer: c => { currentContainer = c; }}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
     if (runtime === source) throw new Error('QA injection anchor missing');
     vm.runInNewContext(runtime, ctx, {filename:'num_series.js'});
-    return {...ctx, stream, modal, timeline, storage, settings, components, logs};
+    return {...ctx, stream, modal, timeline, storage, settings, components, logs, scrollUpdates};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.4'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.5'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
@@ -96,6 +97,8 @@ test('rollback version archived', () => {
     assert.match(archived, /var VERSION = '2\.0\.2'/);
     const prior = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_3.js'), 'utf8');
     assert.match(prior, /var VERSION = '2\.0\.3'/);
+    const tvBaseline = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_4.js'), 'utf8');
+    assert.match(tvBaseline, /var VERSION = '2\.0\.4'/);
 });
 test('boot and native subscriptions', () => {
     const p = boot();
@@ -104,7 +107,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.4')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.5')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
@@ -276,6 +279,42 @@ test('play icon is resolution independent SVG, not a narrow Unicode glyph', () =
     assert.ok(source.includes('<svg viewBox="0 0 24 24" focusable="false"'));
     assert.ok(source.includes('fill:currentColor;transform:translateX(.08em)'));
     assert.doesNotMatch(source, /num2-play" aria-hidden="true">▶/);
+});
+
+test('Android TV restores viewport when a season control receives focus', () => {
+    const p = boot({tv:true});
+    const node = {offsetTop:0};
+    p.window.__num2Qa.setCurrentContainer({0:{contains: e => e === node},length:1});
+    p.window.__num2Qa.scrollHeaderIntoView(node);
+    assert.equal(p.scrollUpdates.length, 1);
+    assert.equal(p.scrollUpdates[0].center, false);
+});
+test('iPhone swipe does not trigger vertical TV scroll', () => {
+    const p = boot({tv:false});
+    const node = {offsetTop:0};
+    p.window.__num2Qa.setCurrentContainer({0:{contains: e => e === node},length:1});
+    p.window.__num2Qa.scrollHeaderIntoView(node);
+    assert.equal(p.scrollUpdates.length, 0);
+});
+test('obsolete torrent modal cannot scroll a newly opened modal', () => {
+    const p = boot({tv:true});
+    const active = {offsetTop:0};
+    p.window.__num2Qa.setCurrentContainer({0:{contains: e => e === active},length:1});
+    p.window.__num2Qa.scrollHeaderIntoView({offsetTop:10});
+    assert.equal(p.scrollUpdates.length, 0);
+});
+test('TV controls have a focus-to-scroll handler for tabs, action and resume', () => {
+    assert.ok(source.includes("tab.on('hover:focus', function () {"));
+    assert.ok(source.includes("banner.on('hover:focus', function () { scrollHeaderIntoView(this); });"));
+    assert.ok(source.includes("action.on('hover:focus', function () { scrollHeaderIntoView(this); });"));
+    assert.ok(source.includes("scrollHeaderIntoView(this);"));
+});
+test('plugin injection completes before native Modal.toggle and skips duplicate collection reset', () => {
+    const code = source.slice(source.indexOf("follow(Lampa.Modal && Lampa.Modal.listener, 'update'"));
+    assert.ok(code.includes('checkAndInjectSeasonBar(event.new_html);'));
+    assert.ok(!code.includes('setTimeout(function () { checkAndInjectSeasonBar(event.new_html); }, 0);'));
+    assert.ok(source.includes("applySeasonFilter(container, choice ? String(choice.season) : 'all', true)"));
+    assert.ok(source.includes("if (!skipController && enabled && enabled.name === 'modal'"));
 });
 
 process.stdout.write('\nNUM Series Pro: ' + total + ' smoke checks passed\n');
