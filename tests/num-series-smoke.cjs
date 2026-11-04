@@ -78,18 +78,20 @@ function boot({mac = false, appready = true} = {}) {
         setTimeout: fn => { fn(); return 1; },
         clearTimeout() {}
     };
-    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, resumePresentation, formatSeasonCount, setWatched, undoBulk}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
+    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, resumePresentation, formatSeasonCount, setWatched, undoBulk, seasonPickerItems, openSeasonPicker, seasonStats}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
     if (runtime === source) throw new Error('QA injection anchor missing');
     vm.runInNewContext(runtime, ctx, {filename:'num_series.js'});
     return {...ctx, stream, modal, timeline, storage, settings, components, logs};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.1'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.2'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
     const previous = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_0.js'), 'utf8');
     assert.match(previous, /var VERSION = '2\.0\.0'/);
+    const mobileV1 = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_1.js'), 'utf8');
+    assert.match(mobileV1, /var VERSION = '2\.0\.1'/);
 });
 test('boot and native subscriptions', () => {
     const p = boot();
@@ -98,7 +100,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.1')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.2')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
@@ -230,6 +232,47 @@ test('compact mobile toolbar has accessible action icon', () => {
     assert.match(source, /num2-actions svg/);
     assert.ok(source.includes('aria-label="Действия с сериями"'));
     assert.match(source, /aria-selected/);
+});
+
+
+test('mobile selector replaces overflowing season tabs under 600px', () => {
+    assert.ok(source.includes('.num2-mobile{display:none'));
+    assert.ok(source.includes('.num2-tabs{display:none!important}'));
+    assert.ok(source.includes('.num2-mobile{display:flex;min-height:2.85em}'));
+    assert.ok(source.includes('safeAction(mobile, function () { openSeasonPicker(container); })'));
+    assert.ok(source.includes('bar.append(mobile)'));
+});
+test('season picker counts episodes and highlights active selection', () => {
+    const p=boot();
+    p.stream.send('torrent_file',{type:'list_open',items:[]});
+    const episodes=[
+        {season:1,episode:1,path:'S01E01.mkv',timeline:{hash:'s1a',percent:100}},
+        {season:1,episode:2,path:'S01E02.mkv',timeline:{hash:'s1b',percent:0}},
+        {season:2,episode:1,path:'S02E01.mkv',timeline:{hash:'s2a',percent:0}}
+    ];
+    episodes.forEach(episode => p.stream.send('torrent_file',{
+        type:'render',element:episode,item:element()
+    }));
+    const choices=p.window.__num2Qa.seasonPickerItems();
+    assert.equal(choices.length,3);
+    assert.equal(choices[0].num2_season,'all');
+    assert.ok(choices[0].title.includes('1/3'));
+    assert.equal(choices[1].num2_season,'1');
+    assert.ok(choices[1].title.includes('1/2'));
+    assert.equal(choices[2].num2_season,'2');
+    assert.ok(choices[2].title.includes('0/1'));
+});
+test('mobile selector preserves unknown season as an explicit choice', () => {
+    const p=boot();
+    p.stream.send('torrent_file',{type:'list_open',items:[]});
+    p.stream.send('torrent_file',{type:'render',element:{
+        season:0,episode:0,path:'unrecognized-video.mkv',timeline:{hash:'unknown',percent:0}
+    },item:element()});
+    p.stream.send('torrent_file',{type:'render',element:{
+        season:1,episode:1,path:'S01E01.mkv',timeline:{hash:'known',percent:0}
+    },item:element()});
+    const choices=p.window.__num2Qa.seasonPickerItems();
+    assert.ok(choices.some(x=>x.num2_season==='unknown' && x.title.includes('1')));
 });
 
 process.stdout.write('\nNUM Series Pro: ' + total + ' smoke checks passed\n');
