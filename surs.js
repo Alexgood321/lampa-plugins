@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.7.3 (ContentRows Discovery Hotfix)
+ * Версия: 3.7.4 (HDRezka Shelves Compatibility)
  * Релиз: исправление загрузки главной страницы, исключение безымянных полок и дублирующихся строк ContentRows.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -2190,13 +2190,15 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         if (extShelf) {
             return function(callback) {
                 var called = false;
+                // Account shelves may make multiple authenticated requests.
+                var externalTimeout = /^hdrezka_/.test(shelfId) ? 10000 : 2500;
                 var timer = setTimeout(function() {
                     if (!called) {
                         called = true;
-                        console.warn('[SURS Hub] Таймаут внешней полки (2.5с):', shelfId);
+                        console.warn('[SURS Hub] Таймаут внешней полки:', shelfId);
                         callback({ results: [] });
                     }
-                }, 2500);
+                }, externalTimeout);
 
                 try {
                     var handler = extShelf.loader;
@@ -3144,7 +3146,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (shelf.enabled) {
                             var fn = getShelfLoader(shelf.id, owner, params);
                             if (fn) {
-                                fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(shelf.id) ? 5500 : 2500;
+                                fn.__sursTimeout = /^hdrezka_/.test(shelf.id) ? 11000 :
+                                    /^(trakt_|ext_Trakt)/.test(shelf.id) ? 5500 : 2500;
                                 combinedData.push(fn);
                             }
                         }
@@ -3329,7 +3332,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.7.3 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.7.4 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
