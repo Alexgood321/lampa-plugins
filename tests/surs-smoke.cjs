@@ -13,7 +13,7 @@ function test(name, fn) {
     passed++;
     process.stdout.write('✓ ' + name + '\n');
 }
-function boot({ ready = true, saved = null } = {}) {
+function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoints = 0 } = {}) {
     const stored = new Map();
     if (saved !== null) stored.set('surs_fixed_shelves_v2', saved);
     const timers = [];
@@ -21,7 +21,7 @@ function boot({ ready = true, saved = null } = {}) {
     let contentRowsCalls = 0;
     const added = [];
     const navigations = [];
-    const window = { appready: true };
+    const window = { appready: true, matchMedia: () => ({matches: coarse}), navigator: {maxTouchPoints: touchPoints} };
     const Lampa = {
         Reguest: function () {},
         Api: {
@@ -50,13 +50,14 @@ function boot({ ready = true, saved = null } = {}) {
         Activity: { active: () => true, replace: value => navigations.push(value) },
         Listener: { follow: () => {} },
         Noty: { show: () => {} },
+        Platform: { screen: type => type === 'tv' && tv },
         Favorite: { continues: () => [] },
         Maker: { make: (type, data, choose) => {
             if (typeof choose === 'function') return choose({only: (...selected) => selected});
             return { type, data };
         }}
     };
-    const $ = () => ({ length: 1, append: () => {} });
+    const $ = target => target && typeof target.addClass === 'function' ? target : ({ length: 1, append: () => {} });
     const ctx = {
         window, Lampa, $,
         setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
@@ -75,7 +76,7 @@ function boot({ ready = true, saved = null } = {}) {
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.8\.3/);
+    assert.match(source, /Версия: 3\.8\.4/);
 });
 test('factory default matches 11 visible shelves and keeps 12 disabled', () => {
     const app = boot();
@@ -156,7 +157,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.8.3');
+    assert.equal(app.window.LampaShelfManager.version, '3.8.4');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -265,6 +266,50 @@ test('small-screen, coarse-pointer and reduced-motion rules exist', () => {
     assert.match(source, /prefers-reduced-motion: reduce/);
     assert.match(source, /data-action="cancel"/);
     assert.match(source, /data-action="search"/);
+});
+test('navigation row carries a responsive line hook and exactly seven entries', () => {
+    const app = boot({ saved: [{id:'nav_buttons',enabled:true}] });
+    const result = app.getMain();
+    assert.equal(result.length, 1);
+    const row = result[0];
+    assert.equal(row.results.length, 7);
+    assert.equal(row.params.items.mapping, 'line');
+    assert.equal(row.params.items.view, 7);
+    assert.equal(row.params.items.align_left, true);
+    assert.ok(typeof row.params.emit.onCreate === 'function');
+});
+test('TV keeps one horizontal DPAD-friendly line even if a coarse pointer is reported', () => {
+    const app = boot({ saved: [{id:'nav_buttons',enabled:true}], tv: true, coarse: true });
+    const row = app.getMain()[0];
+    const classes = [];
+    row.params.emit.onCreate.call({html:{addClass:name => classes.push(name)}});
+    assert.deepEqual(classes,['surs-nav-line']);
+});
+test('iPhone/iPad get wrapped navigation without affecting regular content rows', () => {
+    const app = boot({ saved: [{id:'nav_buttons',enabled:true}], coarse: true });
+    const row = app.getMain()[0];
+    const classes = [];
+    row.params.emit.onCreate.call({html:{addClass:name => classes.push(name)}});
+    assert.deepEqual(classes,['surs-nav-line','surs-nav-line--touch']);
+    const desktop = boot({ saved: [{id:'nav_buttons',enabled:true}] });
+    const unchanged = [];
+    desktop.getMain()[0].params.emit.onCreate.call({html:{addClass:name => unchanged.push(name)}});
+    assert.deepEqual(unchanged,['surs-nav-line']);
+    assert.match(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\(4/);
+    assert.match(source,/\.surs-nav-line--touch \.scroll__body\.mapping--line\s*\{\s*grid-template-columns: repeat\(3/);
+});
+test('iPad pointer fallback identifies touch input via maxTouchPoints', () => {
+    const app = boot({ saved: [{id:'nav_buttons',enabled:true}], coarse:false, touchPoints:5 });
+    const classes=[];
+    app.getMain()[0].params.emit.onCreate.call({html:{addClass:name=>classes.push(name)}});
+    assert.equal(classes.includes('surs-nav-line--touch'),true);
+});
+test('navigation CSS remains isolated and hides film badges on quick buttons', () => {
+    assert.match(source,/\.surs-nav-line \.scroll__body\.mapping--line\s*\{\s*display: grid !important/);
+    assert.match(source,/\.surs-nav-line \.card__type,/);
+    assert.match(source,/\.surs-nav-line \.card__quality,/);
+    assert.match(source,/\.surs-nav-line \.card--button-compact\s*\{/);
+    assert.doesNotMatch(source,/\.items-line\s*\{\s*display:\s*grid/);
 });
 test('native main menu handlers are preserved', () => {
     assert.doesNotMatch(source, /mainButton\.off\('hover:enter click'\)/);
