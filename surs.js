@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.8.6 (Customizable Navigation Buttons)
- * Релиз: отдельная настройка видимости каждой кнопки SURS и адаптивное центрирование при любом количестве.
+ * Версия: 3.9.0 (Responsive Shelf Editor UX)
+ * Релиз: переработан редактор полок для iPhone, iPad, Mac и TV: компоновка, поиск, управление и сохранение.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1044,6 +1044,338 @@
                         margin-left: 0;
                     }
                 }
+
+                /* SURS 3.9: isolated shelf editor design tokens and responsive layout */
+                .modal.surs-sm-modal {
+                    --sm-bg: #171a20;
+                    --sm-card: #23272f;
+                    --sm-border: rgba(255,255,255,0.12);
+                    --sm-muted: #a8b1bf;
+                    --sm-accent: #418ac4;
+                    --sm-radius: 12px;
+                    --sm-gap: 8px;
+                }
+                .modal.surs-sm-modal .modal__content {
+                    width: min(960px, 95vw) !important;
+                    max-width: 960px !important;
+                    padding: 0 !important;
+                    background: var(--sm-bg) !important;
+                    border-radius: 16px !important;
+                    overflow: hidden;
+                    box-sizing: border-box;
+                }
+                .modal.surs-sm-modal .modal__body,
+                .modal.surs-sm-modal .modal__body > .scroll,
+                .modal.surs-sm-modal .modal__body > .scroll > .scroll__content,
+                .modal.surs-sm-modal .modal__body .scroll__body {
+                    width: 100%;
+                    min-width: 0;
+                    min-height: 0;
+                    box-sizing: border-box;
+                }
+                .modal.surs-sm-modal .modal__body > .scroll > .scroll__content {
+                    max-height: none !important;
+                    padding: 0 !important;
+                }
+                .modal.surs-sm-modal .modal__body .scroll__body {
+                    transform: none !important;
+                }
+                .modal.surs-sm-modal .surs-sm-wrap {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    height: min(85dvh, 820px);
+                    height: min(85vh, 820px);
+                    padding: 18px 20px 0 !important;
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 0;
+                    overflow: hidden;
+                    box-sizing: border-box;
+                }
+                @supports (height: 85dvh) {
+                    .modal.surs-sm-modal .surs-sm-wrap { height: min(85dvh, 820px); }
+                }
+                .surs-sm-header {
+                    flex: 0 0 auto;
+                    align-items: center;
+                    margin-bottom: 10px !important;
+                    padding-bottom: 12px !important;
+                    gap: 12px !important;
+                }
+                .surs-sm-title-group { align-items: center !important; gap: 10px !important; }
+                .surs-sm-title { font-size: 21px !important; line-height: 1.25; }
+                .surs-sm-version { font-size: 12px; color: var(--sm-muted); font-weight: 400; }
+                .surs-sm-counter { font-size: 12px !important; padding: 3px 9px !important; }
+                .surs-sm-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
+                .surs-sm-search-field {
+                    flex: 1 1 160px;
+                    height: 44px;
+                    min-width: 0;
+                    display: flex;
+                    align-items: center;
+                    border: 1px solid var(--sm-border);
+                    border-radius: 10px;
+                    background: rgba(255,255,255,0.06);
+                    box-sizing: border-box;
+                    padding: 0 12px;
+                }
+                .surs-sm-search-icon { color: var(--sm-muted); margin-right: 8px; font-size: 18px; }
+                .surs-sm-search-input {
+                    background: transparent; border: 0; outline: none;
+                    color: #fff; width: 100%; min-width: 0;
+                    font-size: 14px; font-family: inherit;
+                }
+                .surs-sm-search-input::placeholder { color: var(--sm-muted); opacity: 0.9; }
+                .surs-sm-search-trigger, .surs-sm-toolbar-btn, .surs-sm-header-btn {
+                    min-height: 44px; min-width: 44px;
+                    display: inline-flex; align-items: center; justify-content: center;
+                    border: 1px solid var(--sm-border);
+                    background: rgba(255,255,255,0.07);
+                    color: #fff; border-radius: 10px;
+                    box-sizing: border-box; font-size: 14px;
+                    padding: 0 12px; cursor: pointer;
+                }
+                .surs-sm-search-trigger { display: none; }
+                .surs-sm-header-btn { display: none; }
+                .surs-sm-toolbar-btn.focus, .surs-sm-header-btn.focus,
+                .surs-sm-search-trigger.focus {
+                    outline: 2px solid #8ec8ff;
+                    outline-offset: -2px;
+                }
+                .surs-sm-tabs {
+                    margin-bottom: 0 !important;
+                    padding-bottom: 4px !important;
+                    gap: 6px !important;
+                    flex: 1 1 auto;
+                    min-width: 0;
+                }
+                .surs-sm-tab {
+                    min-height: 44px !important;
+                    display: inline-flex;
+                    align-items: center;
+                    box-sizing: border-box;
+                    padding: 0 13px !important;
+                    border-radius: 10px !important;
+                    font-size: 13px !important;
+                    transform: none !important;
+                }
+                .surs-sm-list {
+                    flex: 1 1 0;
+                    min-height: 0;
+                    max-height: none !important;
+                    overflow-x: hidden;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
+                    padding: 0 3px 6px 0 !important;
+                    margin: 0 !important;
+                    scroll-behavior: auto !important;
+                }
+                .surs-sm-list-heading {
+                    display: flex; align-items: center; justify-content: space-between;
+                    color: var(--sm-muted); font-size: 12px; line-height: 18px;
+                    margin: 2px 0 8px; flex-shrink: 0;
+                }
+                .surs-sm-item {
+                    padding: 11px 12px !important;
+                    margin-bottom: var(--sm-gap) !important;
+                    background: var(--sm-card) !important;
+                    border-radius: var(--sm-radius) !important;
+                    border: 1px solid var(--sm-border) !important;
+                    min-height: 76px; gap: 10px;
+                    box-sizing: border-box;
+                }
+                .surs-sm-item--disabled { opacity: 0.78 !important; }
+                .surs-sm-info { min-width: 0; margin-right: 0 !important; }
+                .surs-sm-title-line { gap: 5px 8px !important; align-items: center; }
+                .surs-sm-name {
+                    font-size: 15px !important; line-height: 1.35 !important;
+                    font-weight: 600 !important; white-space: normal !important;
+                    overflow-wrap: anywhere !important;
+                    max-height: none !important;
+                }
+                .surs-sm-desc {
+                    font-size: 12px !important; line-height: 1.35 !important;
+                    color: var(--sm-muted) !important;
+                    margin-top: 4px !important;
+                    white-space: normal !important;
+                    max-height: 2.8em;
+                    overflow: hidden;
+                }
+                .surs-sm-badge { font-size: 10px !important; line-height: 1.25; }
+                .surs-sm-drag-handle {
+                    min-width: 44px !important; width: 44px !important;
+                    min-height: 44px !important; height: 44px !important;
+                    margin: 0 !important; flex: 0 0 44px;
+                }
+                .surs-sm-drag-handle svg { width: 20px; height: 20px; }
+                .surs-sm-actions { gap: 8px !important; margin-left: auto; }
+                .surs-sm-toggle {
+                    min-height: 44px !important; height: 44px !important;
+                    min-width: 78px !important; display: inline-flex;
+                    justify-content: center; align-items: center;
+                    padding: 0 8px !important; font-size: 13px !important;
+                    line-height: 1.2 !important;
+                    border-radius: 9px !important;
+                }
+                .surs-sm-navbtn--more { width: 44px !important; min-width: 44px !important; height: 44px !important; }
+                .surs-sm-footer {
+                    flex: 0 0 auto;
+                    display: flex !important; flex-direction: row !important;
+                    padding: 12px 0 14px !important;
+                    margin: 0 !important;
+                    border-top: 1px solid var(--sm-border);
+                    background: var(--sm-bg);
+                    gap: 10px !important;
+                    align-items: center;
+                }
+                .surs-sm-footer-left, .surs-sm-footer-right {
+                    display: flex !important; flex-wrap: nowrap !important;
+                    align-items: center; gap: 8px !important;
+                    min-width: 0; width: auto !important;
+                }
+                .surs-sm-footer-left { flex: 1 1 auto; }
+                .surs-sm-footer-right { flex: 0 0 auto; }
+                .surs-sm-btn {
+                    min-height: 44px !important; box-sizing: border-box;
+                    padding: 10px 14px !important; border-radius: 10px !important;
+                    font-size: 14px !important; line-height: 1.2 !important;
+                    transform: none !important;
+                }
+                .surs-sm-btn--inactive {
+                    opacity: 0.5; box-shadow: none !important;
+                }
+                .surs-sm-row-filtered { display: none !important; }
+                .surs-sm-empty-search {
+                    display: none; padding: 22px 12px;
+                    color: var(--sm-muted); text-align: center;
+                    font-size: 14px;
+                }
+                .surs-sm-item--dragging { transform: scale(0.985) !important; opacity: 0.65 !important; }
+                .surs-sm-item--drag-over { border-top: 3px solid #8ec8ff !important; transform: none !important; }
+                .surs-sm-item.focus { border-color: #80befa !important; outline: 2px solid rgba(128,190,250,.65); outline-offset: -2px; }
+
+                /* Tablet: centered editing surface, not a bottom sheet. */
+                @media screen and (min-width: 701px) and (max-width: 1100px) {
+                    .modal.surs-sm-modal .modal__content { width: min(820px, 94vw) !important; }
+                    .modal.surs-sm-modal .surs-sm-wrap { height: 88vh; padding: 16px 18px 0 !important; }
+                    .surs-sm-item { min-height: 78px; }
+                }
+                /* Mobile only: touch-aware fullscreen editor, fixed header/footer. */
+                @media screen and (max-width: 700px) {
+                    .modal.surs-sm-modal.surs-sm--touch {
+                        padding: 0 !important; background: #15181d !important;
+                        backdrop-filter: none !important;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .modal__content {
+                        position: fixed !important;
+                        top: 0 !important; bottom: 0 !important;
+                        left: 0 !important; right: 0 !important;
+                        width: 100vw !important; max-width: 100vw !important;
+                        height: 100vh !important; height: 100dvh !important;
+                        border-radius: 0 !important; padding: 0 !important;
+                        display: flex; flex-direction: column;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .modal__body,
+                    .modal.surs-sm-modal.surs-sm--touch .modal__body > .scroll,
+                    .modal.surs-sm-modal.surs-sm--touch .modal__body > .scroll > .scroll__content,
+                    .modal.surs-sm-modal.surs-sm--touch .modal__body .scroll__body {
+                        height: 100% !important;
+                        display: flex !important; flex-direction: column;
+                        flex: 1 1 0; min-height: 0;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-wrap {
+                        height: 100% !important; max-height: none !important;
+                        padding: max(12px, env(safe-area-inset-top, 0px)) 14px 0 !important;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-header {
+                        margin-bottom: 10px !important; padding-bottom: 10px !important;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-title { font-size: 20px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-version { font-size: 11px; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-title-group { flex: 1 1 auto; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-header-btn { display: inline-flex; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-legend { display: none !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-counter { white-space: nowrap; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toolbar { flex-wrap: wrap; gap: 8px; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tabs {
+                        flex: 1 1 auto; overflow: visible !important; padding: 0 !important;
+                        display: flex; gap: 6px !important;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="surs"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="core"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="plugin"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="streaming"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab[data-cat="genre"] { display: none !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-tab {
+                        flex: 1 1 0; justify-content: center;
+                        padding: 0 6px !important; white-space: nowrap;
+                        font-size: 12px !important;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toolbar-btn { min-width: 44px; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-search-field {
+                        flex: 1 0 100%; order: 2;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-list-heading { margin-bottom: 6px; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-item { padding: 10px 8px !important; min-height: 76px; gap: 8px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-name { font-size: 15px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-drag-handle { width: 44px !important; min-width: 44px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-actions { gap: 4px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-navbtn--step,
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-navbtn--top { display: none !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toggle {
+                        min-width: 48px !important; width: 48px !important;
+                        height: 44px !important; border: none !important;
+                        background: transparent !important; font-size: 0 !important;
+                        position: relative; overflow: hidden;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toggle:before {
+                        content: ''; width: 42px; height: 26px;
+                        border-radius: 20px; background: #4a515c;
+                        position: absolute; top: 9px; left: 3px;
+                        transition: background 120ms ease;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toggle:after {
+                        content: ''; width: 20px; height: 20px;
+                        border-radius: 100%; background: #eee;
+                        position: absolute; top: 12px; left: 6px;
+                        transition: transform 120ms ease;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toggle.active:before { background: #2f9566; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-toggle.active:after { transform: translateX(16px); }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-navbtn--more { min-width: 44px !important; width: 44px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer {
+                        padding: 10px 0 max(12px, env(safe-area-inset-bottom, 0px)) !important;
+                        flex-direction: row !important; gap: 8px !important;
+                        width: 100%; box-sizing: border-box;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer-left,
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer-right {
+                        flex: 1 1 0; width: 50% !important;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer [data-action="add"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer [data-action="apply"] {
+                        display: inline-flex !important; width: 100%;
+                        min-width: 0 !important; justify-content: center;
+                    }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer [data-action="rescan"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer [data-action="search"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer [data-action="reset"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer [data-action="cancel"],
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-footer [data-action="hide-all-plugins"] {
+                        display: none !important;
+                    }
+                }
+                @media screen and (max-width: 365px) {
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-wrap { padding-left: 10px !important; padding-right: 10px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-item { gap: 4px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-drag-handle { width: 38px !important; min-width: 38px !important; }
+                    .modal.surs-sm-modal.surs-sm--touch .surs-sm-navbtn--more { width: 40px !important; min-width: 40px !important; }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .modal.surs-sm-modal .surs-sm-item,
+                    .modal.surs-sm-modal .surs-sm-toggle { transition: none !important; }
+                }
+
             </style>
         `);
         $('body').append(style);
@@ -2687,7 +3019,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.6</span></div>
+                        <div class="surs-sm-title">Полки Главного экрана <span class="surs-sm-version">v3.9.0</span></div>
                         <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
@@ -3756,7 +4088,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.8.6 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.9.0 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -3773,7 +4105,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             refreshSursHome();
             return defaults;
         },
-        version: '3.8.6'
+        version: '3.9.0'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
