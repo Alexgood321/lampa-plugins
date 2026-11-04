@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.7.2 (Stability & Trakt Fixes)
- * Релиз: корректные таймауты Trakt, безопасный вывод названий, транзакционное редактирование и исправления управления.
+ * Версия: 3.7.3 (ContentRows Discovery Hotfix)
+ * Релиз: исправление загрузки главной страницы, исключение безымянных полок и дублирующихся строк ContentRows.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -34,6 +34,14 @@
     // ==========================================
     window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
     var STORAGE_DISCOVERED_KEY = 'surs_discovered_shelves_v2';
+
+    // В старых сборках каждому неподписанному ContentRow присваивался случайный ID.
+    // Такие записи нельзя надежно соотнести с установленным плагином.
+    function isAnonymousShelf(item) {
+        if (!item || !item.id) return false;
+        var title = String(item.title || '');
+        return title === 'Сторонняя полка' || /^Lampa Row #\d+$/.test(title) || /^ext_row_[a-z0-9]{6}$/.test(item.id);
+    }
 
     function registerDiscoveredShelf(def) {
         if (!def || !def.id) return false;
@@ -75,7 +83,7 @@
             var saved = Lampa.Storage.get(STORAGE_DISCOVERED_KEY, []);
             if (Array.isArray(saved)) {
                 saved.forEach(function(item) {
-                    if (item && item.id && !window.SURS_EXTERNAL_SHELVES[item.id]) {
+                    if (item && item.id && !isAnonymousShelf(item) && !window.SURS_EXTERNAL_SHELVES[item.id]) {
                         window.SURS_EXTERNAL_SHELVES[item.id] = item;
                     }
                 });
@@ -94,8 +102,9 @@
                     var origAdd = Lampa.ContentRows.add;
                     Lampa.ContentRows.add = function(rowDef) {
                         try {
-                            if (rowDef && typeof rowDef === 'object' && rowDef.call) {
-                                var rowId = 'ext_' + (rowDef.name || ('row_' + Math.random().toString(36).substr(2, 6)));
+                            if (rowDef && typeof rowDef === 'object' && rowDef.call && (rowDef.name || rowDef.title)) {
+                                // Не регистрируем анонимные строки под случайными именами.
+                                var rowId = 'ext_' + (rowDef.name || rowDef.title);
                                 registerDiscoveredShelf({
                                     id: rowId,
                                     title: rowDef.title || rowDef.name || 'Сторонняя полка',
@@ -1219,6 +1228,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
                                 // Не запускаем стороннюю полку при обнаружении: это может вызвать сеть и побочные эффекты.
 
+                                // Показ только опознанных ContentRows. Не запускаем их при сканировании.
+                                if (/^Lampa Row #\d+$/.test(baseTitle)) return;
+                                var duplicate = Object.keys(window.SURS_EXTERNAL_SHELVES).some(function(key) {
+                                    var existing = window.SURS_EXTERNAL_SHELVES[key];
+                                    return key !== baseId && existing && existing.title === baseTitle;
+                                });
+                                if (duplicate) return;
+
                                 registerDiscoveredShelf({
                                     id: baseId,
                                     title: baseTitle,
@@ -1350,7 +1367,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var seen = {};
             var unique = [];
             saved.forEach(function(s) {
-                if (s && s.id && !seen[s.id]) {
+                if (s && s.id && !seen[s.id] && (!isAnonymousShelf(s) || s.enabled)) {
                     seen[s.id] = true;
                     unique.push(s);
                 }
@@ -3127,9 +3144,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         if (shelf.enabled) {
                             var fn = getShelfLoader(shelf.id, owner, params);
                             if (fn) {
-                            fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(sid) ? 5500 : 2500;
-                            combinedData.push(fn);
-                        }
+                                fn.__sursTimeout = /^(trakt_|ext_Trakt)/.test(shelf.id) ? 5500 : 2500;
+                                combinedData.push(fn);
+                            }
                         }
                     });
                 }
@@ -3312,7 +3329,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.7.2 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.7.3 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
