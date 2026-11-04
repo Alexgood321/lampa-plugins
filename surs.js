@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.8.3 (Factory Shelf Layout)
- * Релиз: заводской профиль из 11 активных полок в порядке пользователя; остальные выключены, прежние настройки сохраняются.
+ * Версия: 3.8.4 (Responsive Navigation Row)
+ * Релиз: адаптивная панель навигации для ТВ, Mac, iPhone и iPad; чистые кнопки без меток фильмов.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -865,6 +865,111 @@
                         scroll-behavior: auto !important;
                     }
                 }
+
+                /* SURS 3.8.4: row-specific adaptive navigation (no impact on films). */
+                .items-line.surs-nav-line {
+                    padding-bottom: 1.6em !important;
+                }
+                .surs-nav-line .scroll--horizontal,
+                .surs-nav-line .scroll__content {
+                    width: 100% !important;
+                    box-sizing: border-box;
+                }
+                .surs-nav-line .scroll__content {
+                    padding-left: 0.8em !important;
+                    padding-right: 0.8em !important;
+                }
+                .surs-nav-line .scroll__body.mapping--line {
+                    display: grid !important;
+                    grid-template-columns: repeat(7, minmax(0, 1fr));
+                    column-gap: 0.7em;
+                    row-gap: 0.7em;
+                    align-items: stretch;
+                    width: 100% !important;
+                    max-width: 100em;
+                    min-width: 0;
+                    margin-left: auto;
+                    margin-right: auto;
+                    box-sizing: border-box;
+                }
+                .surs-nav-line .card--button-compact {
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    height: 5.6em !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    box-sizing: border-box;
+                }
+                .surs-nav-line .card--button-compact .card__view {
+                    height: 100% !important;
+                    min-height: 0 !important;
+                    margin: 0 !important;
+                    padding: 0.45em !important;
+                    box-sizing: border-box;
+                    gap: 0.22em;
+                    transform: none !important;
+                }
+                .surs-nav-line .card__button-icon {
+                    width: 2em !important;
+                    height: 2em !important;
+                    flex: 0 0 auto;
+                }
+                .surs-nav-line .card__button-icon svg {
+                    display: block;
+                    width: 100% !important;
+                    height: 100% !important;
+                }
+                .surs-nav-line .card__button-label {
+                    display: block;
+                    margin: 0 !important;
+                    max-width: 100% !important;
+                    font-size: 0.79em !important;
+                    font-weight: 600;
+                    line-height: 1.18;
+                    white-space: normal !important;
+                    overflow-wrap: break-word;
+                    text-overflow: clip;
+                    text-align: center;
+                }
+                /* Third-party movie badges are never meaningful on navigation tiles. */
+                .surs-nav-line .card__type,
+                .surs-nav-line .card__quality,
+                .surs-nav-line .card__vote,
+                .surs-nav-line .card__marker,
+                .surs-nav-line .card__icons,
+                .surs-nav-line .card__age,
+                .surs-nav-line .card__title {
+                    display: none !important;
+                }
+                .surs-nav-line .card--button-compact.focus .card__view,
+                .surs-nav-line .card--button-compact.hover .card__view,
+                .surs-nav-line .card--button-compact:hover .card__view {
+                    background: rgba(255,255,255,0.16) !important;
+                    border-color: rgba(255,255,255,0.65) !important;
+                    box-shadow: 0 0 0 0.12em rgba(255,255,255,0.18) !important;
+                    transform: none !important;
+                }
+                /* Only touch interfaces wrap: keep one-row DPAD navigation on TV. */
+                @media screen and (max-width: 1100px) {
+                    .surs-nav-line--touch .scroll__body.mapping--line {
+                        grid-template-columns: repeat(4, minmax(0, 1fr));
+                    }
+                    .surs-nav-line--touch .card--button-compact {
+                        height: 5.8em !important;
+                    }
+                }
+                @media screen and (max-width: 360px) {
+                    .surs-nav-line--touch .scroll__body.mapping--line {
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                    }
+                }
+                @media screen and (max-width: 690px) and (hover: hover) {
+                    .surs-nav-line:not(.surs-nav-line--touch) .scroll__body.mapping--line {
+                        width: max-content !important;
+                        min-width: 44em;
+                        margin-left: 0;
+                    }
+                }
             </style>
         `);
         $('body').append(style);
@@ -1580,7 +1685,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                     var $h = $(this.html);
                                     $h.addClass('card--button-compact');
                                     $h.attr('data-nav-id', b.id);
-                                    $h.on('hover:enter click', function(e) {
+                                    // Lampa's Callback module handles remote OK (onlyEnter).
+                                    // Click is touch/mouse only; avoid double activation on OK.
+                                    $h.on('click', function(e) {
                                         if (e && e.stopPropagation) e.stopPropagation();
                                         b.action();
                                     });
@@ -1600,7 +1707,23 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 callback({
                     results: results,
                     title: 'Быстрый переход',
-                    params: { items: { view: 20, mapping: 'line' } }
+                    params: {
+                        items: { view: 7, mapping: 'line', align_left: true },
+                        emit: {
+                            onCreate: function() {
+                                var line = $(this.html);
+                                line.addClass('surs-nav-line');
+                                var touch = false, tv = false;
+                                try {
+                                    tv = !!(Lampa.Platform && Lampa.Platform.screen &&
+                                        Lampa.Platform.screen('tv'));
+                                    touch = !tv && !!(window.matchMedia &&
+                                        window.matchMedia('(pointer: coarse)').matches);
+                                } catch(e) {}
+                                if (touch) line.addClass('surs-nav-line--touch');
+                            }
+                        }
+                    }
                 });
             };
         }
@@ -2470,7 +2593,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.3</span></div>
+                        <div class="surs-sm-title">Полки Главного экрана <span style="font-size:0.55em;opacity:0.55;font-weight:500;">v3.8.4</span></div>
                         <div class="surs-sm-counter">${enabledCount} из ${shelves.length} активно</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: [▲/▼/⤒] порядок · [OK] выбор · [≡] меню</div>
@@ -3497,7 +3620,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.8.3 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.8.4 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -3514,7 +3637,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             refreshSursHome();
             return defaults;
         },
-        version: '3.8.3'
+        version: '3.8.4'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
