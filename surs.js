@@ -3854,16 +3854,26 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     return;
                 }
 
-                // 3. Во вкладках -> уже на самом верху
+                // From category tabs, Up selects the screen profile selector.
                 if (cur.hasClass('surs-sm-tab')) {
+                    var currentProfile = root.find('.surs-sm-screen-tab.active')[0];
+                    if (currentProfile) setModalFocus(currentProfile, false);
                     return;
                 }
+                if (cur.hasClass('surs-sm-screen-tab')) return;
 
                 try { Navigator.move('up'); } catch(e){}
             },
             down: function () {
                 var root = modalHtml || $('.surs-sm-wrap');
                 var cur = getCurrentFocus();
+
+                // From the screen selector, Down opens category filters.
+                if (cur.hasClass('surs-sm-screen-tab')) {
+                    var categoryTab = root.find('.surs-sm-tab.active')[0];
+                    if (categoryTab) setModalFocus(categoryTab, false);
+                    return;
+                }
 
                 // 1. Из вкладок -> переход к первой строке списка
                 if (cur.hasClass('surs-sm-tab')) {
@@ -3916,6 +3926,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             left: function () {
                 var root = modalHtml || $('.surs-sm-wrap');
                 var cur = getCurrentFocus();
+
+                if (cur.hasClass('surs-sm-screen-tab')) {
+                    var screens = root.find('.surs-sm-screen-tab');
+                    var screenIndex = screens.index(cur);
+                    if (screenIndex > 0) setModalFocus(screens.eq(screenIndex - 1)[0], false);
+                    return;
+                }
 
                 // Во вкладках
                 if (cur.hasClass('surs-sm-tab')) {
@@ -4168,7 +4185,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     description: 'Изменить порядок полок (▲/▼), скрыть лишние или добавить новые'
                 },
                 onChange: function() {
-                    openShelfManagerModal();
+                    openShelfManagerModal('MAIN');
                 }
             });
 
