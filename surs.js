@@ -1,7 +1,7 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.8 (Performance)
-* Релиз: компактный JS, объединение запросов логотипов и диагностика загрузки; без кеша фильмов и сериалов.
+* Версия: 3.9.9 (US Premieres)
+* Релиз: включена полка «Новинки США 8+» сразу под панелью навигации; игровые фильмы и сериалы сортируются по дате выхода.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
 *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1268,6 +1268,7 @@ var STORAGE_SHELVES_KEY = 'surs_fixed_shelves_v2';
 
 var SURS_BASE_SHELVES = [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
+{ id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: true, desc: 'Игровые фильмы и сериалы США за год с рейтингом TMDB от 8,0, без анимации' },
 { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
 { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
 { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -1454,6 +1455,7 @@ newCount: diff
 function getDefaultShelvesList() {
 return [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
+{ id: 'us_new_8', title: 'Новинки США 8+', enabled: true, cat: 'surs' },
 { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
 { id: 'new_movies', title: 'Новинки мирового кино', enabled: false, cat: 'surs' },
 { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: false, cat: 'surs' },
@@ -1614,6 +1616,14 @@ unique.push(s);
 });
 
 if (!unique.length) return profile ? getDefaultSectionShelves(name) : [getDefaultShelvesList()[0]];
+
+
+if (!profile && seen.nav_buttons && !seen.us_new_8) {
+var navIndex = unique.findIndex(function(item) { return item.id === 'nav_buttons'; });
+unique.splice(navIndex + 1, 0, {
+id: 'us_new_8', title: 'Новинки США 8+', enabled: true, cat: 'surs'
+});
+}
 
 
 return unique;
@@ -2003,6 +2013,101 @@ callback({
 results: lately,
 title: 'Расписание: новые серии',
 params: { items: { view: 20, mapping: 'line' } }
+});
+};
+}
+
+
+
+if (shelfId === 'us_new_8') {
+return function(callback) {
+var now = new Date();
+var end = now.toISOString().slice(0, 10);
+now.setFullYear(now.getFullYear() - 1);
+var start = now.toISOString().slice(0, 10);
+var requestParams = Object.assign({}, params || {});
+delete requestParams.page;
+var types = [
+{ id: 'movie', date: 'primary_release_date',
+sort: 'release_date.desc', votes: 200, blocked: '16,99,10770' },
+{ id: 'tv', date: 'first_air_date',
+sort: 'first_air_date.desc', votes: 100,
+blocked: '16,99,10763,10764,10766,10767' }
+];
+var pending = 4;
+var done = false;
+var keys = {};
+var cards = [];
+function publish() {
+if (done) return;
+done = true;
+clearTimeout(deadline);
+cards.sort(function(a, b) {
+var da = a.release_date || a.first_air_date || '';
+var db = b.release_date || b.first_air_date || '';
+if (da !== db) return da > db ? -1 : 1;
+if (Number(a.vote_average) !== Number(b.vote_average))
+return Number(b.vote_average) - Number(a.vote_average);
+return Number(b.vote_count) - Number(a.vote_count);
+});
+callback({
+title: 'Новинки США 8+',
+results: cards.slice(0, 60),
+params: { items: { view: 20, mapping: 'line' } }
+});
+}
+
+var deadline = setTimeout(publish, 4300);
+function collect(json, type) {
+if (done || !json || !Array.isArray(json.results)) return;
+json.results.forEach(function(item) {
+if (!item || !item.id || !item.poster_path ||
+!item.overview || !String(item.overview).trim() ||
+item.original_language !== 'en' || item.adult === true ||
+Number(item.vote_average) < 8 ||
+Number(item.vote_count) < type.votes) return;
+var date = type.id === 'tv' ? item.first_air_date : item.release_date;
+if (!date || date < start || date > end) return;
+if (type.id === 'tv' &&
+(!Array.isArray(item.origin_country) ||
+item.origin_country.indexOf('US') < 0)) return;
+var excluded = type.blocked.split(',');
+if (Array.isArray(item.genre_ids) && item.genre_ids.some(function(id) {
+return excluded.indexOf(String(id)) >= 0;
+})) return;
+var key = type.id + ':' + item.id;
+if (keys[key]) return;
+keys[key] = true;
+item.source = 'tmdb';
+item.type = type.id;
+item.media_type = type.id;
+cards.push(item);
+});
+}
+types.forEach(function(type) {
+for (var page = 1; page <= 2; page++) {
+(function(pageNumber) {
+var query = 'discover/' + type.id +
+'?with_origin_country=US&with_original_language=en' +
+'&include_adult=false&without_genres=' + type.blocked +
+'&vote_average.gte=8&vote_count.gte=' + type.votes +
+'&' + type.date + '.gte=' + start +
+'&' + type.date + '.lte=' + end +
+'&sort_by=' + type.sort + '&page=' + pageNumber;
+var settled = false;
+function finish(json) {
+if (settled) return;
+settled = true;
+collect(json, type);
+if (--pending === 0) publish();
+}
+try {
+owner.get(query, requestParams, finish, function() { finish(null); });
+} catch (e) {
+finish(null);
+}
+})(page);
+}
 });
 };
 }
@@ -2613,7 +2718,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.8';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.9';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3039,7 +3144,7 @@ window.plugin_surs_fixed_ready = true;
 window.surs_retry_count = 0;
 window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-console.log('SURS Pro v3.9.8 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.9 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3068,7 +3173,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.8'
+version: '3.9.9'
 };
 
 
