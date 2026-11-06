@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.5 (Lampa 3 Compatibility)
- * Релиз: корректные аргументы Card Maker, однократное завершение загрузчиков, восстановление после сбоя инициализации.
+ * Версия: 3.9.6 (Progressive Loading)
+ * Релиз: прогрессивная загрузка полок Lampa 3 и отложенная загрузка CSS редактора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -65,6 +65,7 @@
     // ==========================================
     window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
     var STORAGE_DISCOVERED_KEY = 'surs_discovered_shelves_v2';
+    window.SURS_PERFORMANCE = window.SURS_PERFORMANCE || { script_evaluated_at: Date.now(), screens: {} };
     window.SURS_SHELF_STATUS = window.SURS_SHELF_STATUS || {};
     function recordShelfStatus(id, state) {
         if (id) window.SURS_SHELF_STATUS[id] = { state: state, timestamp: Date.now() };
@@ -907,6 +908,15 @@
                     }
                 }
 
+            </style>
+        `);
+        $('body').append(style);
+    }
+    // Defer modal-only CSS parsing until the editor is requested.
+    function addEditorStyles() {
+        if ($('#surs-editor-styles').length) return;
+        var style = $(`
+            <style id="surs-editor-styles">
                 /* SURS 3.9: isolated shelf editor design tokens and responsive layout */
                 .modal.surs-sm-modal {
                     --sm-bg: #171a20;
@@ -2925,6 +2935,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var isModalOpen = false;
 
     function openShelfManagerModal(scope) {
+        addEditorStyles();
         if (isModalOpen) {
             try { Lampa.Modal.close(); } catch(e){}
             isModalOpen = false;
@@ -3113,7 +3124,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.5</span></div>
+                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.6</span></div>
                         <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
@@ -4120,10 +4131,99 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     };
                 });
 
-                // Порционная плавная догрузка (Smart Chunking):
-                // Первые 6 полок загружаются сразу (верхний экран ТВ),
-                // остальные плавно подгружаются порциями по 4 штуки при скролле вниз.
-                // Это снижает пиковую нагрузку на процессор и ОЗУ Smart TV в 5 раз и полностью исключает зависания!
+                // Lampa 3: four concurrent loads, strict saved order and incremental
+                // Main.onBuild additions. Never call Activity.toggle() per new row:
+                // doing so restarts the TV controller and can reset remote focus.
+                if (Lampa.Manifest && Number(Lampa.Manifest.app_digital) >= 300) {
+                    window.SURS_LOAD_GENERATION = window.SURS_LOAD_GENERATION || {};
+                    var generation = (window.SURS_LOAD_GENERATION[mode] || 0) + 1;
+                    window.SURS_LOAD_GENERATION[mode] = generation;
+                    var targetSource = mode === 'NEW' ? 'SURS NEW' :
+                                       mode === 'RUS' ? 'SURS RUS' : 'SURS';
+                    var metrics = { started_at: Date.now(), first_row_ms: null,
+                                    completed_ms: null, total: protectedData.length, completed: 0 };
+                    window.SURS_PERFORMANCE.screens[mode] = metrics;
+                    var rows = protectedData.map(function() { return { done: false, data: null }; });
+                    var queued = 0, emitted = 0, running = 0;
+                    var pumping = false, flushPending = false, initialBuilt = false;
+                    var deferred = [];
+
+                    function currentScreen() {
+                        if (window.SURS_LOAD_GENERATION[mode] !== generation) return false;
+                        var active = Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active();
+                        return !active || typeof active !== 'object' || !active.component ||
+                               (active.component === 'main' && active.source === targetSource);
+                    }
+                    function publish(batch) {
+                        if (!batch.length || !currentScreen()) return;
+                        if (metrics.first_row_ms === null)
+                            metrics.first_row_ms = Date.now() - metrics.started_at;
+                        if (!initialBuilt) {
+                            initialBuilt = true;
+                            onComplete(batch);
+                            return;
+                        }
+                        var active = Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active();
+                        var component = active && active.activity && active.activity.component;
+                        if (component && typeof component.emit === 'function') {
+                            component.emit('build', batch);
+                        } else {
+                            deferred = deferred.concat(batch);
+                        }
+                    }
+                    function flushReady() {
+                        flushPending = false;
+                        if (!currentScreen()) return;
+                        var batch = [];
+                        while (emitted < rows.length && rows[emitted].done) {
+                            var data = rows[emitted].data;
+                            if (data && Array.isArray(data.results) && data.results.length) batch.push(data);
+                            emitted++;
+                        }
+                        if (batch.length) publish(batch);
+                        if (emitted === rows.length) {
+                            metrics.completed_ms = Date.now() - metrics.started_at;
+                            if (!initialBuilt) onError();
+                        }
+                    }
+                    function scheduleFlush() {
+                        if (flushPending) return;
+                        flushPending = true;
+                        setTimeout(flushReady, 0);
+                    }
+                    function pump() {
+                        if (pumping || !currentScreen()) return;
+                        pumping = true;
+                        while (running < 4 && queued < protectedData.length) {
+                            (function(index) {
+                                queued++;
+                                running++;
+                                var done = false;
+                                function finish(data) {
+                                    if (done) return;
+                                    done = true;
+                                    running--;
+                                    rows[index].done = true;
+                                    rows[index].data = data;
+                                    metrics.completed++;
+                                    scheduleFlush();
+                                    if (!pumping) pump();
+                                }
+                                try { protectedData[index](finish); }
+                                catch(e) { finish({ results: [] }); }
+                            })(queued);
+                        }
+                        pumping = false;
+                    }
+                    // During onCreate, Activity.push has not pushed the new activity yet.
+                    setTimeout(pump, 0);
+                    return function(resolve, reject) {
+                        if (deferred.length) resolve(deferred.splice(0, deferred.length));
+                        else if (typeof reject === 'function') reject();
+                    };
+                }
+
+                // Lampa 2: preserve the existing partNext loading behavior.
                 var isFirstBatch = true;
                 function loadPart(partLoaded, partEmpty) {
                     var chunkLimit = isFirstBatch ? 6 : 4;
@@ -4330,7 +4430,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             // Announce readiness only after all registrations and listeners succeed.
             window.plugin_surs_fixed_ready = true;
             window.surs_retry_count = 0;
-            console.log('SURS Pro v3.9.5 (Fixed & Configurable) успешно инициализирован.');
+            window.SURS_PERFORMANCE.ready_at = Date.now();
+            console.log('SURS Pro v3.9.6 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4359,7 +4460,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.5'
+        version: '3.9.6'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
