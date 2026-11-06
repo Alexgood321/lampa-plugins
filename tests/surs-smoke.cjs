@@ -503,8 +503,8 @@ test('startup waits if Lampa global is not defined', () => {
 });
 test('progressive Lampa3 displays nav before TMDB and appends rows in order', () => {
     const app=boot({saved:[
-        {id:'nav_buttons',enabled:true},{id:'trend_movies',enabled:true},
-        {id:'trend_tv',enabled:true},{id:'genres_icons',enabled:true}
+        {id:'nav_buttons',enabled:true},{id:'us_new_8',enabled:false},
+        {id:'trend_movies',enabled:true},{id:'trend_tv',enabled:true},{id:'genres_icons',enabled:true}
     ]});
     app.Lampa.Manifest={app_digital:300};
     app.Lampa.Lang={translate:key=>key};
@@ -538,7 +538,7 @@ test('progressive Lampa3 displays nav before TMDB and appends rows in order', ()
     assert.equal(typeof app.window.SURS_PERFORMANCE.screens.MAIN.first_row_ms,'number');
 });
 test('progressive loader drops late callbacks when page is no longer current', () => {
-    const app=boot({saved:[{id:'nav_buttons',enabled:true},{id:'trend_movies',enabled:true}]});
+    const app=boot({saved:[{id:'nav_buttons',enabled:true},{id:'us_new_8',enabled:false},{id:'trend_movies',enabled:true}]});
     app.Lampa.Manifest={app_digital:300};
     let active={component:'main',source:'SURS',activity:{component:{emit:()=>{}}}};
     app.Lampa.Activity.active=()=>active;
