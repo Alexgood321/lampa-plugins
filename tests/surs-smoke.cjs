@@ -5,7 +5,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'surs.js'), 'utf8');
+const mainSource = fs.readFileSync(path.join(__dirname, '..', 'surs.js'), 'utf8');
+const editorSource = fs.readFileSync(path.join(__dirname, '..', 'surs-editor.js'), 'utf8');
+const source = mainSource + '\n' + editorSource;
 new vm.Script(source, { filename: 'surs.js' });
 let passed = 0;
 function test(name, fn) {
@@ -94,7 +96,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
         clearTimeout: () => {},
         console: { log: () => {}, error: (...m) => warnings.push(m), warn: (...m) => warnings.push(m) }
     };
-    vm.runInNewContext(source, ctx, { filename: 'surs.js' });
+    vm.runInNewContext(mainSource, ctx, { filename: 'surs.js' });
     const rows = () => window.LampaShelfManager.getSavedShelves();
     const getMain = (sourceId = 'SURS') => {
         let result;
@@ -105,8 +107,22 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
         contentRowsCalls: () => contentRowsCalls };
 }
 
+test('editor JavaScript and stylesheet are deferred', () => {
+    assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
+    assert.doesNotMatch(mainSource, /function renderModalContent\(/);
+    assert.match(editorSource, /function addEditorStyles\(/);
+    assert.match(editorSource, /function openShelfManagerModal\(/);
+    assert.match(mainSource, /__SURS_EDITOR_FACTORY_397/);
+    assert.match(mainSource, /replace\(\/\\\/surs\\\.js/);
+});
+test('deferred editor exposes a constructible factory', () => {
+    const context={window:{}};
+    vm.runInNewContext(editorSource,context,{filename:'surs-editor.js'});
+    assert.equal(typeof context.window.__SURS_EDITOR_FACTORY_397,'function');
+    assert.equal(typeof context.window.__SURS_EDITOR_FACTORY_397({}),'function');
+});
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.6/);
+    assert.match(source, /Версия: 3\.9\.7/);
 });
 test('factory default keeps 9 visible shelves and hides new premieres on home', () => {
     const app = boot();
@@ -189,7 +205,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.6');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.7');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 9);
@@ -364,7 +380,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.6');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.7');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
