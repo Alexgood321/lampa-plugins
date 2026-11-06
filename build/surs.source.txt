@@ -1775,12 +1775,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         responded = true;
                         if (!settled) {
                             var raw = json && Array.isArray(json.results) ? json.results : [];
-                            if (typeof json?.total_pages === 'number')
+                            if (json && typeof json.total_pages === 'number')
                                 st.total = Math.min(500, Math.max(1, json.total_pages));
                             st.boundary = raw.length ? us8CardDate(raw[raw.length - 1]) : '';
                             us8Collect(json, st.type, dates, seen, cards);
                             if (!raw.length || rawPage >= st.total ||
-                                (typeof json?.total_pages !== 'number' && raw.length < 20))
+                                (typeof json && json.total_pages !== 'number' && raw.length < 20))
                                 st.exhausted = true;
                         }
                         if (--pending === 0) next();
