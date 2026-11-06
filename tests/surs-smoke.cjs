@@ -13,7 +13,7 @@ function test(name, fn) {
     passed++;
     process.stdout.write('✓ ' + name + '\n');
 }
-function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoints = 0 } = {}) {
+function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoints = 0, failSourceRegistrationOnce = false } = {}) {
     const stored = new Map();
     if (saved !== null) stored.set('surs_fixed_shelves_v2', saved);
     const timers = [];
@@ -64,6 +64,22 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
             return { type, data };
         }}
     };
+    if (failSourceRegistrationOnce) {
+        let shouldFail = true;
+        Object.defineProperty(Lampa.Api.sources, 'SURS', {
+            configurable: true,
+            enumerable: true,
+            set(value) {
+                if (shouldFail) {
+                    shouldFail = false;
+                    throw new Error('Injected registration failure');
+                }
+                Object.defineProperty(this, 'SURS', {
+                    configurable: true, enumerable: true, writable: true, value
+                });
+            }
+        });
+    }
     const $ = target => {
         if (target && typeof target.addClass === 'function') {
             if (!target.css) target.css = (key, value) => { if (!target.styles) target.styles = {}; target.styles[key] = value; return target; };
@@ -90,7 +106,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.4/);
+    assert.match(source, /Версия: 3\.9\.5/);
 });
 test('factory default keeps 9 visible shelves and hides new premieres on home', () => {
     const app = boot();
@@ -173,7 +189,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.4');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.5');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 9);
@@ -290,6 +306,76 @@ test('ContentRows interception can recover after add is replaced', () => {
     app.getMain();
     app.Lampa.ContentRows.add({name:'late_plugin',title:'Late',call:()=>null});
     assert.ok(app.window.LampaShelfManager.getAllShelves().some(x=>x.id==='ext_late_plugin'));
+});
+test('custom Card factories use item data for nav, streaming and genres', () => {
+    for (const id of ['nav_buttons', 'streaming_global', 'streaming_russian', 'genres_icons']) {
+        const app = boot({saved:[{id,enabled:true}]});
+        app.Lampa.Lang = { translate: key => key };
+        app.Lampa.Maker.make = (type, data) => ({type,data});
+        const result = app.getMain();
+        assert.equal(result.length, 1);
+        const card = result[0].results[0];
+        const made = card.params.createInstance(card);
+        assert.equal(made.type,'Card');
+        assert.equal(made.data,card);
+    }
+});
+test('external callbacks ignore malformed payloads and late duplicate completions', () => {
+    const app=boot({saved:[{id:'ext_double',enabled:true}]});
+    let callbackCount=0;
+    app.Lampa.Api.partNext = (parts, limit, onData, onEmpty) => {
+        parts[0](row => {
+            callbackCount++;
+            if (row.results.length) onData([row]);
+            else onEmpty();
+        });
+    };
+    app.window.surs_register_shelf({id:'ext_double',loader: cb => {
+        cb(null);
+        cb({results:[{id:99}]});
+    }});
+    app.getMain();
+    assert.equal(callbackCount,1);
+    assert.equal(app.window.SURS_SHELF_STATUS.ext_double.state,'empty');
+    app.timers.filter(x=>x.ms >= 5000).forEach(timer => timer.fn());
+    assert.equal(callbackCount,1);
+    assert.equal(app.window.SURS_SHELF_STATUS.ext_double.state,'empty');
+});
+test('external callback throw after first response does not replace the result', () => {
+    const app=boot({saved:[{id:'ext_throw',enabled:true}]});
+    app.window.surs_register_shelf({id:'ext_throw',loader: cb => {
+        cb(function(done){
+            done({results:[{id:31}]});
+            throw new Error('Late plugin exception');
+        });
+    }});
+    const rows=app.getMain();
+    assert.equal(rows[0].results[0].id,31);
+    assert.equal(app.window.SURS_SHELF_STATUS.ext_throw.state,'ready');
+});
+test('boot failure retries and sets ready only after source registration succeeds', () => {
+    const app=boot({failSourceRegistrationOnce:true});
+    assert.equal(!!app.window.plugin_surs_fixed_ready,false);
+    assert.equal(!!app.window.plugin_surs_fixed_starting,false);
+    assert.equal(app.settings.length,0);
+    const retry=app.timers.find(t=>t.ms===1000);
+    assert.ok(retry);
+    retry.fn();
+    assert.equal(app.window.plugin_surs_fixed_ready,true);
+    assert.equal(app.window.plugin_surs_fixed_starting,false);
+    assert.equal(app.components.length,1);
+    assert.equal(app.window.LampaShelfManager.version,'3.9.5');
+});
+test('startup waits if Lampa global is not defined', () => {
+    const queued=[];
+    const window={appready:false};
+    vm.runInNewContext(source,{
+        window,
+        setTimeout: fn => queued.push(fn),
+        console:{error:()=>{},warn:()=>{},log:()=>{}}
+    },{filename:'surs.js'});
+    assert.equal(!!window.plugin_surs_fixed_ready,false);
+    assert.ok(queued.length > 0);
 });
 test('Trakt cards use correct TMDB IDs', () => {
     const app = boot({ saved: [{ id: 'ext_TraktWatchlistRow', title: 'Trakt', enabled: true, cat: 'plugin' }] });
