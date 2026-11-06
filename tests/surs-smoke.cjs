@@ -430,6 +430,40 @@ test('progressive loader drops late callbacks when page is no longer current', (
     tick();
     assert.equal(initial.length,1);
 });
+test('storage errors are detectable without silently losing old shelf settings', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true}]});
+    const old=app.stored.get('surs_fixed_shelves_v2');
+    app.Lampa.Storage.set=(key,list,noListen,onError)=>{onError(new Error('QuotaExceededError'));};
+    assert.equal(app.window.LampaShelfManager.saveShelves([{id:'trend_movies',enabled:true}]),false);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2'),old);
+    app.Lampa.Storage.set=()=>{};
+    assert.equal(app.window.LampaShelfManager.saveShelves([{id:'trend_tv',enabled:true}]),false);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2'),old);
+});
+test('failed reset must not clear the current configuration', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true}]});
+    const previous=app.stored.get('surs_fixed_shelves_v2');
+    app.Lampa.Storage.set=()=>{throw new Error('Storage blocked');};
+    assert.equal(app.window.LampaShelfManager.resetDefaults(),null);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2'),previous);
+});
+test('named Trakt ContentRow retains its receiver', () => {
+    const app=boot({saved:[{id:'trakt_watchlist',enabled:true}]});
+    const row={name:'TraktWatchlistRow',title:'Watchlist',call:function(params,screen){
+        assert.equal(this,row);
+        assert.equal(screen,'main');
+        return cb=>cb({results:[{movie:{ids:{tmdb:321},title:'Фильм',year:2024}}]});
+    }};
+    app.Lampa.ContentRows.add(row);
+    assert.equal(app.getMain()[0].results[0].id,321);
+});
+test('Trakt does not run unrelated ContentRows or inspect function source', () => {
+    const app=boot({saved:[{id:'trakt_watchlist',enabled:true}]});
+    app.Lampa.ContentRows.call=()=>{throw Error('Unsafe ContentRows scan');};
+    assert.equal(app.getMain().length,0);
+    assert.equal(app.contentRowsCalls(),0);
+    assert.doesNotMatch(source,/fnStr\.indexOf\(targetRowName\)/);
+});
 test('Trakt cards use correct TMDB IDs', () => {
     const app = boot({ saved: [{ id: 'ext_TraktWatchlistRow', title: 'Trakt', enabled: true, cat: 'plugin' }] });
     app.Lampa.ContentRows.add({
