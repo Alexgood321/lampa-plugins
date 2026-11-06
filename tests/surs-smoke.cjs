@@ -124,8 +124,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.9/);
-    assert.match(readableSource, /Версия: 3\.9\.9/);
+    assert.match(mainSource, /Версия: 3\.9\.10/);
+    assert.match(readableSource, /Версия: 3\.9\.10/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -229,8 +229,86 @@ test('US premiere loader keeps partial results when requests fail', () => {
     app.timers.filter(x=>x.ms===4300).forEach(x=>x.fn());
     assert.equal(delivered,1);
 });
+test('US 8+ line uses native Lampa More route and pagination metadata', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    const date=new Date().toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>ok({
+        total_pages:5,
+        results:url.indexOf('discover/movie?')===0 ? [{
+            id:40,title:'Film',release_date:date,original_language:'en',
+            poster_path:'/x',overview:'Film',genre_ids:[18],
+            vote_average:8.6,vote_count:400
+        }] : []
+    });
+    const row=app.getMain()[0];
+    assert.equal(row.url,'surs_us_new_8');
+    assert.equal(row.source,'SURS');
+    assert.equal(row.page,1);
+    assert.ok(row.total_pages>1);
+    assert.equal(row.results[0].source,'tmdb');
+});
+test('US 8+ full catalog pages preserve mixed date order and never duplicate', () => {
+    const app=boot();
+    const calls=[];
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{
+        const type=url.indexOf('discover/movie?')===0?'movie':'tv';
+        const page=Number((url.split('&page=')[1]||'1').split('&')[0]);
+        calls.push(type+page);
+        const results=Array.from({length:20},(_,i)=>{
+            const n=(page-1)*20+i;
+            const date=new Date();
+            date.setUTCDate(date.getUTCDate()-(n*2+(type==='tv'?1:0)));
+            const stamp=date.toISOString().slice(0,10);
+            return Object.assign({
+                id:(type==='movie'?1000:2000)+n,original_language:'en',
+                poster_path:'/p',overview:'Story',genre_ids:[18],
+                vote_average:8.5,vote_count:300
+            },type==='movie'?{title:'Film',release_date:stamp}:
+                {name:'Series',first_air_date:stamp,origin_country:['US']});
+        });
+        ok({results:results,total_pages:3});
+    };
+    const request={url:'surs_us_new_8',source:'SURS',page:1};
+    let all=[];
+    for(let page=1;page<=3;page++){
+        request.page=page;
+        let output;
+        app.Lampa.Api.sources.SURS.list(request,data=>output=data,
+            ()=>{throw Error('Unexpected category error')});
+        assert.equal(output.results.length,20);
+        assert.ok(output.total_pages>=6);
+        all=all.concat(output.results);
+    }
+    assert.equal(all.length,60);
+    assert.equal(new Set(all.map(x=>x.type+':'+x.id)).size,60);
+    assert.equal(all[0].id,1000);
+    assert.equal(all[19].id,2009);
+    assert.equal(all[20].id,1010);
+    assert.equal(all[40].id,1020);
+    assert.ok(all.every((x,i)=>!i||
+        (all[i-1].release_date||all[i-1].first_air_date)>=
+        (x.release_date||x.first_air_date)));
+    assert.equal(calls.length,4);
+    app.Lampa.Api.sources.SURS.list({url:'surs_us_new_8',page:1},
+        ()=>{},()=>{});
+    assert.equal(calls.length,6);
+});
+test('US 8+ category failure and other TMDB category fallback', () => {
+    const app=boot();
+    app.Lampa.Api.sources.tmdb.list=(params,ok)=>ok({results:[{id:77}]});
+    let original;
+    app.Lampa.Api.sources.SURS.list({url:'discover/movie'},
+        data=>original=data,()=>{});
+    assert.equal(original.results[0].id,77);
+    app.Lampa.Api.sources.SURS.get=(url,params,ok,error)=>error();
+    let successes=0,errors=0;
+    app.Lampa.Api.sources.SURS.list({url:'surs_us_new_8',page:1},
+        ()=>successes++,()=>errors++);
+    assert.equal(successes,0);
+    assert.equal(errors,1);
+});
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.9/);
+    assert.match(source, /Версия: 3\.9\.10/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -313,7 +391,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.9');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.10');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 24);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -488,7 +566,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.9');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.10');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];

@@ -1729,7 +1729,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var requestParams = us8RequestParams(params);
         var seen = {}, cards = [], queue = [], working = false;
         var states = US8_TYPES.map(function(type) {
-            return { type: type, next: 1, total: 500, boundary: null, exhausted: false };
+            return { type: type, next: 1, total: 0, boundary: null, exhausted: false };
         });
         function run() {
             if (working || !queue.length) return;
@@ -1745,7 +1745,13 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 var results = cards.slice((page - 1) * 20, target);
                 var morePossible = states.some(function(st) { return !st.exhausted; });
                 var totalPages = Math.max(1, Math.ceil(cards.length / 20));
-                if (morePossible) totalPages = Math.max(totalPages, page + 1);
+                if (morePossible) {
+                    var rawPages = states.reduce(function(n, st) {
+                        return n + (st.total || Math.max(2, st.next));
+                    }, 0);
+                    totalPages = Math.max(totalPages, page + 1,
+                        Math.min(100, rawPages));
+                }
                 // Lampa's native category pagination must see total_pages on page 1.
                 if (results.length) {
                     req.ok({
@@ -1779,8 +1785,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                                 st.total = Math.min(500, Math.max(1, json.total_pages));
                             st.boundary = raw.length ? us8CardDate(raw[raw.length - 1]) : '';
                             us8Collect(json, st.type, dates, seen, cards);
-                            if (!raw.length || rawPage >= st.total ||
-                                (typeof json && json.total_pages !== 'number' && raw.length < 20))
+                            if (!raw.length || (st.total && rawPage >= st.total) ||
+                                ((!json || typeof json.total_pages !== 'number') && raw.length < 20))
                                 st.exhausted = true;
                         }
                         if (--pending === 0) next();

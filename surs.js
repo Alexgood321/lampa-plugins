@@ -1,7 +1,7 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.9 (US Premieres)
-* Релиз: включена полка «Новинки США 8+» сразу под панелью навигации; игровые фильмы и сериалы сортируются по дате выхода.
+* Версия: 3.9.10 (US Premieres More)
+* Релиз: штатная кнопка «Ещё» и постраничный общий каталог «Новинки США 8+» в стиле Lampa.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
 *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1660,6 +1660,157 @@ return false;
 
 
 
+var US8_CATALOG_URL = 'surs_us_new_8';
+var US8_TYPES = [
+{ id: 'movie', date: 'primary_release_date', sort: 'release_date.desc',
+votes: 200, blocked: '16,99,10770' },
+{ id: 'tv', date: 'first_air_date', sort: 'first_air_date.desc',
+votes: 100, blocked: '16,99,10763,10764,10766,10767' }
+];
+function us8Dates() {
+var now = new Date();
+var end = now.toISOString().slice(0, 10);
+now.setFullYear(now.getFullYear() - 1);
+return { start: now.toISOString().slice(0, 10), end: end };
+}
+function us8Query(type, dates, page) {
+return 'discover/' + type.id +
+'?with_origin_country=US&with_original_language=en' +
+'&include_adult=false&without_genres=' + type.blocked +
+'&vote_average.gte=8&vote_count.gte=' + type.votes +
+'&' + type.date + '.gte=' + dates.start +
+'&' + type.date + '.lte=' + dates.end +
+'&sort_by=' + type.sort + '&page=' + page;
+}
+function us8CardDate(card) {
+return card.release_date || card.first_air_date || '';
+}
+function us8Compare(a, b) {
+var da = us8CardDate(a), db = us8CardDate(b);
+if (da !== db) return da > db ? -1 : 1;
+if (Number(a.vote_average) !== Number(b.vote_average))
+return Number(b.vote_average) - Number(a.vote_average);
+return Number(b.vote_count) - Number(a.vote_count);
+}
+function us8Collect(json, type, dates, seen, cards) {
+if (!json || !Array.isArray(json.results)) return;
+var blocked = type.blocked.split(',');
+json.results.forEach(function(item) {
+if (!item || !item.id || !item.poster_path ||
+!item.overview || !String(item.overview).trim() ||
+item.original_language !== 'en' || item.adult === true ||
+Number(item.vote_average) < 8 || Number(item.vote_count) < type.votes) return;
+var date = type.id === 'tv' ? item.first_air_date : item.release_date;
+if (!date || date < dates.start || date > dates.end) return;
+if (type.id === 'tv' && (!Array.isArray(item.origin_country) ||
+item.origin_country.indexOf('US') < 0)) return;
+if (Array.isArray(item.genre_ids) && item.genre_ids.some(function(id) {
+return blocked.indexOf(String(id)) >= 0;
+})) return;
+var key = type.id + ':' + item.id;
+if (seen[key]) return;
+seen[key] = true;
+item.source = 'tmdb';
+item.type = type.id;
+item.media_type = type.id;
+cards.push(item);
+});
+}
+function us8RequestParams(params) {
+var copy = Object.assign({}, params || {});
+delete copy.page;
+delete copy.url;
+delete copy.source;
+delete copy._sursUS8Session;
+return copy;
+}
+function us8CatalogSession(owner, params) {
+var dates = us8Dates();
+var requestParams = us8RequestParams(params);
+var seen = {}, cards = [], queue = [], working = false;
+var states = US8_TYPES.map(function(type) {
+return { type: type, next: 1, total: 0, boundary: null, exhausted: false };
+});
+function run() {
+if (working || !queue.length) return;
+working = true;
+var req = queue.shift(), page = req.page, target = page * 20;
+var settled = false;
+var deadline = setTimeout(complete, 8500);
+function complete() {
+if (settled) return;
+settled = true;
+clearTimeout(deadline);
+cards.sort(us8Compare);
+var results = cards.slice((page - 1) * 20, target);
+var morePossible = states.some(function(st) { return !st.exhausted; });
+var totalPages = Math.max(1, Math.ceil(cards.length / 20));
+if (morePossible) {
+var rawPages = states.reduce(function(n, st) {
+return n + (st.total || Math.max(2, st.next));
+}, 0);
+totalPages = Math.max(totalPages, page + 1,
+Math.min(100, rawPages));
+}
+
+if (results.length) {
+req.ok({
+title: 'Новинки США 8+', url: US8_CATALOG_URL,
+source: 'SURS', page: page, total_pages: totalPages,
+results: results
+});
+} else if (req.fail) req.fail();
+working = false;
+run();
+}
+function next() {
+if (settled) return;
+cards.sort(us8Compare);
+var cutoff = cards[target - 1] ? us8CardDate(cards[target - 1]) : null;
+var needs = states.filter(function(st) {
+return !st.exhausted &&
+(!cutoff || !st.boundary || st.boundary >= cutoff);
+});
+if (!needs.length) return complete();
+var pending = needs.length;
+needs.forEach(function(st) {
+var rawPage = st.next++;
+var responded = false;
+function receive(json) {
+if (responded) return;
+responded = true;
+if (!settled) {
+var raw = json && Array.isArray(json.results) ? json.results : [];
+if (json && typeof json.total_pages === 'number')
+st.total = Math.min(500, Math.max(1, json.total_pages));
+st.boundary = raw.length ? us8CardDate(raw[raw.length - 1]) : '';
+us8Collect(json, st.type, dates, seen, cards);
+if (!raw.length || (st.total && rawPage >= st.total) ||
+((!json || typeof json.total_pages !== 'number') && raw.length < 20))
+st.exhausted = true;
+}
+if (--pending === 0) next();
+}
+try {
+owner.get(us8Query(st.type, dates, rawPage), requestParams,
+receive, function() { receive(null); });
+} catch(e) { receive(null); }
+});
+}
+next();
+}
+return {
+load: function(page, ok, fail) {
+var number = Math.max(1, Math.min(500, Number(page) || 1));
+queue.push({ page: number, ok: ok, fail: fail });
+run();
+}
+};
+}
+
+
+
+
 function filterCyrillic(items) {
 var stored = Lampa.Storage.get('cirillic');
 if (stored === '0') return items;
@@ -2018,94 +2169,44 @@ params: { items: { view: 20, mapping: 'line' } }
 }
 
 
-
 if (shelfId === 'us_new_8') {
 return function(callback) {
-var now = new Date();
-var end = now.toISOString().slice(0, 10);
-now.setFullYear(now.getFullYear() - 1);
-var start = now.toISOString().slice(0, 10);
-var requestParams = Object.assign({}, params || {});
-delete requestParams.page;
-var types = [
-{ id: 'movie', date: 'primary_release_date',
-sort: 'release_date.desc', votes: 200, blocked: '16,99,10770' },
-{ id: 'tv', date: 'first_air_date',
-sort: 'first_air_date.desc', votes: 100,
-blocked: '16,99,10763,10764,10766,10767' }
-];
-var pending = 4;
-var done = false;
-var keys = {};
-var cards = [];
-function publish() {
-if (done) return;
-done = true;
+var dates = us8Dates();
+var requestParams = us8RequestParams(params);
+var pending = 4, delivered = false, cards = [], seen = {};
+var pageCount = 1;
+var deadline = setTimeout(deliver, 4300);
+function deliver() {
+if (delivered) return;
+delivered = true;
 clearTimeout(deadline);
-cards.sort(function(a, b) {
-var da = a.release_date || a.first_air_date || '';
-var db = b.release_date || b.first_air_date || '';
-if (da !== db) return da > db ? -1 : 1;
-if (Number(a.vote_average) !== Number(b.vote_average))
-return Number(b.vote_average) - Number(a.vote_average);
-return Number(b.vote_count) - Number(a.vote_count);
-});
+cards.sort(us8Compare);
 callback({
 title: 'Новинки США 8+',
+url: US8_CATALOG_URL,
+source: 'SURS',
+page: 1,
+total_pages: cards.length ? Math.max(pageCount, 2) : 1,
 results: cards.slice(0, 60),
 params: { items: { view: 20, mapping: 'line' } }
 });
 }
-
-var deadline = setTimeout(publish, 4300);
-function collect(json, type) {
-if (done || !json || !Array.isArray(json.results)) return;
-json.results.forEach(function(item) {
-if (!item || !item.id || !item.poster_path ||
-!item.overview || !String(item.overview).trim() ||
-item.original_language !== 'en' || item.adult === true ||
-Number(item.vote_average) < 8 ||
-Number(item.vote_count) < type.votes) return;
-var date = type.id === 'tv' ? item.first_air_date : item.release_date;
-if (!date || date < start || date > end) return;
-if (type.id === 'tv' &&
-(!Array.isArray(item.origin_country) ||
-item.origin_country.indexOf('US') < 0)) return;
-var excluded = type.blocked.split(',');
-if (Array.isArray(item.genre_ids) && item.genre_ids.some(function(id) {
-return excluded.indexOf(String(id)) >= 0;
-})) return;
-var key = type.id + ':' + item.id;
-if (keys[key]) return;
-keys[key] = true;
-item.source = 'tmdb';
-item.type = type.id;
-item.media_type = type.id;
-cards.push(item);
-});
-}
-types.forEach(function(type) {
+US8_TYPES.forEach(function(type) {
 for (var page = 1; page <= 2; page++) {
 (function(pageNumber) {
-var query = 'discover/' + type.id +
-'?with_origin_country=US&with_original_language=en' +
-'&include_adult=false&without_genres=' + type.blocked +
-'&vote_average.gte=8&vote_count.gte=' + type.votes +
-'&' + type.date + '.gte=' + start +
-'&' + type.date + '.lte=' + end +
-'&sort_by=' + type.sort + '&page=' + pageNumber;
-var settled = false;
-function finish(json) {
-if (settled) return;
-settled = true;
-collect(json, type);
-if (--pending === 0) publish();
+var responded = false;
+function receive(json) {
+if (responded) return;
+responded = true;
+if (!delivered && json && typeof json.total_pages === 'number')
+pageCount = Math.max(pageCount, json.total_pages);
+if (!delivered) us8Collect(json, type, dates, seen, cards);
+if (--pending === 0) deliver();
 }
 try {
-owner.get(query, requestParams, finish, function() { finish(null); });
-} catch (e) {
-finish(null);
-}
+owner.get(us8Query(type, dates, pageNumber), requestParams,
+receive, function() { receive(null); });
+} catch(e) { receive(null); }
 })(page);
 }
 });
@@ -2718,7 +2819,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.9';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.10';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -2769,6 +2870,20 @@ function createSourceTMDB(parent, mode) {
 return function() {
 this.network = new Lampa.Reguest();
 this.discovery = false;
+
+
+
+this.list = function(listParams, onComplete, onError) {
+if (listParams && listParams.url === US8_CATALOG_URL) {
+if (!listParams._sursUS8Session)
+listParams._sursUS8Session = us8CatalogSession(this, listParams);
+listParams._sursUS8Session.load(listParams.page || 1, onComplete, onError);
+return;
+}
+if (typeof parent.list === 'function')
+return parent.list(listParams, onComplete, onError);
+if (typeof onError === 'function') onError();
+};
 
 this.main = function(params, onComplete, onError) {
 params = params || {};
@@ -3144,7 +3259,7 @@ window.plugin_surs_fixed_ready = true;
 window.surs_retry_count = 0;
 window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-console.log('SURS Pro v3.9.9 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.10 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3173,7 +3288,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.9'
+version: '3.9.10'
 };
 
 
