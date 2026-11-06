@@ -1,5 +1,5 @@
 /**
- * Lampa Shield Ads v1.0.0
+ * Lampa Shield Ads v1.1.0
  * Focused ad suppression for Lampa 3.x on WebKit / Android WebView / desktop.
  * Derived from an audit of Lampa Shield by DeMoN288 and Lampa source.
  * Original: https://gist.github.com/DeMoN288/24ccaa65bf99d51c8d9cea7ef9bf1ec4
@@ -14,7 +14,7 @@
 
     var PLUGIN = 'lampa_shield_ads';
     var KEY = 'lampa_shield_ads_enabled';
-    var stats = { adRequests: 0, playerVast: 0, fallbackResponses: 0 };
+    var stats = { adRequests: 0, playerVast: 0, prerollBypasses: 0, fallbackResponses: 0 };
     var playerHooked = false;
     var settingsReady = false;
     var xhrHooked = false;
@@ -138,24 +138,102 @@
         xhrHooked = true;
     }
 
+    // Lampa's Preroll.show is not a public API. The engine bypasses it for IPTV.
+    // Temporarily set its IPTV marker between Player.create and Player.start/external.
+    // The marker is restored BEFORE original Player listeners receive start/external.
+    // This handles already cached CUB ad inventories without a splash or 3.5 s delay.
+    var pending = [];
+
+    function restoreItem(entry) {
+        if (entry.timer) clearTimeout(entry.timer);
+        try {
+            if (entry.hadIptv) entry.data.iptv = entry.iptv;
+            else delete entry.data.iptv;
+        } catch (e) {}
+    }
+
+    function restoreData(data) {
+        var remaining = [];
+        pending.forEach(function (entry) {
+            if (!data || entry.data === data) restoreItem(entry);
+            else remaining.push(entry);
+        });
+        pending = remaining;
+    }
+
+    function preparePlayback(data) {
+        if (!enabled() || !data || typeof data !== 'object') return;
+
+        if (typeof data.vast_url === 'string' && data.vast_url.length) {
+            try { delete data.vast_url; } catch (e) { data.vast_url = ''; }
+            stats.playerVast++;
+        }
+
+        // Do not patch genuine IPTV sessions or modify player URLs/playlists.
+        if (data.iptv) return;
+
+        // A previous attempt may be pending while an external player is selected.
+        restoreData(data);
+        var entry = {
+            data: data,
+            hadIptv: Object.prototype.hasOwnProperty.call(data, 'iptv'),
+            iptv: data.iptv,
+            timer: null
+        };
+        try { data.iptv = true; } catch (e) { return; }
+        if (data.iptv !== true) return;
+
+        pending.push(entry);
+        stats.prerollBypasses++;
+
+        // Recovery only if a third-party plugin interrupts the usual player flow.
+        entry.timer = setTimeout(function () { restoreData(data); }, 120000);
+    }
+
     function installPlayerHook() {
         var player = window.Lampa && window.Lampa.Player;
-        if (playerHooked || !player || !player.listener || typeof player.listener.follow !== 'function') return;
-        player.listener.follow('create', function (event) {
-            if (!enabled() || !event || !event.data) return;
-            var data = event.data;
-            if (typeof data.vast_url === 'string' && data.vast_url.length) {
-                // Core preroll.js reads vast_url directly from the player data.
-                // Remove only this ad field. Stream URL, playlist and CUB are untouched.
-                delete data.vast_url;
-                stats.playerVast++;
+        if (playerHooked || !player || !player.listener ||
+            typeof player.listener.send !== 'function') return;
+        var listener = player.listener;
+        var originalSend = listener.send;
+
+        listener.send = function (type, event) {
+            if (type === 'create') {
+                // Preserve all other create listeners and their ability to abort.
+                var aborted = false;
+                var priorAbort = event && event.abort;
+                if (typeof priorAbort === 'function') {
+                    event.abort = function () {
+                        aborted = true;
+                        return priorAbort.apply(this, arguments);
+                    };
+                }
+
+                var result;
+                try { result = originalSend.apply(this, arguments); }
+                finally {
+                    if (event && priorAbort) event.abort = priorAbort;
+                    if (!aborted && event && event.data) preparePlayback(event.data);
+                }
+                return result;
             }
-        });
+
+            if (type === 'start' || type === 'external' || type === 'ready') {
+                // Must happen before core Footer/Metric/Reaction listeners run.
+                restoreData(event && event.data);
+            } else if (type === 'destroy' || type === 'close') {
+                restoreData();
+            }
+            return originalSend.apply(this, arguments);
+        };
+
+        listener.send.__lampaShieldAdsWrapped = true;
         playerHooked = true;
     }
 
     function status() {
         return 'За сеанс: запросов ' + stats.adRequests +
+            ' · заставок пропущено ' + stats.prerollBypasses +
             ' · VAST плагинов ' + stats.playerVast +
             ' · совместимый режим ' + stats.fallbackResponses;
     }
@@ -171,7 +249,7 @@
         api.addParam({
             component: PLUGIN,
             param: { name: KEY, type: 'trigger', 'default': true },
-            field: { name: 'Блокировать preroll', description: 'Встроенная реклама CUB и VAST от онлайн-плагинов. Для очистки ранее загруженных объявлений перезапустите Lampa.' }
+            field: { name: 'Блокировать preroll', description: 'Блокирует заставку до её открытия, даже если реклама уже загружена. Для включения/выключения перезапустите Lampa.' }
         });
         api.addParam({
             component: PLUGIN,
@@ -188,7 +266,7 @@
         installXhrHook();
         installPlayerHook();
         installSettings();
-        try { console.log('Lampa Shield Ads', 'v1.0.0 ready'); } catch (e) {}
+        try { console.log('Lampa Shield Ads', 'v1.1.0 ready'); } catch (e) {}
     }
 
     // Intercept early: VastManager.init() performs an immediate XHR fetch.
