@@ -106,7 +106,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.5/);
+    assert.match(source, /Версия: 3\.9\.6/);
 });
 test('factory default keeps 9 visible shelves and hides new premieres on home', () => {
     const app = boot();
@@ -189,7 +189,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.5');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.6');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 9);
@@ -364,7 +364,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.5');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.6');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
@@ -376,6 +376,59 @@ test('startup waits if Lampa global is not defined', () => {
     },{filename:'surs.js'});
     assert.equal(!!window.plugin_surs_fixed_ready,false);
     assert.ok(queued.length > 0);
+});
+test('progressive Lampa3 displays nav before TMDB and appends rows in order', () => {
+    const app=boot({saved:[
+        {id:'nav_buttons',enabled:true},{id:'trend_movies',enabled:true},
+        {id:'trend_tv',enabled:true},{id:'genres_icons',enabled:true}
+    ]});
+    app.Lampa.Manifest={app_digital:300};
+    app.Lampa.Lang={translate:key=>key};
+    const requests={}, late=[];
+    app.Lampa.Activity.active=()=>({component:'main',source:'SURS',
+        activity:{component:{emit:(type,rows)=>{if(type==='build')late.push(...rows);}}}});
+    app.Lampa.Api.sources.SURS.get=(url,p,done)=>{requests[url]=done;};
+    const initial=[];
+    app.Lampa.Api.sources.SURS.main({source:'SURS'},rows=>initial.push(...rows),()=>{});
+    let ticks=0;
+    function flush() {
+        while (true) {
+            const next=app.timers.find(t=>t.ms===0&&!t.done);
+            if(!next)break;
+            next.done=true; next.fn();
+            if(++ticks>100)throw Error('Timer recursion');
+        }
+    }
+    flush();
+    assert.equal(initial.length,1);
+    assert.equal(initial[0].title,'Быстрый переход');
+    requests['trending/tv/week']({results:[{id:2,title:'Сериал'}]});
+    flush();
+    assert.equal(late.length,0);
+    requests['trending/movie/week']({results:[{id:1,title:'Фильм'}]});
+    flush();
+    assert.deepEqual(Array.from(late,x=>x.title),[
+        'В тренде: Фильмы недели','В тренде: Сериалы недели','Жанры кино и сериалов'
+    ]);
+    assert.equal(app.window.SURS_PERFORMANCE.screens.MAIN.completed,4);
+    assert.equal(typeof app.window.SURS_PERFORMANCE.screens.MAIN.first_row_ms,'number');
+});
+test('progressive loader drops late callbacks when page is no longer current', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true},{id:'trend_movies',enabled:true}]});
+    app.Lampa.Manifest={app_digital:300};
+    let active={component:'main',source:'SURS',activity:{component:{emit:()=>{}}}};
+    app.Lampa.Activity.active=()=>active;
+    let deliver;
+    app.Lampa.Api.sources.SURS.get=(url,p,cb)=>{deliver=cb;};
+    const initial=[];
+    app.Lampa.Api.sources.SURS.main({source:'SURS'},rows=>initial.push(...rows),()=>{});
+    const tick=()=>{let limit=0;while(true){const x=app.timers.find(t=>t.ms===0&&!t.done);if(!x)break;x.done=true;x.fn();if(++limit>50)throw Error('too many timers');}};
+    tick();
+    assert.equal(initial.length,1);
+    active={component:'full',source:'tmdb'};
+    deliver({results:[{id:3,title:'Фильм'}]});
+    tick();
+    assert.equal(initial.length,1);
 });
 test('Trakt cards use correct TMDB IDs', () => {
     const app = boot({ saved: [{ id: 'ext_TraktWatchlistRow', title: 'Trakt', enabled: true, cat: 'plugin' }] });
