@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.3 (Independent Section Defaults)
+ * Версия: 3.9.4 (Independent Section Defaults)
  * Релиз: мировые и российские премьеры по умолчанию включены только в своих разделах; пользовательские настройки главной не перезаписываются.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -80,21 +80,24 @@
 
     function registerDiscoveredShelf(def) {
         if (!def || !def.id) return false;
+        // A metadata refresh must preserve the existing live callback.
+        var previous = window.SURS_EXTERNAL_SHELVES[def.id] || {};
         window.SURS_EXTERNAL_SHELVES[def.id] = {
             id: def.id,
-            title: def.title || def.name || def.id,
-            cat: def.cat || 'plugin',
-            desc: def.desc || 'Сторонний сервис',
-            def: def.def !== undefined ? def.def : false,
-            loader: def.loader || null,
-            call: def.call || null,
-            raw: def.raw || def
+            title: def.title || def.name || previous.title || def.id,
+            cat: def.cat || previous.cat || 'plugin',
+            desc: def.desc || previous.desc || 'Сторонний сервис',
+            def: def.def !== undefined ? def.def : (previous.def !== undefined ? previous.def : false),
+            loader: typeof def.loader === 'function' ? def.loader : (previous.loader || null),
+            call: typeof def.call === 'function' ? def.call : (previous.call || null),
+            raw: def.raw || previous.raw || def,
+            screen: def.screen !== undefined ? def.screen : previous.screen
         };
         saveDiscoveredToStorage();
         return true;
     }
 
-    function saveDiscoveredToStorage() {
+        function saveDiscoveredToStorage() {
         try {
             if (typeof Lampa === 'undefined' || !Lampa.Storage) return;
             var list = [];
@@ -134,18 +137,18 @@
     function patchContentRows() {
         try {
             if (typeof Lampa !== 'undefined' && Lampa.ContentRows && Lampa.ContentRows.add) {
-                if (!Lampa.ContentRows.__surs_patched) {
+                if (!Lampa.ContentRows.add.__sursWrapped) {
                     var origAdd = Lampa.ContentRows.add;
-                    Lampa.ContentRows.add = function(rowDef) {
+                    var wrappedAdd = function(rowDef) {
+                        // Keep native errors, return values and the original row object.
+                        var result = origAdd.apply(this, arguments);
                         try {
                             if (rowDef && typeof rowDef === 'object' && typeof rowDef.call === 'function' && rowDef.name) {
-                                // Не регистрируем анонимные строки под случайными именами.
-                                var rowId = 'ext_' + String(rowDef.name);
                                 registerDiscoveredShelf({
-                                    id: rowId,
+                                    id: 'ext_' + String(rowDef.name),
                                     title: rowDef.title || rowDef.name || 'Сторонняя полка',
                                     cat: 'plugin',
-                                    desc: 'Lampa ContentRow (' + (rowDef.name || 'плагин') + ')',
+                                    desc: 'Lampa ContentRow (' + rowDef.name + ')',
                                     call: rowDef.call,
                                     screen: rowDef.screen,
                                     raw: rowDef
@@ -154,8 +157,10 @@
                         } catch(e) {
                             console.error('[SURS Hub] Ошибка перехвата ContentRows.add:', e);
                         }
-                        return origAdd.apply(this, arguments);
+                        return result;
                     };
+                    wrappedAdd.__sursWrapped = true;
+                    Lampa.ContentRows.add = wrappedAdd;
                     Lampa.ContentRows.__surs_patched = true;
                 }
             }
@@ -2881,7 +2886,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             resolveExternalPayload(data, finish);
                         }, params, owner);
                     } else if (typeof extShelf.call === 'function') {
-                        resolveExternalPayload(extShelf.call(params || {}, 'main'), finish);
+                        // Match the native ContentRows receiver (row.call(params, screen)).
+                        var nativeRow = extShelf.raw && typeof extShelf.raw.call === 'function' ? extShelf.raw : extShelf;
+                        resolveExternalPayload(extShelf.call.call(nativeRow, params || {}, 'main'), finish);
                     } else {
                         // Полка сохранена, но исходный плагин пока не зарегистрирован.
                         finish({ results: [], title: extShelf.title || shelfId });
@@ -3090,7 +3097,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.3</span></div>
+                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.4</span></div>
                         <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
@@ -4033,29 +4040,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 params = params || {};
                 var owner = this;
 
-                // Реконнект живых загрузчиков ContentRows при каждом построении Главного экрана
-                try {
-                    if (typeof Lampa !== 'undefined' && Lampa.ContentRows && typeof Lampa.ContentRows.call === 'function') {
-                        var liveCRItems = [];
-                        Lampa.ContentRows.call('main', params, liveCRItems);
-                        if (liveCRItems && liveCRItems.length) {
-                            window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
-                            liveCRItems.forEach(function(rowFunc, idx) {
-                                if (typeof rowFunc === 'function') {
-                                    var rowId = 'ext_lampa_row_' + idx;
-                                    var shelfObj = window.SURS_EXTERNAL_SHELVES[rowId];
-                                    if (shelfObj) {
-                                        shelfObj.loader = function(cb, p, o) {
-                                            rowFunc(function(data) { cb(data || { results: [] }); });
-                                        };
-                                    }
-                                }
-                            });
-                        }
-                    }
-                } catch(e) {
-                    console.error('[SURS Hub] Ошибка реконнекта ContentRows в main():', e);
-                }
+                // Never run ContentRows.call merely to discover rows.
+                // It executes external handlers and cannot assign stable names.
+                patchContentRows();
 
                 var savedShelves = getSavedShelves(mode);
                 var combinedData = [];
@@ -4323,7 +4310,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.9.3 (Fixed & Configurable) успешно инициализирован.');
+        console.log('SURS Pro v3.9.4 (Fixed & Configurable) успешно инициализирован.');
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -4342,7 +4329,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.3'
+        version: '3.9.4'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
