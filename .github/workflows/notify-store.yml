@@ -4,10 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'surs.js'
-      - 'home_categories.js'
-      - 'num_series.js'
-      - 'shield-ads/lampa-shield-ads.js'
+      - '**/*.js'
+      - 'lampa-plugins.json'
       - '.github/workflows/notify-store.yml'
   workflow_dispatch:
 
