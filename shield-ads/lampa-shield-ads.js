@@ -1,5 +1,5 @@
 /**
- * Lampa Shield Ads v1.1.0
+ * Lampa Shield Ads v1.1.1
  * Focused ad suppression for Lampa 3.x on WebKit / Android WebView / desktop.
  * Derived from an audit of Lampa Shield by DeMoN288 and Lampa source.
  * Original: https://gist.github.com/DeMoN288/24ccaa65bf99d51c8d9cea7ef9bf1ec4
@@ -266,7 +266,11 @@
         installXhrHook();
         installPlayerHook();
         installSettings();
-        try { console.log('Lampa Shield Ads', 'v1.1.0 ready'); } catch (e) {}
+        window.__AlexgoodPluginRuntime = window.__AlexgoodPluginRuntime || {};
+        window.__AlexgoodPluginRuntime['alexgood321/lampa-plugins/shield-ads/lampa-shield-ads.js'] = {
+            version: '1.1.1', ready: true, started_at: Date.now()
+        };
+        try { console.log('Lampa Shield Ads', 'v1.1.1 ready'); } catch (e) {}
     }
 
     // Intercept early: VastManager.init() performs an immediate XHR fetch.
