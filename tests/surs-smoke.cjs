@@ -90,7 +90,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.3/);
+    assert.match(source, /Версия: 3\.9\.4/);
 });
 test('factory default keeps 9 visible shelves and hides new premieres on home', () => {
     const app = boot();
@@ -173,7 +173,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.3');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.4');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 9);
@@ -257,6 +257,39 @@ test('named plugin is not duplicated during discovery', () => {
     app.window.LampaShelfManager.rescan(false);
     assert.equal(app.window.LampaShelfManager.getAllShelves().length, before);
     assert.equal(app.contentRowsCalls(), 0);
+});
+test('main load does not call native ContentRows while scanning', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true}]});
+    app.Lampa.ContentRows.call=()=>{throw Error('Native scan is forbidden');};
+    assert.equal(app.getMain().length,1);
+    assert.equal(app.contentRowsCalls(),0);
+});
+test('ContentRows handler uses native receiver and respects SURS ordering', () => {
+    const saved=[{id:'ext_first',title:'First',enabled:true},{id:'ext_second',title:'Second',enabled:true}];
+    const app=boot({saved});
+    const first={name:'first',title:'First',index:1,screen:['main'],call:function(params,screen){
+        assert.equal(this,first);
+        assert.equal(screen,'main');
+        return cb=>cb({title:'First',results:[{id:1}]});
+    }};
+    app.Lampa.ContentRows.add(first);
+    app.Lampa.ContentRows.add({name:'second',title:'Second',call:()=>cb=>cb({title:'Second',results:[{id:2}]})});
+    assert.deepEqual(Array.from(app.getMain(),x=>x.title),['First','Second']);
+    assert.deepEqual(Array.from(app.rows(),x=>x.id),saved.map(x=>x.id));
+});
+test('updating discovery metadata retains previously live loader', () => {
+    const app=boot({saved:[{id:'ext_sample',title:'Sample',enabled:true}]});
+    app.window.surs_register_shelf({id:'ext_sample',title:'Sample',loader:cb=>cb({results:[{id:42}]})});
+    app.window.surs_register_shelf({id:'ext_sample',title:'Updated title'});
+    assert.equal(app.getMain()[0].results[0].id,42);
+    assert.equal(app.window.LampaShelfManager.getAllShelves().filter(x=>x.id==='ext_sample').length,1);
+});
+test('ContentRows interception can recover after add is replaced', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true}]});
+    app.Lampa.ContentRows.add=row=>app.added.push(row);
+    app.getMain();
+    app.Lampa.ContentRows.add({name:'late_plugin',title:'Late',call:()=>null});
+    assert.ok(app.window.LampaShelfManager.getAllShelves().some(x=>x.id==='ext_late_plugin'));
 });
 test('Trakt cards use correct TMDB IDs', () => {
     const app = boot({ saved: [{ id: 'ext_TraktWatchlistRow', title: 'Trakt', enabled: true, cat: 'plugin' }] });
