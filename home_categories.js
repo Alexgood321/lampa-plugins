@@ -1,6 +1,6 @@
 /**
  * Lampa Plugin: Home Categories Pro (Скрытие и настройка порядка категорий)
- * Version: 2.0.0
+ * Version: 2.0.1
  * Author: Lampa Community & Alexgood321
  * Standard: Полное соответствие официальной документации Lampa (docs/ru)
  * Features:
@@ -19,6 +19,12 @@
     }
 
     window.plugin_home_categories_ready = true;
+
+    var PERF_START = Date.now();
+    var PERF = window.__LampaPluginPerf = window.__LampaPluginPerf || {};
+    var HC_PERF = PERF.home_categories = PERF.home_categories || {
+        scans: 0, total_ms: 0, max_ms: 0, mutations: 0, scheduled: 0, ready_ms: 0
+    };
 
     var STORAGE_ORDER_KEY = 'home_categories_order_v2';
     var STORAGE_HIDDEN_KEY = 'home_categories_hidden_v2';
@@ -220,12 +226,20 @@
      * ПРЯМОЙ БЕЗОПАСНЫЙ DOM-ДВИЖОК
      */
     function updateDOM() {
+        var scanStarted = Date.now();
+        HC_PERF.scans++;
         try {
             var lines = document.querySelectorAll('.items-line');
             if (!lines || !lines.length) return;
 
             var scrollBody = null;
             var visibleLines = [];
+            var order = getSavedOrder();
+            var ranks = Object.create(null);
+            for (var k = 0; k < order.length; k++) ranks[order[k]] = k;
+            function rankFor(category) {
+                return Object.prototype.hasOwnProperty.call(ranks, category) ? ranks[category] : 999;
+            }
 
             for (var i = 0; i < lines.length; i++) {
                 var line = lines[i];
@@ -252,7 +266,7 @@
 
                     visibleLines.push({
                         el: line,
-                        rank: getCategoryRank(catId)
+                        rank: rankFor(catId)
                     });
                 }
             }
@@ -270,16 +284,21 @@
                 }
             }
 
-            syncControllerItems();
+            syncControllerItems(rankFor);
         } catch (e) {
             console.error('HomeCategories: updateDOM error', e);
+        } finally {
+            var elapsed = Date.now() - scanStarted;
+            HC_PERF.total_ms += elapsed;
+            if (elapsed > HC_PERF.max_ms) HC_PERF.max_ms = elapsed;
         }
     }
 
     /**
      * Синхронизация пульта ТВ (D-pad)
      */
-    function syncControllerItems() {
+    function syncControllerItems(rankFor) {
+        rankFor = rankFor || getCategoryRank;
         try {
             var active = Lampa.Activity && Lampa.Activity.active ? Lampa.Activity.active() : null;
             if (!active || !active.activity) return;
@@ -297,7 +316,7 @@
             });
 
             visible.sort(function (a, b) {
-                return getCategoryRank(identifyCategory(a)) - getCategoryRank(identifyCategory(b));
+                return rankFor(identifyCategory(a)) - rankFor(identifyCategory(b));
             });
 
             comp.items = visible;
@@ -855,40 +874,53 @@
         document.head.appendChild(style);
     }
 
-    var intervalTimer = null;
+    // Activity events and relevant DOM additions replace unconditional 300 ms polling.
     var domObserver = null;
+    var scanTimer = null;
+    var menuCheckPending = false;
+
+    function scheduleDOMScan(checkMenu) {
+        menuCheckPending = menuCheckPending || Boolean(checkMenu);
+        if (scanTimer !== null) return;
+        HC_PERF.scheduled++;
+        scanTimer = setTimeout(function () {
+            scanTimer = null;
+            var refreshMenu = menuCheckPending;
+            menuCheckPending = false;
+            updateDOM();
+            if (refreshMenu) addSideMenuItem();
+        }, 120);
+    }
+
+    function relevantNode(node) {
+        if (!node || node.nodeType !== 1) return false;
+        if (node.matches && node.matches('.items-line, .menu__list, .menu__items, .menu')) return true;
+        return Boolean(node.querySelector &&
+            node.querySelector('.items-line, .menu__list, .menu__items'));
+    }
 
     function setupWatchers() {
-        if (intervalTimer) clearInterval(intervalTimer);
-        intervalTimer = setInterval(function () {
-            updateDOM();
-        }, 300);
-
-        if (typeof MutationObserver !== 'undefined' && document.body) {
-            if (domObserver) domObserver.disconnect();
-            var mTimer = null;
-            domObserver = new MutationObserver(function (mutations) {
-                var hasNew = false;
-                for (var i = 0; i < mutations.length; i++) {
-                    if (mutations[i].addedNodes && mutations[i].addedNodes.length) {
-                        hasNew = true;
-                        break;
+        if (typeof MutationObserver === 'undefined' || !document.body) return;
+        if (domObserver) domObserver.disconnect();
+        domObserver = new MutationObserver(function (mutations) {
+            HC_PERF.mutations += mutations.length;
+            for (var i = 0; i < mutations.length; i++) {
+                var nodes = mutations[i].addedNodes;
+                if (!nodes) continue;
+                for (var j = 0; j < nodes.length; j++) {
+                    if (relevantNode(nodes[j])) {
+                        scheduleDOMScan(true);
+                        return;
                     }
                 }
-                if (hasNew) {
-                    clearTimeout(mTimer);
-                    mTimer = setTimeout(function () {
-                        updateDOM();
-                        addSideMenuItem();
-                    }, 40);
-                }
-            });
-            domObserver.observe(document.body, { childList: true, subtree: true });
-        }
+            }
+        });
+        domObserver.observe(document.body, { childList: true, subtree: true });
     }
 
     window.plugin_home_categories_destroy = function () {
-        if (intervalTimer) clearInterval(intervalTimer);
+        if (scanTimer !== null) clearTimeout(scanTimer);
+        scanTimer = null;
         if (domObserver) domObserver.disconnect();
         var style = document.getElementById('lampa-home-categories-style');
         if (style) style.remove();
@@ -902,7 +934,8 @@
     window.HomeCategoriesPro = {
         updateDOM: updateDOM,
         setHidden: setCategoryHidden,
-        openModal: openManagerModal
+        openModal: openManagerModal,
+        performance: HC_PERF
     };
 
     function init() {
@@ -914,14 +947,14 @@
         if (Lampa.Listener) {
             Lampa.Listener.follow('activity', function (e) {
                 if (e.component === 'main') {
-                    updateDOM();
-                    addSideMenuItem();
+                    scheduleDOMScan(true);
                 }
             });
         }
 
         updateDOM();
-        console.log('HomeCategories: Plugin v2.0.0 (Official Spec) initialized!');
+        HC_PERF.ready_ms = Date.now() - PERF_START;
+        console.log('HomeCategories: Plugin v2.0.1 (event-driven) initialized!');
     }
 
     if (window.appready) {
