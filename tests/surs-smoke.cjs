@@ -7,6 +7,7 @@ const vm = require('node:vm');
 
 const mainSource = fs.readFileSync(path.join(__dirname, '..', 'surs.js'), 'utf8');
 const editorSource = fs.readFileSync(path.join(__dirname, '..', 'surs-editor.js'), 'utf8');
+const readableSource = fs.readFileSync(path.join(__dirname, '..', 'build', 'surs.source.txt'), 'utf8');
 const source = mainSource + '\n' + editorSource;
 new vm.Script(source, { filename: 'surs.js' });
 let passed = 0;
@@ -88,7 +89,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
             if (!target.attr) target.attr = (key, value) => { if (!target.attrs) target.attrs = {}; target.attrs[key] = value; return target; };
             return target;
         }
-        return { length: 1, append: () => {} };
+        return { length: 1, append: () => {}, html: () => {} };
     };
     const ctx = {
         window, Lampa, $,
@@ -121,8 +122,55 @@ test('deferred editor exposes a constructible factory', () => {
     assert.equal(typeof context.window.__SURS_EDITOR_FACTORY_397,'function');
     assert.equal(typeof context.window.__SURS_EDITOR_FACTORY_397({}),'function');
 });
+test('compact source builds with preserved UI and smaller initial script', () => {
+    assert.ok(mainSource.length < readableSource.length * 0.85);
+    assert.match(mainSource, /Версия: 3\.9\.8/);
+    assert.match(readableSource, /Версия: 3\.9\.8/);
+    assert.match(mainSource, /surs-fixed-styles/);
+    assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
+});
+test('logo requests deduplicate and limit active network calls', () => {
+    const app=boot({saved:[{id:'streaming_global',enabled:true}]});
+    app.Lampa.TMDB={api:path=>path,key:()=> 'key',image:path=>path};
+    const requests=[];
+    app.Lampa.Network={silent:(url,onSuccess,onError)=>requests.push({url,onSuccess,onError})};
+    const shelf=app.getMain()[0];
+    assert.equal(shelf.title,'Мировые стриминги');
+    const fake={addClass(){return this;},attr(){return this;},on(){return this;},find(){return {replaceWith(){}};}};
+    for(let i=0;i<6;i++) shelf.results[i].params.emit.onCreate.call({html:fake});
+    shelf.results[0].params.emit.onCreate.call({html:fake});
+    assert.equal(requests.length,3);
+    assert.equal(app.window.SURS_PERFORMANCE.logos.deduplicated,1);
+    assert.equal(app.window.SURS_PERFORMANCE.logos.max_active,3);
+    requests[0].onSuccess({logo_path:'/logo.png'});
+    assert.equal(requests.length,4);
+    requests[1].onError();
+    assert.equal(requests.length,5);
+    assert.equal(app.window.SURS_PERFORMANCE.logos.failures,1);
+    assert.equal(app.window.SURS_PERFORMANCE.logos.active,3);
+});
+test('performance diagnostics track startup and progressive row rendering', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true}]});
+    assert.equal(typeof app.window.SURS_PERFORMANCE.ready_at,'number');
+    assert.equal(typeof app.window.SURS_PERFORMANCE.init_ms,'number');
+    app.Lampa.Manifest={app_digital:300};
+    app.Lampa.Activity.active=()=>({component:'main',source:'SURS',activity:{component:{emit(){}}}});
+    let done=0;
+    app.Lampa.Api.sources.SURS.main({source:'SURS'},()=>{done++;},()=>{});
+    let guard=0;
+    while(true){
+        const task=app.timers.find(t=>t.ms===0&&!t.executed);
+        if(!task)break;
+        task.executed=true;task.fn();
+        if(++guard>40)throw Error('Timer runaway');
+    }
+    const stats=app.window.SURS_PERFORMANCE.screens.MAIN;
+    assert.equal(stats.render_batches,1);
+    assert.equal(stats.rendered_rows,1);
+    assert.equal(done,1);
+});
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.7/);
+    assert.match(source, /Версия: 3\.9\.8/);
 });
 test('factory default keeps 9 visible shelves and hides new premieres on home', () => {
     const app = boot();
@@ -205,7 +253,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.7');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.8');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 23);
     assert.equal(defaults.filter(x => x.enabled).length, 9);
@@ -380,7 +428,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.7');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.8');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
