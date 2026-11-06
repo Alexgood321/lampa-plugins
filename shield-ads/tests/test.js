@@ -45,7 +45,7 @@ function environment(withBlob) {
   };
   context.window = context;
   vm.runInNewContext(source, context, {filename:'lampa-shield-ads.js'});
-  const make = (method, url) => { const x = new context.XMLHttpRequest(); let seen = 0; x.onload = () => { seen++; }; x.open(method, url, true); x.send(); return {xhr:x, seen}; };
+  const make = (method, url) => { const x = new context.XMLHttpRequest(); let seen = 0; x.onload = () => { seen++; }; x.open(method, url, true); x.send(); return {xhr:x, get seen() { return seen; }}; };
   return {
     context, calls, hooks, storage, make,
     flush: () => { while (timers.length) { const next = timers.shift(); if (next) next(); } }
