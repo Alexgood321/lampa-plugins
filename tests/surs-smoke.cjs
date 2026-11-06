@@ -861,7 +861,7 @@ test('TV D-pad uses visible filtered rows and fixed accessible focus', () => {
 });
 test('existing factory configuration and nav buttons are still present', () => {
     const app = boot();
-    assert.equal(app.rows().length,23);
+    assert.equal(app.rows().length,24);
     assert.equal(app.rows().filter(x=>x.enabled).length,10);
     assert.equal(app.settings.filter(x=>x.param.name && x.param.name.startsWith('surs_nav_visible_')).length,7);
 });
@@ -871,8 +871,8 @@ test('three independent screen profiles have the expected factory defaults', () 
     const main=manager.getSavedShelves();
     const world=manager.getSavedShelves('NEW');
     const russia=manager.getSavedShelves('RUS');
-    assert.equal(main.length,23);
-    assert.equal(main.filter(x=>x.enabled).length,9);
+    assert.equal(main.length,24);
+    assert.equal(main.filter(x=>x.enabled).length,10);
     assert.equal(main.find(x=>x.id==='rus_movies').enabled,false);
     assert.equal(main.find(x=>x.id==='rus_tv').enabled,false);
     assert.equal(main.find(x=>x.id==='new_movies').enabled,false);
