@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
  * Версия: 3.9.6 (Progressive Loading)
- * Релиз: прогрессивная загрузка полок Lampa 3 и отложенная загрузка CSS редактора.
+ * Релиз: прогрессивная загрузка Lampa 3, надёжное сохранение полок, стабильная интеграция Trakt и отложенные стили редактора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -65,6 +65,7 @@
     // ==========================================
     window.SURS_EXTERNAL_SHELVES = window.SURS_EXTERNAL_SHELVES || {};
     var STORAGE_DISCOVERED_KEY = 'surs_discovered_shelves_v2';
+    var discoveredLoadedOnce = false;
     window.SURS_PERFORMANCE = window.SURS_PERFORMANCE || { script_evaluated_at: Date.now(), screens: {} };
     window.SURS_SHELF_STATUS = window.SURS_SHELF_STATUS || {};
     function recordShelfStatus(id, state) {
@@ -81,6 +82,8 @@
 
     function registerDiscoveredShelf(def) {
         if (!def || !def.id) return false;
+        // Restore old plugin entries before serializing new entries.
+        loadDiscoveredFromStorage();
         // A metadata refresh must preserve the existing live callback.
         var previous = window.SURS_EXTERNAL_SHELVES[def.id] || {};
         window.SURS_EXTERNAL_SHELVES[def.id] = {
@@ -118,6 +121,7 @@
     }
 
     function loadDiscoveredFromStorage() {
+        if (discoveredLoadedOnce) return;
         try {
             if (typeof Lampa === 'undefined' || !Lampa.Storage) return;
             var saved = Lampa.Storage.get(STORAGE_DISCOVERED_KEY, []);
@@ -128,6 +132,7 @@
                     }
                 });
             }
+            discoveredLoadedOnce = true;
         } catch(e) {}
     }
 
@@ -1881,7 +1886,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         // removeItem могли конфликтовать с кэшем Lampa.Storage.
         var name = normalizeShelfScope(scope);
         var cleanDefaults = getDefaultSectionShelves(name);
-        saveShelves(cleanDefaults, name);
+        if (!saveShelves(cleanDefaults, name)) return null;
         if (name === 'MAIN') Lampa.Storage.set('surs_plugins_default_off_v2', 'true');
         return cleanDefaults;
     }
@@ -1934,8 +1939,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         });
         if (!originalFactory && !lastFactory) return saved;
         var defaults = getDefaultShelvesList();
-        saveShelves(defaults);
-        return defaults;
+        return saveShelves(defaults) ? defaults : saved;
     }
 
     function getSavedShelves(scope) {
@@ -1968,9 +1972,27 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     function saveShelves(list, scope) {
         var profile = SURS_SECTION_PROFILES[normalizeShelfScope(scope)];
+        var key = profile ? profile.key : STORAGE_SHELVES_KEY;
         try {
-            Lampa.Storage.set(profile ? profile.key : STORAGE_SHELVES_KEY, list);
-        } catch(e) {}
+            if (!Array.isArray(list)) throw new Error('Invalid shelf list');
+            var saveError = null;
+            // Lampa.Storage.set(name, value, nolisten, callerror) reports quota
+            // errors through the fourth argument; the return value is void.
+            Lampa.Storage.set(key, list, false, function(err) {
+                saveError = err || new Error('Storage error');
+            });
+            if (saveError) throw saveError;
+            var stored = Lampa.Storage.get(key, null);
+            if (JSON.stringify(stored) !== JSON.stringify(list))
+                throw new Error('Storage read-back mismatch');
+            return true;
+        } catch(err) {
+            console.error('[SURS] Ошибка сохранения полок:', key, err);
+            if (Lampa.Noty && typeof Lampa.Noty.show === 'function') {
+                Lampa.Noty.show('Не удалось сохранить полки. Изменения остались в редакторе.');
+            }
+            return false;
+        }
     }
 
     // ==========================================
@@ -2837,8 +2859,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     // 1. Проверяем перехваченную ContentRows строку из плагина Trakt
                     var crShelf = window.SURS_EXTERNAL_SHELVES ? (window.SURS_EXTERNAL_SHELVES['ext_' + targetRowName] || window.SURS_EXTERNAL_SHELVES[shelfId]) : null;
                     if (crShelf && typeof crShelf.call === 'function') {
-                        var resFunc = crShelf.call(params || {}, 'main');
-                        if (resFunc) {
+                        var nativeRow = crShelf.raw && typeof crShelf.raw.call === 'function' ? crShelf.raw : crShelf;
+                        var resFunc = crShelf.call.call(nativeRow, params || {}, 'main');
+                        if (resFunc != null) {
                             resolveExternalPayload(resFunc, finishTrakt);
                             return;
                         }
@@ -2848,28 +2871,18 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     if (typeof window !== 'undefined' && window.TraktTV && window.TraktTV.api) {
                         var api = window.TraktTV.api;
                         if (typeof api[apiMethod] === 'function') {
-                            api[apiMethod]({ limit: 20, page: 1 }).then(function(data) {
-                                finishTrakt(data);
-                            }).catch(function() {
-                                finishTrakt(null);
-                            });
+                            var response = api[apiMethod]({ limit: 20, page: 1 });
+                            if (response && typeof response.then === 'function') {
+                                response.then(finishTrakt, function() { finishTrakt(null); });
+                            } else {
+                                finishTrakt(response);
+                            }
                             return;
                         }
                     }
 
-                    // 3. Проверяем Lampa.ContentRows напрямую
-                    if (typeof Lampa !== 'undefined' && Lampa.ContentRows && typeof Lampa.ContentRows.call === 'function') {
-                        var crItems = [];
-                        Lampa.ContentRows.call('main', params || {}, crItems);
-                        for (var i = 0; i < crItems.length; i++) {
-                            var fnStr = crItems[i].toString();
-                            if (fnStr.indexOf(targetRowName) >= 0 || fnStr.indexOf(apiMethod) >= 0) {
-                                resolveExternalPayload(crItems[i], finishTrakt);
-                                return;
-                            }
-                        }
-                    }
-
+                    // Native ContentRows has no public enumeration API.
+                    // Do not run other plugin callbacks or inspect toString().
                     finishTrakt(null);
                 } catch(e) {
                     console.error('[SURS Trakt] Ошибка загрузчика Trakt:', e);
@@ -2973,7 +2986,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         }
         function applyAndClose() {
             if (hasUnsavedChanges()) {
-                saveShelves(shelves, editorScope);
+                if (!saveShelves(shelves, editorScope)) return;
                 if (needsPluginMigration && editorScope === 'MAIN') Lampa.Storage.set(migrationKey, 'true');
             }
             closeModalSafely(hasUnsavedChanges());
@@ -3033,7 +3046,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 ],
                 onSelect: function(choice) {
                     if (choice.action === 'save') {
-                        saveShelves(shelves, editorScope);
+                        if (!saveShelves(shelves, editorScope)) {
+                            Lampa.Controller.toggle('surs_shelf_manager');
+                            return;
+                        }
                         if (needsPluginMigration && editorScope === 'MAIN')
                             Lampa.Storage.set(migrationKey, 'true');
                         activate();
@@ -3632,7 +3648,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     onSelect: function(a) {
                         if (a.action === 'confirm') {
                             // Сброс выполняется сразу после подтверждения, без второго «Применить».
-                            shelves = executeBulletproofReset(editorScope);
+                            var resetResult = executeBulletproofReset(editorScope);
+                            if (!resetResult) {
+                                Lampa.Controller.toggle('surs_shelf_manager');
+                                return;
+                            }
+                            shelves = resetResult;
                             activeCategory = 'all';
                             searchQuery = '';
                             closeModalSafely(true);
@@ -4370,9 +4391,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         ],
                         onSelect: function(choice) {
                             if (choice.action === 'confirm') {
-                                executeBulletproofReset();
-                                Lampa.Noty.show('Восстановлены 9 активных полок из 23');
-                                refreshSursHome();
+                                if (executeBulletproofReset()) {
+                                    Lampa.Noty.show('Восстановлены 9 активных полок из 23');
+                                    refreshSursHome();
+                                }
                             }
                         },
                         onBack: function() { Lampa.Controller.toggle('settings'); }
@@ -4456,7 +4478,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         resetDefaults: function(scope) {
             var name = normalizeShelfScope(scope);
             var defaults = executeBulletproofReset(name);
-            refreshSursHome(name);
+            if (defaults) refreshSursHome(name);
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
