@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.4 (ContentRows Lifecycle)
- * Релиз: стабильная регистрация сторонних полок, сохранение загрузчиков и порядка, без повторного запуска всех ContentRows при открытии главной.
+ * Версия: 3.9.5 (Lampa 3 Compatibility)
+ * Релиз: корректные аргументы Card Maker, однократное завершение загрузчиков, восстановление после сбоя инициализации.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1993,15 +1993,26 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     // ContentRows.call может вернуть функцию, объект или массив функций/объектов.
     function resolveExternalPayload(value, callback) {
+        var delivered = false;
+        function finish(data) {
+            if (delivered) return;
+            delivered = true;
+            callback(data);
+        }
         if (value && typeof value.then === 'function') {
-            value.then(function(data) { resolveExternalPayload(data, callback); }, function() {
-                callback({ results: [] });
-            });
+            try {
+                value.then(function(data) { resolveExternalPayload(data, finish); }, function() {
+                    finish({ results: [] });
+                });
+            } catch(e) {
+                console.warn('[SURS] Ошибка Promise сторонней полки:', e);
+                finish({ results: [] });
+            }
             return;
         }
         if (typeof value === 'function') {
-            try { value(function(data) { resolveExternalPayload(data, callback); }); }
-            catch(e) { console.warn('[SURS] Ошибка функции ContentRow:', e); callback({ results: [] }); }
+            try { value(function(data) { resolveExternalPayload(data, finish); }); }
+            catch(e) { console.warn('[SURS] Ошибка функции ContentRow:', e); finish({ results: [] }); }
             return;
         }
         if (Array.isArray(value)) {
@@ -2009,10 +2020,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 return typeof entry === 'function' || (entry && Array.isArray(entry.results));
             });
             if (!asRows) {
-                callback({ results: value.filter(function(card) { return card && typeof card === 'object'; }) });
+                finish({ results: value.filter(function(card) { return card && typeof card === 'object'; }) });
                 return;
             }
-            if (!value.length) { callback({ results: [] }); return; }
+            if (!value.length) { finish({ results: [] }); return; }
             var rows = new Array(value.length);
             var pending = value.length;
             value.forEach(function(entry, index) {
@@ -2027,14 +2038,14 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                             if (!merged.title && part.title) merged.title = part.title;
                             merged.results = merged.results.concat(part.results);
                         });
-                        callback(merged);
+                        finish(merged);
                     }
                 });
             });
             return;
         }
-        if (value && Array.isArray(value.results)) { callback(value); return; }
-        callback({ results: [] });
+        if (value && Array.isArray(value.results)) { finish(value); return; }
+        finish({ results: [] });
     }
 
     function shelfTimeout(id) {
@@ -2084,7 +2095,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         source: 'custom',
                         title: b.title,
                         params: {
-                            createInstance: function() { return createCardMaker(this, 'Card'); },
+                            createInstance: function(item_data) { return createCardMaker(item_data, 'Card'); },
                             emit: {
                                 onCreate: function() {
                                     var $h = $(this.html);
@@ -2155,7 +2166,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         source: 'custom',
                         title: s.title,
                         params: {
-                            createInstance: function() { return createCardMaker(this, 'Card'); },
+                            createInstance: function(item_data) { return createCardMaker(item_data, 'Card'); },
                             emit: {
                                 onCreate: function() {
                                     var $h = $(this.html);
@@ -2197,7 +2208,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         source: 'custom',
                         title: s.title,
                         params: {
-                            createInstance: function() { return createCardMaker(this, 'Card'); },
+                            createInstance: function(item_data) { return createCardMaker(item_data, 'Card'); },
                             emit: {
                                 onCreate: function() {
                                     var $h = $(this.html);
@@ -2240,7 +2251,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         source: 'custom',
                         title: genreTitle,
                         params: {
-                            createInstance: function() { return createCardMaker(this, 'Card'); },
+                            createInstance: function(item_data) { return createCardMaker(item_data, 'Card'); },
                             emit: {
                                 onCreate: function() {
                                     var $h = $(this.html);
@@ -2876,7 +2887,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     if (complete) return;
                     complete = true;
                     clearTimeout(timer);
-                    if (!payload.title) payload.title = extShelf.title || shelfId;
+                    // A plugin may return null, a malformed value, or a frozen row.
+                    if (!payload || !Array.isArray(payload.results)) {
+                        payload = { results: [], title: extShelf.title || shelfId };
+                    } else if (!payload.title) {
+                        payload = Object.assign({}, payload, { title: extShelf.title || shelfId });
+                    }
                     callback(payload);
                 }
 
@@ -3097,7 +3113,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var header = $(`
                 <div class="surs-sm-header">
                     <div class="surs-sm-title-group">
-                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.4</span></div>
+                        <div class="surs-sm-title">Полки: ${shelfScopeTitle(editorScope)} <span class="surs-sm-version">v3.9.5</span></div>
                         <div class="surs-sm-counter">${enabledCount} / ${shelves.length}</div>
                     </div>
                     <div class="surs-sm-legend">Пульт: ↑/↓ порядок · OK выбор · ≡ действия</div>
@@ -4125,7 +4141,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // 7. РЕГИСТРАЦИЯ И ЗАПУСК ПЛАГИНА
     // ==========================================
     function startPlugin() {
-        if (window.plugin_surs_fixed_ready) return;
+        if (window.plugin_surs_fixed_ready || window.plugin_surs_fixed_starting) return;
         if (typeof Lampa === 'undefined' || !Lampa.Api || !Lampa.Api.sources || !Lampa.Api.sources.tmdb) {
             if (window.surs_retry_count++ < 10) {
                 setTimeout(startPlugin, 1000);
@@ -4134,8 +4150,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             }
             return;
         }
-        window.plugin_surs_fixed_ready = true;
-        addPluginStyles();
+        window.plugin_surs_fixed_starting = true;
+        try {
+            addPluginStyles();
 
         var TMDBMain = createSourceTMDB(Lampa.Api.sources.tmdb, 'MAIN');
         var TMDBNew = createSourceTMDB(Lampa.Api.sources.tmdb, 'NEW');
@@ -4310,7 +4327,20 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             if (e.type === 'changed') setTimeout(setupMainMenuIntegration, 300);
         });
 
-        console.log('SURS Pro v3.9.4 (Fixed & Configurable) успешно инициализирован.');
+            // Announce readiness only after all registrations and listeners succeed.
+            window.plugin_surs_fixed_ready = true;
+            window.surs_retry_count = 0;
+            console.log('SURS Pro v3.9.5 (Fixed & Configurable) успешно инициализирован.');
+        } catch(err) {
+            console.error('[SURS] Ошибка запуска, повторная попытка:', err);
+            if (window.surs_retry_count++ < 10) {
+                setTimeout(startPlugin, 1000);
+            } else {
+                console.error('[SURS] Не удалось завершить инициализацию');
+            }
+        } finally {
+            window.plugin_surs_fixed_starting = false;
+        }
     }
 
     // Экспорт для быстрого вызова из консоли или других плагинов
@@ -4329,15 +4359,18 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.4'
+        version: '3.9.5'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
-    if (window.appready || (Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active())) {
+    if (window.appready || (typeof Lampa !== 'undefined' && Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active())) {
         startPlugin();
-    } else {
+    } else if (typeof Lampa !== 'undefined' && Lampa.Listener && typeof Lampa.Listener.follow === 'function') {
         Lampa.Listener.follow('app', function (e) {
             if (e.type === 'ready') startPlugin();
         });
+    } else {
+        // The Lampa global may not exist yet when an extension script is evaluated.
+        startPlugin();
     }
 })();
