@@ -124,8 +124,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.11/);
-    assert.match(readableSource, /Версия: 3\.9\.11/);
+    assert.match(mainSource, /Версия: 3\.9\.12/);
+    assert.match(readableSource, /Версия: 3\.9\.12/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -203,14 +203,14 @@ test('US premiere loader enforces country, genre, rating, language and mixed dat
         id,name:'Series',first_air_date:date,poster_path:'/b',overview:'Story',
         vote_average:8.2,vote_count:900,original_language:'en',genre_ids:[18],origin_country:['US']
     },rest);
-    requests[0].success({results:[film(1,before),film(2,now,{genre_ids:[16]}),
+    requests[0].success({total_pages:2,results:[film(1,before),film(2,now,{genre_ids:[16]}),
         film(3,now,{vote_average:7.9}),film(4,now,{vote_count:499}),
         film(5,now,{poster_path:null}),film(6,now,{original_language:'fr'})]});
-    requests[1].success({results:[film(1,before),film(8,now)]});
-    requests[2].success({results:[series(9,now),series(10,now,{genre_ids:[16]}),
+    requests[1].success({total_pages:2,results:[film(1,before),film(8,now)]});
+    requests[2].success({total_pages:2,results:[series(9,now),series(10,now,{genre_ids:[16]}),
         series(11,now,{origin_country:['GB']}),series(12,now,{genre_ids:[10764]}),
         series(13,now,{vote_count:299})]});
-    requests[3].success({results:[series(9,now)]});
+    requests[3].success({total_pages:2,results:[series(9,now)]});
     assert.equal(returned.length,1);
     assert.deepEqual(Array.from(returned[0].results,x=>x.id),[8,9,1]);
     assert.deepEqual(Array.from(returned[0].results,x=>x.type),['movie','tv','movie']);
@@ -223,13 +223,13 @@ test('US premiere loader keeps partial results when requests fail', () => {
     let delivered=0,result=null;
     app.Lampa.Api.sources.SURS.main({},x=>{delivered++;result=x},()=>{delivered++});
     const now=new Date().toISOString().slice(0,10);
-    requests[0].success({results:[{id:12,release_date:now,title:'Film',poster_path:'/a',
+    requests[0].success({total_pages:2,results:[{id:12,release_date:now,title:'Film',poster_path:'/a',
         overview:'Story',vote_average:8.2,vote_count:1400,original_language:'en',genre_ids:[18]}]});
     requests[0].success({results:[{id:22}]});
     for(let i=1;i<4;i++)requests[i].error();
     assert.equal(delivered,1);
     assert.equal(result[0].results.length,1);
-    app.timers.filter(x=>x.ms===4300).forEach(x=>x.fn());
+    app.timers.filter(x=>x.ms===7200).forEach(x=>x.fn());
     assert.equal(delivered,1);
 });
 test('US 8+ line uses native Lampa More route and pagination metadata', () => {
@@ -328,10 +328,10 @@ test('US 8+ Bayesian score rejects limited-vote 8.0 ratings', () => {
     let rows;
     app.Lampa.Api.sources.SURS.main({},value=>rows=value,()=>{throw Error('Empty')});
     assert.equal(requests.length,4);
-    requests[0].ok({results:[film(1,8,510),film(2,8.0,3000),film(3,8.5,500)]});
-    requests[1].ok({results:[film(4,9.4,499)]});
-    requests[2].ok({results:[series(5,8.0,310),series(6,8.3,900),series(7,8.7,300)]});
-    requests[3].ok({results:[series(8,8.9,299)]});
+    requests[0].ok({total_pages:2,results:[film(1,8,510),film(2,8.0,3000),film(3,8.5,500)]});
+    requests[1].ok({total_pages:2,results:[film(4,9.4,499)]});
+    requests[2].ok({total_pages:2,results:[series(5,8.0,310),series(6,8.3,900),series(7,8.7,300)]});
+    requests[3].ok({total_pages:2,results:[series(8,8.9,299)]});
     assert.deepEqual(Array.from(rows[0].results,item=>item.id),[6,2,7,3]);
     assert.ok(rows[0].results.every(item=>item.vote_average>=8 && item.surs_weighted_score>=7.5));
     const boundary=rows[0].results.find(item=>item.id===3);
@@ -362,8 +362,117 @@ test('US 8+ full catalog applies matching quality gates', () => {
     assert.ok(requests.some(url=>url.includes('vote_count.gte=500')));
     assert.ok(requests.some(url=>url.includes('vote_count.gte=300')));
 });
+test('US 8+ adaptive preview halts on empty TMDB pages even if total_pages claims more', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    const requests=[];
+    app.Lampa.Api.partNext=(parts,limit,loaded)=>parts[0](value=>loaded([value]));
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{requests.push(url);ok({results:[],total_pages:10});};
+    let rows;
+    app.Lampa.Api.sources.SURS.main({},value=>rows=value,()=>{throw Error('Empty')});
+    assert.equal(requests.length,4);
+    assert.equal(rows[0].results.length,0);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.pages_requested,4);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.pages_completed,4);
+});
+test('US 8+ adaptive preview searches beyond two pages to meet its quality target', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    app.Lampa.Api.partNext=(parts,limit,loaded)=>parts[0](value=>loaded([value]));
+    const calls=[], date=new Date().toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{
+        calls.push(url);
+        const movie=url.indexOf('discover/movie?')===0;
+        const page=Number((url.split('&page=')[1]||'1').split('&')[0]);
+        const results=Array.from({length:20},(_,i)=>{
+            const id=(movie?1000:2000)+page*20+i;
+            return Object.assign({
+                id,poster_path:'/poster',overview:'Story',original_language:'en',
+                genre_ids:[18],vote_average:i%5===0?8.6:7.9,vote_count:1200
+            },movie?{title:'Film',release_date:date}:
+                {name:'Series',first_air_date:date,origin_country:['US']});
+        });
+        ok({results,total_pages:10});
+    };
+    let rows;
+    app.Lampa.Api.sources.SURS.main({},value=>rows=value,()=>{throw Error('Empty')});
+    assert.equal(calls.length,12);
+    assert.equal(rows[0].results.length,48);
+    assert.ok(calls.some(url=>url.includes('page=6')));
+    assert.ok(rows[0].results.every(x=>x.vote_average>=8&&x.surs_weighted_score>=7.5));
+    assert.equal(new Set(rows[0].results.map(x=>x.type+':'+x.id)).size,48);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.pages_requested,12);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.matched,48);
+});
+test('US 8+ adaptive preview stops at ten pages per type when there are few matches', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    app.Lampa.Api.partNext=(parts,limit,loaded)=>parts[0](value=>loaded([value]));
+    const urls=[], date=new Date().toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{
+        urls.push(url);
+        const movie=url.indexOf('discover/movie?')===0;
+        const page=Number((url.split('&page=')[1]||'1').split('&')[0]);
+        const results=Array.from({length:20},(_,i)=>({
+            id:(movie?1000:2000)+page*20+i,
+            title:movie?'Film':undefined,name:movie?undefined:'Series',
+            release_date:movie?date:undefined,first_air_date:movie?undefined:date,
+            origin_country:['US'],poster_path:'/p',overview:'Story',
+            original_language:'en',genre_ids:[18],
+            vote_average:i===0?8.8:7.9,vote_count:1200
+        }));
+        ok({results,total_pages:20});
+    };
+    let rows;
+    app.Lampa.Api.sources.SURS.main({},x=>rows=x,()=>{throw Error('Empty')});
+    assert.equal(urls.length,20);
+    assert.equal(rows[0].results.length,20);
+    assert.equal(Math.max(...urls.map(u=>Number((u.split('&page=')[1]||'0').split('&')[0]))),10);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.pages_requested,20);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.timeout,false);
+});
+test('US 8+ preview ends on target without scanning unnecessary pages', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    app.Lampa.Api.partNext=(parts,limit,loaded)=>parts[0](value=>loaded([value]));
+    const urls=[], date=new Date().toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{
+        urls.push(url);
+        const movie=url.indexOf('discover/movie?')===0;
+        const page=Number((url.split('&page=')[1]||'1').split('&')[0]);
+        const results=Array.from({length:20},(_,i)=>({
+            id:(movie?1000:2000)+page*20+i,
+            title:movie?'Film':undefined,name:movie?undefined:'Series',
+            release_date:movie?date:undefined,first_air_date:movie?undefined:date,
+            origin_country:['US'],poster_path:'/p',overview:'Story',
+            original_language:'en',genre_ids:[18],vote_average:8.6,vote_count:1200
+        }));
+        ok({results,total_pages:10});
+    };
+    let rows;
+    app.Lampa.Api.sources.SURS.main({},x=>rows=x,()=>{throw Error('Empty')});
+    assert.equal(urls.length,4);
+    assert.equal(rows[0].results.length,60);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.matched,80);
+});
+test('US 8+ preview timeout returns partial results and ignores late callbacks', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    app.Lampa.Api.partNext=(parts,limit,loaded)=>parts[0](value=>loaded([value]));
+    const requests=[];
+    app.Lampa.Api.sources.SURS.get=(url,p,ok,error)=>requests.push({url,ok,error});
+    let completed=0,rows;
+    app.Lampa.Api.sources.SURS.main({},x=>{rows=x;completed++},()=>completed++);
+    assert.equal(requests.length,4);
+    const date=new Date().toISOString().slice(0,10);
+    requests[0].ok({results:[{id:93,title:'Film',release_date:date,
+        poster_path:'/p',overview:'Story',genre_ids:[18],
+        original_language:'en',vote_average:8.5,vote_count:1500}],total_pages:10});
+    app.timers.filter(x=>x.ms===7200).forEach(x=>x.fn());
+    assert.equal(completed,1);
+    assert.equal(rows[0].results.length,1);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.timeout,true);
+    for(let i=1;i<4;i++)requests[i].ok({results:[],total_pages:10});
+    assert.equal(completed,1);
+    assert.equal(requests.length,4);
+});
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.11/);
+    assert.match(source, /Версия: 3\.9\.12/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -446,7 +555,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.11');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.12');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 24);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -621,7 +730,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.11');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.12');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
