@@ -290,7 +290,8 @@
                     if (record && record.state === 'completed')
                         return record.basis === 'inferred' ? 'inferred' : 'done';
                     if (record && record.state === 'reset') return 'none';
-                    if (record && record.state === 'in_progress') return 'started';
+                    if (record && record.state === 'in_progress')
+                        return effectivePercent(row) >= threshold ? 'done' : 'started';
                 }
             }
             if (native >= threshold) return 'done';
