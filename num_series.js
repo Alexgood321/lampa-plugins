@@ -289,7 +289,10 @@
             ensureCloudListener();
             if (event.type === 'list_open') {
                 currentCard=event.params && (event.params.movie || event.params.card) ||
-                    event.movie || event.card || selectedCard(null);
+                    event.movie || event.card || (
+                        Lampa.Activity && typeof Lampa.Activity.active==='function' &&
+                        (Lampa.Activity.active() || {}).movie
+                    ) || null;
                 currentTorrentItems = event.items || [];
                 currentRows = [];
                 currentContainer = null;
@@ -516,7 +519,7 @@
             targets.forEach(function (row) {
                 var timeline = row.element.timeline;
                 backup.push({ row: row, percent: timeline.percent, time: timeline.time,
-                    duration: timeline.duration });
+                    duration: timeline.duration, cloudWatched:effectivePercent(row)>=threshold });
                 timeline.percent = watched ? 100 : 0;
                 timeline.time = watched ? (Number(timeline.duration) || 0) : 0;
                 if (Lampa.Timeline && Lampa.Timeline.update && timeline.hash) Lampa.Timeline.update(timeline);
@@ -551,7 +554,7 @@
                     Lampa.Torserver.viewedSet(row.element.torrent_hash, row.element.id, Number(entry.time) || 0);
                 }
                 setPercent(row, timeline.percent);
-                reportMark(row,(Number(entry.percent)||0)>=threshold,marked);
+                reportMark(row,entry.cloudWatched===true,marked);
             });
             scheduleRefresh();
             if (Lampa.Noty) Lampa.Noty.show('Предыдущий прогресс восстановлен');
