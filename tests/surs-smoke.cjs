@@ -124,8 +124,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.12/);
-    assert.match(readableSource, /Версия: 3\.9\.12/);
+    assert.match(mainSource, /Версия: 3\.9\.13/);
+    assert.match(readableSource, /Версия: 3\.9\.13/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -191,7 +191,7 @@ test('US premiere loader enforces country, genre, rating, language and mixed dat
     assert.ok(requests.every(r=>r.query.includes('with_origin_country=US') &&
         r.query.includes('with_original_language=en') &&
         r.query.includes('vote_average.gte=8') &&
-        r.query.includes('vote_count.gte=' + (r.query.indexOf('discover/movie?')===0 ? 500 : 300))));
+        r.query.includes('vote_count.gte=' + (r.query.indexOf('discover/movie?')===0 ? 300 : 150))));
     const now=new Date().toISOString().slice(0,10);
     const older=new Date();older.setMonth(older.getMonth()-3);
     const before=older.toISOString().slice(0,10);
@@ -204,12 +204,12 @@ test('US premiere loader enforces country, genre, rating, language and mixed dat
         vote_average:8.2,vote_count:900,original_language:'en',genre_ids:[18],origin_country:['US']
     },rest);
     requests[0].success({total_pages:2,results:[film(1,before),film(2,now,{genre_ids:[16]}),
-        film(3,now,{vote_average:7.9}),film(4,now,{vote_count:499}),
+        film(3,now,{vote_average:7.9}),film(4,now,{vote_count:299}),
         film(5,now,{poster_path:null}),film(6,now,{original_language:'fr'})]});
     requests[1].success({total_pages:2,results:[film(1,before),film(8,now)]});
     requests[2].success({total_pages:2,results:[series(9,now),series(10,now,{genre_ids:[16]}),
         series(11,now,{origin_country:['GB']}),series(12,now,{genre_ids:[10764]}),
-        series(13,now,{vote_count:299})]});
+        series(13,now,{vote_count:149})]});
     requests[3].success({total_pages:2,results:[series(9,now)]});
     assert.equal(returned.length,1);
     assert.deepEqual(Array.from(returned[0].results,x=>x.id),[8,9,1]);
@@ -329,14 +329,14 @@ test('US 8+ Bayesian score rejects limited-vote 8.0 ratings', () => {
     app.Lampa.Api.sources.SURS.main({},value=>rows=value,()=>{throw Error('Empty')});
     assert.equal(requests.length,4);
     requests[0].ok({total_pages:2,results:[film(1,8,510),film(2,8.0,3000),film(3,8.5,500)]});
-    requests[1].ok({total_pages:2,results:[film(4,9.4,499)]});
+    requests[1].ok({total_pages:2,results:[film(4,9.4,299)]});
     requests[2].ok({total_pages:2,results:[series(5,8.0,310),series(6,8.3,900),series(7,8.7,300)]});
-    requests[3].ok({total_pages:2,results:[series(8,8.9,299)]});
-    assert.deepEqual(Array.from(rows[0].results,item=>item.id),[6,2,7,3]);
+    requests[3].ok({total_pages:2,results:[series(8,8.9,149)]});
+    assert.deepEqual(Array.from(rows[0].results,item=>item.id),[6,7,2,3,5,1]);
     assert.ok(rows[0].results.every(item=>item.vote_average>=8 && item.surs_weighted_score>=7.5));
     const boundary=rows[0].results.find(item=>item.id===3);
     assert.equal(boundary.vote_average,8.5);
-    assert.equal(boundary.surs_weighted_score,7.5);
+    assert.ok(Math.abs(boundary.surs_weighted_score-7.833333333333333)<1e-9);
 });
 test('US 8+ full catalog applies matching quality gates', () => {
     const app=boot();
@@ -356,11 +356,11 @@ test('US 8+ full catalog applies matching quality gates', () => {
     let result;
     app.Lampa.Api.sources.SURS.list({url:'surs_us_new_8',page:1},
         output=>result=output,()=>{throw Error('Empty catalog')});
-    assert.equal(result.results.length,1);
-    assert.equal(result.results[0].id,51);
-    assert.equal(result.results[0].surs_weighted_score,7.5);
-    assert.ok(requests.some(url=>url.includes('vote_count.gte=500')));
+    assert.equal(result.results.length,2);
+    assert.deepEqual(Array.from(result.results,x=>x.id),[51,52]);
+    assert.ok(result.results.every(x=>x.surs_weighted_score>=7.5));
     assert.ok(requests.some(url=>url.includes('vote_count.gte=300')));
+    assert.ok(requests.some(url=>url.includes('vote_count.gte=150')));
 });
 test('US 8+ adaptive preview halts on empty TMDB pages even if total_pages claims more', () => {
     const app=boot({saved:[{id:'us_new_8',enabled:true}]});
@@ -471,8 +471,67 @@ test('US 8+ preview timeout returns partial results and ignores late callbacks',
     assert.equal(completed,1);
     assert.equal(requests.length,4);
 });
+test('US 8+ balanced filter includes rated titles at new thresholds but still rejects weak evidence', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    const date=new Date().toISOString().slice(0,10);
+    const movie=(id,rating,votes)=>({
+        id,title:'Movie',release_date:date,poster_path:'/a',overview:'Film',
+        genre_ids:[18],original_language:'en',vote_average:rating,vote_count:votes
+    });
+    const tv=(id,rating,votes)=>({
+        id,name:'Series',first_air_date:date,poster_path:'/a',overview:'TV',
+        genre_ids:[18],origin_country:['US'],original_language:'en',
+        vote_average:rating,vote_count:votes
+    });
+    const urls=[];
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{
+        urls.push(url);
+        const isMovie=url.indexOf('discover/movie?')===0;
+        ok({total_pages:2,results:isMovie ? [
+            movie(10,8,300), movie(11,8,399), movie(12,8,400),
+            movie(13,8.5,300), movie(14,8.9,299),movie(15,7.9,700)
+        ] : [
+            tv(20,8,150),tv(21,8,199),tv(22,8,200),
+            tv(23,8.5,150),tv(24,8.9,149),tv(25,7.9,300)
+        ]});
+    };
+    const results=app.getMain()[0].results;
+    assert.deepEqual(Array.from(results,x=>x.id).sort((a,b)=>a-b),[12,13,22,23]);
+    assert.ok(results.every(x=>x.vote_average>=8 && x.surs_weighted_score>=7.5));
+    assert.ok(urls.some(x=>x.includes('vote_count.gte=300')));
+    assert.ok(urls.some(x=>x.includes('vote_count.gte=150')));
+});
+test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request failures', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    const calls=[];
+    const date=new Date().toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{
+        calls.push(url);
+        const isMovie=url.indexOf('discover/movie?')===0;
+        const row=isMovie?{id:33,title:'Movie',release_date:date,poster_path:'/p',
+            overview:'Film',vote_average:8.4,vote_count:550,genre_ids:[18],
+            original_language:'en'}:
+            {id:44,name:'Series',first_air_date:date,poster_path:'/p',
+             overview:'TV',vote_average:8.6,vote_count:260,genre_ids:[18],
+             origin_country:['US'],original_language:'en'};
+        ok({total_pages:2,total_results:isMovie?2:2,results:[row]});
+    };
+    const data=app.getMain()[0];
+    const metrics=app.window.SURS_PERFORMANCE.us8_preview;
+    assert.equal(data.results.length,2);
+    assert.equal(metrics.raw_candidates,4);
+    assert.equal(metrics.pages_movie,2);
+    assert.equal(metrics.pages_tv,2);
+    assert.equal(metrics.pages_requested,4);
+    assert.equal(metrics.pages_completed,4);
+    assert.equal(metrics.matched,2);
+    assert.equal(metrics.tmdb_total_movie,2);
+    assert.equal(metrics.tmdb_total_tv,2);
+    assert.equal(metrics.stop_reason,'exhausted');
+    assert.equal(metrics.timeout,false);
+});
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.12/);
+    assert.match(source, /Версия: 3\.9\.13/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -555,7 +614,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.12');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.13');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 24);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -730,7 +789,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.12');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.13');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
