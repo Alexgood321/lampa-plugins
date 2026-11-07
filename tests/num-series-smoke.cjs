@@ -85,7 +85,7 @@ function boot({mac = false, appready = true, tv = false} = {}) {
     return {...ctx, stream, modal, timeline, storage, settings, components, logs, scrollUpdates};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.8'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.9'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
@@ -100,6 +100,10 @@ test('rollback version archived', () => {
     const tvBaseline = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_4.js'), 'utf8');
     assert.match(tvBaseline, /var VERSION = '2\.0\.4'/);
 });
+test('v2.0.8 archived for rollback', () => {
+    const baseline = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_8.js'), 'utf8');
+    assert.ok(baseline.includes("var VERSION = '2.0.8'"));
+});
 test('v2.0.7 archived for rollback', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_7.js'), 'utf8');
     assert.ok(old.includes("var VERSION = '2.0.7'"));
@@ -111,7 +115,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.8')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.9')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
@@ -336,6 +340,46 @@ test('cloud status overlays NUM without overwriting native Timeline',()=>{
     p.window.LampaSyncPro.getEpisodeState=()=>({state:'reset'});
     assert.equal(p.window.__num2Qa.effectivePercent(row),0);
     assert.equal(row.element.timeline.percent,37);
+});
+test('single episode mark is synced and leaves adjacent episodes unchanged',()=>{
+    const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'},marks=[];
+    p.window.LampaSyncPro={
+        getEpisodeState:()=>null,getResume:()=>null,onChange:()=>()=>{},
+        markEpisode:(c,ep,watched)=>{marks.push({ep,watched});return true;}
+    };
+    p.stream.send('torrent_file',{type:'list_open',items:[],movie:card});
+    const a={card,season:1,episode:1,path:'S01E01.mkv',
+        timeline:{hash:'one',percent:0,time:0,duration:120}};
+    const duplicate={card,season:1,episode:1,path:'S01E01.ALT.mkv',
+        timeline:{hash:'two',percent:0,time:0,duration:140}};
+    const b={card,season:1,episode:2,path:'S01E02.mkv',
+        timeline:{hash:'three',percent:0,time:0,duration:120}};
+    [a,duplicate,b].forEach(x=>p.stream.send('torrent_file',{
+        type:'render',element:x,item:element()}));
+    const menu=[];
+    p.stream.send('torrent_file',{type:'onlong',menu,element:a,items:[a,b]});
+    assert.equal(menu.length,1);
+    menu[0].onSelect();
+    assert.deepEqual(marks,[{ep:'s1:e1',watched:true}]);
+    assert.equal(a.timeline.percent,100);
+    assert.equal(duplicate.timeline.percent,100);
+    assert.equal(b.timeline.percent,0);
+});
+test('cloud completion provenance determines green style',()=>{
+    const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'};
+    let status={state:'completed',basis:'inferred'};
+    p.window.LampaSyncPro={
+        getEpisodeState:()=>status,getResume:()=>null,onChange:()=>()=>{},markEpisode:()=>true
+    };
+    p.stream.send('torrent_file',{type:'list_open',movie:card,items:[]});
+    const row=element(),item={card,season:1,episode:3,path:'S01E03.mkv',
+        timeline:{hash:'h3',percent:0,time:0,duration:0}};
+    p.stream.send('torrent_file',{type:'render',element:item,item:row});
+    assert.equal(row.attr('data-num-watch-state'),'inferred');
+    status={state:'completed',basis:'manual'};
+    // Render state gets reconciled on each Sync Pro notification in the running UI.
+    assert.match(source,/\.num2-episode-done/);
+    assert.match(source,/\.num2-episode-inferred/);
 });
 test('manual season action reports deduplicated cloud marks and can undo',()=>{
     const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'},marks=[];
