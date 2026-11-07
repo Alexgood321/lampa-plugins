@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.6';
+    var VERSION = '2.0.7';
 
     function startPlugin() {
         // Локализация
@@ -167,6 +167,8 @@
         var activeSeason = 'all';
         var currentTorrentItems = [];
         var currentRows = [];
+        var currentCard = null;
+        var syncUnsubscribe = null;
         var currentContainer = null;
         var lastBulk = null;
         var refreshTimer = null;
@@ -216,20 +218,78 @@
         function canUseIINA() {
             return setting('iina') && Lampa.Platform && typeof Lampa.Platform.macOS === 'function' && Lampa.Platform.macOS();
         }
+        function cloudApi() {
+            var sync = window.LampaSyncPro;
+            return sync && typeof sync.getEpisodeState==='function' ? sync : null;
+        }
+        function selectedCard(row) {
+            if(row && row.element && row.element.card)return row.element.card;
+            if(currentCard)return currentCard;
+            if(Lampa.Activity && typeof Lampa.Activity.active==='function'){
+                var a=Lampa.Activity.active() || {};
+                return a.movie || a.card || null;
+            }
+            return null;
+        }
+        function effectivePercent(row) {
+            if(!row || !row.element || !row.element.timeline)return 0;
+            var native=Math.max(0,Math.min(100,Number(row.element.timeline.percent)||0));
+            if(!row.season || !row.episode)return native;
+            var sync=cloudApi(),card=selectedCard(row);
+            if(!sync || !card)return native;
+            var ep='s'+row.season+':e'+row.episode;
+            var record=sync.getEpisodeState(card,ep);
+            if(record && record.state==='completed')return 100;
+            if(record && record.state==='reset')return 0;
+            if(typeof sync.getResume==='function'){
+                var resume=sync.getResume(card);
+                if(resume && resume.episode_key===ep && resume.duration_seconds>0 &&
+                    resume.watched_state!=='completed')
+                    return Math.max(native,Math.min(100,100*Number(resume.position_seconds||0)/Number(resume.duration_seconds)));
+            }
+            return native;
+        }
+        function paintPercent(row, value) {
+            if(!row || !row.item || !row.element || !row.element.timeline)return;
+            var percent=Math.max(0,Math.min(100,Number(value)||0));
+            row.item.attr('data-num-percent',percent);
+            row.item.attr('data-num-updated',Number(row.element.timeline.updated)||0);
+            var title=row.item.find('.torrent-serial__title, .torrent-file__title');
+            title.find('.num-resume-badge').remove();
+            if(setting('percents') && percent>0 && percent<threshold)
+                title.append('<span class="num-resume-badge">'+Math.round(percent)+'%</span>');
+        }
+        function refreshCloud() {
+            if(!currentRows.length || !currentContainer || !currentContainer.length)return;
+            currentRows.forEach(function(row){paintPercent(row,effectivePercent(row));});
+            scheduleRefresh();
+        }
+        function ensureCloudListener() {
+            if(syncUnsubscribe)return;
+            var sync=cloudApi();
+            if(sync && typeof sync.onChange==='function')
+                syncUnsubscribe=sync.onChange(refreshCloud);
+        }
+        function reportMark(row,watched,seen) {
+            var sync=cloudApi(),card=selectedCard(row);
+            if(!sync || !card || !row || !row.season || !row.episode)return;
+            var key=row.season+':'+row.episode;
+            if(seen[key])return;
+            seen[key]=true;
+            if(typeof sync.markEpisode==='function')
+                sync.markEpisode(card,'s'+row.season+':e'+row.episode,watched);
+        }
         function setPercent(row, value) {
             var percent = Math.max(0, Math.min(100, Number(value) || 0));
             row.element.timeline.percent = percent;
-            row.item.attr('data-num-percent', percent);
-            row.item.attr('data-num-updated', Number(row.element.timeline.updated) || 0);
-            var title = row.item.find('.torrent-serial__title, .torrent-file__title');
-            title.find('.num-resume-badge').remove();
-            if (setting('percents') && percent > 0 && percent < threshold) {
-                title.append('<span class="num-resume-badge">' + Math.round(percent) + '%</span>');
-            }
+            paintPercent(row,effectivePercent(row));
         }
         function onTorrentFile(event) {
             if (!event) return;
+            ensureCloudListener();
             if (event.type === 'list_open') {
+                currentCard=event.params && (event.params.movie || event.params.card) ||
+                    event.movie || event.card || selectedCard(null);
                 currentTorrentItems = event.items || [];
                 currentRows = [];
                 currentContainer = null;
@@ -238,6 +298,8 @@
             }
             if (event.type === 'render' && event.element && event.item) {
                 var element = event.element;
+                if(element.card)currentCard=element.card;
+                else if(event.params && event.params.movie)currentCard=event.params.movie;
                 var parsed = parseSeasonEpisode(element.path || element.path_human);
                 var season = Number(element.season) || parsed.season || 0;
                 var episode = Number(element.episode) || parsed.episode || 0;
@@ -279,7 +341,7 @@
             currentRows.forEach(function (row) {
                 if (!row.element || !row.element.timeline || row.season <= 0 || row.episode <= 0) return;
                 var key = row.season + ':' + row.episode;
-                var progress = Number(row.element.timeline.percent) || 0;
+                var progress = effectivePercent(row);
                 var updated = Number(row.element.timeline.updated) || 0;
                 var group = map[key];
                 if (!group) {
@@ -296,6 +358,20 @@
         }
         function resumeCandidate(list) {
             if (!list.length) return null;
+            var sync=cloudApi(), card=selectedCard(list[0] && list[0].row);
+            if(sync && card && typeof sync.getResume==='function'){
+                var current=sync.getResume(card), match=current && String(current.episode_key||'').match(/^s(\d+):e(\d+)$/);
+                if(match){
+                    var picked=list.filter(function(x){return x.season===Number(match[1]) &&
+                        x.episode===Number(match[2]);})[0];
+                    if(picked && picked.percent<threshold)return picked;
+                    if(picked && picked.percent>=threshold){
+                        var next=list.filter(function(x){return x.percent<threshold &&
+                            (x.season>picked.season || x.season===picked.season && x.episode>picked.episode);})[0];
+                        if(next)return next;
+                    }
+                }
+            }
             var partial = list.filter(function (entry) { return entry.percent > 0 && entry.percent < threshold; });
             if (partial.length) {
                 partial.sort(function (a,b) { return b.updated - a.updated || a.season - b.season || a.episode - b.episode; });
@@ -436,10 +512,11 @@
                     (season === 'all' || String(row.season) === String(season));
             });
             if (!targets.length) return;
-            var backup = [];
+            var backup = [], marked = {};
             targets.forEach(function (row) {
                 var timeline = row.element.timeline;
-                backup.push({ row: row, percent: timeline.percent, time: timeline.time, duration: timeline.duration });
+                backup.push({ row: row, percent: timeline.percent, time: timeline.time,
+                    duration: timeline.duration });
                 timeline.percent = watched ? 100 : 0;
                 timeline.time = watched ? (Number(timeline.duration) || 0) : 0;
                 if (Lampa.Timeline && Lampa.Timeline.update && timeline.hash) Lampa.Timeline.update(timeline);
@@ -450,6 +527,7 @@
                     Lampa.Torserver.viewedSet(row.element.torrent_hash, row.element.id, timeline.time);
                 }
                 setPercent(row, timeline.percent);
+                reportMark(row,watched,marked);
             });
             lastBulk = backup;
             scheduleRefresh();
@@ -459,6 +537,7 @@
             if (!lastBulk || !lastBulk.length) return;
             var snapshots = lastBulk;
             lastBulk = null;
+            var marked={};
             snapshots.forEach(function (entry) {
                 var row = entry.row, timeline = row.element.timeline;
                 if (!timeline) return;
@@ -472,6 +551,7 @@
                     Lampa.Torserver.viewedSet(row.element.torrent_hash, row.element.id, Number(entry.time) || 0);
                 }
                 setPercent(row, timeline.percent);
+                reportMark(row,(Number(entry.percent)||0)>=threshold,marked);
             });
             scheduleRefresh();
             if (Lampa.Noty) Lampa.Noty.show('Предыдущий прогресс восстановлен');
@@ -519,6 +599,7 @@
             else if (right > visibleEnd) track.scrollLeft = right - track.clientWidth + 8;
         }
         function checkAndInjectSeasonBar(targetContainer) {
+            ensureCloudListener();
             var container = targetContainer || currentContainer;
             if (!container || !container.length || !currentRows.length) return;
             if (container.find('.num2-bar').length) return;
@@ -639,12 +720,15 @@
         follow(Lampa.Modal && Lampa.Modal.listener, 'close', function () {
             currentContainer = null;
             currentRows = [];
+            currentCard = null;
         });
         window.plugin_num_series_destroy = function () {
             subscriptions.forEach(function (subscription) {
                 if (subscription.listener.remove) subscription.listener.remove(subscription.type, subscription.handler);
             });
             if (refreshTimer) clearTimeout(refreshTimer);
+            if (typeof syncUnsubscribe==='function')syncUnsubscribe();
+            syncUnsubscribe=null;
             $('.num2-bar,.num2-resume').remove();
             $('#num-series-styles').remove();
             window.plugin_num_series_ready = false;
