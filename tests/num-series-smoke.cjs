@@ -85,7 +85,7 @@ function boot({mac = false, appready = true, tv = false} = {}) {
     return {...ctx, stream, modal, timeline, storage, settings, components, logs, scrollUpdates};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.9'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.10'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
@@ -99,6 +99,10 @@ test('rollback version archived', () => {
     assert.match(prior, /var VERSION = '2\.0\.3'/);
     const tvBaseline = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_4.js'), 'utf8');
     assert.match(tvBaseline, /var VERSION = '2\.0\.4'/);
+});
+test('v2.0.9 archived for rollback', () => {
+    const baseline = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_9.js'), 'utf8');
+    assert.ok(baseline.includes("var VERSION = '2.0.9'"));
 });
 test('v2.0.8 archived for rollback', () => {
     const baseline = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_8.js'), 'utf8');
@@ -115,7 +119,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.9')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.10')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
@@ -257,6 +261,19 @@ test('iPhone uses swipeable horizontal tabs, no drop-down selector', () => {
     assert.ok(source.includes('-webkit-overflow-scrolling:touch'));
     assert.ok(source.includes("addTab('all', 'Все')"));
     assert.doesNotMatch(source, /num2-mobile|seasonPickerItems|openSeasonPicker/);
+});
+test('mobile full-row status fills use legible dark green and amber', () => {
+    // Green manually completed, softer green inferred, amber started;
+    // the complete row is targeted, not only the old 3px left stripe.
+    assert.ok(source.includes('.torrent-serial.num2-episode-done,.torrent-file.num2-episode-done{background-color:#244d38!important'));
+    assert.ok(source.includes('.torrent-serial.num2-episode-inferred,.torrent-file.num2-episode-inferred{background-color:#2b4335!important'));
+    assert.ok(source.includes('.torrent-serial.num2-episode-started,.torrent-file.num2-episode-started{background-color:#57442c!important'));
+    assert.ok(source.includes('box-shadow:inset 0 0 0 1px rgba(122,228,161,.38)!important'));
+    assert.ok(source.includes('.torrent-serial.num2-episode-done .torrent-serial__title'));
+    assert.ok(source.includes('color:#fff'));
+    // The full-row overrides must remain in a mobile-only media query.
+    assert.ok(source.includes("            '@media(max-width:600px){' +\n                '.torrent-serial.num2-episode-done"));
+    assert.ok(source.includes('.num2-episode-done{border-left:3px solid #40b97d!important;}'));
 });
 test('mobile season tabs and resume action have taller hit targets', () => {
     assert.ok(source.includes('.num2-tab{min-height:3.35em;padding:.65em 1em'));
