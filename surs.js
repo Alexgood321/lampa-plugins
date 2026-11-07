@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.14 (US Premieres Balanced Quality)
+* Версия: 3.9.15 (US Premieres Balanced Quality)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1268,8 +1268,8 @@ var STORAGE_SHELVES_KEY = 'surs_fixed_shelves_v2';
 
 var SURS_BASE_SHELVES = [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
+{ id: 'kp_new_8', title: 'Новинки США · КП 8+', cat: 'surs', def: true, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 8+ (текущий и предыдущий год); требуется источник KP' },
 { id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: true, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
-{ id: 'kp_new_8', title: 'Новинки США · КП 8+', cat: 'surs', def: false, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 8+ (текущий и предыдущий год); требуется источник KP' },
 { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
 { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
 { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -1456,6 +1456,7 @@ newCount: diff
 function getDefaultShelvesList() {
 return [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
+{ id: 'kp_new_8', title: 'Новинки США · КП 8+', enabled: true, cat: 'surs' },
 { id: 'us_new_8', title: 'Новинки США 8+', enabled: true, cat: 'surs' },
 { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
 { id: 'new_movies', title: 'Новинки мирового кино', enabled: false, cat: 'surs' },
@@ -1623,6 +1624,15 @@ if (!profile && seen.nav_buttons && !seen.us_new_8) {
 var navIndex = unique.findIndex(function(item) { return item.id === 'nav_buttons'; });
 unique.splice(navIndex + 1, 0, {
 id: 'us_new_8', title: 'Новинки США 8+', enabled: true, cat: 'surs'
+});
+}
+
+
+if (!profile && seen.nav_buttons && !seen.kp_new_8) {
+var navPosition = unique.findIndex(function(item) { return item.id === 'nav_buttons'; });
+var insertAt = navPosition + 1;
+unique.splice(insertAt, 0, {
+id: 'kp_new_8', title: 'Новинки США · КП 8+', enabled: true, cat: 'surs'
 });
 }
 
@@ -3129,7 +3139,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.14';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.15';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3574,7 +3584,7 @@ window.plugin_surs_fixed_ready = true;
 window.surs_retry_count = 0;
 window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-console.log('SURS Pro v3.9.14 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.15 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3603,7 +3613,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.14'
+version: '3.9.15'
 };
 
 
