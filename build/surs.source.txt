@@ -1,7 +1,7 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.11 (US Premieres Quality)
- * Релиз: более строгий отбор по числу голосов и взвешенной оценке; сортировка остаётся по новизне.
+ * Версия: 3.9.12 (US Premieres Deep Search)
+ * Релиз: адаптивный поиск до 10 страниц фильмов и 10 страниц сериалов без ослабления фильтров качества.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
  *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1904,6 +1904,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     }
 
     function shelfTimeout(id) {
+        if (id === 'us_new_8') return 8500;
         if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
         if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;
         if (/^ext_/i.test(id)) return 6000;
@@ -2178,19 +2179,32 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             };
         }
 
-        // Native Line.More uses total_pages and routes to CategoryFull via source/url.
+        // Native More opens the mixed catalogue; home preview scans adaptively.
         if (shelfId === 'us_new_8') {
             return function(callback) {
                 var dates = us8Dates();
                 var requestParams = us8RequestParams(params);
-                var pending = 4, delivered = false, cards = [], seen = {};
-                var pageCount = 1;
-                var deadline = setTimeout(deliver, 4300);
+                var delivered = false, cards = [], seen = {};
+                var pageCount = 1, round = 0;
+                var target = 40, maxPages = 10, batchPages = 2;
+                var states = US8_TYPES.map(function(type) {
+                    return { type: type, next: 1, last: maxPages };
+                });
+                var metrics = {
+                    pages_requested: 0, pages_completed: 0, matched: 0,
+                    max_pages_per_type: maxPages, timeout: false
+                };
+                window.SURS_PERFORMANCE.us8_preview = metrics;
+                var deadline = setTimeout(function() {
+                    metrics.timeout = true;
+                    deliver();
+                }, 7200);
                 function deliver() {
                     if (delivered) return;
                     delivered = true;
                     clearTimeout(deadline);
                     cards.sort(us8Compare);
+                    metrics.matched = cards.length;
                     callback({
                         title: 'Новинки США 8+',
                         url: US8_CATALOG_URL,
@@ -2201,25 +2215,51 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         params: { items: { view: 20, mapping: 'line' } }
                     });
                 }
-                US8_TYPES.forEach(function(type) {
-                    for (var page = 1; page <= 2; page++) {
-                        (function(pageNumber) {
-                            var responded = false;
-                            function receive(json) {
-                                if (responded) return;
-                                responded = true;
-                                if (!delivered && json && typeof json.total_pages === 'number')
-                                    pageCount = Math.max(pageCount, json.total_pages);
-                                if (!delivered) us8Collect(json, type, dates, seen, cards);
-                                if (--pending === 0) deliver();
+                function nextBatch() {
+                    if (delivered) return;
+                    if (round > 0 && cards.length >= target) return deliver();
+                    var jobs = [];
+                    states.forEach(function(state) {
+                        for (var n = 0; n < batchPages && state.next <= state.last; n++) {
+                            jobs.push({ state: state, page: state.next++ });
+                        }
+                    });
+                    if (!jobs.length) return deliver();
+                    round++;
+                    var pending = jobs.length;
+                    jobs.forEach(function(job) {
+                        var replied = false;
+                        metrics.pages_requested++;
+                        function finish(json) {
+                            if (replied) return;
+                            replied = true;
+                            if (delivered) return;
+                            metrics.pages_completed++;
+                            var rows = json && Array.isArray(json.results) ? json.results : [];
+                            if (!json || !Array.isArray(json.results)) {
+                                job.state.last = Math.min(job.state.last, job.page);
+                            } else {
+                                if (typeof json.total_pages === 'number' && isFinite(json.total_pages)) {
+                                    var count = Math.max(1, Math.floor(json.total_pages));
+                                    job.state.last = Math.min(job.state.last, count);
+                                    pageCount = Math.max(pageCount, count);
+                                } else if (rows.length < 20) {
+                                    job.state.last = Math.min(job.state.last, job.page);
+                                }
+                                if (!rows.length) job.state.last = Math.min(job.state.last, job.page);
+                                us8Collect(json, job.state.type, dates, seen, cards);
                             }
-                            try {
-                                owner.get(us8Query(type, dates, pageNumber), requestParams,
-                                    receive, function() { receive(null); });
-                            } catch(e) { receive(null); }
-                        })(page);
-                    }
-                });
+                            if (--pending === 0) nextBatch();
+                        }
+                        try {
+                            owner.get(us8Query(job.state.type, dates, job.page),
+                                requestParams, finish, function() { finish(null); });
+                        } catch(e) {
+                            finish(null);
+                        }
+                    });
+                }
+                nextBatch();
             };
         }
 
@@ -2829,7 +2869,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.11';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.12';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -3269,7 +3309,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             window.surs_retry_count = 0;
             window.SURS_PERFORMANCE.ready_at = Date.now();
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-            console.log('SURS Pro v3.9.11 (Fixed & Configurable) успешно инициализирован.');
+            console.log('SURS Pro v3.9.12 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -3298,7 +3338,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.11'
+        version: '3.9.12'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
