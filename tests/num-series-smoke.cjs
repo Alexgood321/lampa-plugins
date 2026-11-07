@@ -107,7 +107,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.6')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.7')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
