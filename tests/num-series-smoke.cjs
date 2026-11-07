@@ -85,7 +85,7 @@ function boot({mac = false, appready = true, tv = false} = {}) {
     return {...ctx, stream, modal, timeline, storage, settings, components, logs, scrollUpdates};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.7'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.8'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
@@ -100,6 +100,10 @@ test('rollback version archived', () => {
     const tvBaseline = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_4.js'), 'utf8');
     assert.match(tvBaseline, /var VERSION = '2\.0\.4'/);
 });
+test('v2.0.7 archived for rollback', () => {
+    const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_7.js'), 'utf8');
+    assert.ok(old.includes("var VERSION = '2.0.7'"));
+});
 test('boot and native subscriptions', () => {
     const p = boot();
     assert.equal(p.stream.count('torrent_file'), 1);
@@ -107,7 +111,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.7')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.8')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();
@@ -363,6 +367,24 @@ test('cloud resume episode takes precedence over older partial playback',()=>{
     const previous={season:1,episode:2,percent:35,updated:9999,row:{element:{card}}};
     const latest={season:1,episode:7,percent:0,updated:0,row:{element:{card}}};
     assert.equal(p.window.__num2Qa.resumeCandidate([previous,latest]),latest);
+});
+
+test('wide screens use spacious controls, iPhone CSS remains identical', () => {
+    assert.ok(source.includes('@media(min-width:601px)'));
+    assert.ok(source.includes('.num2-tab{min-height:3.4em;padding:.68em 1.08em'));
+    assert.ok(source.includes('.num2-actions{flex:0 0 3.4em;width:3.4em'));
+    assert.ok(source.includes('.num2-resume{min-height:5.85em;padding:1.08em 1.3em'));
+    const prior = fs.readFileSync(path.join(__dirname, '..', 'num_series_v2_0_7.js'), 'utf8');
+    const mobile = css => css.match(/'@media\(max-width:600px\)\{[^']+\}'/);
+    assert.ok(mobile(source));
+    assert.equal(mobile(source)[0], mobile(prior)[0]);
+});
+test('wide resume header title and progress have adequate spacing', () => {
+    assert.ok(source.includes('.num2-resume-top{font-size:.98em;line-height:1.4;gap:1em;margin-bottom:.48em'));
+    assert.ok(source.includes('.num2-resume-title{font-size:1.12em;line-height:1.42;white-space:normal'));
+    assert.ok(source.includes('-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere'));
+    assert.ok(source.includes('.num2-progress{height:4px;margin-top:.72em}'));
+    assert.doesNotMatch(source, /position:fixed/);
 });
 
 process.stdout.write('\nNUM Series Pro: ' + total + ' smoke checks passed\n');
