@@ -908,7 +908,7 @@ test('progressive Lampa3 displays nav before TMDB and appends rows in order', ()
     assert.deepEqual(Array.from(late,x=>x.title),[
         'В тренде: Фильмы недели','В тренде: Сериалы недели','Жанры кино и сериалов'
     ]);
-    assert.equal(app.window.SURS_PERFORMANCE.screens.MAIN.completed,4);
+    assert.equal(app.window.SURS_PERFORMANCE.screens.MAIN.completed,5);
     assert.equal(typeof app.window.SURS_PERFORMANCE.screens.MAIN.first_row_ms,'number');
 });
 test('progressive loader drops late callbacks when page is no longer current', () => {
