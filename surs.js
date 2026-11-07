@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.13 (US Premieres Balanced Quality)
+* Версия: 3.9.14 (US Premieres Balanced Quality)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1269,6 +1269,7 @@ var STORAGE_SHELVES_KEY = 'surs_fixed_shelves_v2';
 var SURS_BASE_SHELVES = [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
 { id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: true, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
+{ id: 'kp_new_8', title: 'Новинки США · КП 8+', cat: 'surs', def: false, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 8+ (текущий и предыдущий год); требуется источник KP' },
 { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
 { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
 { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -1821,6 +1822,246 @@ run();
 
 
 
+
+
+
+var KP8_CATALOG_URL = 'surs_kp_new_8';
+var KP8_TYPES = [
+{ id: 'movie', sourceType: 'FILM', votes: 300 },
+{ id: 'tv', sourceType: 'TV_SERIES', votes: 150 },
+{ id: 'tv', sourceType: 'MINI_SERIES', votes: 150 }
+];
+var kp8CountrySource = null, kp8CountryId = null, kp8CountryLoading = false, kp8CountryWaiters = [];
+
+function kp8Years() {
+var year = new Date().getFullYear();
+return { from: year - 1, to: year };
+}
+
+function kp8FindSource(done) {
+var source = Lampa.Api && Lampa.Api.sources && Lampa.Api.sources.KP;
+if (!source || typeof source.list !== 'function' || typeof source.kpFilters !== 'function') {
+done(null);
+return;
+}
+if (source !== kp8CountrySource) {
+kp8CountrySource = source;
+kp8CountryId = null;
+kp8CountryLoading = false;
+kp8CountryWaiters = [];
+}
+if (kp8CountryId !== null) {
+done({ source: source, country: kp8CountryId });
+return;
+}
+kp8CountryWaiters.push(done);
+if (kp8CountryLoading) return;
+kp8CountryLoading = true;
+var settled = false;
+var timer = setTimeout(function() { finish(null); }, 3500);
+function finish(id) {
+if (settled) return;
+settled = true;
+clearTimeout(timer);
+kp8CountryLoading = false;
+if (id != null && id !== '') kp8CountryId = id;
+var ready = kp8CountryId != null ? { source: source, country: kp8CountryId } : null;
+var listeners = kp8CountryWaiters.splice(0);
+listeners.forEach(function(callback) { try { callback(ready); } catch(e) {} });
+}
+try {
+source.kpFilters({}, function(genres, countries, genreMap, countryMap) {
+var id = countryMap && countryMap['США'];
+if (id == null && Array.isArray(countries)) {
+var usa = countries.find(function(country) { return country.title === 'США' || country.country === 'США'; });
+if (usa) id = usa.id;
+}
+finish(id);
+});
+} catch(e) { finish(null); }
+}
+
+function kp8Query(type, country, years) {
+return 'api/v2.2/films?order=YEAR&countries=' + encodeURIComponent(country) +
+'&ratingFrom=8&ratingTo=10&yearFrom=' + years.from +
+'&yearTo=' + years.to + '&type=' + type.sourceType;
+}
+
+function kp8Fetch(type, page, ready, onFinish) {
+var responded = false;
+var timeout = setTimeout(function() { finish(null); }, 6500);
+function finish(data) {
+if (responded) return;
+responded = true;
+clearTimeout(timeout);
+onFinish(data);
+}
+try {
+ready.source.list({
+url: 'filter',
+filter_url: kp8Query(type, ready.country, kp8Years()),
+page: page
+}, finish, function() { finish(null); });
+} catch(e) { finish(null); }
+}
+
+function kp8Date(card) {
+var date = card.release_date || card.first_air_date || '';
+return String(date).slice(0, 10);
+}
+function kp8Compare(a, b) {
+var dateA = kp8Date(a), dateB = kp8Date(b);
+if (dateA !== dateB) return dateA > dateB ? -1 : 1;
+if (a.kp_rating !== b.kp_rating) return b.kp_rating - a.kp_rating;
+return (Number(b.vote_count) || 0) - (Number(a.vote_count) || 0);
+}
+function kp8Collect(json, type, seen, result) {
+if (!json || !Array.isArray(json.results)) return;
+var years = kp8Years();
+json.results.forEach(function(card) {
+if (!card || !card.id || !card.img || card.adult === true ||
+card.type !== type.id || Number(card.kp_rating) < 8 ||
+(Number(card.vote_count) > 0 && Number(card.vote_count) < type.votes)) return;
+var year = Number(kp8Date(card).slice(0, 4));
+if (!year || year < years.from || year > years.to) return;
+var genres = Array.isArray(card.genres) ? card.genres : [];
+if (genres.some(function(g) {
+return /аниме|мультфильм|анимац|короткометраж|документальн|реалити|ток.шоу|телешоу|для взрослых/i.test(g.name || '');
+})) return;
+var countries = Array.isArray(card.production_countries) ? card.production_countries : [];
+if (countries.length && !countries.some(function(c) { return c.name === 'США'; })) return;
+var key = String(card.id);
+if (seen[key]) return;
+seen[key] = true;
+card.kp_rating = Number(card.kp_rating);
+card.source = 'KP';
+result.push(card);
+});
+}
+
+function kp8Preview(callback) {
+var metrics = { source: 'loading', pages_requested: 0, pages_completed: 0, matched: 0, timeout: false };
+window.SURS_PERFORMANCE.kp8_preview = metrics;
+kp8FindSource(function(ready) {
+if (!ready) {
+metrics.source = 'missing';
+if (!window.__SURS_KP_SOURCE_NOTICE && Lampa.Noty && Lampa.Noty.show) {
+window.__SURS_KP_SOURCE_NOTICE = true;
+Lampa.Noty.show('КП 8+: необходим источник KP (kp_source.js)');
+}
+callback({ results: [] });
+return;
+}
+metrics.source = 'KP';
+var seen = {}, cards = [], finished = false, pending = KP8_TYPES.length;
+var timer = setTimeout(function() {
+metrics.timeout = true;
+deliver();
+}, 7600);
+function deliver() {
+if (finished) return;
+finished = true;
+clearTimeout(timer);
+cards.sort(kp8Compare);
+metrics.matched = cards.length;
+callback({
+title: 'Новинки США · КП 8+',
+url: KP8_CATALOG_URL, source: 'SURS', page: 1,
+total_pages: cards.length ? 2 : 1,
+results: cards.slice(0, 60),
+params: { items: { view: 20, mapping: 'line' } }
+});
+}
+KP8_TYPES.forEach(function(type) {
+metrics.pages_requested++;
+kp8Fetch(type, 1, ready, function(json) {
+if (finished) return;
+metrics.pages_completed++;
+kp8Collect(json, type, seen, cards);
+if (--pending === 0) deliver();
+});
+});
+});
+}
+
+function kp8CatalogSession() {
+var ready = null, queued = [], working = false;
+var seen = {}, cards = [], ordered = [], orderedIds = {};
+var states = KP8_TYPES.map(function(type) {
+return { type: type, next: 1, total: 10, exhausted: false };
+});
+var rounds = 0;
+function run() {
+if (working || !queued.length) return;
+working = true;
+var job = queued.shift(), page = job.page;
+var completed = false;
+var deadline = setTimeout(finish, 7900);
+function freeze() {
+cards.sort(kp8Compare);
+cards.forEach(function(card) {
+if (!orderedIds[card.id]) {
+orderedIds[card.id] = true;
+ordered.push(card);
+}
+});
+}
+function finish() {
+if (completed) return;
+completed = true;
+clearTimeout(deadline);
+freeze();
+var more = states.some(function(st) { return !st.exhausted && st.next <= st.total; });
+var pages = Math.max(1, Math.ceil(ordered.length / 20));
+if (more) pages = Math.max(pages, page + 1);
+var results = ordered.slice((page - 1) * 20, page * 20);
+if (results.length) {
+job.ok({ title: 'Новинки США · КП 8+', url: KP8_CATALOG_URL,
+source: 'SURS', page: page, total_pages: pages, results: results });
+} else if (job.fail) job.fail();
+working = false;
+run();
+}
+function next() {
+if (completed) return;
+if (rounds >= 2) {
+freeze();
+if (ordered.length >= page * 20) return finish();
+}
+var todo = states.filter(function(st) { return !st.exhausted && st.next <= st.total; });
+if (!todo.length) return finish();
+rounds++;
+var pending = todo.length;
+todo.forEach(function(st) {
+var n = st.next++;
+kp8Fetch(st.type, n, ready, function(json) {
+if (completed) return;
+if (!json || !Array.isArray(json.results) || !json.results.length) st.exhausted = true;
+else {
+if (typeof json.total_pages === 'number') st.total = Math.min(10, json.total_pages);
+if (n >= st.total) st.exhausted = true;
+kp8Collect(json, st.type, seen, cards);
+}
+if (--pending === 0) next();
+});
+});
+}
+if (ready) next();
+else kp8FindSource(function(found) {
+if (completed) return;
+ready = found;
+if (!ready) return finish();
+next();
+});
+}
+return {
+load: function(page, ok, fail) {
+queued.push({ page: Math.max(1, Number(page) || 1), ok: ok, fail: fail });
+run();
+}
+};
+}
+
 function filterCyrillic(items) {
 var stored = Lampa.Storage.get('cirillic');
 if (stored === '0') return items;
@@ -1905,6 +2146,7 @@ finish({ results: [] });
 
 function shelfTimeout(id) {
 if (id === 'us_new_8') return 8500;
+if (id === 'kp_new_8') return 9500;
 if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
 if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;
 if (/^ext_/i.test(id)) return 6000;
@@ -2279,6 +2521,8 @@ nextBatch();
 };
 }
 
+
+if (shelfId === 'kp_new_8') return kp8Preview;
 
 if (shelfId === 'new_movies') {
 return function(callback) {
@@ -2885,7 +3129,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.13';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.14';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -2940,6 +3184,11 @@ this.discovery = false;
 
 
 this.list = function(listParams, onComplete, onError) {
+if (listParams && listParams.url === KP8_CATALOG_URL) {
+if (!listParams._sursKP8Session) listParams._sursKP8Session = kp8CatalogSession();
+listParams._sursKP8Session.load(listParams.page || 1, onComplete, onError);
+return;
+}
 if (listParams && listParams.url === US8_CATALOG_URL) {
 if (!listParams._sursUS8Session)
 listParams._sursUS8Session = us8CatalogSession(this, listParams);
@@ -3325,7 +3574,7 @@ window.plugin_surs_fixed_ready = true;
 window.surs_retry_count = 0;
 window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-console.log('SURS Pro v3.9.13 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.14 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3354,7 +3603,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.13'
+version: '3.9.14'
 };
 
 
