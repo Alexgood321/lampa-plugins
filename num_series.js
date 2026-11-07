@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.7';
+    var VERSION = '2.0.8';
 
     function startPlugin() {
         // Локализация
@@ -85,6 +85,25 @@
             '.num-hidden-item{display:none!important;}',
             '.num-resume-badge{display:inline-block;margin-left:.4em;padding:.08em .35em;border-radius:.25em;font-size:.75em;color:#b6e6c7;background:rgba(83,179,120,.14);font-variant-numeric:tabular-nums;}',
             '@media(max-width:600px){.num2-bar{gap:.5em;padding:.3em 0;margin-bottom:.75em}.num2-tabs{display:flex!important;gap:.4em}.num2-tab{min-height:3.35em;padding:.65em 1em;font-size:.96em;border-radius:.52em}.num2-actions{flex:0 0 3.35em;width:3.35em;min-width:3.35em;height:3.35em;min-height:3.35em;border-radius:.52em}.num2-resume{min-height:4.3em;padding:.85em .95em;gap:.8em;border-radius:.7em;margin-bottom:1em}.num2-play{width:2.6em;height:2.6em}.num2-resume-title{font-size:1em}.num2-resume-top{font-size:.85em;margin-bottom:.25em}}',
+            // Телевизоры, десктопы и планшеты: отдельная комфортная вертикальная сетка.
+            // До 600px используются прежние мобильные размеры без изменений.
+            '@media(min-width:601px){' +
+                '.num2-bar{gap:.65em;padding:.45em 0;margin-bottom:.85em}' +
+                '.num2-tabs{gap:.65em}' +
+                '.num2-tab{min-height:3.4em;padding:.68em 1.08em;font-size:1em;line-height:1.3;border-radius:.55em}' +
+                '.num2-tab .num2-count{font-size:.9em}' +
+                '.num2-actions{flex:0 0 3.4em;width:3.4em;min-width:3.4em;height:3.4em;min-height:3.4em;font-size:1em;border-radius:.55em}' +
+                '.num2-actions svg{width:1.4em;height:1.4em}' +
+                '.num2-resume{min-height:5.85em;padding:1.08em 1.3em;gap:1.15em;margin-bottom:1.5em;border-radius:.75em}' +
+                '.num2-play{width:3em;height:3em}' +
+                '.num2-play svg{width:1.35em;height:1.35em}' +
+                '.num2-resume-top{font-size:.98em;line-height:1.4;gap:1em;margin-bottom:.48em;flex-wrap:wrap}' +
+                '.num2-resume-status{line-height:1.4}' +
+                '.num2-resume-meta{font-size:.93em;line-height:1.4}' +
+                '.num2-resume-title{font-size:1.12em;line-height:1.42;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}' +
+                '.num2-resume-percent{font-size:.98em}' +
+                '.num2-progress{height:4px;margin-top:.72em}' +
+                '}',
             '@media(prefers-reduced-motion:reduce){.num2-tab,.num2-resume{scroll-behavior:auto;}}'
         ].join('\n');
         document.head.appendChild(style);
