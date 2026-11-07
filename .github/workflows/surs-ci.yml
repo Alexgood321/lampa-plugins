@@ -6,6 +6,9 @@ on:
       - feat/surs-v3.8.0
     paths:
       - surs.js
+      - surs-editor.js
+      - build/surs.source.txt
+      - scripts/build-surs.cjs
       - home_categories.js
       - num_series.js
       - num_series_v1_3_0.js
@@ -27,6 +30,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node scripts/build-surs.cjs --check
+      - run: node --check surs-editor.js
       - run: node --check surs.js
       - run: node --check home_categories.js
       - run: node --check num_series.js
