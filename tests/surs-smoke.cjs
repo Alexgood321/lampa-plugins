@@ -664,7 +664,7 @@ test('the previous 3.8.2 factory profile migrates, but customized visibility doe
     last[12].enabled = true;
     const customized = boot({saved: last});
     assert.equal(customized.rows().length, 24);
-    assert.equal(customized.rows()[9].id, 'upcoming_episodes');
+    assert.equal(customized.rows()[8].id, 'upcoming_episodes');
     assert.equal(customized.rows().filter(x => x.enabled).length, 15);
 });
 test('custom rearrangement of legacy profile is not migrated', () => {
