@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.8';
+    var VERSION = '2.0.9';
 
     function startPlugin() {
         // Локализация
@@ -83,8 +83,18 @@
             '.num2-progress{height:3px;margin-top:.38em;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;}',
             '.num2-progress>div{height:100%;background:#71c99f;}',
             '.num-hidden-item{display:none!important;}',
+            '.num2-episode-done{border-left:3px solid #40b97d!important;}',
+            '.num2-episode-inferred{border-left:3px solid rgba(64,185,125,.72)!important;}',
+            '.num2-episode-started{border-left:3px solid #d9a143!important;}',
+            '.num2-episode-action{display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;margin-left:.55em;width:1.8em;height:1.8em;min-width:1.8em;border-radius:50%;border:1px solid rgba(255,255,255,.24);color:rgba(255,255,255,.65);cursor:pointer;box-sizing:border-box;touch-action:manipulation;}',
+            '.num2-episode-action svg{width:1em;height:1em;display:block;stroke:currentColor;stroke-width:2.3;fill:none;pointer-events:none;}',
+            '.num2-episode-action[data-state=done]{background:rgba(55,174,105,.24);border-color:#40b97d;color:#78e5a8;}',
+            '.num2-episode-action[data-state=inferred]{border-color:#40b97d;color:#78e5a8;background:rgba(55,174,105,.08);}',
+            '.num2-episode-action[data-state=started]{border-color:#d9a143;color:#e7b457;background:rgba(217,161,67,.10);}',
+            '.num2-episode-action:focus-visible{outline:2px solid #fff;outline-offset:2px;}',
             '.num-resume-badge{display:inline-block;margin-left:.4em;padding:.08em .35em;border-radius:.25em;font-size:.75em;color:#b6e6c7;background:rgba(83,179,120,.14);font-variant-numeric:tabular-nums;}',
             '@media(max-width:600px){.num2-bar{gap:.5em;padding:.3em 0;margin-bottom:.75em}.num2-tabs{display:flex!important;gap:.4em}.num2-tab{min-height:3.35em;padding:.65em 1em;font-size:.96em;border-radius:.52em}.num2-actions{flex:0 0 3.35em;width:3.35em;min-width:3.35em;height:3.35em;min-height:3.35em;border-radius:.52em}.num2-resume{min-height:4.3em;padding:.85em .95em;gap:.8em;border-radius:.7em;margin-bottom:1em}.num2-play{width:2.6em;height:2.6em}.num2-resume-title{font-size:1em}.num2-resume-top{font-size:.85em;margin-bottom:.25em}}',
+            '@media(max-width:600px){.num2-episode-action{width:2.15em;height:2.15em;min-width:2.15em;margin-left:.7em}}',
             // Телевизоры, десктопы и планшеты: отдельная комфортная вертикальная сетка.
             // До 600px используются прежние мобильные размеры без изменений.
             '@media(min-width:601px){' +
@@ -192,7 +202,7 @@
         var lastBulk = null;
         var refreshTimer = null;
         var subscriptions = [];
-        var threshold = 85;
+        var threshold = 90;
         var preferences = [
             { id: 'resume', title: 'Показывать продолжение просмотра', value: true },
             { id: 'autoseason', title: 'Автоматически выбирать сезон', value: true },
@@ -268,6 +278,82 @@
             }
             return native;
         }
+        // A series status is shared across different torrents and devices via Sync Pro.
+        // 'inferred' is intentionally distinct from a manually or playback-confirmed completion.
+        function episodeStatus(row) {
+            if (!row || !row.element || !row.element.timeline) return 'none';
+            var native = Math.max(0, Math.min(100, Number(row.element.timeline.percent) || 0));
+            if (row.season > 0 && row.episode > 0) {
+                var api = cloudApi(), card = selectedCard(row);
+                if (api && card) {
+                    var record = api.getEpisodeState(card, 's' + row.season + ':e' + row.episode);
+                    if (record && record.state === 'completed')
+                        return record.basis === 'inferred' ? 'inferred' : 'done';
+                    if (record && record.state === 'reset') return 'none';
+                    if (record && record.state === 'in_progress')
+                        return effectivePercent(row) >= threshold ? 'done' : 'started';
+                }
+            }
+            if (native >= threshold) return 'done';
+            if (native > 0) return 'started';
+            return 'none';
+        }
+        function markSingle(row, watched) {
+            if (!row || row.season <= 0 || row.episode <= 0) return;
+            var sync = cloudApi(), card = selectedCard(row);
+            // Do not promise cloud delivery when Sync Pro is unavailable.
+            var saved = !!(sync && card && typeof sync.markEpisode === 'function' &&
+                sync.markEpisode(card, 's' + row.season + ':e' + row.episode, watched));
+            var changes = {};
+            currentRows.filter(function (candidate) {
+                return candidate.season === row.season && candidate.episode === row.episode &&
+                    candidate.element && candidate.element.timeline;
+            }).forEach(function (candidate) {
+                var item = candidate.element, timeline = item.timeline;
+                var key = String(timeline.hash || item.path || item.id || '') + ':' +
+                    String(item.torrent_hash || '');
+                if (changes[key]) return;
+                changes[key] = true;
+                timeline.percent = watched ? 100 : 0;
+                timeline.time = watched ? (Number(timeline.duration) || 0) : 0;
+                if (Lampa.Timeline && Lampa.Timeline.update && timeline.hash)
+                    Lampa.Timeline.update(timeline);
+                if (Lampa.Storage.field('torrserver_tracktimecode') &&
+                    Lampa.Torserver && typeof Lampa.Torserver.viewedSet === 'function' &&
+                    item.torrent_hash && item.id != null &&
+                    (!watched || Number(timeline.duration) > 0)) {
+                    Lampa.Torserver.viewedSet(item.torrent_hash, item.id, timeline.time);
+                }
+            });
+            refreshCloud();
+            if (!saved && Lampa.Noty && Lampa.Noty.show)
+                Lampa.Noty.show('Отметка сохранена локально. Для синхронизации войдите в Sync Pro.');
+        }
+        function paintEpisodeStatus(row) {
+            if (!row || !row.item || row.season <= 0 || row.episode <= 0) return;
+            var status = episodeStatus(row);
+            row.item.attr('data-num-watch-state', status);
+            row.item.toggleClass('num2-episode-done', status === 'done');
+            row.item.toggleClass('num2-episode-inferred', status === 'inferred');
+            row.item.toggleClass('num2-episode-started', status === 'started');
+            var title = row.item.find('.torrent-serial__title, .torrent-file__title');
+            title.find('.num2-episode-action').remove();
+            var complete = status === 'done' || status === 'inferred';
+            var hint = complete ? 'Снять отметку о просмотре' : 'Отметить серию просмотренной';
+            var icon = complete ?
+                '<path d="M4 12.5l5.1 5.1L20 6.7"/>' :
+                status === 'started' ? '<path d="M9 5l10 7-10 7z"/>' :
+                '<circle cx="12" cy="12" r="8"/>';
+            var badge = $('<span class="num2-episode-action" data-state="' + status +
+                '" role="button" aria-label="' + hint + '" title="' + hint + '">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true">' + icon + '</svg></span>');
+            badge.on('click', function (event) {
+                if (event && event.preventDefault) event.preventDefault();
+                if (event && event.stopPropagation) event.stopPropagation();
+                markSingle(row, !complete);
+            });
+            title.append(badge);
+        }
         function paintPercent(row, value) {
             if(!row || !row.item || !row.element || !row.element.timeline)return;
             var percent=Math.max(0,Math.min(100,Number(value)||0));
@@ -277,6 +363,7 @@
             title.find('.num-resume-badge').remove();
             if(setting('percents') && percent>0 && percent<threshold)
                 title.append('<span class="num-resume-badge">'+Math.round(percent)+'%</span>');
+            paintEpisodeStatus(row);
         }
         function refreshCloud() {
             if(!currentRows.length || !currentContainer || !currentContainer.length)return;
@@ -339,6 +426,17 @@
                     }
                 }
                 if (element.timeline) setPercent(row, element.timeline.percent);
+            }
+            if (event.type === 'onlong' && event.menu && event.element) {
+                var chosen = currentRows.filter(function (r) { return r.element === event.element; })[0];
+                if (chosen && chosen.season > 0 && chosen.episode > 0) {
+                    var status = episodeStatus(chosen);
+                    var watched = status !== 'done' && status !== 'inferred';
+                    event.menu.unshift({
+                        title: watched ? '✓ Отметить серию просмотренной' : '↺ Снять отметку просмотра',
+                        onSelect: function () { markSingle(chosen, watched); }
+                    });
+                }
             }
             if (event.type === 'onlong' && canUseIINA() && event.menu && event.items && event.items.length > 1 && event.element && event.element.torrent_hash) {
                 var url = getTorrServerUrl() + '/stream?link=' + encodeURIComponent(event.element.torrent_hash) + '&m3u';
