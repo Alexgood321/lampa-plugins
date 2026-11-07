@@ -1921,7 +1921,7 @@ var years = kp8Years();
 json.results.forEach(function(card) {
 if (!card || !card.id || !card.img || card.adult === true ||
 card.type !== type.id || Number(card.kp_rating) < 8 ||
-Number(card.vote_count) < type.votes) return;
+(Number(card.vote_count) > 0 && Number(card.vote_count) < type.votes)) return;
 var year = Number(kp8Date(card).slice(0, 4));
 if (!year || year < years.from || year > years.to) return;
 var genres = Array.isArray(card.genres) ? card.genres : [];
@@ -1953,7 +1953,7 @@ callback({ results: [] });
 return;
 }
 metrics.source = 'KP';
-var seen = {}, cards = [], finished = false, pending = KP8_TYPES.length * 2;
+var seen = {}, cards = [], finished = false, pending = KP8_TYPES.length;
 var timer = setTimeout(function() {
 metrics.timeout = true;
 deliver();
@@ -1973,14 +1973,12 @@ params: { items: { view: 20, mapping: 'line' } }
 });
 }
 KP8_TYPES.forEach(function(type) {
-[1, 2].forEach(function(page) {
 metrics.pages_requested++;
-kp8Fetch(type, page, ready, function(json) {
+kp8Fetch(type, 1, ready, function(json) {
 if (finished) return;
 metrics.pages_completed++;
 kp8Collect(json, type, seen, cards);
 if (--pending === 0) deliver();
-});
 });
 });
 });

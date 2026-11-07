@@ -17,6 +17,9 @@ on:
   pull_request:
     paths:
       - surs.js
+      - surs-editor.js
+      - build/surs.source.txt
+      - scripts/build-surs.cjs
       - home_categories.js
       - num_series.js
       - num_series_v1_3_0.js

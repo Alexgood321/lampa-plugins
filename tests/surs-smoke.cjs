@@ -136,7 +136,8 @@ test('KP 8+ uses native source filters, excludes weak ratings and offers More', 
                 production_countries:[{name:'США'}]
             });
             ok({results:[card(requests.length * 10,8.5,500,'драма'),
-                         card(requests.length * 10+1,8.2,10,'драма'),
+                         card(requests.length * 10+1,8.2,0,'драма'),
+                         card(requests.length * 10+3,8.1,10,'драма'),
                          card(requests.length * 10+2,9.1,500,'аниме')],
                 total_pages:2});
         }
@@ -146,7 +147,9 @@ test('KP 8+ uses native source filters, excludes weak ratings and offers More', 
     assert.equal(result[0].title,'Новинки США · КП 8+');
     assert.ok(result[0].results.length > 0);
     assert.ok(result[0].results.every(x=>x.kp_rating >= 8 && x.source === 'KP'));
-    assert.ok(requests.length === 6);
+    assert.ok(requests.length === 3);
+    assert.ok(result[0].results.some(x => x.vote_count === 0));
+    assert.ok(result[0].results.every(x => x.vote_count === 0 || x.vote_count >= 150));
     assert.ok(requests.every(x=>x.includes('countries=1') && x.includes('ratingFrom=8') && x.includes('yearFrom=')));
     assert.equal(result[0].url,'surs_kp_new_8');
     let catalog;
