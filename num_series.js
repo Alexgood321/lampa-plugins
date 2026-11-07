@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.10';
+    var VERSION = '2.0.11';
 
     function startPlugin() {
         // Локализация
@@ -95,14 +95,12 @@
             '.num-resume-badge{display:inline-block;margin-left:.4em;padding:.08em .35em;border-radius:.25em;font-size:.75em;color:#b6e6c7;background:rgba(83,179,120,.14);font-variant-numeric:tabular-nums;}',
             '@media(max-width:600px){.num2-bar{gap:.5em;padding:.3em 0;margin-bottom:.75em}.num2-tabs{display:flex!important;gap:.4em}.num2-tab{min-height:3.35em;padding:.65em 1em;font-size:.96em;border-radius:.52em}.num2-actions{flex:0 0 3.35em;width:3.35em;min-width:3.35em;height:3.35em;min-height:3.35em;border-radius:.52em}.num2-resume{min-height:4.3em;padding:.85em .95em;gap:.8em;border-radius:.7em;margin-bottom:1em}.num2-play{width:2.6em;height:2.6em}.num2-resume-title{font-size:1em}.num2-resume-top{font-size:.85em;margin-bottom:.25em}}',
             '@media(max-width:600px){.num2-episode-action{width:2.15em;height:2.15em;min-width:2.15em;margin-left:.7em}}',
-            // Mobile: color the entire card, not only the narrow side stripe.
-            // Opaque dark fills keep white episode labels legible over changing backdrops.
-            '@media(max-width:600px){' +
+            // On every screen, color the whole episode tile, not only its side stripe.
+            // Keep native Lampa focus outlines and high-contrast text on TV/remotes.
                 '.torrent-serial.num2-episode-done,.torrent-file.num2-episode-done{background-color:#244d38!important;box-shadow:inset 0 0 0 1px rgba(122,228,161,.38)!important}' +
                 '.torrent-serial.num2-episode-inferred,.torrent-file.num2-episode-inferred{background-color:#2b4335!important;box-shadow:inset 0 0 0 1px rgba(122,228,161,.50)!important}' +
                 '.torrent-serial.num2-episode-started,.torrent-file.num2-episode-started{background-color:#57442c!important;box-shadow:inset 0 0 0 1px rgba(238,180,86,.36)!important}' +
-                '.torrent-serial.num2-episode-done .torrent-serial__title,.torrent-serial.num2-episode-inferred .torrent-serial__title,.torrent-serial.num2-episode-started .torrent-serial__title{color:#fff}' +
-                '}',
+                '.torrent-serial.num2-episode-done .torrent-serial__title,.torrent-serial.num2-episode-inferred .torrent-serial__title,.torrent-serial.num2-episode-started .torrent-serial__title{color:#fff}',
             // Телевизоры, десктопы и планшеты: отдельная комфортная вертикальная сетка.
             // До 600px используются прежние мобильные размеры без изменений.
             '@media(min-width:601px){' +
