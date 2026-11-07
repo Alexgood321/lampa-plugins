@@ -381,6 +381,19 @@ test('cloud completion provenance determines green style',()=>{
     assert.match(source,/\.num2-episode-done/);
     assert.match(source,/\.num2-episode-inferred/);
 });
+test('native 90 percent overrides untracked amber status consistently',()=>{
+    const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'};
+    p.window.LampaSyncPro={
+        getEpisodeState:()=>({state:'in_progress',basis:'none'}),
+        getResume:()=>null,onChange:()=>()=>{},markEpisode:()=>true
+    };
+    p.stream.send('torrent_file',{type:'list_open',movie:card,items:[]});
+    const row=element(),item={card,season:1,episode:3,path:'S01E03.mkv',
+        timeline:{hash:'native-h3',percent:95,time:3400,duration:3600}};
+    p.stream.send('torrent_file',{type:'render',element:item,item:row});
+    assert.equal(row.attr('data-num-watch-state'),'done');
+    assert.equal(p.window.__num2Qa.effectivePercent({element:item,season:1,episode:3}),95);
+});
 test('manual season action reports deduplicated cloud marks and can undo',()=>{
     const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'},marks=[];
     p.window.LampaSyncPro={
