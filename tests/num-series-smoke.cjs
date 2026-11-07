@@ -79,13 +79,13 @@ function boot({mac = false, appready = true, tv = false} = {}) {
         setTimeout: fn => { fn(); return 1; },
         clearTimeout() {}
     };
-    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, resumePresentation, formatSeasonCount, setWatched, undoBulk, seasonStats, alignSeasonTab, scrollHeaderIntoView, setCurrentContainer: c => { currentContainer = c; }}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
+    const runtime = source.replace("                console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');", "window.__num2Qa = {groups, resumeCandidate, resumePresentation, formatSeasonCount, setWatched, undoBulk, seasonStats, alignSeasonTab, scrollHeaderIntoView, setCurrentContainer: c => { currentContainer = c; }, setRows: (rows,card) => {currentRows=rows;currentCard=card;}, effectivePercent, cloudApi, reportMark}; console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');");
     if (runtime === source) throw new Error('QA injection anchor missing');
     vm.runInNewContext(runtime, ctx, {filename:'num_series.js'});
     return {...ctx, stream, modal, timeline, storage, settings, components, logs, scrollUpdates};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.6'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.7'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
@@ -315,6 +315,54 @@ test('plugin injection completes before native Modal.toggle and skips duplicate 
     assert.ok(!code.includes('setTimeout(function () { checkAndInjectSeasonBar(event.new_html); }, 0);'));
     assert.ok(source.includes("applySeasonFilter(container, choice ? String(choice.season) : 'all', true)"));
     assert.ok(source.includes("if (!skipController && enabled && enabled.name === 'modal'"));
+});
+
+
+test('cloud status overlays NUM without overwriting native Timeline',()=>{
+    const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'};
+    const row={season:1,episode:2,element:{card,timeline:{percent:37,time:120,duration:300}},
+        item:element()};
+    p.window.LampaSyncPro={
+        getEpisodeState:(_card,key)=>({state:key==='s1:e2'?'completed':'reset'}),
+        getResume:()=>null,onChange:()=>()=>{},markEpisode:()=>true
+    };
+    p.window.__num2Qa.setRows([row],card);
+    assert.equal(p.window.__num2Qa.effectivePercent(row),100);
+    assert.equal(row.element.timeline.percent,37);
+    p.window.LampaSyncPro.getEpisodeState=()=>({state:'reset'});
+    assert.equal(p.window.__num2Qa.effectivePercent(row),0);
+    assert.equal(row.element.timeline.percent,37);
+});
+test('manual season action reports deduplicated cloud marks and can undo',()=>{
+    const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'},marks=[];
+    p.window.LampaSyncPro={
+        getEpisodeState:()=>null,getResume:()=>null,onChange:()=>()=>{},
+        markEpisode:(c,ep,watched)=>{marks.push({c,ep,watched});return true;}
+    };
+    const a={season:1,episode:1,element:{card,timeline:{hash:'s1e1',percent:0,time:0,duration:120}},item:element()};
+    const same={season:1,episode:1,element:{card,timeline:{hash:'s1e1-alt',percent:0,time:0,duration:120}},item:element()};
+    const b={season:1,episode:2,element:{card,timeline:{hash:'s1e2',percent:0,time:0,duration:120}},item:element()};
+    p.window.__num2Qa.setRows([a,same,b],card);
+    p.window.__num2Qa.setWatched('1',true);
+    assert.equal(marks.length,2);
+    assert.deepEqual(marks.map(m=>m.ep),['s1:e1','s1:e2']);
+    assert.equal(marks.every(m=>m.watched),true);
+    assert.equal(a.element.timeline.percent,100);
+    p.window.__num2Qa.undoBulk();
+    assert.equal(marks.length,4);
+    assert.equal(marks.slice(2).every(m=>m.watched===false),true);
+    assert.equal(a.element.timeline.percent,0);
+});
+test('cloud resume episode takes precedence over older partial playback',()=>{
+    const p=boot(),card={id:991,source:'tmdb',media_type:'tv',name:'Test'};
+    p.window.LampaSyncPro={
+        getEpisodeState:()=>null,onChange:()=>()=>{},
+        getResume:()=>({episode_key:'s1:e7',source_kind:'torrent',
+            watched_state:'in_progress',position_seconds:0,duration_seconds:0})
+    };
+    const previous={season:1,episode:2,percent:35,updated:9999,row:{element:{card}}};
+    const latest={season:1,episode:7,percent:0,updated:0,row:{element:{card}}};
+    assert.equal(p.window.__num2Qa.resumeCandidate([previous,latest]),latest);
 });
 
 process.stdout.write('\nNUM Series Pro: ' + total + ' smoke checks passed\n');
