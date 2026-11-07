@@ -1,6 +1,6 @@
 /**
  * Lampa Plugin: Home Categories Pro (Скрытие и настройка порядка категорий)
- * Version: 2.0.1
+ * Version: 2.0.2
  * Author: Lampa Community & Alexgood321
  * Standard: Полное соответствие официальной документации Lampa (docs/ru)
  * Features:
@@ -927,6 +927,8 @@
         $('.hc-menu-item').remove();
         $('.hc-channel-shortcut').remove();
         isModalOpen = false;
+        if (window.__AlexgoodPluginRuntime)
+            delete window.__AlexgoodPluginRuntime['alexgood321/lampa-plugins/home_categories.js'];
         delete window.HomeCategoriesPro;
     };
 
@@ -954,7 +956,11 @@
 
         updateDOM();
         HC_PERF.ready_ms = Date.now() - PERF_START;
-        console.log('HomeCategories: Plugin v2.0.1 (event-driven) initialized!');
+        window.__AlexgoodPluginRuntime = window.__AlexgoodPluginRuntime || {};
+        window.__AlexgoodPluginRuntime['alexgood321/lampa-plugins/home_categories.js'] = {
+            version:'2.0.2', ready:true, started_at:Date.now()
+        };
+        console.log('HomeCategories: Plugin v2.0.2 (event-driven) initialized!');
     }
 
     if (window.appready) {

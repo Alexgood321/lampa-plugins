@@ -85,7 +85,7 @@ function boot({mac = false, appready = true, tv = false} = {}) {
     return {...ctx, stream, modal, timeline, storage, settings, components, logs, scrollUpdates};
 }
 
-test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.5'/));
+test('syntax and version', () => assert.match(source, /var VERSION = '2\.0\.6'/));
 test('rollback version archived', () => {
     const old = fs.readFileSync(path.join(__dirname, '..', 'num_series_v1_3_0.js'), 'utf8');
     assert.match(old, /var VERSION = '1\.3\.0'/);
@@ -107,7 +107,7 @@ test('boot and native subscriptions', () => {
     assert.equal(p.timeline.count('update'), 1);
     assert.equal(p.timeline.count('read'), 1);
     assert.equal(p.settings.length, 7);
-    assert.ok(p.logs.some(s => s.includes('v2.0.5')));
+    assert.ok(p.logs.some(s => s.includes('v2.0.6')));
 });
 test('native episode metadata wins over filename fallback', () => {
     const p = boot();

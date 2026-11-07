@@ -9,7 +9,7 @@
     window.plugin_num_series_ready = true;
 
     var PLUGIN_NAME = 'NUM Series Pro';
-    var VERSION = '2.0.5';
+    var VERSION = '2.0.6';
 
     function startPlugin() {
         // Локализация
@@ -648,10 +648,16 @@
             $('.num2-bar,.num2-resume').remove();
             $('#num-series-styles').remove();
             window.plugin_num_series_ready = false;
+            if (window.__AlexgoodPluginRuntime)
+                delete window.__AlexgoodPluginRuntime['alexgood321/lampa-plugins/num_series.js'];
             window.plugin_num_series_destroy = null;
         };
 
 
+                window.__AlexgoodPluginRuntime = window.__AlexgoodPluginRuntime || {};
+                window.__AlexgoodPluginRuntime['alexgood321/lampa-plugins/num_series.js'] = {
+                    version:VERSION, ready:true, started_at:Date.now()
+                };
                 console.log(PLUGIN_NAME + ' v' + VERSION + ' initialized.');
     }
 
