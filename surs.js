@@ -1628,10 +1628,9 @@ id: 'us_new_8', title: 'Новинки США 8+', enabled: true, cat: 'surs'
 }
 
 
-if (!profile && !seen.kp_new_8) {
+if (!profile && seen.nav_buttons && !seen.kp_new_8) {
 var navPosition = unique.findIndex(function(item) { return item.id === 'nav_buttons'; });
-var usPosition = unique.findIndex(function(item) { return item.id === 'us_new_8'; });
-var insertAt = navPosition >= 0 ? navPosition + 1 : (usPosition >= 0 ? usPosition : 0);
+var insertAt = navPosition + 1;
 unique.splice(insertAt, 0, {
 id: 'kp_new_8', title: 'Новинки США · КП 8+', enabled: true, cat: 'surs'
 });

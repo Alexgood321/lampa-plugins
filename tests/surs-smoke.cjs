@@ -248,11 +248,11 @@ test('KP 8+ migrates saved homes once and preserves user settings', () => {
     assert.ok(!manager.getSavedShelves('NEW').some(x=>x.id==='kp_new_8'));
     assert.ok(!manager.getSavedShelves('RUS').some(x=>x.id==='kp_new_8'));
 });
-test('KP 8+ adds before TMDB US when navigation is missing', () => {
+test('KP 8+ migration does not alter custom homes without navigation', () => {
     const saved = [{id:'core_continue',enabled:true},{id:'us_new_8',enabled:false},{id:'trend_movies',enabled:true}];
     const app = boot({saved});
-    assert.deepEqual(Array.from(app.rows(),x=>x.id),['core_continue','kp_new_8','us_new_8','trend_movies']);
-    assert.equal(app.rows()[2].enabled,false);
+    assert.deepEqual(Array.from(app.rows(),x=>x.id),['core_continue','us_new_8','trend_movies']);
+    assert.equal(app.rows()[1].enabled,false);
 });
 test('US premiere loader enforces country, genre, rating, language and mixed date order', () => {
     const app=boot({saved:[{id:'us_new_8',enabled:true}]});
