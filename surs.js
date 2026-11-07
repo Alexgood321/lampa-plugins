@@ -1,7 +1,7 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.12 (US Premieres Deep Search)
-* Релиз: адаптивный поиск до 10 страниц фильмов и 10 страниц сериалов без ослабления фильтров качества.
+* Версия: 3.9.13 (US Premieres Balanced Quality)
+* Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
 *   - Интерактивная иконка перетаскивания [ ≡ ]: доступна с пульта ТВ и по клику/тапу сразу открывает меню порядка.
@@ -1663,9 +1663,9 @@ return false;
 var US8_CATALOG_URL = 'surs_us_new_8';
 var US8_TYPES = [
 { id: 'movie', date: 'primary_release_date', sort: 'release_date.desc',
-votes: 500, weight: 1000, blocked: '16,99,10770' },
+votes: 300, weight: 400, blocked: '16,99,10770' },
 { id: 'tv', date: 'first_air_date', sort: 'first_air_date.desc',
-votes: 300, weight: 600, blocked: '16,99,10763,10764,10766,10767' }
+votes: 150, weight: 200, blocked: '16,99,10763,10764,10766,10767' }
 ];
 function us8Dates() {
 var now = new Date();
@@ -2192,11 +2192,14 @@ return { type: type, next: 1, last: maxPages };
 });
 var metrics = {
 pages_requested: 0, pages_completed: 0, matched: 0,
-max_pages_per_type: maxPages, timeout: false
+raw_candidates: 0, pages_movie: 0, pages_tv: 0,
+tmdb_total_movie: null, tmdb_total_tv: null,
+stop_reason: '', max_pages_per_type: maxPages, timeout: false
 };
 window.SURS_PERFORMANCE.us8_preview = metrics;
 var deadline = setTimeout(function() {
 metrics.timeout = true;
+metrics.stop_reason = 'timeout';
 deliver();
 }, 7200);
 function deliver() {
@@ -2217,14 +2220,20 @@ params: { items: { view: 20, mapping: 'line' } }
 }
 function nextBatch() {
 if (delivered) return;
-if (round > 0 && cards.length >= target) return deliver();
+if (round > 0 && cards.length >= target) {
+metrics.stop_reason = 'target';
+return deliver();
+}
 var jobs = [];
 states.forEach(function(state) {
 for (var n = 0; n < batchPages && state.next <= state.last; n++) {
 jobs.push({ state: state, page: state.next++ });
 }
 });
-if (!jobs.length) return deliver();
+if (!jobs.length) {
+metrics.stop_reason = 'exhausted';
+return deliver();
+}
 round++;
 var pending = jobs.length;
 jobs.forEach(function(job) {
@@ -2235,7 +2244,14 @@ if (replied) return;
 replied = true;
 if (delivered) return;
 metrics.pages_completed++;
+metrics['pages_' + job.state.type.id]++;
 var rows = json && Array.isArray(json.results) ? json.results : [];
+metrics.raw_candidates += rows.length;
+if (json && typeof json.total_results === 'number' &&
+isFinite(json.total_results)) {
+metrics['tmdb_total_' + job.state.type.id] =
+Math.max(0, Math.floor(json.total_results));
+}
 if (!json || !Array.isArray(json.results)) {
 job.state.last = Math.min(job.state.last, job.page);
 } else {
@@ -2869,7 +2885,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.12';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.13';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3309,7 +3325,7 @@ window.plugin_surs_fixed_ready = true;
 window.surs_retry_count = 0;
 window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-console.log('SURS Pro v3.9.12 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.13 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3338,7 +3354,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.12'
+version: '3.9.13'
 };
 
 
