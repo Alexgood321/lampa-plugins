@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "plugins": [
+    {
+      "name": "SURS Pro",
+      "path": "surs.js",
+      "categories": [
+        "Мои",
+        "Главный экран"
+      ],
+      "author": "Alexgood321",
+      "descr": "Настраиваемые полки главного экрана Lampa"
+    },
+    {
+      "name": "Home Categories Pro",
+      "path": "home_categories.js",
+      "categories": [
+        "Мои",
+        "Главный экран"
+      ],
+      "author": "Alexgood321",
+      "descr": "Управление категориями главного экрана"
+    },
+    {
+      "name": "NUM Series Pro",
+      "path": "num_series.js",
+      "categories": [
+        "Мои",
+        "Сериалы"
+      ],
+      "author": "Alexgood321",
+      "descr": "Навигация по сезонам и сериям"
+    },
+    {
+      "name": "Lampa Shield Ads",
+      "path": "shield-ads/lampa-shield-ads.js",
+      "categories": [
+        "Мои",
+        "Системные и ТВ"
+      ],
+      "author": "Alexgood321",
+      "descr": "Блокировка рекламных запросов Lampa и VAST"
+    }
+  ]
+}
