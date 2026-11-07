@@ -92,9 +92,9 @@
             '.num2-episode-action[data-state=inferred]{border-color:#40b97d;color:#78e5a8;background:rgba(55,174,105,.08);}',
             '.num2-episode-action[data-state=started]{border-color:#d9a143;color:#e7b457;background:rgba(217,161,67,.10);}',
             '.num2-episode-action:focus-visible{outline:2px solid #fff;outline-offset:2px;}',
-            '@media(max-width:600px){.num2-episode-action{width:2.15em;height:2.15em;min-width:2.15em;margin-left:.7em}}',
             '.num-resume-badge{display:inline-block;margin-left:.4em;padding:.08em .35em;border-radius:.25em;font-size:.75em;color:#b6e6c7;background:rgba(83,179,120,.14);font-variant-numeric:tabular-nums;}',
             '@media(max-width:600px){.num2-bar{gap:.5em;padding:.3em 0;margin-bottom:.75em}.num2-tabs{display:flex!important;gap:.4em}.num2-tab{min-height:3.35em;padding:.65em 1em;font-size:.96em;border-radius:.52em}.num2-actions{flex:0 0 3.35em;width:3.35em;min-width:3.35em;height:3.35em;min-height:3.35em;border-radius:.52em}.num2-resume{min-height:4.3em;padding:.85em .95em;gap:.8em;border-radius:.7em;margin-bottom:1em}.num2-play{width:2.6em;height:2.6em}.num2-resume-title{font-size:1em}.num2-resume-top{font-size:.85em;margin-bottom:.25em}}',
+            '@media(max-width:600px){.num2-episode-action{width:2.15em;height:2.15em;min-width:2.15em;margin-left:.7em}}',
             // Телевизоры, десктопы и планшеты: отдельная комфортная вертикальная сетка.
             // До 600px используются прежние мобильные размеры без изменений.
             '@media(min-width:601px){' +
