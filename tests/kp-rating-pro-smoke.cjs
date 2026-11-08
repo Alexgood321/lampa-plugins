@@ -37,9 +37,10 @@ class Node {
     removeAttribute(k){delete this.attributes[k];}
     removeChild(child){let i=this.children.indexOf(child);if(i>=0)this.children.splice(i,1);}
 }
-function environment({kpSource=null,ratingCache=null,budget=null}={}){
+function environment({kpSource=null,ratingCache=null,budget=null,ownCache=null}={}){
     const store=new Map();
     if(ratingCache)store.set('kp_rating',ratingCache);
+    if(ownCache)store.set('kp_rating_pro_cache_v1',ownCache);
     if(budget)store.set('kp_rating_pro_budget_v1',budget);
     const body=new Node('body');const head=new Node('head');
     let io=null, mo=null;const settings=[];
@@ -200,5 +201,105 @@ await test('Both ratings mode retains KP as primary and displays TMDB separately
     assert.ok(!vote.classList.contains('kp-rating-pro-native-tmdb'));
     app.window.kp_rating_pro_destroy();
  });
+ 
+ await test('IMDb from existing rating.js cache is selected when KP is unavailable',async()=>{
+    const old={156:{kp:0,imdb:8.4,timestamp:Date.now()}};
+    const app=environment({ratingCache:old});
+    const el=app.card({id:156,source:'tmdb',type:'movie',title:'Film',vote_average:7.1},'7.1');
+    app.window.kp_rating_pro_rescan();
+    const vote=el.querySelector('.card__vote');
+    assert.equal(vote.textContent,'8.4');
+    assert.equal(vote.attributes['aria-label'],'IMDb 8.4');
+    assert.ok(vote.classList.contains('kp-rating-pro-imdb'));
+    assert.equal(app.window.KP_RATING_PRO_STATS.requests,0);
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('KP stays above IMDb even when the IMDb numeric rating is higher',async()=>{
+    const old={158:{kp:7.3,imdb:9.1,timestamp:Date.now()}};
+    const app=environment({ratingCache:old});
+    const el=app.card({id:158,source:'tmdb',type:'movie',vote_average:8.4});
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'7.3');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'Кинопоиск 7.3');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('Direct IMDb value from KP source is trusted and does not request API',async()=>{
+    const app=environment();
+    const el=app.card({id:'KP_100',source:'KP',type:'tv',imdb_rating:8.7,kp_rating:0,vote_average:0},'8.1');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'8.7');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'IMDb 8.7');
+    assert.equal(app.window.KP_RATING_PRO_STATS.requests,0);
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('IMDb from KP network match works even with no Kinopoisk rating',async()=>{
+    const KP={list:(params,done)=>done({results:[{id:'KP_44',type:'movie',title:'IMDb Only',
+        imdb_rating:8.2,kp_rating:0,release_date:'2026'}]})};
+    const app=environment({kpSource:KP});
+    const el=app.card({id:805,source:'tmdb',type:'movie',title:'IMDb Only',release_date:'2026',vote_average:7.0},'7.0');
+    app.window.kp_rating_pro_rescan();await wait(30);
+    assert.equal(el.querySelector('.card__vote').textContent,'8.2');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'IMDb 8.2');
+    assert.equal(app.window.KP_RATING_PRO_STATS.matched,1);
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('Verified TMDB outranks verified CUB when KP and IMDb are absent',async()=>{
+    const app=environment();
+    const el=app.card({id:806,source:'tmdb',type:'movie',title:'Hybrid',
+        cub_hundred_rating:8.8,vote_average:7.2},'8.8');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'7.2');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'TMDB 7.2');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('CUB remains the only proven fallback if source does not establish TMDB provenance',async()=>{
+    const app=environment();
+    const el=app.card({id:807,source:'cub',type:'movie',
+        cub_hundred_rating:8.2,vote_average:9.6},'8.2');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'8.2');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'CUB 8.2');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('Auto plus secondary shows IMDb before TMDB with KP selected',async()=>{
+    const app=environment();app.store.set('kp_rating_pro_mode','both');
+    const el=app.card({id:808,source:'tmdb',type:'movie',kp_rating:8.4,
+        imdb_rating:9.0,vote_average:8.5});
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'8.4');
+    assert.equal(el.querySelector('.kp-rating-pro-tmdb').textContent,'IMDb 9.0');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('IMDb selected after cached miss does not perform repeat API calls',async()=>{
+    const KP={list:()=>{throw new Error('should not be called')}};
+    const app=environment({kpSource:KP});
+    const el=app.card({id:809,source:'tmdb',type:'movie',imdb_rating:8.9,vote_average:7.2});
+    app.store.set('kp_rating_pro_budget_v1',{day:new Date().toISOString().slice(0,10),count:50});
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'8.9');
+    app.window.kp_rating_pro_destroy();
+ });
+
+ 
+ await test('Old negative KP cache does not suppress IMDb in rating.js cache',async()=>{
+    const cached={910:{kp:0,imdb:8.6,timestamp:Date.now()}};
+    const oldOwn={'tmdb:movie:910':{rate:0,expires:Date.now()+86400000}};
+    const app=environment({ratingCache:cached,ownCache:oldOwn});
+    const el=app.card({id:910,source:'tmdb',type:'movie',vote_average:7.2},'7.2');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'8.6');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'IMDb 8.6');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('CUB IDs are not confused with rating.js TMDB cache keys',async()=>{
+    const old={921:{kp:9.9,imdb:9.9,timestamp:Date.now()}};
+    const app=environment({ratingCache:old,budget:{day:new Date().toISOString().slice(0,10),count:50}});
+    const el=app.card({id:921,source:'cub',type:'movie',cub_hundred_rating:7.4},'7.4');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'7.4');
+    assert.ok(el.querySelector('.card__vote').classList.contains('kp-rating-pro-native-cub'));
+    app.window.kp_rating_pro_destroy();
+ });
+
  console.log(`PASS KP Rating Pro: ${pass} tests`);
 })().catch(err=>{console.error(err);process.exitCode=1;});
