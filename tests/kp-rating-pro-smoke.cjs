@@ -76,7 +76,8 @@ await test('KP rating from card replaces native vote, without API request',async
     assert.equal(vote.textContent,'8.6');assert.equal(vote.attributes['aria-label'],'Кинопоиск 8.6');
     assert.equal(app.window.KP_RATING_PRO_STATS.requests,0);
     app.store.set('kp_rating_pro_mode','tmdb');app.window.kp_rating_pro_rescan();
-    assert.equal(vote.textContent,'8.6');assert.ok(!vote.attributes['aria-label']);
+    assert.equal(vote.textContent,'8.6');assert.equal(vote.attributes['aria-label'],'КП 8.6');
+    assert.ok(vote.classList.contains('kp-rating-pro-native-kp'));
     app.window.kp_rating_pro_destroy();
 });
 await test('Existing rating.js cached KP value is reused without API',async()=>{
@@ -141,5 +142,63 @@ await test('Both ratings mode retains KP as primary and displays TMDB separately
     assert.ok(el.querySelector('.kp-rating-pro-tmdb'));
     app.window.kp_rating_pro_destroy();
 });
-console.log(`PASS KP Rating Pro: ${pass} tests`);
+
+ await test('Native TMDB source label appears without waiting for KP',async()=>{
+    const app=environment({budget:{day:new Date().toISOString().slice(0,10),count:50}});
+    const el=app.card({id:700,source:'tmdb',type:'movie',title:'Film',vote_average:8.5},'8.5');
+    app.window.kp_rating_pro_rescan();
+    const vote=el.querySelector('.card__vote');
+    assert.equal(vote.textContent,'8.5');
+    assert.ok(vote.classList.contains('kp-rating-pro-native-tmdb'));
+    assert.equal(vote.attributes['aria-label'],'TMDB 8.5');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('CUB native rating is correctly labeled CUB',async()=>{
+    const app=environment();app.store.set('kp_rating_pro_mode','tmdb');
+    const el=app.card({id:701,source:'cub',type:'movie',title:'CUB film',cub_hundred_rating:7.7,vote_average:8.8},'7.7');
+    app.window.kp_rating_pro_rescan();
+    const vote=el.querySelector('.card__vote');
+    assert.equal(vote.textContent,'7.7');
+    assert.ok(vote.classList.contains('kp-rating-pro-native-cub'));
+    assert.ok(!vote.classList.contains('kp-rating-pro-native-tmdb'));
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('Both mode uses CUB label for native CUB score',async()=>{
+    const app=environment();app.store.set('kp_rating_pro_mode','both');
+    const el=app.card({id:702,source:'cub',type:'tv',kp_rating:8.7,cub_hundred_rating:8.1,vote_average:7.5});
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'8.7');
+    assert.equal(el.querySelector('.kp-rating-pro-tmdb').textContent,'CUB 8.1');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('Unverified source and CUB fire counters receive no false labels',async()=>{
+    const app=environment();app.store.set('kp_rating_pro_mode','tmdb');
+    const u=app.card({id:703,source:'unverified',type:'movie',vote_average:6.4},'6.4');
+    const f=app.card({id:704,source:'cub',type:'movie',cub_hundred_fire:765,cub_hundred_rating:7.2,vote_average:8.0},'765');
+    app.window.kp_rating_pro_rescan();
+    assert.ok(!u.querySelector('.card__vote').classList.contains('kp-rating-pro-native'));
+    assert.ok(!f.querySelector('.card__vote').classList.contains('kp-rating-pro-native'));
+    assert.equal(f.querySelector('.card__vote').textContent,'765');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('Changing the rating mode never leaves outdated labels',async()=>{
+    const app=environment();
+    const el=app.card({id:705,source:'tmdb',type:'movie',kp_rating:9.1,vote_average:7.8},'7.8');
+    app.window.kp_rating_pro_rescan();
+    const vote=el.querySelector('.card__vote');
+    assert.equal(vote.textContent,'9.1');
+    assert.ok(vote.classList.contains('kp-rating-pro-kp'));
+    app.store.set('kp_rating_pro_mode','tmdb');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(vote.textContent,'7.8');
+    assert.ok(vote.classList.contains('kp-rating-pro-native-tmdb'));
+    assert.ok(!vote.classList.contains('kp-rating-pro-kp'));
+    app.store.set('kp_rating_pro_mode','kp');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(vote.textContent,'9.1');
+    assert.ok(vote.classList.contains('kp-rating-pro-kp'));
+    assert.ok(!vote.classList.contains('kp-rating-pro-native-tmdb'));
+    app.window.kp_rating_pro_destroy();
+ });
+ console.log(`PASS KP Rating Pro: ${pass} tests`);
 })().catch(err=>{console.error(err);process.exitCode=1;});
