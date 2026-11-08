@@ -104,7 +104,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
         Lampa.Api.sources[sourceId].main({ source: sourceId }, x => { result = x; }, () => { result = []; });
         return result;
     };
-    return { stored, timers, warnings, window, Lampa, added, settings, components, navigations, rows, getMain,
+    return { ctx, stored, timers, warnings, window, Lampa, added, settings, components, navigations, rows, getMain,
         contentRowsCalls: () => contentRowsCalls };
 }
 
@@ -188,6 +188,63 @@ test('KP cached preview works when source is temporarily unavailable', () => {
     assert.equal(app.window.SURS_PERFORMANCE.kp8_preview.status,'cached');
 });
 
+
+test('KP source autoloads a pinned original dependency and shares one download', () => {
+    const app = boot({saved:[{id:'kp_new_8',enabled:true}]});
+    const scripts = [];
+    app.Lampa.Api.partNext = (parts, limit, loaded, empty) => {
+        parts[0](row => loaded([row]));
+    };
+    app.ctx.document = {
+        createElement: tag => {
+            assert.equal(tag,'script');
+            return {async:false,src:'',onload:null,onerror:null};
+        },
+        head: {appendChild: script => scripts.push(script)}
+    };
+    const results = [];
+    const api = app.Lampa.Api.sources.SURS;
+    api.main({}, value=>results.push(value), ()=>results.push([]));
+    api.main({}, value=>results.push(value), ()=>results.push([]));
+    assert.equal(scripts.length,1);
+    assert.match(scripts[0].src,/nb557\/plugins@cde2cf057e6634df43553fe8deeaef5030f95945\/kp_source\.js/);
+    const yr=String(new Date().getFullYear());
+    let calls=0;
+    app.Lampa.Api.sources.KP={list:(args,done)=>{
+        calls++;
+        done({results:[{id:'KP_auto_'+calls,source:'KP',
+            type:args.filter_url.includes('FILM')?'movie':'tv',
+            kp_rating:8.6,vote_count:450,release_date:yr,first_air_date:yr,
+            production_countries:[{name:'США'}],genres:[{name:'драма'}]}],total_pages:1});
+    }};
+    scripts[0].onload();
+    assert.equal(results.length,2);
+    assert.equal(results[0][0].title,'Новинки США · КП 8+');
+    assert.equal(results[0][0].results.length,3);
+    assert.equal(app.window.SURS_PERFORMANCE.kp8_dependency.status,'ready');
+});
+test('KP source reports an automatic dependency download failure', () => {
+    const app = boot({saved:[{id:'kp_new_8',enabled:true}]});
+    const scripts=[];
+    app.Lampa.Api.partNext = (parts, limit, loaded, empty) => {
+        parts[0](row => row.results && row.results.length ? loaded([row]) : empty());
+    };
+    app.ctx.document = {
+        createElement:()=>({}),
+        head:{appendChild:s=>scripts.push(s)}
+    };
+    const messages=[];
+    app.Lampa.Noty.show=message=>messages.push(message);
+    let data;
+    app.Lampa.Api.sources.SURS.main({},x=>data=x,()=>data=[]);
+    assert.equal(scripts.length,1);
+    scripts[0].onerror();
+    assert.ok(Array.isArray(data) && data.length===0);
+    assert.equal(app.window.SURS_PERFORMANCE.kp8_dependency.status,'failed');
+    assert.equal(app.window.SURS_PERFORMANCE.kp8_preview.failed_reason,'script_download_failed');
+    assert.ok(messages.some(m=>m.includes('не удалось загрузить источник')));
+});
+
 test('KP 8+ is registered and enabled directly below navigation by default', () => {
     const app = boot();
     const kp = app.window.LampaShelfManager.getAllShelves().find(x => x.id === 'kp_new_8');
@@ -269,7 +326,7 @@ test('KP 8+ explains missing source instead of reporting incorrect ratings', () 
     app.Lampa.Noty.show = note => notes.push(note);
     assert.equal(app.getMain().length,0);
     assert.equal(app.window.SURS_PERFORMANCE.kp8_preview.status,'missing_source');
-    assert.ok(notes[0].includes('kp_source.js'));
+    assert.ok(notes[0].includes('источник Кинопоиска'));
 });
 test('KP 8+ distinguishes API failure from valid empty filtered results', () => {
     const app = boot({saved:[{id:'kp_new_8',enabled:true}]});
@@ -315,8 +372,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.17/);
-    assert.match(readableSource, /Версия: 3\.9\.17/);
+    assert.match(mainSource, /Версия: 3\.9\.18/);
+    assert.match(readableSource, /Версия: 3\.9\.18/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -744,7 +801,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.17/);
+    assert.match(source, /Версия: 3\.9\.18/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -827,7 +884,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.17');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.18');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 25);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -1002,7 +1059,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.17');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.18');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
