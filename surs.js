@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.18 (US Premieres Balanced Quality)
+* Версия: 3.9.19 (US Premieres Balanced Quality)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1895,6 +1895,13 @@ run();
 
 var KP8_SOURCE_URL = 'https://cdn.jsdelivr.net/gh/nb557/plugins@cde2cf057e6634df43553fe8deeaef5030f95945/kp_source.js';
 var KP8_CATALOG_URL = 'surs_kp_new_8';
+
+
+var KP8_PREVIEW_TARGET = 20;
+var KP8_PREVIEW_PAGES_PER_TYPE = 10;
+var KP8_PREVIEW_BATCH_PAGES = 2;
+
+var KP8_PREVIEW_CACHE_KEY = 'kp_new_8_deep_v1';
 var KP8_TYPES = [
 { id: 'movie', sourceType: 'FILM', votes: 300 },
 { id: 'tv', sourceType: 'TV_SERIES', votes: 150 },
@@ -2042,7 +2049,8 @@ if (!json || !Array.isArray(json.results)) return;
 var years = kp8Years();
 json.results.forEach(function(card) {
 if (!card || !card.id || card.adult === true ||
-card.type !== type.id || Number(card.kp_rating) < 8 ||
+card.type !== type.id || !isFinite(Number(card.kp_rating)) ||
+Number(card.kp_rating) < 8 ||
 (Number(card.vote_count) > 0 && Number(card.vote_count) < type.votes)) return;
 var year = Number(kp8Date(card).slice(0, 4));
 if (!year || year < years.from || year > years.to) return;
@@ -2062,24 +2070,31 @@ result.push(card);
 }
 
 function kp8Preview(callback) {
-var cachedPreview = readSursPreviewCache('kp_new_8');
+var cachedPreview = readSursPreviewCache(KP8_PREVIEW_CACHE_KEY);
 var metrics = {
 source: 'loading', status: 'loading', pages_requested: 0,
 pages_completed: 0, pages_failed: 0, raw_candidates: 0,
-matched: 0, timeout: false, failed_reason: ''
+matched: 0, timeout: false, failed_reason: '',
+stop_reason: '', max_pages_per_type: KP8_PREVIEW_PAGES_PER_TYPE,
+target: KP8_PREVIEW_TARGET, cache_hit: !!cachedPreview,
+pages_movie: 0, pages_series: 0, pages_mini_series: 0
 };
 window.SURS_PERFORMANCE.kp8_preview = metrics;
-metrics.cache_hit = !!cachedPreview;
 if (cachedPreview) {
 callback({
 title: 'Новинки США · КП 8+', url: KP8_CATALOG_URL,
-source: 'SURS', page: 1, total_pages: cachedPreview.total_pages,
+source: 'SURS', page: 1,
+total_pages: cachedPreview.total_pages,
 results: cachedPreview.results,
 params: { items: { view: 20, mapping: 'line' } }
 });
 metrics.source = 'cache';
 metrics.status = 'cached';
-if (cachedPreview.age < 4 * 60 * 60 * 1000) return;
+if (cachedPreview.age < 4 * 60 * 60 * 1000) {
+metrics.matched = cachedPreview.results.length;
+metrics.stop_reason = 'cache';
+return;
+}
 }
 kp8FindSource(function(ready) {
 if (!ready) {
@@ -2092,16 +2107,24 @@ if (!cachedPreview) callback({ results: [] });
 return;
 }
 metrics.source = 'KP';
-var seen = {}, cards = [], finished = false, secondPage = [];
-var timer = setTimeout(function() {
+var seen = {}, cards = [], finished = false, round = 0;
+var states = KP8_TYPES.map(function(type, index) {
+return { type: type, next: 1, last: KP8_PREVIEW_PAGES_PER_TYPE,
+metric: index === 0 ? 'pages_movie' :
+(index === 1 ? 'pages_series' : 'pages_mini_series') };
+});
+
+
+var deadline = setTimeout(function() {
 metrics.timeout = true;
+metrics.stop_reason = 'timeout';
 deliver();
-}, 13500);
+}, 6900);
 
 function deliver() {
 if (finished) return;
 finished = true;
-clearTimeout(timer);
+clearTimeout(deadline);
 cards.sort(kp8Compare);
 metrics.matched = cards.length;
 if (cards.length) {
@@ -2121,44 +2144,62 @@ metrics.status = 'empty_api';
 kp8Notice('empty_api', 'КП 8+: источник вернул пустую подборку. Проверьте фильтры и доступность API.');
 }
 var result = {
-title: 'Новинки США · КП 8+',
-url: KP8_CATALOG_URL, source: 'SURS', page: 1,
-total_pages: cards.length ? 2 : 1,
+title: 'Новинки США · КП 8+', url: KP8_CATALOG_URL,
+source: 'SURS', page: 1, total_pages: cards.length ? 2 : 1,
 results: cards.slice(0, 60),
 params: { items: { view: 20, mapping: 'line' } }
 };
-saveSursPreviewCache('kp_new_8', result);
+saveSursPreviewCache(KP8_PREVIEW_CACHE_KEY, result);
 if (!cachedPreview) callback(result);
 }
 
-function loadBatch(jobs, onBatchDone) {
+function nextBatch() {
 if (finished) return;
-if (!jobs.length) return onBatchDone();
+if (round > 0 && cards.length >= KP8_PREVIEW_TARGET) {
+metrics.stop_reason = 'target';
+return deliver();
+}
+var jobs = [];
+states.forEach(function(state) {
+for (var n = 0; n < KP8_PREVIEW_BATCH_PAGES &&
+state.next <= state.last; n++) {
+jobs.push({ state: state, page: state.next++ });
+}
+});
+if (!jobs.length) {
+metrics.stop_reason = 'exhausted';
+return deliver();
+}
+round++;
 var pending = jobs.length;
 jobs.forEach(function(job) {
 metrics.pages_requested++;
-kp8Fetch(job.type, job.page, ready, function(json, failure) {
+kp8Fetch(job.state.type, job.page, ready, function(json, failure) {
 if (finished) return;
 metrics.pages_completed++;
+metrics[job.state.metric]++;
 if (!json || !Array.isArray(json.results)) {
 metrics.pages_failed++;
 if (failure) metrics.failed_reason = failure;
+job.state.last = Math.min(job.state.last, job.page);
 } else {
 metrics.raw_candidates += json.results.length;
-kp8Collect(json, job.type, seen, cards);
-if (job.page === 1 && json.results.length &&
-Number(json.total_pages) > 1) secondPage.push({ type: job.type, page: 2 });
+kp8Collect(json, job.state.type, seen, cards);
+if (typeof json.total_pages === 'number' &&
+isFinite(json.total_pages)) {
+job.state.last = Math.min(job.state.last,
+Math.max(1, Math.floor(json.total_pages)));
+} else if (json.results.length < 20) {
+job.state.last = Math.min(job.state.last, job.page);
 }
-if (--pending === 0) onBatchDone();
+if (!json.results.length)
+job.state.last = Math.min(job.state.last, job.page);
+}
+if (--pending === 0) nextBatch();
 });
 });
 }
-
-loadBatch(KP8_TYPES.map(function(type) { return { type: type, page: 1 }; }), function() {
-if (!cards.length && metrics.raw_candidates > 0 && secondPage.length) {
-loadBatch(secondPage, deliver);
-} else deliver();
-});
+nextBatch();
 });
 }
 
@@ -3326,7 +3367,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.18';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.19';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3825,7 +3866,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v3.9.18 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.19 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3854,7 +3895,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.18'
+version: '3.9.19'
 };
 
 
