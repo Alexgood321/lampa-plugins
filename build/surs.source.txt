@@ -3503,7 +3503,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // extension can register after that page, so rescue ONLY a mismatched
     // default TMDB main, never a user-selected view or a deep link.
     var sursBootRecoveryDone = false, sursBootRecoveryBound = false;
-    var sursBootRecoveryStarted = Date.now();
+    var sursBootRecoveryStarted = 0;
     function ensureSursActiveOnBoot() {
         if (sursBootRecoveryDone || !window.plugin_surs_fixed_ready ||
             Date.now() - sursBootRecoveryStarted > 8000) return;
@@ -3537,6 +3537,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         } catch(err) { console.warn('[SURS] Cold boot recovery failed:', err); }
     }
     function scheduleSursBootRecovery() {
+        sursBootRecoveryStarted = Date.now();
         if (!sursBootRecoveryBound) {
             sursBootRecoveryBound = true;
             if (Lampa.Listener && Lampa.Listener.follow) {

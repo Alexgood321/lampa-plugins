@@ -3503,7 +3503,7 @@ return loadPart;
 
 
 var sursBootRecoveryDone = false, sursBootRecoveryBound = false;
-var sursBootRecoveryStarted = Date.now();
+var sursBootRecoveryStarted = 0;
 function ensureSursActiveOnBoot() {
 if (sursBootRecoveryDone || !window.plugin_surs_fixed_ready ||
 Date.now() - sursBootRecoveryStarted > 8000) return;
@@ -3537,6 +3537,7 @@ refreshSursHome('MAIN');
 } catch(err) { console.warn('[SURS] Cold boot recovery failed:', err); }
 }
 function scheduleSursBootRecovery() {
+sursBootRecoveryStarted = Date.now();
 if (!sursBootRecoveryBound) {
 sursBootRecoveryBound = true;
 if (Lampa.Listener && Lampa.Listener.follow) {
