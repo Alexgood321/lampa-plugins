@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.17 (US Premieres Balanced Quality)
+* Версия: 3.9.18 (US Premieres Balanced Quality)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1893,6 +1893,7 @@ run();
 
 
 
+var KP8_SOURCE_URL = 'https://cdn.jsdelivr.net/gh/nb557/plugins@cde2cf057e6634df43553fe8deeaef5030f95945/kp_source.js';
 var KP8_CATALOG_URL = 'surs_kp_new_8';
 var KP8_TYPES = [
 { id: 'movie', sourceType: 'FILM', votes: 300 },
@@ -1908,13 +1909,89 @@ var year = new Date().getFullYear();
 return { from: year - 1, to: year };
 }
 
-function kp8FindSource(done) {
+var kp8DependencyStatus = 'idle';
+var kp8DependencyWaiters = [];
+var kp8DependencyError = '';
+function kp8RegisteredSource() {
 var source = Lampa.Api && Lampa.Api.sources && Lampa.Api.sources.KP;
-if (!source || typeof source.list !== 'function') {
+return source && typeof source.list === 'function' ? source : null;
+}
+function kp8LoadDependency(done) {
+var source = kp8RegisteredSource();
+if (source) {
+kp8DependencyStatus = 'ready';
+done(source);
+return;
+}
+if (typeof document === 'undefined' || !document.head ||
+typeof document.createElement !== 'function') {
+kp8DependencyError = 'no_document';
 done(null);
 return;
 }
-done({ source: source, country: KP8_US_COUNTRY_ID });
+kp8DependencyWaiters.push(done);
+if (kp8DependencyStatus === 'loading') return;
+if (kp8DependencyStatus === 'failed') {
+var failedWaiters = kp8DependencyWaiters.splice(0);
+failedWaiters.forEach(function(fn) { try { fn(null); } catch(e) {} });
+return;
+}
+
+kp8DependencyStatus = 'loading';
+kp8DependencyError = '';
+var settled = false, script = null;
+var timer = setTimeout(function() { finish(null, 'load_timeout'); }, 6500);
+function finish(found, error) {
+if (settled) return;
+settled = true;
+clearTimeout(timer);
+kp8DependencyStatus = found ? 'ready' : 'failed';
+kp8DependencyError = found ? '' : (error || 'not_registered');
+window.SURS_PERFORMANCE.kp8_dependency = {
+status: kp8DependencyStatus,
+error: kp8DependencyError,
+url: KP8_SOURCE_URL
+};
+if (script) {
+script.onload = null;
+script.onerror = null;
+}
+var callbacks = kp8DependencyWaiters.splice(0);
+callbacks.forEach(function(fn) {
+try { fn(found); } catch(e) {
+console.warn('[SURS] KP dependency callback failed:', e);
+}
+});
+}
+function waitForRegistration() {
+if (settled) return;
+var registered = kp8RegisteredSource();
+if (registered) return finish(registered, null);
+
+setTimeout(waitForRegistration, 150);
+}
+try {
+script = document.createElement('script');
+script.async = true;
+script.src = KP8_SOURCE_URL;
+script.onload = waitForRegistration;
+script.onerror = function() { finish(null, 'script_download_failed'); };
+document.head.appendChild(script);
+} catch(e) {
+finish(null, 'script_injection_failed');
+}
+}
+function kp8FindSource(done) {
+kp8LoadDependency(function(source) {
+done(source ? { source: source, country: KP8_US_COUNTRY_ID } : null);
+});
+}
+function kp8PreloadEnabledSource() {
+try {
+if (getSavedShelves('MAIN').some(function(item) {
+return item.id === 'kp_new_8' && item.enabled;
+})) kp8LoadDependency(function() {});
+} catch(e) {}
 }
 
 function kp8Notice(reason, message) {
@@ -2008,8 +2085,9 @@ kp8FindSource(function(ready) {
 if (!ready) {
 metrics.source = 'missing';
 metrics.status = 'missing_source';
-metrics.failed_reason = 'KP source is not installed or not registered';
-kp8Notice('missing_source', 'КП 8+: установите kp_source.js. Плагин rating.js не является источником.');
+metrics.failed_reason = kp8DependencyError || 'source_not_registered';
+metrics.dependency_status = kp8DependencyStatus;
+kp8Notice('missing_source', 'КП 8+: не удалось загрузить источник Кинопоиска (' + metrics.failed_reason + ').');
 if (!cachedPreview) callback({ results: [] });
 return;
 }
@@ -3248,7 +3326,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.17';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.18';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3746,7 +3824,8 @@ window.surs_retry_count = 0;
 window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
-console.log('SURS Pro v3.9.17 (Fixed & Configurable) успешно инициализирован.');
+kp8PreloadEnabledSource();
+console.log('SURS Pro v3.9.18 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3775,7 +3854,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.17'
+version: '3.9.18'
 };
 
 
