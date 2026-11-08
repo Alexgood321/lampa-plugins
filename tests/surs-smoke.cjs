@@ -192,6 +192,9 @@ test('KP cached preview works when source is temporarily unavailable', () => {
 test('KP source autoloads a pinned original dependency and shares one download', () => {
     const app = boot({saved:[{id:'kp_new_8',enabled:true}]});
     const scripts = [];
+    app.Lampa.Api.partNext = (parts, limit, loaded, empty) => {
+        parts[0](row => loaded([row]));
+    };
     app.ctx.document = {
         createElement: tag => {
             assert.equal(tag,'script');
@@ -223,6 +226,9 @@ test('KP source autoloads a pinned original dependency and shares one download',
 test('KP source reports an automatic dependency download failure', () => {
     const app = boot({saved:[{id:'kp_new_8',enabled:true}]});
     const scripts=[];
+    app.Lampa.Api.partNext = (parts, limit, loaded, empty) => {
+        parts[0](row => row.results && row.results.length ? loaded([row]) : empty());
+    };
     app.ctx.document = {
         createElement:()=>({}),
         head:{appendChild:s=>scripts.push(s)}
