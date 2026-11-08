@@ -221,7 +221,7 @@ test('KP source autoloads a pinned original dependency and shares one download',
     assert.equal(results.length,2);
     assert.equal(results[0][0].title,'Новинки США · КП 8+');
     assert.equal(results[0][0].results.length,3);
-    assert.equal(calls,3);
+    assert.equal(calls,6); // Two independent main() invocations, three requests each.
     assert.equal(app.window.SURS_PERFORMANCE.kp8_dependency.status,'ready');
 });
 test('KP source reports an automatic dependency download failure', () => {
