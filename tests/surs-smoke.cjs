@@ -109,6 +109,85 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 }
 
 
+
+test('cold boot repairs only a mismatched TMDB main and never other screens', () => {
+    const app = boot({saved:[{id:'nav_buttons',enabled:true}]});
+    app.Lampa.Activity.active = () => ({component:'main',source:'tmdb'});
+    const rescue = app.timers.find(x=>x.ms===650);
+    assert.ok(rescue);
+    rescue.fn();
+    const refresh = app.timers.find(x=>x.ms===80);
+    assert.ok(refresh);
+    refresh.fn();
+    assert.equal(app.navigations.length,1);
+    assert.equal(app.navigations[0].source,'SURS');
+    rescue.fn();
+    assert.equal(app.navigations.length,1);
+    assert.equal(app.window.SURS_PERFORMANCE.boot_rescue.from,'tmdb');
+
+    const custom = boot();
+    custom.Lampa.Activity.active = () => ({component:'main',source:'KP'});
+    custom.timers.find(x=>x.ms===650).fn();
+    assert.equal(custom.navigations.length,0);
+
+    const full = boot();
+    full.Lampa.Activity.active = () => ({component:'full',source:'tmdb'});
+    full.timers.find(x=>x.ms===650).fn();
+    assert.equal(full.navigations.length,0);
+});
+test('discovered shelf storage batching preserves latest metadata and writes once', () => {
+    const app = boot();
+    const write = app.Lampa.Storage.set;
+    let writes=0;
+    app.Lampa.Storage.set = (key,value) => {
+        if(key==='surs_discovered_shelves_v2') writes++;
+        return write(key,value);
+    };
+    for(let i=0;i<25;i++)
+        app.window.surs_register_shelf({id:'debounce_'+i,title:'Row '+i});
+    assert.equal(writes,0);
+    const scheduled = app.timers.filter(x=>x.ms===400);
+    assert.ok(scheduled.length>=25);
+    scheduled.forEach(x=>x.fn());
+    assert.equal(writes,1);
+    assert.equal(app.stored.get('surs_discovered_shelves_v2').filter(x => x.id.startsWith('debounce_')).length,25);
+    app.window.surs_register_shelf({id:'debounce_24',title:'Last modified'});
+    app.timers.filter(x=>x.ms===400).slice(-1)[0].fn();
+    assert.equal(writes,2);
+    assert.equal(app.stored.get('surs_discovered_shelves_v2').find(x=>x.id==='debounce_24').title,'Last modified');
+});
+test('US8 cached preview returns immediately without additional network requests', () => {
+    const app=boot({saved:[{id:'us_new_8',enabled:true}]});
+    const now=new Date().toISOString().slice(0,10);
+    const entry={id:991,title:'Cached film',release_date:now,original_language:'en',
+        poster_path:'/poster',overview:'Story',vote_average:8.8,vote_count:1200,genre_ids:[18]};
+    let requests=0;
+    app.Lampa.Api.sources.SURS.get=(url,p,cb)=> {
+        requests++;
+        cb({results:entry.type==='tv'?[]:[entry],total_pages:1});
+    };
+    const first=app.getMain();
+    assert.equal(first[0].results[0].id,991);
+    const before=requests;
+    const again=app.getMain();
+    assert.equal(again[0].results[0].id,991);
+    assert.equal(requests,before);
+    assert.equal(app.window.SURS_PERFORMANCE.us8_preview.cache_hit,true);
+});
+test('KP cached preview works when source is temporarily unavailable', () => {
+    const app=boot({saved:[{id:'kp_new_8',enabled:true}]});
+    const year=String(new Date().getFullYear());
+    const record={id:'KP_932',source:'KP',type:'movie',
+        kp_rating:8.6,vote_count:380,release_date:year,
+        production_countries:[{name:'США'}],genres:[{name:'драма'}]};
+    app.Lampa.Api.sources.KP={list:(p,cb)=>cb({results:[record],total_pages:1})};
+    assert.equal(app.getMain()[0].results.length,1);
+    delete app.Lampa.Api.sources.KP;
+    const cached=app.getMain();
+    assert.equal(cached[0].results[0].id,'KP_932');
+    assert.equal(app.window.SURS_PERFORMANCE.kp8_preview.status,'cached');
+});
+
 test('KP 8+ is registered and enabled directly below navigation by default', () => {
     const app = boot();
     const kp = app.window.LampaShelfManager.getAllShelves().find(x => x.id === 'kp_new_8');
@@ -236,8 +315,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.16/);
-    assert.match(readableSource, /Версия: 3\.9\.16/);
+    assert.match(mainSource, /Версия: 3\.9\.17/);
+    assert.match(readableSource, /Версия: 3\.9\.17/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -665,7 +744,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.16/);
+    assert.match(source, /Версия: 3\.9\.17/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -748,7 +827,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.16');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.17');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 25);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -923,7 +1002,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.16');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.17');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
@@ -1036,9 +1115,9 @@ test('Trakt cards use correct TMDB IDs', () => {
 test('early load retries without setting ready flag', () => {
     const app = boot({ ready: false });
     assert.equal(!!app.window.plugin_surs_fixed_ready, false);
-    assert.ok(app.timers.some(x => x.ms === 1000));
+    assert.ok(app.timers.some(x => x.ms === 150));
     app.Lampa.Api.sources.tmdb = { get: (url, params, cb) => cb({ results: [] }) };
-    app.timers.find(x => x.ms === 1000).fn();
+    app.timers.find(x => x.ms === 150).fn();
     assert.equal(app.window.plugin_surs_fixed_ready, true);
 });
 test('new editor has phone, tablet, reduced-motion and scoped modal rules', () => {

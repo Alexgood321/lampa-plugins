@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.16 (US Premieres Balanced Quality)
+ * Версия: 3.9.17 (US Premieres Balanced Quality)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -116,24 +116,56 @@
         return true;
     }
 
-        function saveDiscoveredToStorage() {
+        // ContentRows often registers 20+ rows in a single synchronous burst.
+    // Commit the latest snapshot once, and flush before the page is suspended.
+    var discoveredSaveTimer = null, discoveredSaveRevision = 0, discoveredSavePending = false;
+    function flushDiscoveredToStorage() {
+        if (!discoveredSavePending) return;
+        discoveredSavePending = false;
+        if (discoveredSaveTimer !== null) {
+            clearTimeout(discoveredSaveTimer);
+            discoveredSaveTimer = null;
+        }
         try {
-            if (typeof Lampa === 'undefined' || !Lampa.Storage) return;
+            if (typeof Lampa === 'undefined' || !Lampa.Storage) {
+                discoveredSavePending = true;
+                return;
+            }
             var list = [];
             for (var key in window.SURS_EXTERNAL_SHELVES) {
                 var it = window.SURS_EXTERNAL_SHELVES[key];
                 if (isAnonymousShelf(it)) continue;
                 list.push({
-                    id: it.id,
-                    title: it.title,
-                    cat: it.cat,
-                    desc: it.desc,
-                    def: it.def
+                    id: it.id, title: it.title, cat: it.cat,
+                    desc: it.desc, def: it.def
                 });
             }
-            Lampa.Storage.set(STORAGE_DISCOVERED_KEY, list);
-        } catch(e) {}
+            var existing = Lampa.Storage.get(STORAGE_DISCOVERED_KEY, []);
+            if (JSON.stringify(existing) !== JSON.stringify(list)) {
+                Lampa.Storage.set(STORAGE_DISCOVERED_KEY, list);
+                window.SURS_PERFORMANCE.discovered_writes =
+                    (window.SURS_PERFORMANCE.discovered_writes || 0) + 1;
+            }
+        } catch(e) {
+            discoveredSavePending = true;
+        }
     }
+    function saveDiscoveredToStorage() {
+        discoveredSavePending = true;
+        var revision = ++discoveredSaveRevision;
+        if (discoveredSaveTimer !== null) clearTimeout(discoveredSaveTimer);
+        discoveredSaveTimer = setTimeout(function() {
+            if (revision === discoveredSaveRevision) flushDiscoveredToStorage();
+        }, 400);
+    }
+    try {
+        if (typeof window.addEventListener === 'function')
+            window.addEventListener('pagehide', flushDiscoveredToStorage);
+        if (typeof document !== 'undefined' && document.addEventListener)
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) flushDiscoveredToStorage();
+            });
+    } catch(e) {}
 
     function loadDiscoveredFromStorage() {
         if (discoveredLoadedOnce) return;
@@ -1671,6 +1703,32 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     // Shared US 8+ selection for the home shelf and native CategoryFull catalog.
     // The catalog keeps a transient buffer only while that screen is open.
+    // Read-through cache only for already validated, successfully loaded previews.
+    // Stale data can be shown immediately while a single fetch refreshes the cache.
+    var SURS_PREVIEW_CACHE_PREFIX = 'surs_preview_cache_v1_';
+    var SURS_PREVIEW_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+    function readSursPreviewCache(id) {
+        try {
+            var stored = Lampa.Storage.get(SURS_PREVIEW_CACHE_PREFIX + id, null);
+            if (!stored || !Array.isArray(stored.results) || !stored.results.length) return null;
+            var age = Date.now() - Number(stored.saved_at);
+            if (!isFinite(age) || age < 0 || age > SURS_PREVIEW_CACHE_MAX_AGE) return null;
+            return {
+                age: age, results: stored.results,
+                total_pages: Number(stored.total_pages) || 1
+            };
+        } catch(e) { return null; }
+    }
+    function saveSursPreviewCache(id, result) {
+        if (!result || !Array.isArray(result.results) || !result.results.length) return;
+        try {
+            Lampa.Storage.set(SURS_PREVIEW_CACHE_PREFIX + id, {
+                saved_at: Date.now(),
+                total_pages: Number(result.total_pages) || 1,
+                results: result.results.slice(0, 60)
+            });
+        } catch(e) {}
+    }
     var US8_CATALOG_URL = 'surs_us_new_8';
     var US8_TYPES = [
         { id: 'movie', date: 'primary_release_date', sort: 'release_date.desc',
@@ -1927,19 +1985,32 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     }
 
     function kp8Preview(callback) {
+        var cachedPreview = readSursPreviewCache('kp_new_8');
         var metrics = {
             source: 'loading', status: 'loading', pages_requested: 0,
             pages_completed: 0, pages_failed: 0, raw_candidates: 0,
             matched: 0, timeout: false, failed_reason: ''
         };
         window.SURS_PERFORMANCE.kp8_preview = metrics;
+        metrics.cache_hit = !!cachedPreview;
+        if (cachedPreview) {
+            callback({
+                title: 'Новинки США · КП 8+', url: KP8_CATALOG_URL,
+                source: 'SURS', page: 1, total_pages: cachedPreview.total_pages,
+                results: cachedPreview.results,
+                params: { items: { view: 20, mapping: 'line' } }
+            });
+            metrics.source = 'cache';
+            metrics.status = 'cached';
+            if (cachedPreview.age < 4 * 60 * 60 * 1000) return;
+        }
         kp8FindSource(function(ready) {
             if (!ready) {
                 metrics.source = 'missing';
                 metrics.status = 'missing_source';
                 metrics.failed_reason = 'KP source is not installed or not registered';
                 kp8Notice('missing_source', 'КП 8+: установите kp_source.js. Плагин rating.js не является источником.');
-                callback({ results: [] });
+                if (!cachedPreview) callback({ results: [] });
                 return;
             }
             metrics.source = 'KP';
@@ -1971,13 +2042,15 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     metrics.status = 'empty_api';
                     kp8Notice('empty_api', 'КП 8+: источник вернул пустую подборку. Проверьте фильтры и доступность API.');
                 }
-                callback({
+                var result = {
                     title: 'Новинки США · КП 8+',
                     url: KP8_CATALOG_URL, source: 'SURS', page: 1,
                     total_pages: cards.length ? 2 : 1,
                     results: cards.slice(0, 60),
                     params: { items: { view: 20, mapping: 'line' } }
-                });
+                };
+                saveSursPreviewCache('kp_new_8', result);
+                if (!cachedPreview) callback(result);
             }
 
             function loadBatch(jobs, onBatchDone) {
@@ -2173,7 +2246,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     function shelfTimeout(id) {
         if (id === 'us_new_8') return 8500;
-    if (id === 'kp_new_8') return 16000;
+    if (id === 'kp_new_8') return 8000;
         if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
         if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;
         if (/^ext_/i.test(id)) return 6000;
@@ -2451,6 +2524,23 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         // Native More opens the mixed catalogue; home preview scans adaptively.
         if (shelfId === 'us_new_8') {
             return function(callback) {
+                var cachedPreview = readSursPreviewCache('us_new_8');
+                if (cachedPreview) {
+                    callback({
+                        title: 'Новинки США 8+', url: US8_CATALOG_URL,
+                        source: 'SURS', page: 1, total_pages: cachedPreview.total_pages,
+                        results: cachedPreview.results,
+                        params: { items: { view: 20, mapping: 'line' } }
+                    });
+                    if (cachedPreview.age < 4 * 60 * 60 * 1000) {
+                        window.SURS_PERFORMANCE.us8_preview = {
+                            source: 'cache', cache_hit: true, pages_requested: 0,
+                            pages_completed: 0, matched: cachedPreview.results.length,
+                            stop_reason: 'cache', timeout: false
+                        };
+                        return;
+                    }
+                }
                 var dates = us8Dates();
                 var requestParams = us8RequestParams(params);
                 var delivered = false, cards = [], seen = {};
@@ -2477,7 +2567,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     clearTimeout(deadline);
                     cards.sort(us8Compare);
                     metrics.matched = cards.length;
-                    callback({
+                    var result = {
                         title: 'Новинки США 8+',
                         url: US8_CATALOG_URL,
                         source: 'SURS',
@@ -2485,7 +2575,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         total_pages: cards.length ? Math.max(pageCount, 2) : 1,
                         results: cards.slice(0, 60),
                         params: { items: { view: 20, mapping: 'line' } }
-                    });
+                    };
+                    saveSursPreviewCache('us_new_8', result);
+                    if (!cachedPreview) callback(result);
                 }
                 function nextBatch() {
                     if (delivered) return;
@@ -3156,7 +3248,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.16';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.17';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -3407,12 +3499,64 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // ==========================================
     // 7. РЕГИСТРАЦИЯ И ЗАПУСК ПЛАГИНА
     // ==========================================
+    // Lampa's Activity.init schedules its initial page after 500ms. A network
+    // extension can register after that page, so rescue ONLY a mismatched
+    // default TMDB main, never a user-selected view or a deep link.
+    var sursBootRecoveryDone = false, sursBootRecoveryBound = false;
+    var sursBootRecoveryStarted = 0;
+    function ensureSursActiveOnBoot() {
+        if (sursBootRecoveryDone || !window.plugin_surs_fixed_ready ||
+            Date.now() - sursBootRecoveryStarted > 8000) return;
+        try {
+            var active = Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active();
+            if (!active || typeof active !== 'object' || !active.component) return;
+            if (active.component !== 'main') {
+                sursBootRecoveryDone = true;
+                return;
+            }
+            if (active.source === 'SURS' || active.source === 'SURS NEW' || active.source === 'SURS RUS') {
+                sursBootRecoveryDone = true;
+                return;
+            }
+            if (active.source !== 'tmdb' && active.source !== 'surs_mod') {
+                sursBootRecoveryDone = true;
+                return;
+            }
+            if (window.start_deep_link ||
+                (Lampa.Storage && Lampa.Storage.field &&
+                 Lampa.Storage.field('start_page') === 'last')) {
+                sursBootRecoveryDone = true;
+                return;
+            }
+            if (!Lampa.Storage || Lampa.Storage.get('source') !== 'SURS') return;
+            sursBootRecoveryDone = true;
+            window.SURS_PERFORMANCE.boot_rescue = {
+                from: active.source, to: 'SURS', at: Date.now()
+            };
+            refreshSursHome('MAIN');
+        } catch(err) { console.warn('[SURS] Cold boot recovery failed:', err); }
+    }
+    function scheduleSursBootRecovery() {
+        sursBootRecoveryStarted = Date.now();
+        if (!sursBootRecoveryBound) {
+            sursBootRecoveryBound = true;
+            if (Lampa.Listener && Lampa.Listener.follow) {
+                Lampa.Listener.follow('activity', function(e) {
+                    if (e && e.type === 'start' && !sursBootRecoveryDone)
+                        setTimeout(ensureSursActiveOnBoot, 0);
+                });
+            }
+        }
+        setTimeout(ensureSursActiveOnBoot, 0);
+        setTimeout(ensureSursActiveOnBoot, 650);
+    }
+
     function startPlugin() {
         if (window.plugin_surs_fixed_ready || window.plugin_surs_fixed_starting) return;
         var initStartedAt = Date.now();
         if (typeof Lampa === 'undefined' || !Lampa.Api || !Lampa.Api.sources || !Lampa.Api.sources.tmdb) {
-            if (window.surs_retry_count++ < 10) {
-                setTimeout(startPlugin, 1000);
+            if (window.surs_retry_count++ < 66) {
+                setTimeout(startPlugin, 150);
             } else {
                 console.error('SURS: не удалось дождаться источника TMDB');
             }
@@ -3601,7 +3745,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             window.surs_retry_count = 0;
             window.SURS_PERFORMANCE.ready_at = Date.now();
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-            console.log('SURS Pro v3.9.16 (Fixed & Configurable) успешно инициализирован.');
+            scheduleSursBootRecovery();
+            console.log('SURS Pro v3.9.17 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -3630,7 +3775,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.16'
+        version: '3.9.17'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
