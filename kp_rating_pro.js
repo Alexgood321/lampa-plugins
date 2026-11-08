@@ -1,5 +1,6 @@
 /**
  * KP Rating Pro for Lampa v1.0.0
+ * Version: 1.0.0
  * Global, lazy Kinopoisk ratings for standard Lampa posters.
  * Original implementation by Alexgood321. Does not copy rating.js or its credentials.
  * Uses the installed Lampa.Api.sources.KP and reuses the existing rating.js cache.
