@@ -37,9 +37,10 @@ class Node {
     removeAttribute(k){delete this.attributes[k];}
     removeChild(child){let i=this.children.indexOf(child);if(i>=0)this.children.splice(i,1);}
 }
-function environment({kpSource=null,ratingCache=null,budget=null}={}){
+function environment({kpSource=null,ratingCache=null,budget=null,ownCache=null}={}){
     const store=new Map();
     if(ratingCache)store.set('kp_rating',ratingCache);
+    if(ownCache)store.set('kp_rating_pro_cache_v1',ownCache);
     if(budget)store.set('kp_rating_pro_budget_v1',budget);
     const body=new Node('body');const head=new Node('head');
     let io=null, mo=null;const settings=[];
@@ -276,6 +277,27 @@ await test('Both ratings mode retains KP as primary and displays TMDB separately
     app.store.set('kp_rating_pro_budget_v1',{day:new Date().toISOString().slice(0,10),count:50});
     app.window.kp_rating_pro_rescan();
     assert.equal(el.querySelector('.card__vote').textContent,'8.9');
+    app.window.kp_rating_pro_destroy();
+ });
+
+ 
+ await test('Old negative KP cache does not suppress IMDb in rating.js cache',async()=>{
+    const cached={910:{kp:0,imdb:8.6,timestamp:Date.now()}};
+    const oldOwn={'tmdb:movie:910':{rate:0,expires:Date.now()+86400000}};
+    const app=environment({ratingCache:cached,ownCache:oldOwn});
+    const el=app.card({id:910,source:'tmdb',type:'movie',vote_average:7.2},'7.2');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'8.6');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'IMDb 8.6');
+    app.window.kp_rating_pro_destroy();
+ });
+ await test('CUB IDs are not confused with rating.js TMDB cache keys',async()=>{
+    const old={921:{kp:9.9,imdb:9.9,timestamp:Date.now()}};
+    const app=environment({ratingCache:old,budget:{day:new Date().toISOString().slice(0,10),count:50}});
+    const el=app.card({id:921,source:'cub',type:'movie',cub_hundred_rating:7.4},'7.4');
+    app.window.kp_rating_pro_rescan();
+    assert.equal(el.querySelector('.card__vote').textContent,'7.4');
+    assert.ok(el.querySelector('.card__vote').classList.contains('kp-rating-pro-native-cub'));
     app.window.kp_rating_pro_destroy();
  });
 

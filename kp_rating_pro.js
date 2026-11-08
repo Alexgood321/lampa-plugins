@@ -164,10 +164,13 @@
     function legacyCacheLookup(card) {
         // @t_anton/rating.js stores independently sourced {kp, imdb, timestamp}
         // under the TMDB ID. Never assume another source's ID is a TMDB ID.
-        if (card.source && card.source !== 'tmdb' && card.source !== 'SURS' && card.source !== 'cub') return null;
+        var origin=String(card.source || 'tmdb').toLowerCase();
+        if (['tmdb','surs','surs_mod','cub'].indexOf(origin)<0) return null;
+        var tmdbId = origin === 'cub' ? card.tmdb_id : (card.tmdb_id || card.id);
+        if (!tmdbId || !/^\d+$/.test(String(tmdbId))) return null;
         try {
             var all = Lampa.Storage.cache ? Lampa.Storage.cache('kp_rating', 500, {}) : storageGet('kp_rating', {});
-            var found = all && all[String(card.id)];
+            var found = all && all[String(tmdbId)];
             if (!found || (!isValidRate(found.kp) && !isValidRate(found.imdb))) return null;
             if (!Number(found.timestamp) || Date.now() - Number(found.timestamp) > 14 * 86400000) return null;
             metrics.externalCacheHits++;
@@ -393,9 +396,13 @@
         if (mode()==='tmdb') {restore(node,card,true);return;}
         if (isValidRate(card.kp_rating)) {renderRanked(node,card,null);return;}
         var entry=cacheLookup(card);
-        if (entry) {renderRanked(node,card,entry); return;}
+        if (entry && (isValidRate(entry.rate) || isValidRate(entry.imdb))) {
+            renderRanked(node,card,entry);return;
+        }
+        // An old negative KP cache can coexist with a valid rating.js IMDb.
         var legacy=legacyCacheLookup(card);
         if (legacy) {writeCache(card,legacy);renderRanked(node,card,legacy);return;}
+        if (entry) {renderRanked(node,card,entry);return;}
         renderRanked(node,card,null);
         if (card.source==='KP') return;
         enqueue(card,node);
