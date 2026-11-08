@@ -1,6 +1,6 @@
 /**
- * KP Rating Pro for Lampa v1.0.1
- * Version: 1.0.1
+ * KP Rating Pro for Lampa v1.1.0
+ * Version: 1.1.0
  * Global, lazy Kinopoisk ratings for standard Lampa posters.
  * Original implementation by Alexgood321. Does not copy rating.js or its credentials.
  * Uses the installed Lampa.Api.sources.KP and reuses the existing rating.js cache.
@@ -10,7 +10,7 @@
     if (window.kp_rating_pro_initialized) return;
     window.kp_rating_pro_initialized = true;
 
-    var VERSION = '1.0.1';
+    var VERSION = '1.1.0';
     var STORAGE_PREFIX = 'kp_rating_pro_';
     var CACHE_KEY = STORAGE_PREFIX + 'cache_v1';
     var BUDGET_KEY = STORAGE_PREFIX + 'budget_v1';
@@ -90,34 +90,63 @@
     function originalRating(card) {
         return Number(card.cub_hundred_rating || card.vote_average || 0);
     }
-    // Lampa prioritizes cub_hundred_rating over vote_average.
-    // cub_hundred_fire is a count, not a 0–10 rating.
+    // The visible native badge prioritizes CUB. A source provider is tagged
+    // only when it can be identified from the card's own data.
     function nativeProvider(card) {
         if (!card || card.cub_hundred_fire) return null;
-        if (isValidRate(card.cub_hundred_rating)) {
+        if (isValidRate(card.cub_hundred_rating))
             return {code:'cub', title:'CUB', value:Number(card.cub_hundred_rating)};
-        }
-        if (card.source === 'KP' && isValidRate(card.vote_average || card.kp_rating)) {
+        if (String(card.source || '').toUpperCase() === 'KP' &&
+            isValidRate(card.vote_average || card.kp_rating))
             return {code:'kp', title:'КП', value:Number(card.vote_average || card.kp_rating)};
-        }
         if (!isValidRate(card.vote_average)) return null;
-        var source = String(card.source || 'tmdb').toLowerCase();
-        if (['tmdb','surs','surs_mod','cub'].indexOf(source) < 0) return null;
+        var origin = String(card.source || 'tmdb').toLowerCase();
+        if (['tmdb','surs','surs_mod','cub'].indexOf(origin) < 0) return null;
+        // No TMDB attribution for independent sources without explicit origin.
+        if (origin === 'cub' && !card.tmdb_id && !card.tmdb_rating &&
+            card.rating_source !== 'tmdb') return null;
         return {code:'tmdb', title:'TMDB', value:Number(card.vote_average)};
+    }
+    function directImdb(card) {
+        var ratings = [card.imdb_rating, card.ratingImdb, card.imdbRating];
+        for (var i=0;i<ratings.length;i++)
+            if (isValidRate(ratings[i])) return Number(ratings[i]);
+        return 0;
+    }
+    function rankedRatings(card, fromCache) {
+        var result=[], c=fromCache || {};
+        function add(code,title,value) {
+            if (isValidRate(value))
+                result.push({code:code,title:title,value:Number(value)});
+        }
+        var kp = isValidRate(card.kp_rating) ? Number(card.kp_rating) :
+            (String(card.source || '').toUpperCase() === 'KP' &&
+             isValidRate(card.vote_average) ? Number(card.vote_average) : Number(c.rate || c.kp || 0));
+        var imdb = directImdb(card) || Number(c.imdb || 0);
+        add('kp','КП',kp);
+        add('imdb','IMDb',imdb);
+        // TMDB rating is not inferred from third-party vote_average blindly.
+        var origin=String(card.source || 'tmdb').toLowerCase();
+        var canUseTMDB = ['tmdb','surs','surs_mod'].indexOf(origin)>=0;
+        if (canUseTMDB) add('tmdb','TMDB',card.vote_average);
+        else if (isValidRate(card.tmdb_rating)) add('tmdb','TMDB',card.tmdb_rating);
+        else if (origin==='cub' && card.rating_source==='tmdb') add('tmdb','TMDB',card.vote_average);
+        add('cub','CUB',card.cub_hundred_rating);
+        return result;
     }
     function clearVoteLabels(vote) {
         if (!vote) return;
         vote.classList.remove('kp-rating-pro-vote','kp-rating-pro-kp',
-            'kp-rating-pro-native','kp-rating-pro-native-tmdb',
-            'kp-rating-pro-native-cub','kp-rating-pro-native-kp');
+            'kp-rating-pro-imdb','kp-rating-pro-native',
+            'kp-rating-pro-native-tmdb','kp-rating-pro-native-cub',
+            'kp-rating-pro-native-kp','kp-rating-pro-native-imdb');
         vote.removeAttribute('aria-label');
     }
     function decorateNative(node,card) {
         var vote = getVote(node), provider = nativeProvider(card);
         if (!vote) return;
-        // Refuse to attribute a score when another plugin changed its number.
         if (!provider || !isValidRate(Number(vote.textContent)) ||
-            Math.abs(Number(vote.textContent)-Math.min(provider.value,10))>0.06) {
+            Math.abs(Number(vote.textContent)-Math.min(provider.value,10)) > 0.06) {
             clearVoteLabels(vote);
             return;
         }
@@ -133,15 +162,19 @@
         return item;
     }
     function legacyCacheLookup(card) {
-        // The installed @t_anton rating.js stores {kp, imdb, timestamp} by TMDB ID.
+        // @t_anton/rating.js stores independently sourced {kp, imdb, timestamp}
+        // under the TMDB ID. Never assume another source's ID is a TMDB ID.
         if (card.source && card.source !== 'tmdb' && card.source !== 'SURS' && card.source !== 'cub') return null;
         try {
             var all = Lampa.Storage.cache ? Lampa.Storage.cache('kp_rating', 500, {}) : storageGet('kp_rating', {});
             var found = all && all[String(card.id)];
-            if (!found || !isValidRate(found.kp)) return null;
+            if (!found || (!isValidRate(found.kp) && !isValidRate(found.imdb))) return null;
             if (!Number(found.timestamp) || Date.now() - Number(found.timestamp) > 14 * 86400000) return null;
             metrics.externalCacheHits++;
-            return Number(found.kp);
+            return {
+                kp: isValidRate(found.kp) ? Number(found.kp) : 0,
+                imdb: isValidRate(found.imdb) ? Number(found.imdb) : 0
+            };
         } catch(e) { return null; }
     }
     function trimCache() {
@@ -158,7 +191,13 @@
         saveTimer = setTimeout(function(){ saveTimer = null; trimCache(); storageSet(CACHE_KEY, cache); }, 1500);
     }
     function writeCache(card, rating) {
-        cache[cacheKey(card)] = {rate: rating || 0, expires: Date.now() + (rating ? SUCCESS_TTL : MISS_TTL)};
+        var values = rating && typeof rating === 'object' ? rating : {kp:rating};
+        var kp = isValidRate(values.kp) ? Number(values.kp) : 0;
+        var imdb = isValidRate(values.imdb) ? Number(values.imdb) : 0;
+        cache[cacheKey(card)] = {
+            rate: kp, imdb: imdb,
+            expires: Date.now() + (kp || imdb ? SUCCESS_TTL : MISS_TTL)
+        };
         saveCache();
     }
     function getVote(node) {
@@ -174,41 +213,58 @@
         view.appendChild(vote);
         return vote;
     }
-    function applyRating(node, card, kp) {
+    function renderRanked(node,card,stored) {
         if (!node || !node.isConnected) return;
-        var selected = mode();
         if (!enabled()) return restore(node,card,false);
-        if (selected === 'tmdb') return restore(node,card,true);
-        if (!isValidRate(kp)) return;
-        var vote = makeVote(node);
+        if (mode()==='tmdb') return restore(node,card,true);
+        if (card.cub_hundred_fire) return restore(node,card,false);
+        var candidates = rankedRatings(card,stored);
+        if (!candidates.length) return restore(node,card,true);
+        var vote = getVote(node) || makeVote(node);
         if (!vote) return;
-        var provider = nativeProvider(card);
+        var target = candidates[0], native = originalRating(card);
+        var isOurs = vote.classList.contains('kp-rating-pro-vote');
+        // When replacing with a fallback (not KP/IMDb), verify that the
+        // native number has not been changed by an unrelated extension.
+        if (!isOurs && target.code !== 'kp' && target.code !== 'imdb' &&
+            (!isValidRate(Number(vote.textContent)) ||
+             Math.abs(Number(vote.textContent) - native) > 0.06)) {
+            return decorateNative(node,card);
+        }
         clearVoteLabels(vote);
-        vote.classList.add('kp-rating-pro-vote','kp-rating-pro-kp');
-        vote.setAttribute('aria-label','Кинопоиск '+format(kp));
-        vote.textContent = format(kp);
+        vote.classList.add('kp-rating-pro-vote');
+        if (target.code === 'kp') vote.classList.add('kp-rating-pro-kp');
+        else if (target.code === 'imdb') vote.classList.add('kp-rating-pro-imdb');
+        else vote.classList.add('kp-rating-pro-native','kp-rating-pro-native-'+target.code);
+        vote.textContent = format(target.value);
+        vote.setAttribute('aria-label',target.title+' '+format(target.value));
         var extra = node.querySelector('.kp-rating-pro-tmdb');
-        if (selected === 'both' && provider && provider.code !== 'kp' && isValidRate(provider.value)) {
+        var second = mode() === 'both' ? candidates[1] : null;
+        if (second) {
             if (!extra) {
                 extra = document.createElement('div');
                 extra.className = 'kp-rating-pro-tmdb';
                 vote.parentNode.appendChild(extra);
             }
-            extra.textContent = provider.title+' '+format(provider.value);
+            extra.textContent = second.title+' '+format(second.value);
         } else if (extra && extra.parentNode) extra.parentNode.removeChild(extra);
         metrics.decorated++;
+        if (target.code === 'imdb')
+            metrics.imdbSelected = (metrics.imdbSelected||0)+1;
     }
-    function restore(node, card, showNativeLabel) {
+    function applyRating(node,card,rating) {
+        renderRanked(node,card,rating && typeof rating === 'object' ? rating : {kp:rating});
+    }
+    function restore(node,card,showNativeLabel) {
         var vote = getVote(node);
         if (!vote) return;
-        var wasReplaced = vote.classList.contains('kp-rating-pro-kp');
+        var wasReplaced = vote.classList.contains('kp-rating-pro-vote');
         clearVoteLabels(vote);
-        // Preserve native values from other plugins; only undo our own KP swap.
         if (wasReplaced) {
-            var native = originalRating(card);
-            vote.textContent = isValidRate(native) ? format(native) : '';
+            var native=originalRating(card);
+            vote.textContent=isValidRate(native) ? format(native) : '';
         }
-        var extra = node.querySelector('.kp-rating-pro-tmdb');
+        var extra=node.querySelector('.kp-rating-pro-tmdb');
         if (extra && extra.parentNode) extra.parentNode.removeChild(extra);
         if (showNativeLabel) decorateNative(node,card);
     }
@@ -250,16 +306,21 @@
         var titles = [normalize(card.title || card.name), normalize(card.original_title || card.original_name)]
             .filter(Boolean);
         var matching = opts.filter(function(candidate) {
-            if (!candidate || !isValidRate(candidate.kp_rating) || kind(candidate)!==want) return false;
-            var cy = year(candidate);
+            if (!candidate || (!isValidRate(candidate.kp_rating) && !isValidRate(candidate.imdb_rating)) ||
+                kind(candidate)!==want) return false;
+            var cy=year(candidate);
             if (y && cy && Math.abs(cy-y)>1) return false;
             if (byImdb && card.imdb_id && candidate.imdb_id === card.imdb_id) return true;
-            var names = [normalize(candidate.title||candidate.name),normalize(candidate.original_title||candidate.original_name)];
-            return titles.some(function(t){ return names.indexOf(t)>=0; });
+            var names=[normalize(candidate.title||candidate.name),normalize(candidate.original_title||candidate.original_name)];
+            return titles.some(function(t) {return names.indexOf(t)>=0;});
         });
         if (!matching.length) return null;
-        matching.sort(function(a,b) { return Number(b.vote_count||0)-Number(a.vote_count||0); });
-        return Number(matching[0].kp_rating);
+        matching.sort(function(a,b){return Number(b.vote_count||0)-Number(a.vote_count||0);});
+        var result=matching[0];
+        return {
+            kp:isValidRate(result.kp_rating)?Number(result.kp_rating):0,
+            imdb:isValidRate(result.imdb_rating)?Number(result.imdb_rating):0
+        };
     }
     function queryCard(source, card, done) {
         var imdb = String(card.imdb_id || '');
@@ -311,11 +372,12 @@
         queryCard(source,job.card,function(rating){
             inflight=false;
             activeJob=null;
-            if (isValidRate(rating)) { metrics.matched++; writeCache(job.card,rating); }
+            var hasRating = rating && (isValidRate(rating.kp) || isValidRate(rating.imdb));
+            if (hasRating) { metrics.matched++; writeCache(job.card,rating); }
             else { metrics.misses++; writeCache(job.card,0); }
             job.nodes.forEach(function(node){
-                if(node && node.card_data && cacheKey(node.card_data)===job.key && isValidRate(rating))
-                    applyRating(node,node.card_data,rating);
+                if(node && node.card_data && cacheKey(node.card_data)===job.key)
+                    renderRanked(node,node.card_data,hasRating ? {rate:rating.kp,imdb:rating.imdb} : null);
             });
             if (queue.length) setTimeout(pump,WAIT_BETWEEN_REQUESTS);
         });
@@ -329,14 +391,13 @@
         if (!cur || cur.key!==key) stateByNode.set(node,{key:key});
         if (!enabled()) {restore(node,card,false);return;}
         if (mode()==='tmdb') {restore(node,card,true);return;}
-        if (isValidRate(card.kp_rating)) {applyRating(node,card,card.kp_rating);return;}
-        // The fallback is labeled immediately; network lookup is independent.
-        restore(node,card,true);
-        if (card.source==='KP') return;
+        if (isValidRate(card.kp_rating)) {renderRanked(node,card,null);return;}
         var entry=cacheLookup(card);
-        if (entry) {if (entry.rate) applyRating(node,card,entry.rate); return;}
+        if (entry) {renderRanked(node,card,entry); return;}
         var legacy=legacyCacheLookup(card);
-        if (legacy) {writeCache(card,legacy);applyRating(node,card,legacy);return;}
+        if (legacy) {writeCache(card,legacy);renderRanked(node,card,legacy);return;}
+        renderRanked(node,card,null);
+        if (card.source==='KP') return;
         enqueue(card,node);
     }
     function observeCard(node) {
@@ -344,7 +405,7 @@
         var card=node.card_data;
         if (!isFilm(card)) return;
         stateByNode.set(node,{key:cacheKey(card)});
-        if (enabled()) decorateNative(node,card);
+        if (enabled()) renderRanked(node,card,null);
         if (io) io.observe(node);
         else updateCard(node);
     }
@@ -379,6 +440,7 @@
           '.card__vote.kp-rating-pro-kp:before,.card__vote.kp-rating-pro-native-kp:before{content:"КП";font-size:.66em;opacity:.88;font-weight:600}' +
           '.card__vote.kp-rating-pro-native-tmdb:before{content:"TMDB";font-size:.62em;opacity:.88;font-weight:600}' +
           '.card__vote.kp-rating-pro-native-cub:before{content:"CUB";font-size:.66em;opacity:.88;font-weight:600}' +
+          '.card__vote.kp-rating-pro-imdb:before{content:"IMDb";font-size:.62em;opacity:.88;font-weight:600}' +
           '.kp-rating-pro-tmdb{position:absolute;bottom:2.15em;right:.3em;padding:.16em .35em;font-size:.65em;' +
           'background:rgba(0,0,0,.75);border-radius:.35em;color:#fff;pointer-events:none}';
         document.head.appendChild(style);
@@ -390,8 +452,8 @@
         Lampa.SettingsApi.addParam({component:'kp_rating_pro',param:{name:ENABLED_KEY,type:'trigger',default:true},
             field:{name:'Показывать рейтинги на постерах',description:'Только видимые карточки; загрузка не блокируется'},
             onChange:function(v){storageSet(ENABLED_KEY,!!v);scan(document.body,true);if(v)pump();}});
-        Lampa.SettingsApi.addParam({component:'kp_rating_pro',param:{name:MODE_KEY,type:'select',default:'kp',values:{kp:'КП вместо TMDB',both:'КП и TMDB',tmdb:'Только стандартный рейтинг'}},
-            field:{name:'Отображаемый рейтинг',description:'При отсутствии рейтинга КП сохраняется стандартный'},
+        Lampa.SettingsApi.addParam({component:'kp_rating_pro',param:{name:MODE_KEY,type:'select',default:'kp',values:{kp:'Авто: КП → IMDb → TMDB → CUB',both:'Авто + второй рейтинг',tmdb:'Штатный рейтинг Lampa'}},
+            field:{name:'Отображаемый рейтинг',description:'Приоритет: КП, затем IMDb, TMDB, CUB. Только подтверждённые источники'},
             onChange:function(v){storageSet(MODE_KEY,v);scan(document.body,true);pump();}});
     }
     function start() {
