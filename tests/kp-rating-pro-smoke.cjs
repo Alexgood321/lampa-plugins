@@ -219,7 +219,7 @@ await test('Both ratings mode retains KP as primary and displays TMDB separately
     const el=app.card({id:158,source:'tmdb',type:'movie',vote_average:8.4});
     app.window.kp_rating_pro_rescan();
     assert.equal(el.querySelector('.card__vote').textContent,'7.3');
-    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'КП 7.3');
+    assert.equal(el.querySelector('.card__vote').attributes['aria-label'],'Кинопоиск 7.3');
     app.window.kp_rating_pro_destroy();
  });
  await test('Direct IMDb value from KP source is trusted and does not request API',async()=>{

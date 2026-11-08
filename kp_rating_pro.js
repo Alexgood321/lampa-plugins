@@ -237,7 +237,7 @@
         else if (target.code === 'imdb') vote.classList.add('kp-rating-pro-imdb');
         else vote.classList.add('kp-rating-pro-native','kp-rating-pro-native-'+target.code);
         vote.textContent = format(target.value);
-        vote.setAttribute('aria-label',target.title+' '+format(target.value));
+        vote.setAttribute('aria-label',(target.code === 'kp' ? 'Кинопоиск' : target.title)+' '+format(target.value));
         var extra = node.querySelector('.kp-rating-pro-tmdb');
         var second = mode() === 'both' ? candidates[1] : null;
         if (second) {
