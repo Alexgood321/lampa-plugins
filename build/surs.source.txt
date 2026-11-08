@@ -2160,8 +2160,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     return deliver();
                 }
                 var jobs = [];
+                // First query only page 1 per type to learn total_pages.
+                // Later rounds may request two pages per type concurrently.
+                var batchPages = round === 0 ? 1 : KP8_PREVIEW_BATCH_PAGES;
                 states.forEach(function(state) {
-                    for (var n = 0; n < KP8_PREVIEW_BATCH_PAGES &&
+                    for (var n = 0; n < batchPages &&
                          state.next <= state.last; n++) {
                         jobs.push({ state: state, page: state.next++ });
                     }

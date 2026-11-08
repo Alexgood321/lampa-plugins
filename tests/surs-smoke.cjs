@@ -221,6 +221,7 @@ test('KP source autoloads a pinned original dependency and shares one download',
     assert.equal(results.length,2);
     assert.equal(results[0][0].title,'Новинки США · КП 8+');
     assert.equal(results[0][0].results.length,3);
+    assert.equal(calls,3);
     assert.equal(app.window.SURS_PERFORMANCE.kp8_dependency.status,'ready');
 });
 test('KP source reports an automatic dependency download failure', () => {
@@ -448,7 +449,7 @@ test('KP 8+ deadline returns partial results without accepting late requests', (
     app.Lampa.Api.partNext=(parts,limit,loaded,empty)=>
         parts[0](x=>{rows=[x];loaded([x]);});
     app.Lampa.Api.sources.SURS.main({},data=>{rows=data;delivered++;},()=>delivered++);
-    assert.equal(requested.length,6);
+    assert.equal(requested.length,3);
     const type=requested[0].p.filter_url.includes('type=FILM')?'movie':'tv';
     requested[0].ok({results:[{id:'KP_partial',type,release_date:yr,first_air_date:yr,
         kp_rating:8.3,vote_count:650,genres:[{name:'драма'}],production_countries:[{name:'США'}]}],

@@ -2160,8 +2160,11 @@ metrics.stop_reason = 'target';
 return deliver();
 }
 var jobs = [];
+
+
+var batchPages = round === 0 ? 1 : KP8_PREVIEW_BATCH_PAGES;
 states.forEach(function(state) {
-for (var n = 0; n < KP8_PREVIEW_BATCH_PAGES &&
+for (var n = 0; n < batchPages &&
 state.next <= state.last; n++) {
 jobs.push({ state: state, page: state.next++ });
 }
