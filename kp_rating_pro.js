@@ -1,6 +1,6 @@
 /**
- * KP Rating Pro for Lampa v1.0.0
- * Version: 1.0.0
+ * KP Rating Pro for Lampa v1.0.1
+ * Version: 1.0.1
  * Global, lazy Kinopoisk ratings for standard Lampa posters.
  * Original implementation by Alexgood321. Does not copy rating.js or its credentials.
  * Uses the installed Lampa.Api.sources.KP and reuses the existing rating.js cache.
@@ -10,7 +10,7 @@
     if (window.kp_rating_pro_initialized) return;
     window.kp_rating_pro_initialized = true;
 
-    var VERSION = '1.0.0';
+    var VERSION = '1.0.1';
     var STORAGE_PREFIX = 'kp_rating_pro_';
     var CACHE_KEY = STORAGE_PREFIX + 'cache_v1';
     var BUDGET_KEY = STORAGE_PREFIX + 'budget_v1';
@@ -90,6 +90,41 @@
     function originalRating(card) {
         return Number(card.cub_hundred_rating || card.vote_average || 0);
     }
+    // Lampa prioritizes cub_hundred_rating over vote_average.
+    // cub_hundred_fire is a count, not a 0–10 rating.
+    function nativeProvider(card) {
+        if (!card || card.cub_hundred_fire) return null;
+        if (isValidRate(card.cub_hundred_rating)) {
+            return {code:'cub', title:'CUB', value:Number(card.cub_hundred_rating)};
+        }
+        if (card.source === 'KP' && isValidRate(card.vote_average || card.kp_rating)) {
+            return {code:'kp', title:'КП', value:Number(card.vote_average || card.kp_rating)};
+        }
+        if (!isValidRate(card.vote_average)) return null;
+        var source = String(card.source || 'tmdb').toLowerCase();
+        if (['tmdb','surs','surs_mod','cub'].indexOf(source) < 0) return null;
+        return {code:'tmdb', title:'TMDB', value:Number(card.vote_average)};
+    }
+    function clearVoteLabels(vote) {
+        if (!vote) return;
+        vote.classList.remove('kp-rating-pro-vote','kp-rating-pro-kp',
+            'kp-rating-pro-native','kp-rating-pro-native-tmdb',
+            'kp-rating-pro-native-cub','kp-rating-pro-native-kp');
+        vote.removeAttribute('aria-label');
+    }
+    function decorateNative(node,card) {
+        var vote = getVote(node), provider = nativeProvider(card);
+        if (!vote) return;
+        // Refuse to attribute a score when another plugin changed its number.
+        if (!provider || !isValidRate(Number(vote.textContent)) ||
+            Math.abs(Number(vote.textContent)-Math.min(provider.value,10))>0.06) {
+            clearVoteLabels(vote);
+            return;
+        }
+        clearVoteLabels(vote);
+        vote.classList.add('kp-rating-pro-native','kp-rating-pro-native-'+provider.code);
+        vote.setAttribute('aria-label',provider.title+' '+format(provider.value));
+    }
     function cacheLookup(card) {
         var key = cacheKey(card), item = cache[key];
         if (!item) return null;
@@ -142,36 +177,40 @@
     function applyRating(node, card, kp) {
         if (!node || !node.isConnected) return;
         var selected = mode();
-        if (!enabled() || selected === 'tmdb') return restore(node, card);
+        if (!enabled()) return restore(node,card,false);
+        if (selected === 'tmdb') return restore(node,card,true);
         if (!isValidRate(kp)) return;
         var vote = makeVote(node);
         if (!vote) return;
-        var native = originalRating(card);
-        vote.classList.add('kp-rating-pro-vote');
-        vote.classList.add('kp-rating-pro-kp');
-        vote.setAttribute('aria-label','Кинопоиск ' + format(kp));
+        var provider = nativeProvider(card);
+        clearVoteLabels(vote);
+        vote.classList.add('kp-rating-pro-vote','kp-rating-pro-kp');
+        vote.setAttribute('aria-label','Кинопоиск '+format(kp));
         vote.textContent = format(kp);
         var extra = node.querySelector('.kp-rating-pro-tmdb');
-        if (selected === 'both' && card.source !== 'KP' && isValidRate(native)) {
+        if (selected === 'both' && provider && provider.code !== 'kp' && isValidRate(provider.value)) {
             if (!extra) {
                 extra = document.createElement('div');
                 extra.className = 'kp-rating-pro-tmdb';
                 vote.parentNode.appendChild(extra);
             }
-            extra.textContent = 'TMDB ' + format(native);
+            extra.textContent = provider.title+' '+format(provider.value);
         } else if (extra && extra.parentNode) extra.parentNode.removeChild(extra);
         metrics.decorated++;
     }
-    function restore(node, card) {
+    function restore(node, card, showNativeLabel) {
         var vote = getVote(node);
         if (!vote) return;
-        vote.classList.remove('kp-rating-pro-vote','kp-rating-pro-kp');
-        vote.removeAttribute('aria-label');
-        var native = originalRating(card);
-        if (isValidRate(native)) vote.textContent = format(native);
-        else vote.textContent = '';
+        var wasReplaced = vote.classList.contains('kp-rating-pro-kp');
+        clearVoteLabels(vote);
+        // Preserve native values from other plugins; only undo our own KP swap.
+        if (wasReplaced) {
+            var native = originalRating(card);
+            vote.textContent = isValidRate(native) ? format(native) : '';
+        }
         var extra = node.querySelector('.kp-rating-pro-tmdb');
         if (extra && extra.parentNode) extra.parentNode.removeChild(extra);
+        if (showNativeLabel) decorateNative(node,card);
     }
     function getSource() {
         try {
@@ -288,8 +327,11 @@
         metrics.scanned++;
         var cur=stateByNode.get(node), key=cacheKey(card);
         if (!cur || cur.key!==key) stateByNode.set(node,{key:key});
-        if (!enabled() || mode()==='tmdb') {restore(node,card);return;}
+        if (!enabled()) {restore(node,card,false);return;}
+        if (mode()==='tmdb') {restore(node,card,true);return;}
         if (isValidRate(card.kp_rating)) {applyRating(node,card,card.kp_rating);return;}
+        // The fallback is labeled immediately; network lookup is independent.
+        restore(node,card,true);
         if (card.source==='KP') return;
         var entry=cacheLookup(card);
         if (entry) {if (entry.rate) applyRating(node,card,entry.rate); return;}
@@ -302,6 +344,7 @@
         var card=node.card_data;
         if (!isFilm(card)) return;
         stateByNode.set(node,{key:cacheKey(card)});
+        if (enabled()) decorateNative(node,card);
         if (io) io.observe(node);
         else updateCard(node);
     }
@@ -332,8 +375,10 @@
         if (document.getElementById('kp-rating-pro-css')) return;
         var style=document.createElement('style');
         style.id='kp-rating-pro-css';
-        style.textContent='.card__vote.kp-rating-pro-kp{display:flex;align-items:center;gap:.3em;white-space:nowrap}' +
-          '.card__vote.kp-rating-pro-kp:before{content:"КП";font-size:.66em;opacity:.88;font-weight:600}' +
+        style.textContent='.card__vote.kp-rating-pro-kp,.card__vote.kp-rating-pro-native{display:flex;align-items:center;gap:.3em;white-space:nowrap}' +
+          '.card__vote.kp-rating-pro-kp:before,.card__vote.kp-rating-pro-native-kp:before{content:"КП";font-size:.66em;opacity:.88;font-weight:600}' +
+          '.card__vote.kp-rating-pro-native-tmdb:before{content:"TMDB";font-size:.62em;opacity:.88;font-weight:600}' +
+          '.card__vote.kp-rating-pro-native-cub:before{content:"CUB";font-size:.66em;opacity:.88;font-weight:600}' +
           '.kp-rating-pro-tmdb{position:absolute;bottom:2.15em;right:.3em;padding:.16em .35em;font-size:.65em;' +
           'background:rgba(0,0,0,.75);border-radius:.35em;color:#fff;pointer-events:none}';
         document.head.appendChild(style);
