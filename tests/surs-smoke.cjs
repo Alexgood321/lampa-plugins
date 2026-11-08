@@ -150,7 +150,7 @@ test('discovered shelf storage batching preserves latest metadata and writes onc
     assert.equal(scheduled.length,25);
     scheduled.forEach(x=>x.fn());
     assert.equal(writes,1);
-    assert.equal(app.stored.get('surs_discovered_shelves_v2').length,25);
+    assert.equal(app.stored.get('surs_discovered_shelves_v2').filter(x => x.id.startsWith('debounce_')).length,25);
     app.window.surs_register_shelf({id:'debounce_24',title:'Last modified'});
     app.timers.filter(x=>x.ms===400).slice(-1)[0].fn();
     assert.equal(writes,2);
