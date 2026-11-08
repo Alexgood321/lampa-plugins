@@ -1115,9 +1115,9 @@ test('Trakt cards use correct TMDB IDs', () => {
 test('early load retries without setting ready flag', () => {
     const app = boot({ ready: false });
     assert.equal(!!app.window.plugin_surs_fixed_ready, false);
-    assert.ok(app.timers.some(x => x.ms === 1000));
+    assert.ok(app.timers.some(x => x.ms === 150));
     app.Lampa.Api.sources.tmdb = { get: (url, params, cb) => cb({ results: [] }) };
-    app.timers.find(x => x.ms === 1000).fn();
+    app.timers.find(x => x.ms === 150).fn();
     assert.equal(app.window.plugin_surs_fixed_ready, true);
 });
 test('new editor has phone, tablet, reduced-motion and scoped modal rules', () => {
