@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.15 (US Premieres Balanced Quality)
+ * Версия: 3.9.16 (US Premieres Balanced Quality)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1841,7 +1841,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         { id: 'tv', sourceType: 'TV_SERIES', votes: 150 },
         { id: 'tv', sourceType: 'MINI_SERIES', votes: 150 }
     ];
-    var kp8CountrySource = null, kp8CountryId = null, kp8CountryLoading = false, kp8CountryWaiters = [];
+    // USA is country=1 in Kinopoisk Unofficial API. Querying /films/filters
+    // before every shelf load adds a failure point and unnecessarily delays the page.
+    var KP8_US_COUNTRY_ID = 1;
 
     function kp8Years() {
         var year = new Date().getFullYear();
@@ -1850,45 +1852,19 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     function kp8FindSource(done) {
         var source = Lampa.Api && Lampa.Api.sources && Lampa.Api.sources.KP;
-        if (!source || typeof source.list !== 'function' || typeof source.kpFilters !== 'function') {
+        if (!source || typeof source.list !== 'function') {
             done(null);
             return;
         }
-        if (source !== kp8CountrySource) {
-            kp8CountrySource = source;
-            kp8CountryId = null;
-            kp8CountryLoading = false;
-            kp8CountryWaiters = [];
-        }
-        if (kp8CountryId !== null) {
-            done({ source: source, country: kp8CountryId });
-            return;
-        }
-        kp8CountryWaiters.push(done);
-        if (kp8CountryLoading) return;
-        kp8CountryLoading = true;
-        var settled = false;
-        var timer = setTimeout(function() { finish(null); }, 3500);
-        function finish(id) {
-            if (settled) return;
-            settled = true;
-            clearTimeout(timer);
-            kp8CountryLoading = false;
-            if (id != null && id !== '') kp8CountryId = id;
-            var ready = kp8CountryId != null ? { source: source, country: kp8CountryId } : null;
-            var listeners = kp8CountryWaiters.splice(0);
-            listeners.forEach(function(callback) { try { callback(ready); } catch(e) {} });
-        }
+        done({ source: source, country: KP8_US_COUNTRY_ID });
+    }
+
+    function kp8Notice(reason, message) {
+        if (!message || window.__SURS_KP_LAST_NOTICE === reason) return;
+        window.__SURS_KP_LAST_NOTICE = reason;
         try {
-            source.kpFilters({}, function(genres, countries, genreMap, countryMap) {
-                var id = countryMap && countryMap['США'];
-                if (id == null && Array.isArray(countries)) {
-                    var usa = countries.find(function(country) { return country.title === 'США' || country.country === 'США'; });
-                    if (usa) id = usa.id;
-                }
-                finish(id);
-            });
-        } catch(e) { finish(null); }
+            if (Lampa.Noty && typeof Lampa.Noty.show === 'function') Lampa.Noty.show(message);
+        } catch(e) {}
     }
 
     function kp8Query(type, country, years) {
@@ -1899,20 +1875,21 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     function kp8Fetch(type, page, ready, onFinish) {
         var responded = false;
-        var timeout = setTimeout(function() { finish(null); }, 6500);
-        function finish(data) {
+        var timeout = setTimeout(function() { finish(null, 'timeout'); }, 11000);
+        function finish(data, reason) {
             if (responded) return;
             responded = true;
             clearTimeout(timeout);
-            onFinish(data);
+            onFinish(data, reason || '');
         }
         try {
             ready.source.list({
                 url: 'filter',
                 filter_url: kp8Query(type, ready.country, kp8Years()),
                 page: page
-            }, finish, function() { finish(null); });
-        } catch(e) { finish(null); }
+            }, function(json) { finish(json, null); },
+            function() { finish(null, 'request_failed'); });
+        } catch(e) { finish(null, 'exception'); }
     }
 
     function kp8Date(card) {
@@ -1929,7 +1906,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         if (!json || !Array.isArray(json.results)) return;
         var years = kp8Years();
         json.results.forEach(function(card) {
-            if (!card || !card.id || !card.img || card.adult === true ||
+            if (!card || !card.id || card.adult === true ||
                 card.type !== type.id || Number(card.kp_rating) < 8 ||
                 (Number(card.vote_count) > 0 && Number(card.vote_count) < type.votes)) return;
             var year = Number(kp8Date(card).slice(0, 4));
@@ -1950,30 +1927,50 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     }
 
     function kp8Preview(callback) {
-        var metrics = { source: 'loading', pages_requested: 0, pages_completed: 0, matched: 0, timeout: false };
+        var metrics = {
+            source: 'loading', status: 'loading', pages_requested: 0,
+            pages_completed: 0, pages_failed: 0, raw_candidates: 0,
+            matched: 0, timeout: false, failed_reason: ''
+        };
         window.SURS_PERFORMANCE.kp8_preview = metrics;
         kp8FindSource(function(ready) {
             if (!ready) {
                 metrics.source = 'missing';
-                if (!window.__SURS_KP_SOURCE_NOTICE && Lampa.Noty && Lampa.Noty.show) {
-                    window.__SURS_KP_SOURCE_NOTICE = true;
-                    Lampa.Noty.show('КП 8+: необходим источник KP (kp_source.js)');
-                }
+                metrics.status = 'missing_source';
+                metrics.failed_reason = 'KP source is not installed or not registered';
+                kp8Notice('missing_source', 'КП 8+: установите kp_source.js. Плагин rating.js не является источником.');
                 callback({ results: [] });
                 return;
             }
             metrics.source = 'KP';
-            var seen = {}, cards = [], finished = false, pending = KP8_TYPES.length;
+            var seen = {}, cards = [], finished = false, secondPage = [];
             var timer = setTimeout(function() {
                 metrics.timeout = true;
                 deliver();
-            }, 7600);
+            }, 13500);
+
             function deliver() {
                 if (finished) return;
                 finished = true;
                 clearTimeout(timer);
                 cards.sort(kp8Compare);
                 metrics.matched = cards.length;
+                if (cards.length) {
+                    metrics.status = 'ready';
+                    window.__SURS_KP_LAST_NOTICE = '';
+                } else if (metrics.pages_failed === metrics.pages_requested && metrics.pages_requested) {
+                    metrics.status = 'api_error';
+                    kp8Notice('api_error', 'КП 8+: источник KP не отвечает. Проверьте его работу в Lampa.');
+                } else if (metrics.timeout && metrics.pages_failed) {
+                    metrics.status = 'timeout';
+                    kp8Notice('timeout', 'КП 8+: превышено время ожидания ответа источника KP.');
+                } else if (metrics.raw_candidates) {
+                    metrics.status = 'filtered';
+                    kp8Notice('filtered', 'КП 8+: API ответил, но по фильтрам США и рейтингу 8+ подходящих новинок нет.');
+                } else {
+                    metrics.status = 'empty_api';
+                    kp8Notice('empty_api', 'КП 8+: источник вернул пустую подборку. Проверьте фильтры и доступность API.');
+                }
                 callback({
                     title: 'Новинки США · КП 8+',
                     url: KP8_CATALOG_URL, source: 'SURS', page: 1,
@@ -1982,14 +1979,34 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     params: { items: { view: 20, mapping: 'line' } }
                 });
             }
-            KP8_TYPES.forEach(function(type) {
-                metrics.pages_requested++;
-                kp8Fetch(type, 1, ready, function(json) {
-                    if (finished) return;
-                    metrics.pages_completed++;
-                    kp8Collect(json, type, seen, cards);
-                    if (--pending === 0) deliver();
+
+            function loadBatch(jobs, onBatchDone) {
+                if (finished) return;
+                if (!jobs.length) return onBatchDone();
+                var pending = jobs.length;
+                jobs.forEach(function(job) {
+                    metrics.pages_requested++;
+                    kp8Fetch(job.type, job.page, ready, function(json, failure) {
+                        if (finished) return;
+                        metrics.pages_completed++;
+                        if (!json || !Array.isArray(json.results)) {
+                            metrics.pages_failed++;
+                            if (failure) metrics.failed_reason = failure;
+                        } else {
+                            metrics.raw_candidates += json.results.length;
+                            kp8Collect(json, job.type, seen, cards);
+                            if (job.page === 1 && json.results.length &&
+                                Number(json.total_pages) > 1) secondPage.push({ type: job.type, page: 2 });
+                        }
+                        if (--pending === 0) onBatchDone();
+                    });
                 });
+            }
+
+            loadBatch(KP8_TYPES.map(function(type) { return { type: type, page: 1 }; }), function() {
+                if (!cards.length && metrics.raw_candidates > 0 && secondPage.length) {
+                    loadBatch(secondPage, deliver);
+                } else deliver();
             });
         });
     }
@@ -2006,7 +2023,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             working = true;
             var job = queued.shift(), page = job.page;
             var completed = false;
-            var deadline = setTimeout(finish, 7900);
+            var deadline = setTimeout(finish, 14500);
             function freeze() {
                 cards.sort(kp8Compare);
                 cards.forEach(function(card) {
@@ -2156,7 +2173,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     function shelfTimeout(id) {
         if (id === 'us_new_8') return 8500;
-    if (id === 'kp_new_8') return 9500;
+    if (id === 'kp_new_8') return 16000;
         if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
         if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;
         if (/^ext_/i.test(id)) return 6000;
@@ -3139,7 +3156,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.15';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.16';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -3584,7 +3601,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             window.surs_retry_count = 0;
             window.SURS_PERFORMANCE.ready_at = Date.now();
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
-            console.log('SURS Pro v3.9.15 (Fixed & Configurable) успешно инициализирован.');
+            console.log('SURS Pro v3.9.16 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -3613,7 +3630,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.15'
+        version: '3.9.16'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
