@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 4.0.0-beta.1 (Hot Discovery shadow / original shelf preserved)
+* Версия: 4.0.1 (Hot Discovery shadow / original shelf preserved)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -4935,7 +4935,7 @@ openSmartDiagnostics: openSmartDiagnostics,
 hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
 openHotDiagnostics: openHotDiagnostics,
 refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-version: '4.0.0-beta.1'
+version: '4.0.1'
 };
 
 

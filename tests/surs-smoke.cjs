@@ -1461,8 +1461,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 4\.0\.0-beta\.1/);
-    assert.match(readableSource, /Версия: 4\.0\.0-beta\.1/);
+    assert.match(mainSource, /Версия: 4\.0\.1/);
+    assert.match(readableSource, /Версия: 4\.0\.1/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -1890,7 +1890,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 4\.0\.0-beta\.1/);
+    assert.match(source, /Версия: 4\.0\.1/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -1976,7 +1976,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '4.0.0-beta.1');
+    assert.equal(app.window.LampaShelfManager.version, '4.0.1');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 26);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -2151,7 +2151,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'4.0.0-beta.1');
+    assert.equal(app.window.LampaShelfManager.version,'4.0.1');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
