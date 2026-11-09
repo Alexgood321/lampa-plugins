@@ -1318,7 +1318,7 @@ test('Hot Discovery 4.0 stays disabled by default and preserves the original sma
     assert.ok(legacy);
     assert.equal(hot.def,false);
     assert.equal(legacy.def,true);
-    assert.equal(app.rows().find(x=>x.id==='hot_us_new').enabled,false);
+    assert.equal(app.rows().some(x=>x.id==='hot_us_new'),false);
     assert.ok(app.settings.some(x=>x.param&&x.param.name==='surs_hot_diagnostics'));
 });
 test('Hot Discovery opt-in renders verified JSON and preserves both category pages', () => {

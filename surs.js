@@ -1493,7 +1493,6 @@ return [
 { id: 'smart_us_new', title: 'Лучшие новинки США', enabled: true, cat: 'surs' },
 { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', enabled: false, cat: 'surs' },
 { id: 'us_new_8', title: 'Новинки США 8+', enabled: false, cat: 'surs' },
-{ id: 'hot_us_new', title: 'Горячие новинки США · тест', enabled: false, cat: 'surs' },
 { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
 { id: 'new_movies', title: 'Новинки мирового кино', enabled: false, cat: 'surs' },
 { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: false, cat: 'surs' },
