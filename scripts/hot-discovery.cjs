@@ -240,9 +240,10 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
     mdblist_failures:0,season_calls:0,discovered:0,us_verified:0,eligible:0};
   const tmdb=async relative=>{
     stats.tmdb_calls++;
-    const url=BASE+'/'+relative+(relative.includes('?')?'&':'?')+'language=ru-RU';
-    try{return await transport(url,tmdbToken.includes('.')?
-      {Authorization:'Bearer '+tmdbToken}: {Authorization:'Bearer '+tmdbToken});}
+    const keyAuth=/^[0-9a-f]{32}$/i.test(tmdbToken);
+    const url=BASE+'/'+relative+(relative.includes('?')?'&':'?')+'language=ru-RU'+
+      (keyAuth?'&api_key='+encodeURIComponent(tmdbToken):'');
+    try{return await transport(url,keyAuth?{}:{Authorization:'Bearer '+tmdbToken});}
     catch(e){stats.tmdb_failures++;return null;}
   };
   const jobs=discoveryJobs(nowDate);

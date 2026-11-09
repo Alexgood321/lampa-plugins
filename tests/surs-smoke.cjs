@@ -1308,6 +1308,61 @@ test('smart 3.9.26 checks page two when page one is full of older high-rated rel
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.recent_top10,10);
 });
 
+
+test('Hot Discovery 4.0 stays disabled by default and preserves the original smart shelf', () => {
+    const app=boot();
+    const shelves=app.window.LampaShelfManager.getAllShelves();
+    const hot=shelves.find(x=>x.id==='hot_us_new');
+    const legacy=shelves.find(x=>x.id==='smart_us_new');
+    assert.ok(hot);
+    assert.ok(legacy);
+    assert.equal(hot.def,false);
+    assert.equal(legacy.def,true);
+    assert.equal(app.rows().find(x=>x.id==='hot_us_new').enabled,false);
+    assert.ok(app.settings.some(x=>x.param&&x.param.name==='surs_hot_diagnostics'));
+});
+test('Hot Discovery opt-in renders verified JSON and preserves both category pages', () => {
+    const app=boot({saved:[{id:'hot_us_new',enabled:true}]});
+    const day=new Date().toISOString().slice(0,10);
+    const source={
+        schema:1,mode:'shadow',generated_at:new Date().toISOString(),
+        items:Array.from({length:40},(_,i)=>({
+            id:17000+i,source:'tmdb',type:'movie',media_type:'movie',
+            title:'Hot '+i,poster_path:'/poster.jpg',release_date:day,
+            surs_hot_premiere_date:day,surs_hot_score:91-i,surs_hot_rank:i+1
+        })),diagnostics:{discovered:150,selected:40,us_verified:70}
+    };
+    let calls=0;
+    app.Lampa.Reguest.prototype.silent=function(url,ok){
+        calls++;assert.ok(url.includes('data/hot-discovery.json'));
+        ok(source);
+    };
+    const preview=app.getMain();
+    assert.equal(preview.length,1);
+    assert.equal(preview[0].results.length,40);
+    assert.equal(preview[0].title,'Горячие новинки США · тест');
+    const params={url:'surs_hot_us_new',page:1};
+    let first,second;
+    app.Lampa.Api.sources.SURS.list(params,x=>first=x,()=>{});
+    assert.equal(first.results.length,20);
+    params.page=2;
+    app.Lampa.Api.sources.SURS.list(params,x=>second=x,()=>{});
+    assert.equal(second.results.length,20);
+    assert.equal(first.results[0].id,17000);
+    assert.equal(second.results[0].id,17020);
+    assert.equal(calls,1);
+});
+test('Hot Discovery rejects malformed feeds and leaves existing Smart US shelf untouched', () => {
+    const app=boot({saved:[{id:'hot_us_new',enabled:true}]});
+    app.Lampa.Reguest.prototype.silent=function(url,ok){
+        ok({schema:1,generated_at:new Date().toISOString(),
+            items:[{id:1,source:'tmdb',type:'movie',poster_path:'/one'}]});
+    };
+    const out=app.getMain();
+    assert.equal(out.length,0);
+    assert.equal(app.window.SURS_PERFORMANCE.hot_us.status,'unavailable');
+});
+
 test('smart shelf cache keeps More pagination stable without network', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures();let count=0;
@@ -1921,7 +1976,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.26');
+    assert.equal(app.window.LampaShelfManager.version, '4.0.0-beta.1');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 26);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -2096,7 +2151,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.26');
+    assert.equal(app.window.LampaShelfManager.version,'4.0.0-beta.1');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
