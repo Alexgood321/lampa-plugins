@@ -12,7 +12,7 @@ Optional variable: MDBLIST_LIST_IDS, comma-separated numerical IDs of selected M
 
 Go to Actions / SURS Hot Discovery builder / Run workflow. Without a TMDB secret it reports "not_configured" and does not manufacture data.
 
-Scheduled every 3 hours (UTC). The job publishes JSON using the scoped GitHub Actions token; no VPS or new subscription.
+Source snapshots run every 3 hours (UTC); the public top-40 refreshes once per UTC day to avoid intraday reshuffling. The job publishes JSON using the scoped GitHub Actions token; no VPS or new subscription.
 
 Public data URL:
 https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json
@@ -27,7 +27,7 @@ https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discov
 - Optional MDBList enriches ratings and, with explicit list IDs, adds independent candidates.
 - Historical snapshots in repo for 31 days; absent trend treated neutrally.
 - Publish 12–40 verified unique cards only; failed API calls cannot replace previous valid data.
-- Stable position for near-ties with previous rank below 0.75 point score difference.
+- Order always follows descending visible score. Previous position is used only for exactly equal scores.
 
 ## Safety and rollout
 

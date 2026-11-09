@@ -171,16 +171,19 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_score=round(100*(.55*q+.25*heat+.10*growth.score+.10*freshness));
   }
   const eligible=candidates.filter(c=>c.poster_path&&c.surs_hot_age>=0&&
-    c.surs_hot_age<=550&&c.surs_hot_quality>=6.65&&
+    c.surs_hot_age<=550&&
+    // A decades-old restored film with a new digital listing is not a new film.
+    (!c.surs_hot_original_date||daysSince(c.surs_hot_original_date,now)<=730)&&
+    c.surs_hot_quality>=6.65&&
     number(c.vote_count)>=8&&
     !(number(c.vote_count)>=250&&number(c.vote_average)<6.3));
   const previousRank=new Map((previous?.items||[]).map((c,i)=>[identity(c),i]));
   eligible.sort((a,b)=>{
+    // The visible score MUST match actual order: no hidden post-sort swaps.
     const delta=b.surs_hot_score-a.surs_hot_score;
-    if(Math.abs(delta)>=.75)return delta;
+    if(delta)return delta;
     const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
     if(pa!==undefined&&pb!==undefined&&pa!==pb)return pa-pb;
-    if(delta)return delta;
     return identity(a).localeCompare(identity(b));
   });
   return eligible.slice(0,MAX_ITEMS).map((c,i)=>({...c,surs_hot_rank:i+1}));
@@ -338,10 +341,12 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
         const type=c.type==='movie'?'movie':'show';
         const info=await transport(MDB+'/tmdb/'+type+'/'+c.id+'/?apikey='+
           encodeURIComponent(mdblistKey));
-        if(info&&Number(info.ids?.tmdb||c.id)===c.id)c.surs_hot_ratings=parseMdb(info);
+        if(info&&Number(info.ids?.tmdb)===c.id)c.surs_hot_ratings=parseMdb(info);
       }catch(e){stats.mdblist_failures++;}
     });
   }
+  if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
+    throw Error('TMDB partial outage: refusing to replace last verified feed');
   const items=scoreCandidates(candidates,history,nowDate,previous);
   stats.eligible=candidates.filter(c=>c.surs_hot_quality>=6.65&&c.surs_hot_age<=550).length;
   const feed={schema:1,algorithm:'hot-discovery-4.0',mode:'shadow',
@@ -367,7 +372,12 @@ async function main(){
   // Only publish after validation; CI/workflow preserves the previous good feed on failure.
   const content=JSON.stringify(result.feed,null,2)+'\n';
   const hist=JSON.stringify(result.history)+'\n';
-  fs.writeFileSync(out+'.tmp',content);fs.renameSync(out+'.tmp',out);
+  // Source snapshots are collected every 3h; display ranking changes once per UTC day.
+  // This avoids the shelf jumping around multiple times during the same day.
+  const sameDay=old&&old.schema===1&&dateOnly(old.generated_at)===dateOnly(now);
+  if(!sameDay){
+    fs.writeFileSync(out+'.tmp',content);fs.renameSync(out+'.tmp',out);
+  }
   fs.writeFileSync(historyFile+'.tmp',hist);fs.renameSync(historyFile+'.tmp',historyFile);
   process.stdout.write(JSON.stringify({generated_at:result.feed.generated_at,
     selected:result.feed.items.length,diagnostics:result.feed.diagnostics})+'\n');

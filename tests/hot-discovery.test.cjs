@@ -105,3 +105,22 @@ test('No credentials or insufficient data never create synthetic published feed'
   await assert.rejects(hot.build({now:NOW,tmdbToken:'sample-token',
     transport:async()=>({results:[]})}),/Invalid Hot Discovery feed/);
 });
+
+test('hot ranking strictly follows the visible score without a hidden diversity shuffle',()=>{
+  const basic={type:'movie',poster_path:'/p',vote_average:8.6,vote_count:4000,
+    surs_hot_premiere_date:day(45)};
+  const rows=Array.from({length:20},(_,i)=>({...basic,id:700+i,popularity:10+i*5}));
+  const output=hot.scoreCandidates(rows,{snapshots:[]},NOW,null);
+  assert.equal(output.length,20);
+  for(let i=1;i<output.length;i++)
+    assert.ok(output[i-1].surs_hot_score>=output[i].surs_hot_score);
+});
+test('a new digital listing does not reclassify decades-old movies as a new release',()=>{
+  const m=detail(975,800);
+  m.release_dates.results=[{iso_3166_1:'US',release_dates:[
+    {type:4,release_date:day(4)+'T00:00:00Z'}]}];
+  const premiere=hot.moviePremiere(m,NOW);
+  const cards=[{...m,type:'movie',surs_hot_premiere_date:premiere.date,
+    surs_hot_original_date:premiere.original,surs_hot_premiere_kind:'digital'}];
+  assert.equal(hot.scoreCandidates(cards,{snapshots:[]},NOW,null).length,0);
+});
