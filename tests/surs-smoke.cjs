@@ -826,7 +826,7 @@ test('KP 8+ migration does not alter custom homes without navigation', () => {
     const saved = [{id:'core_continue',enabled:true},{id:'us_new_8',enabled:false},{id:'trend_movies',enabled:true}];
     const app = boot({saved});
     assert.deepEqual(Array.from(app.rows(),x=>x.id),['core_continue','us_new_8','trend_movies']);
-    assert.equal(app.rows()[3].enabled,false);
+    assert.equal(app.rows()[1].enabled,false);
 });
 test('US premiere loader enforces country, genre, rating, language and mixed date order', () => {
     const app=boot({saved:[{id:'us_new_8',enabled:true}]});
