@@ -569,10 +569,11 @@ test('KP 7.5 label is refreshed for saved shelves without resetting user setting
     ];
     const app=boot({saved});
     const rows=app.rows();
-    assert.deepEqual(Array.from(rows,x=>x.id),saved.map(x=>x.id));
-    assert.equal(rows[1].title,'Новинки США · КП 7,5+');
-    assert.equal(rows[1].enabled,false);
-    assert.equal(rows[2].title,'Новинки США 8+');
+    assert.deepEqual(Array.from(rows,x=>x.id),
+        ['nav_buttons','smart_us_new','kp_new_8','us_new_8']);
+    assert.equal(rows[2].title,'Новинки США · КП 7,5+');
+    assert.equal(rows[2].enabled,false);
+    assert.equal(rows[3].title,'Новинки США 8+');
     assert.equal(app.stored.get('surs_fixed_shelves_v2'),saved);
 });
 
