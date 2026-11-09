@@ -557,6 +557,22 @@ test('KP 7.5 release ignores cached 8.0 selections', () => {
     assert.ok(app.stored.has('surs_preview_cache_v1_kp_new_8_rating75_v1'));
 });
 
+
+test('KP 7.5 label is refreshed for saved shelves without resetting user settings', () => {
+    const saved=[
+        {id:'nav_buttons',title:'Панель кнопок',enabled:true},
+        {id:'kp_new_8',title:'Новинки США · КП 8+',enabled:false},
+        {id:'us_new_8',title:'Новинки США 8+',enabled:true}
+    ];
+    const app=boot({saved});
+    const rows=app.rows();
+    assert.deepEqual(Array.from(rows,x=>x.id),saved.map(x=>x.id));
+    assert.equal(rows[1].title,'Новинки США · КП 7,5+');
+    assert.equal(rows[1].enabled,false);
+    assert.equal(rows[2].title,'Новинки США 8+');
+    assert.equal(app.stored.get('surs_fixed_shelves_v2'),saved);
+});
+
 test('editor JavaScript and stylesheet are deferred', () => {
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
     assert.doesNotMatch(mainSource, /function renderModalContent\(/);

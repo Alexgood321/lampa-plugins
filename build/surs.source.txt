@@ -1645,7 +1645,10 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             saved.forEach(function(s) {
                 if (s && s.id && !seen[s.id] && (!isAnonymousShelf(s) || s.enabled)) {
                     seen[s.id] = true;
-                    unique.push(s);
+                    // Migrate the visible label without changing the stored ID,
+                    // enabled state, or the user's manually arranged order.
+                    unique.push(!profile && s.id === 'kp_new_8' ?
+                        Object.assign({}, s, {title: 'Новинки США · КП 7,5+'}) : s);
                 }
             });
             // Нельзя оставлять пользователя без доступа к менеджеру полок.

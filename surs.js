@@ -1645,7 +1645,10 @@ var unique = [];
 saved.forEach(function(s) {
 if (s && s.id && !seen[s.id] && (!isAnonymousShelf(s) || s.enabled)) {
 seen[s.id] = true;
-unique.push(s);
+
+
+unique.push(!profile && s.id === 'kp_new_8' ?
+Object.assign({}, s, {title: 'Новинки США · КП 7,5+'}) : s);
 }
 });
 
