@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.26 (US Premieres Balanced Quality)
+* Версия: 4.0.0-beta.1 (Hot Discovery shadow / original shelf preserved)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1303,6 +1303,7 @@ var SURS_BASE_SHELVES = [
 { id: 'smart_us_new', title: 'Лучшие новинки США', cat: 'surs', def: true, desc: 'Отбор новых фильмов и сериалов США: TMDB + подтверждённый КП, качество, популярность, свежесть' },
 { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', cat: 'surs', def: false, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 7,5+ (текущий и предыдущий год); требуется источник KP' },
 { id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: false, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
+{ id: 'hot_us_new', title: 'Горячие новинки США · тест', cat: 'surs', def: false, desc: 'Hot Discovery 4.0: серверная подборка через GitHub Actions, сравнение с 3.9.26' },
 { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
 { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
 { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -1741,6 +1742,130 @@ total_pages: Number(result.total_pages) || 1,
 results: result.results.slice(0, 60)
 });
 } catch(e) {}
+}
+
+
+
+
+var HOT_US_ID='hot_us_new',HOT_US_TITLE='Горячие новинки США · тест';
+var HOT_US_CATALOG_URL='surs_hot_us_new';
+var HOT_US_URL='https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json';
+var HOT_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
+var hotRequesting=false,hotCallbacks=[],hotLastTry=0;
+function hotValid(feed){
+if(!feed||feed.schema!==1||!Array.isArray(feed.items)||
+feed.items.length<12||feed.items.length>40)return false;
+var age=Date.now()-Date.parse(feed.generated_at||'');
+if(!isFinite(age)||age<0||age>HOT_MAX_AGE)return false;
+var seen={};
+return feed.items.every(function(c){
+var key=c.type+':'+c.id;
+if(seen[key]||!c.id||!['movie','tv'].includes(c.type)||
+!c.poster_path||!String(c.poster_path).startsWith('/')||
+c.source!=='tmdb'||!isFinite(Number(c.surs_hot_score)))
+return false;
+seen[key]=true;return true;
+});
+}
+function hotReadCached(){
+try{
+var f=Lampa.Storage.get(HOT_CACHE_KEY,null);
+return hotValid(f)?f:null;
+}catch(e){return null;}
+}
+function hotRow(feed){
+return {title:HOT_US_TITLE,source:'SURS',url:HOT_US_CATALOG_URL,page:1,
+total_pages:Math.ceil(feed.items.length/20),
+results:feed.items.slice(0,40),
+params:{items:{view:20,mapping:'line'}}};
+}
+function hotLoad(owner,done){
+var old=hotReadCached();
+if(old){done(old);if(Date.now()-hotLastTry<3*3600000)return;}
+else if(Date.now()-hotLastTry<30000)return done(null);
+if(hotRequesting){if(!old)hotCallbacks.push(done);return;}
+hotRequesting=true;hotLastTry=Date.now();
+if(!old)hotCallbacks.push(done);
+var finished=false,timeout=setTimeout(function(){finish(null,'timeout');},3500);
+function finish(feed,error){
+if(finished)return;
+finished=true;clearTimeout(timeout);hotRequesting=false;
+if(hotValid(feed)){
+try{Lampa.Storage.set(HOT_CACHE_KEY,feed);}catch(e){}
+window.SURS_PERFORMANCE.hot_us={
+status:'ready',generated_at:feed.generated_at,
+source:feed.sources||{},diagnostics:feed.diagnostics||{},
+top10:feed.items.slice(0,10).map(function(c){
+return {title:c.title||c.name,score:c.surs_hot_score,
+quality:c.surs_hot_quality,heat:c.surs_hot_heat,
+release:c.surs_hot_premiere_date,kind:c.surs_hot_premiere_kind};
+})
+};
+}else{
+feed=old;
+window.SURS_PERFORMANCE.hot_us={
+status:old?'cached':'unavailable',error:error||'invalid_feed',
+generated_at:old?old.generated_at:null,
+diagnostics:old?old.diagnostics||{}:{}
+};
+}
+hotCallbacks.splice(0).forEach(function(fn){try{fn(feed);}catch(e){}});
+}
+try{
+var network=owner&&owner.network&&typeof owner.network.silent==='function'?
+owner.network:new Lampa.Reguest();
+if(!network||typeof network.silent!=='function')
+return finish(null,'network_unavailable');
+network.silent(HOT_US_URL+'?v='+Math.floor(Date.now()/3600000),
+function(json){
+try{if(typeof json==='string')json=JSON.parse(json);}
+catch(e){json=null;}
+finish(json,'invalid_response');
+},function(){finish(null,'request_failed');});
+}catch(e){finish(null,'network_error');}
+}
+function hotPreview(owner,params,callback){
+hotLoad(owner,function(feed){callback(feed?hotRow(feed):{results:[]});});
+}
+function hotCatalog(page,owner,params,ok,fail){
+params=params||{};
+var session=params._sursHotSession;
+function publish(feed){
+var list=session||feed&&Array.isArray(feed.items)&&feed.items;
+if(!list||!list.length)return typeof fail==='function'&&fail();
+if(!session){
+session=list.slice(0,40);params._sursHotSession=session;
+}
+var slice=session.slice((page-1)*20,page*20);
+if(!slice.length)return typeof fail==='function'&&fail();
+ok({title:HOT_US_TITLE,url:HOT_US_CATALOG_URL,source:'SURS',
+page:page,total_pages:Math.ceil(session.length/20),results:slice});
+}
+if(session)return publish(null);
+hotLoad(owner,publish);
+}
+function openHotDiagnostics(){
+if(!Lampa.Select||!Lampa.Select.show)return;
+var current=window.SURS_PERFORMANCE.hot_us||{},
+cached=hotReadCached(),d=current.diagnostics||cached&&cached.diagnostics||{};
+var items=[
+{title:'Hot Discovery 4.0 · '+(current.status||'не загружен')},
+{title:'JSON: '+(current.generated_at||cached&&cached.generated_at||'пока нет')},
+{title:'TMDB запросов: '+(d.tmdb_calls||0)+' · ошибок '+(d.tmdb_failures||0)},
+{title:'MDBList запросов: '+(d.mdblist_calls||0)+' · ошибок '+(d.mdblist_failures||0)},
+{title:'Кандидатов: '+(d.discovered||0)+' · США '+(d.us_verified||0)+
+' · выбрано '+(d.selected||0)},
+{title:'Перспективных с предварительной оценкой: '+(d.provisional||0)},
+{title:'История роста доступна: '+(d.measured_growth||0)+' карточкам'},
+{title:'Статус API: '+(current.error||'нет ошибок')},
+{title:'Тестовая полка не меняет «Лучшие новинки США»'}
+];
+if(cached)cached.items.slice(0,10).forEach(function(c){
+items.push({title:'#'+c.surs_hot_rank+' '+(c.title||c.name)+
+' · Hot '+c.surs_hot_score+' · премьера '+c.surs_hot_premiere_date});
+});
+Lampa.Select.show({title:'SURS Hot Discovery · диагностика',
+items:items,onSelect:function(){}});
 }
 
 
@@ -3249,6 +3374,7 @@ finish({ results: [] });
 function shelfTimeout(id) {
 if (id === 'us_new_8') return 8500;
 if (id === 'smart_us_new') return 5500;
+if (id === 'hot_us_new') return 4500;
 if (id === 'kp_new_8') return 8000;
 if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
 if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;
@@ -3646,6 +3772,7 @@ nextBatch();
 
 if (shelfId === 'kp_new_8') return kp8Preview;
 if (shelfId === 'smart_us_new') return function(callback) { smartPreview(owner, params, callback); };
+if (shelfId === 'hot_us_new') return function(callback) { hotPreview(owner, params, callback); };
 
 if (shelfId === 'new_movies') {
 return function(callback) {
@@ -4311,6 +4438,10 @@ if (listParams && listParams.url === SMART_US_CATALOG_URL) {
 smartCatalog(listParams.page || 1, this, listParams, onComplete, onError);
 return;
 }
+if (listParams && listParams.url === HOT_US_CATALOG_URL) {
+hotCatalog(listParams.page || 1, this, listParams, onComplete, onError);
+return;
+}
 if (listParams && listParams.url === KP8_CATALOG_URL) {
 if (!listParams._sursKP8Session) listParams._sursKP8Session = kp8CatalogSession();
 listParams._sursKP8Session.load(listParams.page || 1, onComplete, onError);
@@ -4620,6 +4751,13 @@ field: {name:'Диагностика «Лучшие новинки США»',
 description:'Баллы SURS, рейтинги КП/IMDb/TMDB, статус загрузки'},
 onChange:openSmartDiagnostics
 });
+Lampa.SettingsApi.addParam({
+component: 'surs',
+param: {name:'surs_hot_diagnostics',type:'button'},
+field: {name:'Диагностика «Горячие новинки США»',
+description:'Публикация GitHub Actions, источники, кандидаты, актуальность'},
+onChange:openHotDiagnostics
+});
 
 Lampa.SettingsApi.addParam({
 component: 'surs',
@@ -4794,8 +4932,10 @@ return defaults;
 getDefaultSectionShelves: getDefaultSectionShelves,
 smartDiagnostics: smartReadDiagnostic,
 openSmartDiagnostics: openSmartDiagnostics,
+hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
+openHotDiagnostics: openHotDiagnostics,
 refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-version: '3.9.26'
+version: '4.0.0-beta.1'
 };
 
 

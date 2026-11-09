@@ -1,0 +1,58 @@
+name: SURS Hot Discovery builder
+
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: surs-hot-discovery-main
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate builder offline
+        run: |
+          node --check scripts/hot-discovery.cjs
+          node --test tests/hot-discovery.test.cjs
+      - name: Fetch and rank
+        id: compute
+        env:
+          TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+          MDBLIST_LIST_IDS: ${{ vars.MDBLIST_LIST_IDS }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$TMDB_READ_ACCESS_TOKEN" && -z "$TMDB_API_KEY" ]]; then
+            echo "status=not_configured" >> "$GITHUB_OUTPUT"
+            echo "## Hot Discovery inactive: add TMDB_READ_ACCESS_TOKEN secret" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node scripts/hot-discovery.cjs
+          echo "status=generated" >> "$GITHUB_OUTPUT"
+      - name: Publish only validated data
+        if: steps.compute.outputs.status == 'generated'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/hot-discovery.json data/hot-discovery-history.json
+          if git diff --cached --quiet; then
+            echo "No changes to publish" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m 'data(hot): update verified ranking and snapshots [skip ci]'
+          git push origin HEAD:main
+          echo "Updated Hot Discovery; previous good feed preserved in Git history." >> "$GITHUB_STEP_SUMMARY"
