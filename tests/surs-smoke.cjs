@@ -813,7 +813,7 @@ test('smart 3.9.23 keeps a provisional preview while KP finishes asynchronously'
     app.getMain();
     assert.equal(broad.length,6);
     assert.ok(broad.every(x=>x.p.filter_url.includes('ratingFrom=0')));
-    const before=app.timers.find(x=>x.ms===650);
+    const before=app.timers.filter(x=>x.ms===650).slice(-1)[0];
     assert.ok(before);
     before.fn();
     const draft=app.stored.get('surs_preview_cache_v1_smart_us_v3');
