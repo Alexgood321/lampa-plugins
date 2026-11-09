@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.19 (US Premieres Balanced Quality)
+* Версия: 3.9.20 (US Premieres Balanced Quality)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1300,7 +1300,7 @@ var STORAGE_SHELVES_KEY = 'surs_fixed_shelves_v2';
 
 var SURS_BASE_SHELVES = [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
-{ id: 'kp_new_8', title: 'Новинки США · КП 8+', cat: 'surs', def: true, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 8+ (текущий и предыдущий год); требуется источник KP' },
+{ id: 'kp_new_8', title: 'Новинки США · КП 7,5+', cat: 'surs', def: true, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 7,5+ (текущий и предыдущий год); требуется источник KP' },
 { id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: true, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
 { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
 { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
@@ -1488,7 +1488,7 @@ newCount: diff
 function getDefaultShelvesList() {
 return [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
-{ id: 'kp_new_8', title: 'Новинки США · КП 8+', enabled: true, cat: 'surs' },
+{ id: 'kp_new_8', title: 'Новинки США · КП 7,5+', enabled: true, cat: 'surs' },
 { id: 'us_new_8', title: 'Новинки США 8+', enabled: true, cat: 'surs' },
 { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
 { id: 'new_movies', title: 'Новинки мирового кино', enabled: false, cat: 'surs' },
@@ -1645,7 +1645,10 @@ var unique = [];
 saved.forEach(function(s) {
 if (s && s.id && !seen[s.id] && (!isAnonymousShelf(s) || s.enabled)) {
 seen[s.id] = true;
-unique.push(s);
+
+
+unique.push(!profile && s.id === 'kp_new_8' ?
+Object.assign({}, s, {title: 'Новинки США · КП 7,5+'}) : s);
 }
 });
 
@@ -1664,7 +1667,7 @@ if (!profile && seen.nav_buttons && !seen.kp_new_8) {
 var navPosition = unique.findIndex(function(item) { return item.id === 'nav_buttons'; });
 var insertAt = navPosition + 1;
 unique.splice(insertAt, 0, {
-id: 'kp_new_8', title: 'Новинки США · КП 8+', enabled: true, cat: 'surs'
+id: 'kp_new_8', title: 'Новинки США · КП 7,5+', enabled: true, cat: 'surs'
 });
 }
 
@@ -1897,11 +1900,14 @@ var KP8_SOURCE_URL = 'https://cdn.jsdelivr.net/gh/nb557/plugins@cde2cf057e6634df
 var KP8_CATALOG_URL = 'surs_kp_new_8';
 
 
+var KP8_MIN_RATING = 7.5;
 var KP8_PREVIEW_TARGET = 20;
 var KP8_PREVIEW_PAGES_PER_TYPE = 10;
 var KP8_PREVIEW_BATCH_PAGES = 2;
 
-var KP8_PREVIEW_CACHE_KEY = 'kp_new_8_deep_v1';
+var KP8_PREVIEW_CACHE_KEY = 'kp_new_8_rating75_v1';
+
+var KP8_CATALOG_PAGES_PER_YEAR = 5;
 var KP8_TYPES = [
 { id: 'movie', sourceType: 'FILM', votes: 300 },
 { id: 'tv', sourceType: 'TV_SERIES', votes: 150 },
@@ -2011,11 +2017,11 @@ if (Lampa.Noty && typeof Lampa.Noty.show === 'function') Lampa.Noty.show(message
 
 function kp8Query(type, country, years) {
 return 'api/v2.2/films?order=YEAR&countries=' + encodeURIComponent(country) +
-'&ratingFrom=8&ratingTo=10&yearFrom=' + years.from +
+'&ratingFrom=' + KP8_MIN_RATING + '&ratingTo=10&yearFrom=' + years.from +
 '&yearTo=' + years.to + '&type=' + type.sourceType;
 }
 
-function kp8Fetch(type, page, ready, onFinish) {
+function kp8Fetch(type, page, ready, onFinish, years) {
 var responded = false;
 var timeout = setTimeout(function() { finish(null, 'timeout'); }, 11000);
 function finish(data, reason) {
@@ -2027,7 +2033,7 @@ onFinish(data, reason || '');
 try {
 ready.source.list({
 url: 'filter',
-filter_url: kp8Query(type, ready.country, kp8Years()),
+filter_url: kp8Query(type, ready.country, years || kp8Years()),
 page: page
 }, function(json) { finish(json, null); },
 function() { finish(null, 'request_failed'); });
@@ -2050,7 +2056,7 @@ var years = kp8Years();
 json.results.forEach(function(card) {
 if (!card || !card.id || card.adult === true ||
 card.type !== type.id || !isFinite(Number(card.kp_rating)) ||
-Number(card.kp_rating) < 8 ||
+Number(card.kp_rating) < KP8_MIN_RATING ||
 (Number(card.vote_count) > 0 && Number(card.vote_count) < type.votes)) return;
 var year = Number(kp8Date(card).slice(0, 4));
 if (!year || year < years.from || year > years.to) return;
@@ -2082,7 +2088,7 @@ pages_movie: 0, pages_series: 0, pages_mini_series: 0
 window.SURS_PERFORMANCE.kp8_preview = metrics;
 if (cachedPreview) {
 callback({
-title: 'Новинки США · КП 8+', url: KP8_CATALOG_URL,
+title: 'Новинки США · КП 7,5+', url: KP8_CATALOG_URL,
 source: 'SURS', page: 1,
 total_pages: cachedPreview.total_pages,
 results: cachedPreview.results,
@@ -2102,7 +2108,7 @@ metrics.source = 'missing';
 metrics.status = 'missing_source';
 metrics.failed_reason = kp8DependencyError || 'source_not_registered';
 metrics.dependency_status = kp8DependencyStatus;
-kp8Notice('missing_source', 'КП 8+: не удалось загрузить источник Кинопоиска (' + metrics.failed_reason + ').');
+kp8Notice('missing_source', 'КП 7,5+: не удалось загрузить источник Кинопоиска (' + metrics.failed_reason + ').');
 if (!cachedPreview) callback({ results: [] });
 return;
 }
@@ -2132,19 +2138,19 @@ metrics.status = 'ready';
 window.__SURS_KP_LAST_NOTICE = '';
 } else if (metrics.pages_failed === metrics.pages_requested && metrics.pages_requested) {
 metrics.status = 'api_error';
-kp8Notice('api_error', 'КП 8+: источник KP не отвечает. Проверьте его работу в Lampa.');
+kp8Notice('api_error', 'КП 7,5+: источник KP не отвечает. Проверьте его работу в Lampa.');
 } else if (metrics.timeout && metrics.pages_failed) {
 metrics.status = 'timeout';
-kp8Notice('timeout', 'КП 8+: превышено время ожидания ответа источника KP.');
+kp8Notice('timeout', 'КП 7,5+: превышено время ожидания ответа источника KP.');
 } else if (metrics.raw_candidates) {
 metrics.status = 'filtered';
-kp8Notice('filtered', 'КП 8+: API ответил, но по фильтрам США и рейтингу 8+ подходящих новинок нет.');
+kp8Notice('filtered', 'КП 7,5+: API ответил, но по фильтрам США и рейтингу 8+ подходящих новинок нет.');
 } else {
 metrics.status = 'empty_api';
-kp8Notice('empty_api', 'КП 8+: источник вернул пустую подборку. Проверьте фильтры и доступность API.');
+kp8Notice('empty_api', 'КП 7,5+: источник вернул пустую подборку. Проверьте фильтры и доступность API.');
 }
 var result = {
-title: 'Новинки США · КП 8+', url: KP8_CATALOG_URL,
+title: 'Новинки США · КП 7,5+', url: KP8_CATALOG_URL,
 source: 'SURS', page: 1, total_pages: cards.length ? 2 : 1,
 results: cards.slice(0, 60),
 params: { items: { view: 20, mapping: 'line' } }
@@ -2207,18 +2213,31 @@ nextBatch();
 }
 
 function kp8CatalogSession() {
+
+
 var ready = null, queued = [], working = false;
 var seen = {}, cards = [], ordered = [], orderedIds = {};
-var states = KP8_TYPES.map(function(type) {
-return { type: type, next: 1, total: 10, exhausted: false };
+var range = kp8Years(), states = [];
+[range.to, range.from].forEach(function(year) {
+KP8_TYPES.forEach(function(type) {
+states.push({
+type: type, year: year, next: 1,
+total: KP8_CATALOG_PAGES_PER_YEAR, exhausted: false
 });
-var rounds = 0;
+});
+});
+var metrics = { pages_requested: 0, pages_completed: 0,
+matched: 0, failed: 0, timeout: false };
+window.SURS_PERFORMANCE.kp8_catalog = metrics;
+
 function run() {
 if (working || !queued.length) return;
 working = true;
-var job = queued.shift(), page = job.page;
-var completed = false;
-var deadline = setTimeout(finish, 14500);
+var job = queued.shift(), page = job.page, completed = false;
+var deadline = setTimeout(function() {
+metrics.timeout = true;
+finish();
+}, 14500);
 function freeze() {
 cards.sort(kp8Compare);
 cards.forEach(function(card) {
@@ -2227,45 +2246,56 @@ orderedIds[card.id] = true;
 ordered.push(card);
 }
 });
+metrics.matched = ordered.length;
 }
 function finish() {
 if (completed) return;
 completed = true;
 clearTimeout(deadline);
 freeze();
-var more = states.some(function(st) { return !st.exhausted && st.next <= st.total; });
+var more = states.some(function(st) {
+return !st.exhausted && st.next <= st.total;
+});
 var pages = Math.max(1, Math.ceil(ordered.length / 20));
-if (more) pages = Math.max(pages, page + 1);
+if (more && ordered.length >= page * 20)
+pages = Math.max(pages, page + 1);
 var results = ordered.slice((page - 1) * 20, page * 20);
 if (results.length) {
-job.ok({ title: 'Новинки США · КП 8+', url: KP8_CATALOG_URL,
-source: 'SURS', page: page, total_pages: pages, results: results });
+job.ok({ title: 'Новинки США · КП 7,5+',
+url: KP8_CATALOG_URL, source: 'SURS',
+page: page, total_pages: pages, results: results });
 } else if (job.fail) job.fail();
 working = false;
 run();
 }
 function next() {
 if (completed) return;
-if (rounds >= 2) {
-freeze();
-if (ordered.length >= page * 20) return finish();
-}
-var todo = states.filter(function(st) { return !st.exhausted && st.next <= st.total; });
+
+if (cards.length >= page * 20) return finish();
+var todo = states.filter(function(st) {
+return !st.exhausted && st.next <= st.total;
+});
 if (!todo.length) return finish();
-rounds++;
 var pending = todo.length;
 todo.forEach(function(st) {
 var n = st.next++;
+metrics.pages_requested++;
 kp8Fetch(st.type, n, ready, function(json) {
 if (completed) return;
-if (!json || !Array.isArray(json.results) || !json.results.length) st.exhausted = true;
-else {
-if (typeof json.total_pages === 'number') st.total = Math.min(10, json.total_pages);
-if (n >= st.total) st.exhausted = true;
+metrics.pages_completed++;
+if (!json || !Array.isArray(json.results)) {
+st.exhausted = true;
+metrics.failed++;
+} else {
+var pages = Number(json.total_pages);
+if (isFinite(pages) && pages > 0)
+st.total = Math.min(st.total, Math.floor(pages));
+if (n >= st.total || !json.results.length)
+st.exhausted = true;
 kp8Collect(json, st.type, seen, cards);
 }
 if (--pending === 0) next();
-});
+}, { from: st.year, to: st.year });
 });
 }
 if (ready) next();
@@ -2278,7 +2308,8 @@ next();
 }
 return {
 load: function(page, ok, fail) {
-queued.push({ page: Math.max(1, Number(page) || 1), ok: ok, fail: fail });
+queued.push({ page: Math.max(1, Number(page) || 1),
+ok: ok, fail: fail });
 run();
 }
 };
@@ -3370,7 +3401,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.19';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.20';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3869,7 +3900,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v3.9.19 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.20 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -3898,7 +3929,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.19'
+version: '3.9.20'
 };
 
 
