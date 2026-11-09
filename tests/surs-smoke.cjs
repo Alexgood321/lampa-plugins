@@ -693,7 +693,7 @@ test('smart shelf merges only verified KP names of the same year and type', () =
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.kp_matches,2);
 });
 
-test('smart 3.9.22 exposes a quality-first 60/15/15/10 score and top-ten diagnostics', () => {
+test('smart 3.9.23 exposes a quality-first 60/15/15/10 score and top-ten diagnostics', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -711,7 +711,7 @@ test('smart 3.9.22 exposes a quality-first 60/15/15/10 score and top-ten diagnos
     }
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.top10[0].score,cards[0].surs_smart_score);
 });
-test('smart 3.9.22 trusts 10000 votes over a 30-vote inflated score', () => {
+test('smart 3.9.23 trusts 10000 votes over a 30-vote inflated score', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -724,7 +724,7 @@ test('smart 3.9.22 trusts 10000 votes over a 30-vote inflated score', () => {
     assert.equal(cards[0].id,6102);
     assert.ok(cards[0].surs_smart_quality>cards[1].surs_smart_quality);
 });
-test('smart 3.9.22 merges only IMDb with exact title, year and media type from KP', () => {
+test('smart 3.9.23 merges only IMDb with exact title, year and media type from KP', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -747,7 +747,7 @@ test('smart 3.9.22 merges only IMDb with exact title, year and media type from K
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.imdb_matches,2);
     assert.ok(cards[0].surs_smart_breakdown.ratings.some(x=>x.source==='IMDb' && x.votes===12000));
 });
-test('smart 3.9.22 accepts typed KP Rating Pro cache but rejects untyped legacy scores', () => {
+test('smart 3.9.23 accepts typed KP Rating Pro cache but rejects untyped legacy scores', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.stored.set('kp_rating_pro_cache_v1',{
@@ -764,7 +764,7 @@ test('smart 3.9.22 accepts typed KP Rating Pro cache but rejects untyped legacy 
     assert.equal(card.imdb_rating,8.8);
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.cache_imdb_matches,1);
 });
-test('smart 3.9.22 quality floor rejects popular weak movies independently of popularity', () => {
+test('smart 3.9.23 quality floor rejects popular weak movies independently of popularity', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),fresh=f.dates[0],older=f.dates[2];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -779,7 +779,7 @@ test('smart 3.9.22 quality floor rejects popular weak movies independently of po
     assert.ok(cards.some(x=>x.id===6403));
     assert.ok(app.window.SURS_PERFORMANCE.smart_us.rejected_quality>=1);
 });
-test('smart 3.9.22 does not force weak series above better movies', () => {
+test('smart 3.9.23 does not force weak series above better movies', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -792,6 +792,97 @@ test('smart 3.9.22 does not force weak series above better movies', () => {
     assert.ok(cards.length>=6);
     assert.ok(cards.slice(0,4).every(c=>c.type==='movie'));
     assert.ok(cards.some(c=>c.type==='tv'));
+});
+
+
+test('smart 3.9.23 keeps a provisional preview while KP finishes asynchronously', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=f.dates[0],broad=[];
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        const tv=q.includes('discover/tv');
+        cb({results:[f.card(tv?7002:7001,tv?'tv':'movie',tv?'Async Series':'Async Movie',
+            8.0,1500,75,day)],total_pages:1});
+    };
+    app.Lampa.Api.sources.KP={list:(p,done)=>{
+        if(p.url==='filter'){broad.push({p,done});return;}
+        const title=decodeURIComponent(p.query||'');
+        done({results:[{type:title.includes('Series')?'tv':'movie',
+            original_title:title,release_date:day,first_air_date:day,
+            kp_rating:8.7,imdb_rating:8.4,vote_count:3000}],total_pages:1});
+    }};
+    app.getMain();
+    assert.equal(broad.length,6);
+    assert.ok(broad.every(x=>x.p.filter_url.includes('ratingFrom=0')));
+    const before=app.timers.find(x=>x.ms===650);
+    assert.ok(before);
+    before.fn();
+    const draft=app.stored.get('surs_preview_cache_v1_smart_us_v3');
+    assert.ok(draft&&draft.results.length===2);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.phase,'provisional');
+    broad.forEach(x=>x.done({results:[],total_pages:1}));
+    const last=app.stored.get('surs_preview_cache_v1_smart_us_v3');
+    assert.ok(last.results.every(x=>x.kp_rating===8.7&&x.imdb_rating===8.4));
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.phase,'complete');
+    assert.equal(app.stored.get('surs_smart_diagnostics_v1').phase,'complete');
+    assert.ok(app.window.SURS_PERFORMANCE.smart_us.targeted_requests<=8);
+});
+test('smart 3.9.23 diagnostics show top-ten breakdown and source information', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const tv=q.includes('discover/tv');
+        done({results:[f.card(tv?7102:7101,tv?'tv':'movie','Diagnosed Title',
+            8.3,5000,70,day)],total_pages:1});
+    };
+    app.getMain();
+    const dialogs=[];
+    app.Lampa.Select={show:x=>dialogs.push(x)};
+    app.window.LampaShelfManager.openSmartDiagnostics();
+    assert.equal(dialogs.length,1);
+    assert.ok(dialogs[0].items.some(x=>x.title.includes('Кандидатов')));
+    const card=dialogs[0].items.find(x=>x.action==='card');
+    assert.ok(card&&card.card.score>0);
+    dialogs[0].onSelect(card);
+    assert.equal(dialogs.length,2);
+    assert.ok(dialogs[1].items.some(x=>x.title.includes('Качество')));
+    assert.ok(dialogs[1].items.some(x=>x.title.includes('TMDB')));
+    assert.ok(app.settings.some(x=>x.param&&x.param.name==='surs_smart_diagnostics'));
+});
+test('smart 3.9.23 never overwrites a verified diagnostic after KP fails', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        const tv=q.includes('discover/tv');
+        cb({results:[f.card(tv?7202:7201,tv?'tv':'movie','Still Cached',
+            8.2,4000,60,day)],total_pages:1});
+    };
+    const verified={phase:'complete',top10:[{rank:1,title:'Verified Result',score:90}]};
+    app.stored.set('surs_smart_diagnostics_v1',verified);
+    app.getMain();
+    const after=app.stored.get('surs_smart_diagnostics_v1');
+    assert.equal(after.phase,'complete');
+    assert.equal(after.top10[0].title,'Verified Result');
+    assert.ok(after.last_attempt_at);
+});
+test('smart 3.9.23 background requests are bounded even with many TMDB candidates', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=f.dates[0],calls=[];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const tv=q.includes('discover/tv');
+        done({results:Array.from({length:20},(_,i)=>f.card((tv?7400:7300)+i,
+            tv?'tv':'movie',(tv?'Series ':'Movie ')+i,7.9,1800,95-i,day)),
+            total_pages:1});
+    };
+    app.Lampa.Api.sources.KP={list:(p,done)=>{
+        calls.push(p);
+        done({results:[],total_pages:1});
+    }};
+    app.getMain();
+    const m=app.window.SURS_PERFORMANCE.smart_us;
+    assert.ok(m.kp_requests<=14);
+    assert.equal(m.targeted_requests,8);
+    assert.ok(calls.filter(x=>x.url==='filter').every(x=>x.filter_url.includes('ratingFrom=0')));
+    assert.equal(m.phase,'complete');
 });
 
 test('smart shelf cache keeps More pagination stable without network', () => {
@@ -892,8 +983,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.22/);
-    assert.match(readableSource, /Версия: 3\.9\.22/);
+    assert.match(mainSource, /Версия: 3\.9\.23/);
+    assert.match(readableSource, /Версия: 3\.9\.23/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -1321,7 +1412,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.22/);
+    assert.match(source, /Версия: 3\.9\.23/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -1407,7 +1498,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.22');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.23');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 26);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -1582,7 +1673,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.22');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.23');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
