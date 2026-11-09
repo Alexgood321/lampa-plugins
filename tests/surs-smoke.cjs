@@ -1272,6 +1272,42 @@ test('smart 3.9.26 diagnostics disclose actual premiere date and period of each 
     assert.ok(popups[1].items.some(x=>x.title.includes('Премьера: '+d)));
 });
 
+
+test('smart 3.9.26 respects calendar-day premiere windows on exact 180/181/365/366/550 boundaries', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures();
+    const day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.startsWith('discover/tv'))return done({results:[],total_pages:1});
+        done({results:[180,181,365,366,550].map((age,i)=>
+            f.card(18000+i,'movie','Age '+age,9.2,10000,90,day(age))),total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    const bands=new Map(cards.map(c=>[c.id,c.surs_smart_period]));
+    assert.equal(bands.get(18000),0);
+    assert.equal(bands.get(18001),1);
+    assert.equal(bands.get(18002),1);
+    assert.equal(bands.get(18003),2);
+    assert.equal(bands.get(18004),2);
+});
+test('smart 3.9.26 checks page two when page one is full of older high-rated releases', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),urls=[];
+    const day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        urls.push(q);
+        if(q.startsWith('discover/tv'))return done({results:[],total_pages:1});
+        const page=Number((q.match(/page=(\d+)/)||[])[1]);
+        done({results:Array.from({length:20},(_,i)=>f.card(
+            19000+page*100+i,'movie','Find Recent '+page+' '+i,
+            8.7,9000,100-i,page===1?day(350):day(40))),total_pages:2});
+    };
+    const cards=app.getMain()[0].results;
+    assert.ok(urls.some(q=>q.includes('page=2')));
+    assert.equal(cards[0].surs_smart_period,0);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.recent_top10,10);
+});
+
 test('smart shelf cache keeps More pagination stable without network', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures();let count=0;

@@ -1803,7 +1803,11 @@ period===2?'366–550 дней':'вне периода';
 }
 function smartAge(date) {
 var timestamp=Date.parse(date+'T00:00:00Z');
-return isFinite(timestamp) ? Math.max(0,(Date.now()-timestamp)/86400000) : 9999;
+if(!isFinite(timestamp))return 9999;
+
+var now=new Date(),today=Date.UTC(now.getUTCFullYear(),
+now.getUTCMonth(),now.getUTCDate());
+return Math.max(0,Math.floor((today-timestamp)/86400000));
 }
 function smartNormalize(s) {
 var str=String(s||'').toLowerCase().replace(/ё/g,'е');
@@ -2426,10 +2430,14 @@ catch(e){receive(null);}
 pump();
 }
 batch(jobs.filter(function(j){return j.page===1;}),function(){
-var enough=cards.filter(function(c){
+var ready=cards.filter(function(c){
 smartRate(c,dates);
 return !c.surs_smart_pending_season&&c.surs_smart_passes_quality;
-}).length>=60;
+});
+
+
+var recent=ready.filter(function(c){return smartPeriod(c)===0;}).length;
+var enough=ready.length>=60&&recent>=15;
 if(enough)verifySeasonPremieres();
 else batch(jobs.filter(function(j){return j.page===2;}),verifySeasonPremieres);
 });
