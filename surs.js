@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.25 (US Premieres Balanced Quality)
+* Версия: 3.9.26 (US Premieres Balanced Quality)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1749,42 +1749,65 @@ results: result.results.slice(0, 60)
 var SMART_US_ID = 'smart_us_new';
 var SMART_US_TITLE = 'Лучшие новинки США';
 var SMART_US_CATALOG_URL = 'surs_smart_us_new';
-var SMART_US_CACHE = 'smart_us_v5';
+var SMART_US_CACHE = 'smart_us_v6';
 var SMART_US_LIMIT = 40;
 var smartRunning = false, smartWaiters = [];
 
 function smartWindow() {
-var now = new Date();
-var end = now.toISOString().slice(0, 10);
-now.setMonth(now.getMonth() - 18);
-return {start:now.toISOString().slice(0, 10),end:end};
+
+var now=new Date(),end=now.toISOString().slice(0,10);
+var start=new Date(now.getTime()-550*86400000).toISOString().slice(0,10);
+return {start:start,end:end};
 }
 function smartQueries(windowDates) {
-var jobs = [];
-['movie','tv'].forEach(function(type) {
-var dateKey = type === 'movie' ? 'primary_release_date' : 'first_air_date';
-var excluded = type === 'movie' ? '16,99,10770' :
-'16,99,10763,10764,10766,10767';
-['popularity.desc',dateKey+'.desc'].forEach(function(sort) {
-for (var page=1;page<=2;page++) {
-jobs.push({type:type,url:'discover/'+type+
+var jobs=[];
+['movie','tv'].forEach(function(type){
+var field=type==='movie'?'primary_release_date':'first_air_date';
+var exclude=type==='movie'?'16,99,10770':'16,99,10763,10764,10766,10767';
+['popularity.desc',field+'.desc'].forEach(function(sort){
+for(var page=1;page<=2;page++){
+jobs.push({type:type,page:page,url:'discover/'+type+
 '?with_origin_country=US&include_adult=false'+
-'&without_genres='+excluded+
+'&without_genres='+exclude+
 '&vote_average.gte=6.3&vote_count.gte=15'+
-'&'+dateKey+'.gte='+windowDates.start+
-'&'+dateKey+'.lte='+windowDates.end+
+'&'+field+'.gte='+windowDates.start+
+'&'+field+'.lte='+windowDates.end+
 '&sort_by='+sort+'&page='+page});
 }
 });
 });
+
+
+for(var page=1;page<=2;page++){
+jobs.push({type:'tv',seasonCandidate:true,page:page,
+url:'discover/tv?with_origin_country=US&include_adult=false'+
+'&without_genres=16,99,10763,10764,10766,10767'+
+'&vote_average.gte=6.3&vote_count.gte=15'+
+'&air_date.gte='+windowDates.start+
+'&air_date.lte='+windowDates.end+
+'&sort_by=popularity.desc&page='+page});
+}
 return jobs;
 }
 function smartDate(card) {
-return String(card.release_date || card.first_air_date || '').slice(0,10);
+return String((card.type==='tv'&&card.surs_smart_premiere_date)||
+card.release_date||card.first_air_date||'').slice(0,10);
+}
+function smartPeriod(card) {
+var age=smartAge(smartDate(card));
+return age<=180?0:age<=365?1:age<=550?2:3;
+}
+function smartPeriodLabel(period) {
+return period===0?'0–180 дней':period===1?'181–365 дней':
+period===2?'366–550 дней':'вне периода';
 }
 function smartAge(date) {
 var timestamp=Date.parse(date+'T00:00:00Z');
-return isFinite(timestamp) ? Math.max(0,(Date.now()-timestamp)/86400000) : 9999;
+if(!isFinite(timestamp))return 9999;
+
+var now=new Date(),today=Date.UTC(now.getUTCFullYear(),
+now.getUTCMonth(),now.getUTCDate());
+return Math.max(0,Math.floor((today-timestamp)/86400000));
 }
 function smartNormalize(s) {
 var str=String(s||'').toLowerCase().replace(/ё/g,'е');
@@ -1799,35 +1822,53 @@ if (!n || seen[n]) return false;
 seen[n]=true; return true;
 });
 }
-function smartAccept(card,type,windowDates) {
-if (!card || !card.id || !card.poster_path || card.adult===true) return false;
+function smartAccept(card,type,windowDates,seasonCandidate) {
+if(!card||!card.id||!card.poster_path||card.adult===true)return false;
 var date=type==='movie'?card.release_date:card.first_air_date;
-if (!date || date<windowDates.start || date>windowDates.end) return false;
-if (type==='tv' && (!Array.isArray(card.origin_country) ||
-card.origin_country.indexOf('US')<0)) return false;
-if (type==='movie' && !card.title && !card.original_title) return false;
-if (type==='tv' && !card.name && !card.original_name) return false;
-var bad=type==='movie'?[16,99,10770]:[16,99,10763,10764,10766,10767];
-if (Array.isArray(card.genre_ids) && card.genre_ids.some(function(g) {
+
+if((!date||date<windowDates.start)&&!(type==='tv'&&seasonCandidate))
+return false;
+if(date&&date>windowDates.end)return false;
+if(type==='tv'&&(!Array.isArray(card.origin_country)||
+card.origin_country.indexOf('US')<0))return false;
+if(type==='movie'&&!card.title&&!card.original_title)return false;
+if(type==='tv'&&!card.name&&!card.original_name)return false;
+var bad=type==='movie'?[16,99,10770]:
+[16,99,10763,10764,10766,10767];
+if(Array.isArray(card.genre_ids)&&card.genre_ids.some(function(g){
 return bad.indexOf(Number(g))>=0;
-})) return false;
+}))return false;
 var rating=Number(card.vote_average)||0,votes=Number(card.vote_count)||0;
-var age=smartAge(date);
+var age=smartAge(date||windowDates.start);
 var minVotes=age<=30?15:age<=90?35:80;
-if (type==='tv') minVotes=Math.max(12,Math.round(minVotes*.7));
-return rating>=6.3 && votes>=minVotes && age<=550;
+if(type==='tv')minVotes=Math.max(12,Math.round(minVotes*.7));
+return rating>=6.3&&votes>=minVotes&&
+(age<=550||(type==='tv'&&seasonCandidate));
 }
-function smartCandidate(json,type,dates,seen,cards) {
-if (!json || !Array.isArray(json.results)) return;
-json.results.forEach(function(raw) {
-if (!smartAccept(raw,type,dates)) return;
+function smartCandidate(json,type,dates,seen,cards,job) {
+if(!json||!Array.isArray(json.results))return;
+var seasonCandidate=!!(job&&job.seasonCandidate);
+json.results.forEach(function(raw){
+if(!smartAccept(raw,type,dates,seasonCandidate))return;
 var key=type+':'+raw.id;
-if (seen[key]) return;
-seen[key]=true;
+if(seen[key]){
+if(type==='tv'&&seasonCandidate)
+seen[key].surs_smart_season_candidate=true;
+return;
+}
 var card=Object.assign({},raw,{
 source:'tmdb',type:type,media_type:type
 });
-cards.push(card);
+if(type==='tv'){
+card.surs_smart_premiere_type='series';
+if(seasonCandidate){
+card.surs_smart_season_candidate=true;
+
+if(!raw.first_air_date||raw.first_air_date<dates.start)
+card.surs_smart_pending_season=true;
+}
+}
+seen[key]=card;cards.push(card);
 });
 }
 function smartValidRate(v) {
@@ -1882,7 +1923,10 @@ kp:0,imdb:0,items:0,by_imdb:0,by_title:0,
 year_offset:0,ambiguous:0
 };
 function year(card) {
-var n=Number(smartDate(card).slice(0,4));
+
+var identityDate=card.type==='tv'&&card.first_air_date?
+card.first_air_date:smartDate(card);
+var n=Number(String(identityDate).slice(0,4));
 return n>=1900&&n<=2200?n:0;
 }
 cards.forEach(function(c){
@@ -2014,7 +2058,7 @@ for(var i=0;i<sources.length;i++)for(var j=i+1;j<sources.length;j++)
 maxDifference=Math.max(maxDifference,Math.abs(sources[i].adjusted-sources[j].adjusted));
 agreement=Math.max(0,1-maxDifference/3);
 }
-var qualityFloor=age<=45?6.75:(age<=120?6.95:7.10);
+var qualityFloor=age<=45?7.00:(age<=180?7.15:7.25);
 var round=function(x){return Math.round(x*100)/100;};
 var points={quality:round(60*quality/10),popularity:round(15*popularity),
 freshness:round(15*freshness),agreement:round(10*agreement)};
@@ -2042,6 +2086,10 @@ ranking_method:'quality_first',
 ranking_quality_points:round(98.8*quality/10),
 ranking_secondary_points:round(1.2*secondaryRatio),
 ranking_secondary_cap:1.2,
+premiere_date:smartDate(card),
+premiere_kind:card.type==='movie'?'Фильм':card.surs_smart_premiere_type==='season'?
+'Новый сезон '+card.surs_smart_season_number:'Новый сериал',
+period:smartPeriodLabel(smartPeriod(card)),
 rating_coverage:coverage,coverage_percent:Math.round(coverage/3*100),
 quality_before_coverage:round(qualityRaw),
 coverage_penalty:round(coveragePenalty),
@@ -2057,25 +2105,31 @@ return score;
 }
 function smartRank(cards,dates) {
 cards.forEach(function(c){smartRate(c,dates);});
-var qualityCandidates=cards.filter(function(c){return c.surs_smart_passes_quality;});
-qualityCandidates.sort(function(a,b){
+var qualified=cards.filter(function(c){
+return !c.surs_smart_pending_season&&c.surs_smart_passes_quality&&
+smartPeriod(c)<=2;
+});
+qualified.sort(function(a,b){
+var periodA=smartPeriod(a),periodB=smartPeriod(b);
+if(periodA!==periodB)return periodA-periodB;
 
-
-var scoreDiff=b.surs_smart_raw_score-a.surs_smart_raw_score;
-if(Math.abs(scoreDiff)>1e-10)return scoreDiff;
+var score=b.surs_smart_raw_score-a.surs_smart_raw_score;
+if(Math.abs(score)>1e-10)return score;
 if(a.surs_smart_quality!==b.surs_smart_quality)
 return b.surs_smart_quality-a.surs_smart_quality;
 var votes=Number(b.vote_count||0)-Number(a.vote_count||0);
 if(votes)return votes;
-var aKey=String(a.type)+':'+String(a.id);
-var bKey=String(b.type)+':'+String(b.id);
-return aKey<bKey?-1:aKey>bKey?1:0;
+var ka=String(a.type)+':'+String(a.id),kb=String(b.type)+':'+String(b.id);
+return ka<kb?-1:ka>kb?1:0;
 });
-var selected=qualityCandidates.slice(0,SMART_US_LIMIT);
-selected.forEach(function(c,i){c.surs_smart_rank=i+1;});
+var selected=qualified.slice(0,SMART_US_LIMIT);
+selected.forEach(function(c,i){
+c.surs_smart_rank=i+1;
+c.surs_smart_period=smartPeriod(c);
+c.surs_smart_period_label=smartPeriodLabel(c.surs_smart_period);
+});
 return selected;
 }
-
 function smartMakeResult(cards) {
 return { title:SMART_US_TITLE,url:SMART_US_CATALOG_URL,
 source:'SURS',page:1,total_pages:Math.max(1,Math.ceil(cards.length/20)),
@@ -2092,8 +2146,27 @@ try{return Lampa.Storage.get(SMART_DIAG_KEY,null);}catch(e){return null;}
 function smartTopTen(cards){
 return (cards||[]).slice(0,10).map(function(c,i){
 return {rank:i+1,id:c.id,type:c.type,title:c.title||c.name||'Без названия',
-score:c.surs_smart_score,breakdown:c.surs_smart_breakdown};
+score:c.surs_smart_score,premiere:smartDate(c),
+period:smartPeriodLabel(smartPeriod(c)),
+season:c.surs_smart_season_number||0,
+breakdown:c.surs_smart_breakdown};
 });
+}
+var SMART_TV_SEASON_DETAILS_LIMIT=20;
+function smartFindRecentSeason(details,dates){
+if(!details||!Array.isArray(details.seasons))return null;
+var best=null;
+details.seasons.forEach(function(s){
+if(!s||Number(s.season_number)<2||!Number.isInteger(Number(s.season_number)))
+return;
+var day=String(s.air_date||'').slice(0,10);
+if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||day<dates.start||day>dates.end)
+return;
+if(!isFinite(Date.parse(day+'T00:00:00Z')))return;
+if(!best||day>best.date)
+best={date:day,number:Number(s.season_number)};
+});
+return best;
 }
 function smartBuild(owner,params,done){
 if(smartRunning){if(typeof done==='function')smartWaiters.push(done);return;}
@@ -2101,11 +2174,14 @@ smartRunning=true;smartLastBuild=Date.now();
 if(typeof done==='function')smartWaiters.push(done);
 var oldCache=readSursPreviewCache(SMART_US_CACHE),oldDiag=smartReadDiagnostic();
 var dates=smartWindow(),cards=[],kpCards=[],seen={};
-var metrics={version:'3.9.25',phase:'loading',status:'loading',started_at:Date.now(),
+var metrics={version:'3.9.26',phase:'loading',status:'loading',started_at:Date.now(),
 tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
 kp_requests:0,kp_done:0,kp_failed:0,kp_status:'loading',
 kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
 targeted_requests:0,candidates:0,selected:0,rejected_quality:0,
+season_candidates:0,season_detail_requests:0,season_detail_done:0,
+season_detail_failed:0,season_verified:0,season_unverified:0,
+period_recent:0,period_mid:0,period_reserve:0,recent_top10:0,
 top10:[],timeout:false};
 window.SURS_PERFORMANCE.smart_us=metrics;
 var previewSent=false,finished=false,tmdbDone=false,broadDone=false,kpDone=false,
@@ -2126,6 +2202,11 @@ metrics.kp_matches+=m.kp;metrics.imdb_matches+=m.imdb;
 var selected=smartRank(cards,dates);
 metrics.candidates=cards.length;metrics.selected=selected.length;
 metrics.rejected_quality=cards.filter(function(c){return !c.surs_smart_passes_quality;}).length;
+metrics.season_unverified=cards.filter(function(c){return c.surs_smart_pending_season;}).length;
+metrics.period_recent=selected.filter(function(c){return smartPeriod(c)===0;}).length;
+metrics.period_mid=selected.filter(function(c){return smartPeriod(c)===1;}).length;
+metrics.period_reserve=selected.filter(function(c){return smartPeriod(c)===2;}).length;
+metrics.recent_top10=selected.slice(0,10).filter(function(c){return smartPeriod(c)===0;}).length;
 metrics.coverage_two=selected.filter(function(c){return c.surs_smart_source_count>=2;}).length;
 metrics.coverage_three=selected.filter(function(c){return c.surs_smart_source_count>=3;}).length;
 metrics.coverage_kp=selected.filter(function(c){return smartValidRate(c.kp_rating)>0;}).length;
@@ -2282,7 +2363,7 @@ if(replied)return;
 replied=true;
 if(!finished){
 metrics.tmdb_done++;
-if(json&&Array.isArray(json.results))smartCandidate(json,job.type,dates,seen,cards);
+if(json&&Array.isArray(json.results))smartCandidate(json,job.type,dates,seen,cards,job);
 else metrics.tmdb_failed++;
 }
 if(--pending===0&&!finished)doneBatch();
@@ -2291,11 +2372,74 @@ try{owner.get(job.url,params,receive,function(){receive(null);});}
 catch(e){receive(null);}
 });
 }
-function tmdbFinished(){tmdbDone=true;searchMissing();progress();}
-batch(jobs.filter(function(j){return /[?&]page=1(?:&|$)/.test(j.url);}),function(){
-var enough=cards.filter(function(c){smartRate(c,dates);return c.surs_smart_passes_quality;}).length>=60;
-if(enough)tmdbFinished();
-else batch(jobs.filter(function(j){return /[?&]page=2(?:&|$)/.test(j.url);}),tmdbFinished);
+function seasonDetailsDone(){
+tmdbDone=true;searchMissing();progress();
+}
+function verifySeasonPremieres(){
+var candidates=cards.filter(function(c){
+
+return c.type==='tv'&&c.surs_smart_season_candidate&&
+(c.surs_smart_pending_season||
+smartAge(c.first_air_date)>180);
+});
+metrics.season_candidates=candidates.length;
+candidates.sort(function(a,b){
+if(!!a.surs_smart_pending_season!==!!b.surs_smart_pending_season)
+return a.surs_smart_pending_season?-1:1;
+return Number(b.vote_count||0)-Number(a.vote_count||0);
+});
+var queue=candidates.slice(0,SMART_TV_SEASON_DETAILS_LIMIT);
+if(!queue.length)return seasonDetailsDone();
+var index=0,active=0,left=queue.length;
+function pump(){
+if(finished)return;
+while(index<queue.length&&active<3&&!finished){
+(function(c){
+active++;metrics.tmdb_requests++;metrics.season_detail_requests++;
+var replied=false,timer=setTimeout(function(){receive(null);},7500);
+function receive(details){
+if(replied)return;
+replied=true;clearTimeout(timer);
+if(finished)return;
+active--;left--;
+metrics.tmdb_done++;metrics.season_detail_done++;
+if(!details||!Array.isArray(details.seasons)){
+metrics.season_detail_failed++;
+metrics.tmdb_failed++;
+}else if(!details.id||String(details.id)===String(c.id)){
+var latest=smartFindRecentSeason(details,dates);
+if(latest){
+c.surs_smart_premiere_date=latest.date;
+c.surs_smart_premiere_type='season';
+c.surs_smart_season_number=latest.number;
+c.surs_smart_pending_season=false;
+metrics.season_verified++;
+}
+}else{
+metrics.season_detail_failed++;
+metrics.tmdb_failed++;
+}
+if(left===0)seasonDetailsDone();
+else pump();
+}
+try{owner.get('tv/'+c.id,params,receive,function(){receive(null);});}
+catch(e){receive(null);}
+})(queue[index++]);
+}
+}
+pump();
+}
+batch(jobs.filter(function(j){return j.page===1;}),function(){
+var ready=cards.filter(function(c){
+smartRate(c,dates);
+return !c.surs_smart_pending_season&&c.surs_smart_passes_quality;
+});
+
+
+var recent=ready.filter(function(c){return smartPeriod(c)===0;}).length;
+var enough=ready.length>=60&&recent>=15;
+if(enough)verifySeasonPremieres();
+else batch(jobs.filter(function(j){return j.page===2;}),verifySeasonPremieres);
 });
 kp8FindSource(kpSource);
 }
@@ -2325,6 +2469,9 @@ d.kp_match.indexOf('year_offset')>=0?'по названию, соседний г
 if(d.imdb_match)matches.push('IMDb: '+(d.imdb_match==='imdb'?'по IMDb ID':
 d.imdb_match.indexOf('year_offset')>=0?'по названию, соседний год':'по названию и году'));
 var items=[
+{title:'Премьера: '+(d.premiere_date||c.premiere||'неизвестна')+
+' · '+(d.premiere_kind||'фильм/сериал')+
+' · период '+(d.period||c.period||'неизвестен')},
 {title:'Источников: '+(d.rating_coverage||1)+'/3 · покрытие '+(d.coverage_percent||33)+'%'},
 {title:'Не получено: '+(missing.length?missing.join(', '):'все источники представлены')},
 {title:'Качество '+(p.quality||0)+'/60 · Популярность '+(p.popularity||0)+'/15'},
@@ -2355,9 +2502,10 @@ var live=window.SURS_PERFORMANCE.smart_us||{};
 var data=live.top10&&live.top10.length?live:(smartReadDiagnostic()||live);
 var state=live.phase==='loading'?'loading':(data.phase||'cached');
 var items=[
-{title:'Версия SURS '+(data.version||'3.9.25')+' · '+smartStatusText(state)},
+{title:'Версия SURS '+(data.version||'3.9.26')+' · '+smartStatusText(state)},
 {title:'Статус отражает завершение запросов, а не полноту рейтингов'},
-{title:'Порядок: качество прежде всего; остальные факторы только при близких оценках'},
+{title:'Порядок: сначала 0–180, затем 181–365, затем 366–550 дней'},
+{title:'Внутри каждого периода: качество прежде всего; популярность при равенстве'},
 {title:'SURS: качество 98,8 балла + вторичные факторы до 1,2 балла'},
 {title:'TMDB '+(data.tmdb_done||0)+'/'+(data.tmdb_requests||0)+
 ' · ошибок '+(data.tmdb_failed||0)},
@@ -2365,6 +2513,14 @@ var items=[
 ' · '+smartStatusText(data.kp_status)+' · ошибок '+(data.kp_failed||0)},
 {title:'Кандидатов '+(data.candidates||0)+' · отобрано '+(data.selected||0)+
 ' · исключено '+(data.rejected_quality||0)},
+{title:'Релизы 0–180 дней: '+(data.period_recent||0)+
+' · 181–365: '+(data.period_mid||0)+
+' · 366–550: '+(data.period_reserve||0)},
+{title:'Свежих в топ-10: '+(data.recent_top10||0)+
+' · подтверждено новых сезонов '+(data.season_verified||0)},
+{title:'Проверено сезонов: '+(data.season_detail_done||0)+'/'+
+(data.season_detail_requests||0)+' · без подтверждения '+
+(data.season_unverified||0)+' · ошибок '+(data.season_detail_failed||0)},
 {title:'Покрытие рейтингов: '+(data.coverage_percent||0)+
 '% · 2+ источника '+(data.coverage_two||0)+'/'+(data.selected||0)+
 ' · все три '+(data.coverage_three||0)},
@@ -2378,7 +2534,8 @@ new Date(data.checked_at).toLocaleString('ru-RU'):'ещё не завершён'
 (data.top10||[]).forEach(function(c){
 var d=c.breakdown||{};
 var found=(d.ratings||[]).map(function(r){return r.source;}).join('+')||'нет данных';
-items.push({title:'#'+c.rank+' · '+c.title+' · SURS '+c.score+
+items.push({title:'#'+c.rank+' · '+c.title+' · '+(c.premiere||'?')+
+' · '+(c.period||'?')+' · SURS '+c.score+
 ' · '+found+' ('+(d.rating_coverage||1)+'/3)',
 action:'card',card:c});
 });
@@ -4095,7 +4252,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.25';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.26';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -4606,7 +4763,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v3.9.25 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.26 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4638,7 +4795,7 @@ getDefaultSectionShelves: getDefaultSectionShelves,
 smartDiagnostics: smartReadDiagnostic,
 openSmartDiagnostics: openSmartDiagnostics,
 refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-version: '3.9.25'
+version: '3.9.26'
 };
 
 

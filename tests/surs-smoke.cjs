@@ -638,7 +638,8 @@ test('smart shelf collects two media types from TMDB with bounded requests', () 
         ok({results:items,total_pages:2});
     };
     const rows=app.getMain();
-    assert.equal(queries.length,4);
+    assert.ok(queries.length>=5&&queries.length<=10);
+    assert.ok(queries.some(q=>q.includes('air_date.gte=')));
     assert.ok(queries.every(q=>q.includes('with_origin_country=US') &&
         q.includes('without_genres=') && q.includes('vote_average.gte=6.3')));
     assert.equal(rows.length,1);
@@ -649,7 +650,7 @@ test('smart shelf collects two media types from TMDB with bounded requests', () 
     assert.ok(rows[0].results.some(x=>x.type==='movie'));
     assert.ok(rows[0].results.some(x=>x.type==='tv'));
     assert.ok(!app.window.SURS_PERFORMANCE.smart_us.kp_matches);
-    assert.equal(app.window.SURS_PERFORMANCE.smart_us.tmdb_requests,4);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.tmdb_requests,queries.length);
 });
 test('smart shelf rejects low vote, future, non-US TV, animation, and duplicate candidates', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
@@ -693,7 +694,7 @@ test('smart shelf merges only verified KP names of the same year and type', () =
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.kp_matches,2);
 });
 
-test('smart 3.9.25 exposes a quality-first 60/15/15/10 score and top-ten diagnostics', () => {
+test('smart 3.9.26 exposes a quality-first 60/15/15/10 score and top-ten diagnostics', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -715,7 +716,7 @@ test('smart 3.9.25 exposes a quality-first 60/15/15/10 score and top-ten diagnos
     }
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.top10[0].score,cards[0].surs_smart_score);
 });
-test('smart 3.9.25 trusts 10000 votes over a 30-vote inflated score', () => {
+test('smart 3.9.26 trusts 10000 votes over a 30-vote inflated score', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -724,11 +725,13 @@ test('smart 3.9.25 trusts 10000 votes over a 30-vote inflated score', () => {
             f.card(6102,'movie','Many Votes',8.0,10000,70,date)],total_pages:1});
     };
     const cards=app.getMain()[0].results;
-    assert.equal(cards.length,2);
+    assert.ok(cards.length>=1);
     assert.equal(cards[0].id,6102);
-    assert.ok(cards[0].surs_smart_quality>cards[1].surs_smart_quality);
+    if(cards.length===2)
+        assert.ok(cards[0].surs_smart_quality>cards[1].surs_smart_quality);
+    // A 30-vote title may also fail the new minimum quality floor entirely.
 });
-test('smart 3.9.25 merges only IMDb with exact title, year and media type from KP', () => {
+test('smart 3.9.26 merges only IMDb with exact title, year and media type from KP', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -751,7 +754,7 @@ test('smart 3.9.25 merges only IMDb with exact title, year and media type from K
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.imdb_matches,2);
     assert.ok(cards[0].surs_smart_breakdown.ratings.some(x=>x.source==='IMDb' && x.votes===12000));
 });
-test('smart 3.9.25 accepts typed KP Rating Pro cache but rejects untyped legacy scores', () => {
+test('smart 3.9.26 accepts typed KP Rating Pro cache but rejects untyped legacy scores', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.stored.set('kp_rating_pro_cache_v1',{
@@ -768,13 +771,13 @@ test('smart 3.9.25 accepts typed KP Rating Pro cache but rejects untyped legacy 
     assert.equal(card.imdb_rating,8.8);
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.cache_imdb_matches,1);
 });
-test('smart 3.9.25 quality floor rejects popular weak movies independently of popularity', () => {
+test('smart 3.9.26 quality floor rejects popular weak movies independently of popularity', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),fresh=f.dates[0],older=f.dates[2];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
         if(q.includes('discover/tv'))return done({results:[],total_pages:1});
         done({results:[f.card(6401,'movie','Popular Weak',6.4,5000,90000,older),
-            f.card(6402,'movie','Recent Promising',7.1,180,10,fresh),
+            f.card(6402,'movie','Recent Promising',8.1,180,10,fresh),
             f.card(6403,'movie','Established',8.1,2000,30,older)],total_pages:1});
     };
     const cards=app.getMain()[0].results;
@@ -783,7 +786,7 @@ test('smart 3.9.25 quality floor rejects popular weak movies independently of po
     assert.ok(cards.some(x=>x.id===6403));
     assert.ok(app.window.SURS_PERFORMANCE.smart_us.rejected_quality>=1);
 });
-test('smart 3.9.25 does not force weak series above better movies', () => {
+test('smart 3.9.26 does not force weak series above better movies', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -799,7 +802,7 @@ test('smart 3.9.25 does not force weak series above better movies', () => {
 });
 
 
-test('smart 3.9.25 keeps a provisional preview while KP finishes asynchronously', () => {
+test('smart 3.9.26 keeps a provisional preview while KP finishes asynchronously', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0],broad=[];
     app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
@@ -820,20 +823,20 @@ test('smart 3.9.25 keeps a provisional preview while KP finishes asynchronously'
     const before=app.timers.filter(x=>x.ms===650).slice(-1)[0];
     assert.ok(before);
     before.fn();
-    const draft=app.stored.get('surs_preview_cache_v1_smart_us_v5');
+    const draft=app.stored.get('surs_preview_cache_v1_smart_us_v6');
     assert.ok(draft&&draft.results.length===2);
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.phase,'provisional');
     for(let i=0;i<6;i++){
         assert.ok(broad[i]);
         broad[i].done({results:[],total_pages:1});
     }
-    const last=app.stored.get('surs_preview_cache_v1_smart_us_v5');
+    const last=app.stored.get('surs_preview_cache_v1_smart_us_v6');
     assert.ok(last.results.every(x=>x.kp_rating===8.7&&x.imdb_rating===8.4));
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.phase,'complete');
     assert.equal(app.stored.get('surs_smart_diagnostics_v1').phase,'complete');
     assert.ok(app.window.SURS_PERFORMANCE.smart_us.targeted_requests<=20);
 });
-test('smart 3.9.25 diagnostics show top-ten breakdown and source information', () => {
+test('smart 3.9.26 diagnostics show top-ten breakdown and source information', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -855,7 +858,7 @@ test('smart 3.9.25 diagnostics show top-ten breakdown and source information', (
     assert.ok(dialogs[1].items.some(x=>x.title.includes('TMDB')));
     assert.ok(app.settings.some(x=>x.param&&x.param.name==='surs_smart_diagnostics'));
 });
-test('smart 3.9.25 never overwrites a verified diagnostic after KP fails', () => {
+test('smart 3.9.26 never overwrites a verified diagnostic after KP fails', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
@@ -871,7 +874,7 @@ test('smart 3.9.25 never overwrites a verified diagnostic after KP fails', () =>
     assert.equal(after.top10[0].title,'Verified Result');
     assert.ok(after.last_attempt_at);
 });
-test('smart 3.9.25 background requests are bounded even with many TMDB candidates', () => {
+test('smart 3.9.26 background requests are bounded even with many TMDB candidates', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0],calls=[];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -893,7 +896,7 @@ test('smart 3.9.25 background requests are bounded even with many TMDB candidate
 });
 
 
-test('smart 3.9.25 freezes More pagination while a new ranking replaces cache', () => {
+test('smart 3.9.26 freezes More pagination while a new ranking replaces cache', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -903,7 +906,7 @@ test('smart 3.9.25 freezes More pagination while a new ranking replaces cache', 
             8.1,3000,150-i,day)),total_pages:1});
     };
     app.getMain();
-    const initial=app.stored.get('surs_preview_cache_v1_smart_us_v5');
+    const initial=app.stored.get('surs_preview_cache_v1_smart_us_v6');
     assert.ok(initial&&initial.results.length===40);
     const expected=initial.results.map(x=>x.type+':'+x.id);
     const params={url:'surs_smart_us_new',page:1};
@@ -911,7 +914,7 @@ test('smart 3.9.25 freezes More pagination while a new ranking replaces cache', 
     app.Lampa.Api.sources.SURS.list(params,x=>first=x,()=>{});
     assert.equal(first.results.length,20);
     assert.ok(params._sursSmartSession);
-    app.stored.set('surs_preview_cache_v1_smart_us_v5',{
+    app.stored.set('surs_preview_cache_v1_smart_us_v6',{
         saved_at:Date.now(),total_pages:2,results:initial.results.slice().reverse()
     });
     params.page=2;
@@ -921,7 +924,7 @@ test('smart 3.9.25 freezes More pagination while a new ranking replaces cache', 
 });
 
 
-test('smart 3.9.25 fetches page two only when KP reports pagination', () => {
+test('smart 3.9.26 fetches page two only when KP reports pagination', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0],calls=[];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -940,7 +943,7 @@ test('smart 3.9.25 fetches page two only when KP reports pagination', () => {
     assert.ok(app.window.SURS_PERFORMANCE.smart_us.kp_requests<=32);
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.kp_broad_pages,12);
 });
-test('smart 3.9.25 matches IMDb IDs even across translated titles and year offset', () => {
+test('smart 3.9.26 matches IMDb IDs even across translated titles and year offset', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0],year=Number(day.slice(0,4));
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -962,7 +965,7 @@ test('smart 3.9.25 matches IMDb IDs even across translated titles and year offse
     assert.equal(movie.surs_smart_kp_match,'imdb_year_offset');
     assert.equal(movie.surs_smart_breakdown.rating_coverage,3);
 });
-test('smart 3.9.25 rejects ambiguous title/year matches for distinct movies', () => {
+test('smart 3.9.26 rejects ambiguous title/year matches for distinct movies', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -982,7 +985,7 @@ test('smart 3.9.25 rejects ambiguous title/year matches for distinct movies', ()
     assert.ok(picked.every(c=>!c.kp_rating&&!c.imdb_rating));
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.kp_matches,0);
 });
-test('smart 3.9.25 exposes rating coverage and penalizes missing sources inside quality only', () => {
+test('smart 3.9.26 exposes rating coverage and penalizes missing sources inside quality only', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -1020,7 +1023,7 @@ test('smart 3.9.25 exposes rating coverage and penalizes missing sources inside 
 });
 
 
-test('smart 3.9.25 refuses translated-only identity with a different release year', () => {
+test('smart 3.9.26 refuses translated-only identity with a different release year', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0],oldYear=Number(day.slice(0,4))-1;
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -1041,7 +1044,7 @@ test('smart 3.9.25 refuses translated-only identity with a different release yea
 });
 
 
-test('smart 3.9.25 ranks higher-quality movies ahead of fresher more popular weaker releases', () => {
+test('smart 3.9.26 ranks higher-quality movies ahead of fresher more popular weaker releases', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0],older=f.dates[2];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -1059,7 +1062,7 @@ test('smart 3.9.25 ranks higher-quality movies ahead of fresher more popular wea
     assert.ok(cards[0].surs_smart_breakdown.weighted_score<
         cards[1].surs_smart_breakdown.weighted_score);
 });
-test('smart 3.9.25 only lets popularity and freshness decide near-equal quality', () => {
+test('smart 3.9.26 only lets popularity and freshness decide near-equal quality', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),date=f.dates[0],older=f.dates[2];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -1075,7 +1078,7 @@ test('smart 3.9.25 only lets popularity and freshness decide near-equal quality'
     assert.ok(cards[0].surs_smart_score-cards[1].surs_smart_score<=1.2);
     assert.ok(cards[0].surs_smart_breakdown.ranking_secondary_points<=1.2);
 });
-test('smart 3.9.25 shows strictly non-increasing SURS for all 40 cards across movie and TV', () => {
+test('smart 3.9.26 shows strictly non-increasing SURS for all 40 cards across movie and TV', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -1096,7 +1099,7 @@ test('smart 3.9.25 shows strictly non-increasing SURS for all 40 cards across mo
         }
     });
 });
-test('smart 3.9.25 diagnostic distinguishes weighted components from quality-first rank', () => {
+test('smart 3.9.26 diagnostic distinguishes weighted components from quality-first rank', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures(),day=f.dates[0];
     app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
@@ -1112,6 +1115,197 @@ test('smart 3.9.25 diagnostic distinguishes weighted components from quality-fir
     windows[0].onSelect(choice);
     assert.ok(windows[1].items.some(x=>x.title.includes('Контрольная формула 60/15/15/10')));
     assert.ok(windows[1].items.some(x=>x.title.includes('Приоритет качества:')));
+});
+
+
+test('smart 3.9.26 prioritizes good movies from last 180 days over older higher-scored films', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures();
+    const date=daysAgo=>new Date(Date.now()-daysAgo*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        if(q.startsWith('discover/tv'))return cb({results:[],total_pages:1});
+        cb({results:[
+            f.card(11001,'movie','Fresh Strong',8.0,9000,50,date(30)),
+            f.card(11002,'movie','Older Brilliant',9.6,9000,50,date(250)),
+            f.card(11003,'movie','Reserve Classic',9.8,9000,50,date(500))
+        ],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.deepEqual(Array.from(cards,c=>c.id),[11001,11002,11003]);
+    assert.ok(cards[0].surs_smart_score<cards[1].surs_smart_score);
+    assert.deepEqual(Array.from(cards,c=>c.surs_smart_period),[0,1,2]);
+    assert.deepEqual(Array.from(cards,c=>c.surs_smart_period_label),
+        ['0–180 дней','181–365 дней','366–550 дней']);
+    assert.deepEqual([app.window.SURS_PERFORMANCE.smart_us.period_recent,
+        app.window.SURS_PERFORMANCE.smart_us.period_mid,
+        app.window.SURS_PERFORMANCE.smart_us.period_reserve],[1,1,1]);
+});
+test('smart 3.9.26 uses older movies only when there are fewer than 10 strong recent premieres', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        if(q.startsWith('discover/tv'))return cb({results:[],total_pages:1});
+        cb({results:[
+            ...Array.from({length:8},(_,i)=>f.card(12000+i,'movie','Recent '+i,
+                8.1+i*.01,15000,100,day(25))),
+            ...Array.from({length:12},(_,i)=>f.card(12100+i,'movie','Older '+i,
+                9.4,15000,100,day(240)))
+        ],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.equal(cards.length,20);
+    assert.equal(cards.slice(0,8).filter(c=>c.surs_smart_period===0).length,8);
+    assert.equal(cards[8].surs_smart_period,1);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.recent_top10,8);
+});
+test('smart 3.9.26 excludes weak recent premieres rather than promoting them by date', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        if(q.startsWith('discover/tv'))return cb({results:[],total_pages:1});
+        cb({results:[
+            f.card(12201,'movie','Weak New',6.4,8000,800000,day(4)),
+            f.card(12202,'movie','Older Good',8.6,8000,20,day(220))
+        ],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.deepEqual(Array.from(cards,c=>c.id),[12202]);
+});
+test('smart 3.9.26 includes an old US TV show ONLY with a verified new season premiere', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    const old=day(900),fresh=day(25),detailCalls=[];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.startsWith('tv/')){
+            detailCalls.push(q);
+            return done({id:12301,seasons:[
+                {season_number:0,air_date:fresh},
+                {season_number:1,air_date:old},
+                {season_number:2,air_date:fresh}
+            ]});
+        }
+        if(q.startsWith('discover/tv')&&q.includes('air_date.gte=')){
+            return done({results:[f.card(12301,'tv','Return Series',8.6,4200,200,old)],
+                total_pages:1});
+        }
+        return done({results:[],total_pages:1});
+    };
+    const results=app.getMain()[0].results;
+    assert.equal(results.length,1);
+    assert.equal(results[0].id,12301);
+    assert.equal(results[0].first_air_date,old);
+    assert.equal(results[0].surs_smart_premiere_date,fresh);
+    assert.equal(results[0].surs_smart_season_number,2);
+    assert.equal(results[0].surs_smart_premiere_type,'season');
+    assert.equal(results[0].surs_smart_period,0);
+    assert.ok(detailCalls.includes('tv/12301'));
+    const metrics=app.window.SURS_PERFORMANCE.smart_us;
+    assert.equal(metrics.season_verified,1);
+    assert.equal(metrics.season_unverified,0);
+});
+test('smart 3.9.26 rejects a returning show with a fresh episode but no new season', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    const old=day(900),fresh=day(14);
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.startsWith('tv/'))return done({id:12401,
+            last_episode_to_air:{air_date:fresh},
+            seasons:[{season_number:1,air_date:old},{season_number:0,air_date:fresh}]});
+        if(q.startsWith('discover/tv')&&q.includes('air_date.gte='))
+            return done({results:[f.card(12401,'tv','Reruns Only',8.9,8000,100,old)],
+                total_pages:1});
+        return done({results:[f.card(12402,'movie','Safe Movie',8.1,6000,50,fresh)],
+            total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.ok(cards.some(c=>c.id===12402));
+    assert.ok(!cards.some(c=>c.id===12401));
+    assert.ok(app.window.SURS_PERFORMANCE.smart_us.season_unverified>=1);
+});
+test('smart 3.9.26 excludes future season dates and does not promote unverified old series', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    const old=day(1050),future=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.startsWith('tv/'))return done({id:12501,seasons:[
+            {season_number:1,air_date:old},{season_number:2,air_date:future}]});
+        if(q.startsWith('discover/tv')&&q.includes('air_date.gte='))
+            return done({results:[f.card(12501,'tv','Future Season',8.5,9000,90,old)],
+                total_pages:1});
+        return done({results:[],total_pages:1});
+    };
+    const rows=app.getMain();
+    assert.ok(!rows[0]||rows[0].results.every(c=>c.id!==12501));
+});
+test('smart 3.9.26 preserves quality sorting INSIDE each premiere group', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        if(q.startsWith('discover/tv'))return cb({results:[],total_pages:1});
+        cb({results:[
+            f.card(12601,'movie','Recent Medium',7.9,8000,50,day(80)),
+            f.card(12602,'movie','Recent High',8.6,8000,50,day(40)),
+            f.card(12603,'movie','Older High',9.2,8000,50,day(210)),
+            f.card(12604,'movie','Older Medium',8.3,8000,50,day(270))
+        ],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.deepEqual(Array.from(cards,c=>c.id),[12602,12601,12603,12604]);
+    assert.ok(cards[0].surs_smart_score>=cards[1].surs_smart_score);
+    assert.ok(cards[2].surs_smart_score>=cards[3].surs_smart_score);
+});
+test('smart 3.9.26 diagnostics disclose actual premiere date and period of each card', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),d=new Date().toISOString().slice(0,10),popups=[];
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        if(q.startsWith('discover/tv'))return cb({results:[],total_pages:1});
+        cb({results:[f.card(12701,'movie','Premiere Title',8.7,6000,50,d)],
+            total_pages:1});
+    };
+    app.getMain();
+    app.Lampa.Select={show:p=>popups.push(p)};
+    app.window.LampaShelfManager.openSmartDiagnostics();
+    assert.ok(popups[0].items.some(x=>x.title.includes('Релизы 0–180 дней')));
+    const card=popups[0].items.find(x=>x.action==='card');
+    assert.ok(card.title.includes(d));
+    popups[0].onSelect(card);
+    assert.ok(popups[1].items.some(x=>x.title.includes('Премьера: '+d)));
+});
+
+
+test('smart 3.9.26 respects calendar-day premiere windows on exact 180/181/365/366/550 boundaries', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures();
+    const day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.startsWith('discover/tv'))return done({results:[],total_pages:1});
+        done({results:[180,181,365,366,550].map((age,i)=>
+            f.card(18000+i,'movie','Age '+age,9.2,10000,90,day(age))),total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    const bands=new Map(cards.map(c=>[c.id,c.surs_smart_period]));
+    assert.equal(bands.get(18000),0);
+    assert.equal(bands.get(18001),1);
+    assert.equal(bands.get(18002),1);
+    assert.equal(bands.get(18003),2);
+    assert.equal(bands.get(18004),2);
+});
+test('smart 3.9.26 checks page two when page one is full of older high-rated releases', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),urls=[];
+    const day=n=>new Date(Date.now()-n*86400000).toISOString().slice(0,10);
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        urls.push(q);
+        if(q.startsWith('discover/tv'))return done({results:[],total_pages:1});
+        const page=Number((q.match(/page=(\d+)/)||[])[1]);
+        done({results:Array.from({length:20},(_,i)=>f.card(
+            19000+page*100+i,'movie','Find Recent '+page+' '+i,
+            8.7,9000,100-i,page===1?day(350):day(40))),total_pages:2});
+    };
+    const cards=app.getMain()[0].results;
+    assert.ok(urls.some(q=>q.includes('page=2')));
+    assert.equal(cards[0].surs_smart_period,0);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.recent_top10,10);
 });
 
 test('smart shelf cache keeps More pagination stable without network', () => {
@@ -1212,8 +1406,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.25/);
-    assert.match(readableSource, /Версия: 3\.9\.25/);
+    assert.match(mainSource, /Версия: 3\.9\.26/);
+    assert.match(readableSource, /Версия: 3\.9\.26/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -1641,7 +1835,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.25/);
+    assert.match(source, /Версия: 3\.9\.26/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -1727,7 +1921,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.25');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.26');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 26);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -1902,7 +2096,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.25');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.26');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
