@@ -1301,8 +1301,8 @@ var STORAGE_SHELVES_KEY = 'surs_fixed_shelves_v2';
 var SURS_BASE_SHELVES = [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
 { id: 'smart_us_new', title: 'Лучшие новинки США', cat: 'surs', def: true, desc: 'Отбор новых фильмов и сериалов США: TMDB + подтверждённый КП, качество, популярность, свежесть' },
-{ id: 'kp_new_8', title: 'Новинки США · КП 7,5+', cat: 'surs', def: true, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 7,5+ (текущий и предыдущий год); требуется источник KP' },
-{ id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: true, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
+{ id: 'kp_new_8', title: 'Новинки США · КП 7,5+', cat: 'surs', def: false, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 7,5+ (текущий и предыдущий год); требуется источник KP' },
+{ id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: false, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
 { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
 { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
 { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -2298,7 +2298,7 @@ done(source ? { source: source, country: KP8_US_COUNTRY_ID } : null);
 function kp8PreloadEnabledSource() {
 try {
 if (getSavedShelves('MAIN').some(function(item) {
-return item.id === 'kp_new_8' && item.enabled;
+return (item.id === 'kp_new_8' || item.id === 'smart_us_new') && item.enabled;
 })) kp8LoadDependency(function() {});
 } catch(e) {}
 }

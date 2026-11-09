@@ -246,13 +246,16 @@ test('KP source reports an automatic dependency download failure', () => {
     assert.ok(messages.some(m=>m.includes('не удалось загрузить источник')));
 });
 
-test('KP 8+ is registered and enabled directly below navigation by default', () => {
+test('legacy KP and TMDB shelves remain registered but disabled by default', () => {
     const app = boot();
     const kp = app.window.LampaShelfManager.getAllShelves().find(x => x.id === 'kp_new_8');
     assert.ok(kp);
-    assert.equal(kp.def, true);
-    assert.deepEqual(Array.from(app.rows().slice(0,3),x=>x.id),['nav_buttons','kp_new_8','us_new_8']);
-    assert.equal(app.rows()[2].enabled, true);
+    assert.equal(kp.def, false);
+    assert.deepEqual(Array.from(app.rows().slice(0,4),x=>x.id),
+        ['nav_buttons','smart_us_new','kp_new_8','us_new_8']);
+    assert.equal(app.rows()[1].enabled, true);
+    assert.equal(app.rows()[2].enabled, false);
+    assert.equal(app.rows()[3].enabled, false);
     assert.ok(mainSource.includes('Lampa.Api.sources.KP'));
     assert.ok(!mainSource.includes('cors.kp556.workers.dev'));
 });
