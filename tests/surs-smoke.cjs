@@ -1131,10 +1131,10 @@ test('smart 3.9.26 prioritizes good movies from last 180 days over older higher-
         ],total_pages:1});
     };
     const cards=app.getMain()[0].results;
-    assert.deepEqual(cards.map(c=>c.id),[11001,11002,11003]);
+    assert.deepEqual(Array.from(cards,c=>c.id),[11001,11002,11003]);
     assert.ok(cards[0].surs_smart_score<cards[1].surs_smart_score);
-    assert.deepEqual(cards.map(c=>c.surs_smart_period),[0,1,2]);
-    assert.deepEqual(cards.map(c=>c.surs_smart_period_label),
+    assert.deepEqual(Array.from(cards,c=>c.surs_smart_period),[0,1,2]);
+    assert.deepEqual(Array.from(cards,c=>c.surs_smart_period_label),
         ['0–180 дней','181–365 дней','366–550 дней']);
     assert.deepEqual([app.window.SURS_PERFORMANCE.smart_us.period_recent,
         app.window.SURS_PERFORMANCE.smart_us.period_mid,
@@ -1169,7 +1169,7 @@ test('smart 3.9.26 excludes weak recent premieres rather than promoting them by 
         ],total_pages:1});
     };
     const cards=app.getMain()[0].results;
-    assert.deepEqual(cards.map(c=>c.id),[12202]);
+    assert.deepEqual(Array.from(cards,c=>c.id),[12202]);
 });
 test('smart 3.9.26 includes an old US TV show ONLY with a verified new season premiere', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
@@ -1250,7 +1250,7 @@ test('smart 3.9.26 preserves quality sorting INSIDE each premiere group', () => 
         ],total_pages:1});
     };
     const cards=app.getMain()[0].results;
-    assert.deepEqual(cards.map(c=>c.id),[12602,12601,12603,12604]);
+    assert.deepEqual(Array.from(cards,c=>c.id),[12602,12601,12603,12604]);
     assert.ok(cards[0].surs_smart_score>=cards[1].surs_smart_score);
     assert.ok(cards[2].surs_smart_score>=cards[3].surs_smart_score);
 });
