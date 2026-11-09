@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.25 (US Premieres Balanced Quality)
+ * Версия: 3.9.26 (US Premieres Balanced Quality)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1749,7 +1749,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var SMART_US_ID = 'smart_us_new';
     var SMART_US_TITLE = 'Лучшие новинки США';
     var SMART_US_CATALOG_URL = 'surs_smart_us_new';
-    var SMART_US_CACHE = 'smart_us_v5';
+    var SMART_US_CACHE = 'smart_us_v6';
     var SMART_US_LIMIT = 40;
     var smartRunning = false, smartWaiters = [];
 
@@ -1760,29 +1760,48 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         return {start:now.toISOString().slice(0, 10),end:end};
     }
     function smartQueries(windowDates) {
-        var jobs = [];
-        ['movie','tv'].forEach(function(type) {
-            var dateKey = type === 'movie' ? 'primary_release_date' : 'first_air_date';
-            var excluded = type === 'movie' ? '16,99,10770' :
-                '16,99,10763,10764,10766,10767';
-            ['popularity.desc',dateKey+'.desc'].forEach(function(sort) {
-                for (var page=1;page<=2;page++) {
-                    jobs.push({type:type,url:'discover/'+type+
-                        '?with_origin_country=US&include_adult=false'+
-                        '&without_genres='+excluded+
-                        '&vote_average.gte=6.3&vote_count.gte=15'+
-                        '&'+dateKey+'.gte='+windowDates.start+
-                        '&'+dateKey+'.lte='+windowDates.end+
-                        '&sort_by='+sort+'&page='+page});
-                }
-            });
+    var jobs=[];
+    ['movie','tv'].forEach(function(type){
+        var field=type==='movie'?'primary_release_date':'first_air_date';
+        var exclude=type==='movie'?'16,99,10770':'16,99,10763,10764,10766,10767';
+        ['popularity.desc',field+'.desc'].forEach(function(sort){
+            for(var page=1;page<=2;page++){
+                jobs.push({type:type,page:page,url:'discover/'+type+
+                    '?with_origin_country=US&include_adult=false'+
+                    '&without_genres='+exclude+
+                    '&vote_average.gte=6.3&vote_count.gte=15'+
+                    '&'+field+'.gte='+windowDates.start+
+                    '&'+field+'.lte='+windowDates.end+
+                    '&sort_by='+sort+'&page='+page});
+            }
         });
-        return jobs;
+    });
+    // Series that started years ago may still have a genuinely NEW season.
+    // Airing an episode is only discovery, not evidence of a season premiere.
+    for(var page=1;page<=2;page++){
+        jobs.push({type:'tv',seasonCandidate:true,page:page,
+            url:'discover/tv?with_origin_country=US&include_adult=false'+
+                '&without_genres=16,99,10763,10764,10766,10767'+
+                '&vote_average.gte=6.3&vote_count.gte=15'+
+                '&air_date.gte='+windowDates.start+
+                '&air_date.lte='+windowDates.end+
+                '&sort_by=popularity.desc&page='+page});
     }
-    function smartDate(card) {
-        return String(card.release_date || card.first_air_date || '').slice(0,10);
-    }
-    function smartAge(date) {
+    return jobs;
+}
+function smartDate(card) {
+    return String((card.type==='tv'&&card.surs_smart_premiere_date)||
+        card.release_date||card.first_air_date||'').slice(0,10);
+}
+function smartPeriod(card) {
+    var age=smartAge(smartDate(card));
+    return age<=180?0:age<=365?1:age<=550?2:3;
+}
+function smartPeriodLabel(period) {
+    return period===0?'0–180 дней':period===1?'181–365 дней':
+        period===2?'366–550 дней':'вне периода';
+}
+function smartAge(date) {
         var timestamp=Date.parse(date+'T00:00:00Z');
         return isFinite(timestamp) ? Math.max(0,(Date.now()-timestamp)/86400000) : 9999;
     }
@@ -1799,38 +1818,56 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             seen[n]=true; return true;
         });
     }
-    function smartAccept(card,type,windowDates) {
-        if (!card || !card.id || !card.poster_path || card.adult===true) return false;
-        var date=type==='movie'?card.release_date:card.first_air_date;
-        if (!date || date<windowDates.start || date>windowDates.end) return false;
-        if (type==='tv' && (!Array.isArray(card.origin_country) ||
-            card.origin_country.indexOf('US')<0)) return false;
-        if (type==='movie' && !card.title && !card.original_title) return false;
-        if (type==='tv' && !card.name && !card.original_name) return false;
-        var bad=type==='movie'?[16,99,10770]:[16,99,10763,10764,10766,10767];
-        if (Array.isArray(card.genre_ids) && card.genre_ids.some(function(g) {
-            return bad.indexOf(Number(g))>=0;
-        })) return false;
-        var rating=Number(card.vote_average)||0,votes=Number(card.vote_count)||0;
-        var age=smartAge(date);
-        var minVotes=age<=30?15:age<=90?35:80;
-        if (type==='tv') minVotes=Math.max(12,Math.round(minVotes*.7));
-        return rating>=6.3 && votes>=minVotes && age<=550;
-    }
-    function smartCandidate(json,type,dates,seen,cards) {
-        if (!json || !Array.isArray(json.results)) return;
-        json.results.forEach(function(raw) {
-            if (!smartAccept(raw,type,dates)) return;
-            var key=type+':'+raw.id;
-            if (seen[key]) return;
-            seen[key]=true;
-            var card=Object.assign({},raw,{
-                source:'tmdb',type:type,media_type:type
-            });
-            cards.push(card);
+    function smartAccept(card,type,windowDates,seasonCandidate) {
+    if(!card||!card.id||!card.poster_path||card.adult===true)return false;
+    var date=type==='movie'?card.release_date:card.first_air_date;
+    // An old show needs verification of a new season from TMDB detail.
+    if((!date||date<windowDates.start)&&!(type==='tv'&&seasonCandidate))
+        return false;
+    if(date&&date>windowDates.end)return false;
+    if(type==='tv'&&(!Array.isArray(card.origin_country)||
+        card.origin_country.indexOf('US')<0))return false;
+    if(type==='movie'&&!card.title&&!card.original_title)return false;
+    if(type==='tv'&&!card.name&&!card.original_name)return false;
+    var bad=type==='movie'?[16,99,10770]:
+        [16,99,10763,10764,10766,10767];
+    if(Array.isArray(card.genre_ids)&&card.genre_ids.some(function(g){
+        return bad.indexOf(Number(g))>=0;
+    }))return false;
+    var rating=Number(card.vote_average)||0,votes=Number(card.vote_count)||0;
+    var age=smartAge(date||windowDates.start);
+    var minVotes=age<=30?15:age<=90?35:80;
+    if(type==='tv')minVotes=Math.max(12,Math.round(minVotes*.7));
+    return rating>=6.3&&votes>=minVotes&&
+        (age<=550||(type==='tv'&&seasonCandidate));
+}
+function smartCandidate(json,type,dates,seen,cards,job) {
+    if(!json||!Array.isArray(json.results))return;
+    var seasonCandidate=!!(job&&job.seasonCandidate);
+    json.results.forEach(function(raw){
+        if(!smartAccept(raw,type,dates,seasonCandidate))return;
+        var key=type+':'+raw.id;
+        if(seen[key]){
+            if(type==='tv'&&seasonCandidate)
+                seen[key].surs_smart_season_candidate=true;
+            return;
+        }
+        var card=Object.assign({},raw,{
+            source:'tmdb',type:type,media_type:type
         });
-    }
-    function smartValidRate(v) {
+        if(type==='tv'){
+            card.surs_smart_premiere_type='series';
+            if(seasonCandidate){
+                card.surs_smart_season_candidate=true;
+                // Older shows may enter only AFTER a recent season is verified.
+                if(!raw.first_air_date||raw.first_air_date<dates.start)
+                    card.surs_smart_pending_season=true;
+            }
+        }
+        seen[key]=card;cards.push(card);
+    });
+}
+function smartValidRate(v) {
     var n=Number(v);return isFinite(n)&&n>=1&&n<=10?n:0;
 }
 function smartVotes(data,keys) {
@@ -2014,7 +2051,7 @@ function smartRate(card,dates) {
             maxDifference=Math.max(maxDifference,Math.abs(sources[i].adjusted-sources[j].adjusted));
         agreement=Math.max(0,1-maxDifference/3);
     }
-    var qualityFloor=age<=45?6.75:(age<=120?6.95:7.10);
+    var qualityFloor=age<=45?7.00:(age<=180?7.15:7.25);
     var round=function(x){return Math.round(x*100)/100;};
     var points={quality:round(60*quality/10),popularity:round(15*popularity),
         freshness:round(15*freshness),agreement:round(10*agreement)};
@@ -2042,6 +2079,10 @@ function smartRate(card,dates) {
         ranking_quality_points:round(98.8*quality/10),
         ranking_secondary_points:round(1.2*secondaryRatio),
         ranking_secondary_cap:1.2,
+        premiere_date:smartDate(card),
+        premiere_kind:card.type==='movie'?'Фильм':card.surs_smart_premiere_type==='season'?
+            'Новый сезон '+card.surs_smart_season_number:'Новый сериал',
+        period:smartPeriodLabel(smartPeriod(card)),
         rating_coverage:coverage,coverage_percent:Math.round(coverage/3*100),
         quality_before_coverage:round(qualityRaw),
         coverage_penalty:round(coveragePenalty),
@@ -2057,25 +2098,31 @@ function smartRate(card,dates) {
 }
 function smartRank(cards,dates) {
     cards.forEach(function(c){smartRate(c,dates);});
-    var qualityCandidates=cards.filter(function(c){return c.surs_smart_passes_quality;});
-    qualityCandidates.sort(function(a,b){
-        // A single score drives BOTH ranking and the visible SURS number.
-        // No alternating genres or reshuffling after sorting.
-        var scoreDiff=b.surs_smart_raw_score-a.surs_smart_raw_score;
-        if(Math.abs(scoreDiff)>1e-10)return scoreDiff;
+    var qualified=cards.filter(function(c){
+        return !c.surs_smart_pending_season&&c.surs_smart_passes_quality&&
+            smartPeriod(c)<=2;
+    });
+    qualified.sort(function(a,b){
+        var periodA=smartPeriod(a),periodB=smartPeriod(b);
+        if(periodA!==periodB)return periodA-periodB;
+        // Quality-first SURS score applies INSIDE the same premiere period.
+        var score=b.surs_smart_raw_score-a.surs_smart_raw_score;
+        if(Math.abs(score)>1e-10)return score;
         if(a.surs_smart_quality!==b.surs_smart_quality)
             return b.surs_smart_quality-a.surs_smart_quality;
         var votes=Number(b.vote_count||0)-Number(a.vote_count||0);
         if(votes)return votes;
-        var aKey=String(a.type)+':'+String(a.id);
-        var bKey=String(b.type)+':'+String(b.id);
-        return aKey<bKey?-1:aKey>bKey?1:0;
+        var ka=String(a.type)+':'+String(a.id),kb=String(b.type)+':'+String(b.id);
+        return ka<kb?-1:ka>kb?1:0;
     });
-    var selected=qualityCandidates.slice(0,SMART_US_LIMIT);
-    selected.forEach(function(c,i){c.surs_smart_rank=i+1;});
+    var selected=qualified.slice(0,SMART_US_LIMIT);
+    selected.forEach(function(c,i){
+        c.surs_smart_rank=i+1;
+        c.surs_smart_period=smartPeriod(c);
+        c.surs_smart_period_label=smartPeriodLabel(c.surs_smart_period);
+    });
     return selected;
 }
-
     function smartMakeResult(cards) {
         return { title:SMART_US_TITLE,url:SMART_US_CATALOG_URL,
             source:'SURS',page:1,total_pages:Math.max(1,Math.ceil(cards.length/20)),
@@ -2101,7 +2148,7 @@ function smartRank(cards,dates) {
         if(typeof done==='function')smartWaiters.push(done);
         var oldCache=readSursPreviewCache(SMART_US_CACHE),oldDiag=smartReadDiagnostic();
         var dates=smartWindow(),cards=[],kpCards=[],seen={};
-        var metrics={version:'3.9.25',phase:'loading',status:'loading',started_at:Date.now(),
+        var metrics={version:'3.9.26',phase:'loading',status:'loading',started_at:Date.now(),
             tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
             kp_requests:0,kp_done:0,kp_failed:0,kp_status:'loading',
             kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
@@ -2355,7 +2402,7 @@ function smartRank(cards,dates) {
         var data=live.top10&&live.top10.length?live:(smartReadDiagnostic()||live);
         var state=live.phase==='loading'?'loading':(data.phase||'cached');
         var items=[
-            {title:'Версия SURS '+(data.version||'3.9.25')+' · '+smartStatusText(state)},
+            {title:'Версия SURS '+(data.version||'3.9.26')+' · '+smartStatusText(state)},
             {title:'Статус отражает завершение запросов, а не полноту рейтингов'},
             {title:'Порядок: качество прежде всего; остальные факторы только при близких оценках'},
             {title:'SURS: качество 98,8 балла + вторичные факторы до 1,2 балла'},
@@ -4095,7 +4142,7 @@ function smartRank(cards,dates) {
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.25';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.26';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4606,7 +4653,7 @@ function smartRank(cards,dates) {
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v3.9.25 (Fixed & Configurable) успешно инициализирован.');
+            console.log('SURS Pro v3.9.26 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4638,7 +4685,7 @@ function smartRank(cards,dates) {
         smartDiagnostics: smartReadDiagnostic,
         openSmartDiagnostics: openSmartDiagnostics,
         refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-        version: '3.9.25'
+        version: '3.9.26'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
