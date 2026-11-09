@@ -252,7 +252,7 @@ test('KP 8+ is registered and enabled directly below navigation by default', () 
     assert.ok(kp);
     assert.equal(kp.def, true);
     assert.deepEqual(Array.from(app.rows().slice(0,3),x=>x.id),['nav_buttons','kp_new_8','us_new_8']);
-    assert.equal(app.rows()[1].enabled, true);
+    assert.equal(app.rows()[2].enabled, true);
     assert.ok(mainSource.includes('Lampa.Api.sources.KP'));
     assert.ok(!mainSource.includes('cors.kp556.workers.dev'));
 });
@@ -573,6 +573,162 @@ test('KP 7.5 label is refreshed for saved shelves without resetting user setting
     assert.equal(app.stored.get('surs_fixed_shelves_v2'),saved);
 });
 
+
+test('smart US shelf is enabled by default without losing legacy options', () => {
+    const app=boot();
+    const rows=app.rows();
+    assert.deepEqual(Array.from(rows.slice(0,4),x=>x.id),
+        ['nav_buttons','smart_us_new','kp_new_8','us_new_8']);
+    assert.equal(rows[1].enabled,true);
+    assert.equal(rows[2].enabled,false);
+    assert.equal(rows[3].enabled,false);
+    assert.ok(app.window.LampaShelfManager.getAllShelves().some(x=>x.id==='smart_us_new'));
+});
+test('smart shelf migration respects custom legacy visibility and order', () => {
+    const saved=[
+        {id:'us_new_8',enabled:true,title:'TMDB legacy'},
+        {id:'nav_buttons',enabled:true,title:'Nav'},
+        {id:'kp_new_8',enabled:false,title:'KP legacy'},
+        {id:'core_continue',enabled:true}
+    ];
+    const app=boot({saved});
+    const ids=Array.from(app.rows(),x=>x.id);
+    assert.deepEqual(ids,['us_new_8','nav_buttons','smart_us_new','kp_new_8','core_continue']);
+    assert.equal(app.rows()[0].enabled,true);
+    assert.equal(app.rows()[3].enabled,false);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2'),saved);
+    assert.deepEqual(Array.from(app.rows(),x=>x.id),ids);
+    assert.ok(!app.window.LampaShelfManager.getSavedShelves('NEW').some(x=>x.id==='smart_us_new'));
+});
+function smartFixtures() {
+    const today=new Date().toISOString().slice(0,10);
+    const monthsAgo=(n)=>{const d=new Date();d.setMonth(d.getMonth()-n);return d.toISOString().slice(0,10);};
+    return {
+        dates:[today,monthsAgo(1),monthsAgo(3)],
+        card:(id,type,name,rate,votes,pop,date)=>{
+            const tv=type==='tv';
+            return {
+                id,source:'tmdb',title:tv?undefined:name,name:tv?name:undefined,
+                original_title:tv?undefined:name,original_name:tv?name:undefined,
+                vote_average:rate,vote_count:votes,popularity:pop,
+                poster_path:'/poster'+id,overview:'Description',genre_ids:[18],
+                release_date:tv?undefined:date,first_air_date:tv?date:undefined,
+                origin_country:tv?['US']:undefined
+            };
+        }
+    };
+}
+test('smart shelf collects two media types from TMDB with bounded requests', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const fixture=smartFixtures(),queries=[];
+    app.Lampa.Api.sources.SURS.get=(url,p,ok)=>{
+        queries.push(url);
+        const type=url.startsWith('discover/tv')?'tv':'movie';
+        const page=Number((url.match(/page=(\d+)/)||[])[1]);
+        const sort=(url.match(/sort_by=([^&]+)/)||[])[1];
+        const items=Array.from({length:20},(_,i)=>fixture.card(
+            type==='tv'?3000+i+page*100+(sort.includes('popularity')?0:500):
+                1000+i+page*100+(sort.includes('popularity')?0:500),
+            type,type==='tv'?'Series '+page+' '+i:'Movie '+page+' '+i,
+            7.3+(i%5)*.2,150+i*7,100-i*2,fixture.dates[i%3]));
+        ok({results:items,total_pages:2});
+    };
+    const rows=app.getMain();
+    assert.equal(queries.length,8);
+    assert.ok(queries.every(q=>q.includes('with_origin_country=US') &&
+        q.includes('without_genres=') && q.includes('vote_average.gte=6.3')));
+    assert.equal(rows.length,1);
+    assert.equal(rows[0].title,'Лучшие новинки США');
+    assert.equal(rows[0].results.length,40);
+    assert.equal(new Set(rows[0].results.map(x=>x.type+':'+x.id)).size,40);
+    assert.ok(rows[0].results.every(x=>x.source==='tmdb' && x.surs_smart_score>0));
+    assert.ok(rows[0].results.some(x=>x.type==='movie'));
+    assert.ok(rows[0].results.some(x=>x.type==='tv'));
+    assert.ok(!app.window.SURS_PERFORMANCE.smart_us.kp_matches);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.tmdb_requests,8);
+});
+test('smart shelf rejects low vote, future, non-US TV, animation, and duplicate candidates', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures();
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        const type=q.includes('discover/tv')?'tv':'movie';
+        const good=f.card(type==='tv'?200:100,type,'Valid',8.1,500,70,f.dates[0]);
+        const badvotes=f.card(type==='tv'?201:101,type,'New Low',8.1,1,70,f.dates[0]);
+        const animation=f.card(type==='tv'?202:102,type,'Cartoon',9.9,1200,70,f.dates[0]);
+        animation.genre_ids=[16];
+        const nextYear=f.card(type==='tv'?203:103,type,'Future',9.9,1500,70,'2099-01-01');
+        const foreign=f.card(204,'tv','Foreign',8.3,200,70,f.dates[0]);foreign.origin_country=['GB'];
+        cb({results:[good,badvotes,animation,nextYear,foreign],total_pages:1});
+    };
+    const rows=app.getMain();
+    assert.equal(rows[0].results.length,2);
+    assert.ok(rows[0].results.every(x=>x.title==='Valid'||x.name==='Valid'));
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.candidates,2);
+});
+test('smart shelf merges only verified KP names of the same year and type', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0],year=date.slice(0,4);
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        const type=q.includes('discover/tv')?'tv':'movie';
+        const title=type==='tv'?'True Series':'True Movie';
+        cb({results:[f.card(type==='tv'?302:301,type,title,7.4,500,75,date)],total_pages:1});
+    };
+    app.Lampa.Api.sources.KP={list:(params,cb)=>{
+        const tv=params.filter_url.includes('type=TV_SERIES');
+        const isFilm=params.filter_url.includes('type=FILM');
+        const title=tv?'True Series':isFilm?'True Movie':'Wrong Genre';
+        cb({results:[{
+            id:'KP_'+title.replace(/ /g,'_'),type:tv?'tv':isFilm?'movie':'tv',
+            original_title:title,release_date:date,first_air_date:date,
+            kp_rating:8.9,vote_count:900
+        }],total_pages:1});
+    }};
+    const rows=app.getMain();
+    assert.equal(rows[0].results.length,2);
+    assert.ok(rows[0].results.every(x=>x.kp_rating===8.9));
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.kp_matches,2);
+});
+test('smart shelf cache keeps More pagination stable without network', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures();let count=0;
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        count++;
+        const type=q.includes('discover/tv')?'tv':'movie';
+        const page=Number((q.match(/page=(\d+)/)||[])[1]);
+        const sort=q.includes('popularity.desc')?1:2;
+        cb({results:Array.from({length:15},(_,i)=>f.card(
+            (type==='movie'?1000:2000)+sort*200+page*20+i,type,
+            'Title '+type+' '+sort+' '+page+' '+i,8.1,350,85,f.dates[i%3])),
+            total_pages:2});
+    };
+    const home=app.getMain();
+    assert.equal(home[0].results.length,40);
+    const before=count;
+    let a,b;
+    app.Lampa.Api.sources.SURS.list({url:'surs_smart_us_new',page:1},x=>a=x,()=>{});
+    app.Lampa.Api.sources.SURS.list({url:'surs_smart_us_new',page:2},x=>b=x,()=>{});
+    assert.equal(a.results.length,20);
+    assert.equal(b.results.length,20);
+    assert.equal(a.total_pages,2);
+    assert.equal(new Set(a.results.concat(b.results).map(x=>x.id)).size,40);
+    assert.equal(count,before);
+});
+test('smart shelf cache survives temporary TMDB outages and preserves other profiles', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,cb)=>{
+        const type=q.includes('discover/tv')?'tv':'movie';
+        cb({results:[f.card(type==='tv'?40:30,type,'Good',8.2,250,80,date)],total_pages:1});
+    };
+    const before=app.getMain();
+    assert.ok(before[0].results.length===2);
+    app.Lampa.Api.sources.SURS.get=()=>{throw Error('TMDB offline')};
+    const cached=app.getMain();
+    assert.equal(cached[0].results.length,2);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.status,'cached');
+    assert.ok(!app.window.LampaShelfManager.getSavedShelves('NEW').some(x=>x.id==='smart_us_new'));
+});
+
 test('editor JavaScript and stylesheet are deferred', () => {
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
     assert.doesNotMatch(mainSource, /function renderModalContent\(/);
@@ -589,8 +745,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.20/);
-    assert.match(readableSource, /Версия: 3\.9\.20/);
+    assert.match(mainSource, /Версия: 3\.9\.21/);
+    assert.match(readableSource, /Версия: 3\.9\.21/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -637,12 +793,12 @@ test('performance diagnostics track startup and progressive row rendering', () =
 test('US premiere defaults migrate after navigation and honor explicit disabling', () => {
     const original=[{id:'stream_netflix',enabled:true},{id:'nav_buttons',enabled:true},{id:'core_continue',enabled:true}];
     const app=boot({saved:original});
-    assert.deepEqual(Array.from(app.rows(),x=>x.id),['stream_netflix','nav_buttons','kp_new_8','us_new_8','core_continue']);
+    assert.deepEqual(Array.from(app.rows(),x=>x.id),['stream_netflix','nav_buttons','smart_us_new','kp_new_8','us_new_8','core_continue']);
     assert.equal(app.stored.get('surs_fixed_shelves_v2'),original);
-    assert.equal(app.rows()[2].enabled,true);
-    const disabled=app.rows().map(x=>Object.assign({},x));disabled[2].enabled=false;
+    assert.equal(app.rows()[3].enabled,true);
+    const disabled=app.rows().map(x=>Object.assign({},x));disabled[3].enabled=false;
     app.window.LampaShelfManager.saveShelves(disabled);
-    assert.equal(app.rows()[2].enabled,false);
+    assert.equal(app.rows()[3].enabled,false);
     assert.equal(app.rows().filter(x=>x.id==='us_new_8').length,1);
     assert.ok(!app.window.LampaShelfManager.getSavedShelves('NEW').some(x=>x.id==='us_new_8'));
 });
@@ -651,13 +807,13 @@ test('KP 8+ migrates saved homes once and preserves user settings', () => {
     const saved = [{id:'nav_buttons',enabled:true},{id:'us_new_8',enabled:true},{id:'core_continue',enabled:true}];
     const app = boot({saved});
     const manager = app.window.LampaShelfManager;
-    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),['nav_buttons','kp_new_8','us_new_8','core_continue']);
-    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),['nav_buttons','kp_new_8','us_new_8','core_continue']);
+    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),['nav_buttons','smart_us_new','kp_new_8','us_new_8','core_continue']);
+    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),['nav_buttons','smart_us_new','kp_new_8','us_new_8','core_continue']);
     assert.equal(app.stored.get('surs_fixed_shelves_v2'), saved);
     const modified = manager.getSavedShelves().map(x=>Object.assign({},x));
-    modified[1].enabled = false;
+    modified[2].enabled = false;
     manager.saveShelves(modified);
-    assert.equal(manager.getSavedShelves()[1].enabled,false);
+    assert.equal(manager.getSavedShelves()[2].enabled,false);
     assert.equal(manager.getSavedShelves().filter(x=>x.id==='kp_new_8').length,1);
     assert.ok(!manager.getSavedShelves('NEW').some(x=>x.id==='kp_new_8'));
     assert.ok(!manager.getSavedShelves('RUS').some(x=>x.id==='kp_new_8'));
@@ -666,7 +822,7 @@ test('KP 8+ migration does not alter custom homes without navigation', () => {
     const saved = [{id:'core_continue',enabled:true},{id:'us_new_8',enabled:false},{id:'trend_movies',enabled:true}];
     const app = boot({saved});
     assert.deepEqual(Array.from(app.rows(),x=>x.id),['core_continue','us_new_8','trend_movies']);
-    assert.equal(app.rows()[1].enabled,false);
+    assert.equal(app.rows()[3].enabled,false);
 });
 test('US premiere loader enforces country, genre, rating, language and mixed date order', () => {
     const app=boot({saved:[{id:'us_new_8',enabled:true}]});
@@ -1018,23 +1174,26 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.20/);
+    assert.match(source, /Версия: 3\.9\.21/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
     const rows = app.rows();
     const expected = [
-        'nav_buttons', 'kp_new_8', 'us_new_8', 'core_continue', 'new_movies', 'new_tv',
+        'nav_buttons', 'smart_us_new', 'kp_new_8', 'us_new_8', 'core_continue', 'new_movies', 'new_tv',
         'trend_movies', 'trend_tv', 'period_10s', 'period_00s',
         'genres_icons', 'streaming_global', 'streaming_russian'
     ];
-    assert.equal(rows.length, 25);
-    assert.deepEqual(Array.from(rows.slice(0, 13), x => x.id), expected);
-    assert.equal(rows.filter(x => x.enabled).length, 11);
-    assert.equal(rows.filter(x => !x.enabled).length, 14);
+    assert.equal(rows.length, 26);
+    assert.deepEqual(Array.from(rows.slice(0, 14), x => x.id), expected);
+    assert.equal(rows.filter(x => x.enabled).length, 10);
+    assert.equal(rows.filter(x => !x.enabled).length, 16);
     assert.equal(rows.find(x=>x.id==='new_movies').enabled,false);
     assert.equal(rows.find(x=>x.id==='new_tv').enabled,false);
-    assert.ok(rows.slice(13).every(x => !x.enabled));
+    assert.equal(rows.find(x=>x.id==='smart_us_new').enabled,true);
+    assert.equal(rows.find(x=>x.id==='kp_new_8').enabled,false);
+    assert.equal(rows.find(x=>x.id==='us_new_8').enabled,false);
+    assert.ok(rows.slice(14).every(x => !x.enabled));
 });
 test('custom saved shelf order and visibility survive the update', () => {
     const custom = [
@@ -1043,8 +1202,8 @@ test('custom saved shelf order and visibility survive the update', () => {
         { id: 'core_continue', title: 'Продолжить просмотр', enabled: true }
     ];
     const app = boot({ saved: custom });
-    assert.deepEqual(Array.from(app.rows(), x => x.id), ['stream_netflix','nav_buttons','kp_new_8','us_new_8','core_continue']);
-    assert.deepEqual(Array.from(app.rows(), x => x.enabled), [true,false,true,true,true]);
+    assert.deepEqual(Array.from(app.rows(), x => x.id), ['stream_netflix','nav_buttons','smart_us_new','kp_new_8','us_new_8','core_continue']);
+    assert.deepEqual(Array.from(app.rows(), x => x.enabled), [true,false,true,true,true,true]);
 });
 test('legacy factory 22-enabled configuration automatically migrates to 10 active', () => {
     const legacy = [
@@ -1056,10 +1215,10 @@ test('legacy factory 22-enabled configuration automatically migrates to 10 activ
         'genre_scifi','period_00s'
     ].map(id => ({ id, enabled: true }));
     const app = boot({ saved: legacy });
-    assert.equal(app.rows().filter(x => x.enabled).length, 11);
-    assert.equal(app.rows()[4].id, 'new_movies');
-    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 25);
-    assert.equal(app.stored.get('surs_fixed_shelves_v2')[4].id, 'new_movies');
+    assert.equal(app.rows().filter(x => x.enabled).length, 10);
+    assert.equal(app.rows()[5].id, 'new_movies');
+    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 26);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2')[5].id, 'new_movies');
 });
 test('the previous 3.8.2 factory profile migrates, but customized visibility does not', () => {
     const last = [
@@ -1071,15 +1230,15 @@ test('the previous 3.8.2 factory profile migrates, but customized visibility doe
         'genre_scifi','period_00s'
     ].map((id, i) => ({id, enabled: i < 12}));
     const app = boot({saved: last});
-    assert.equal(app.rows().length, 25);
-    assert.equal(app.rows().filter(x => x.enabled).length, 11);
-    assert.equal(app.rows()[8].id, 'period_10s');
+    assert.equal(app.rows().length, 26);
+    assert.equal(app.rows().filter(x => x.enabled).length, 10);
+    assert.equal(app.rows()[9].id, 'period_10s');
 
     last[12].enabled = true;
     const customized = boot({saved: last});
-    assert.equal(customized.rows().length, 24);
-    assert.equal(customized.rows()[8].id, 'upcoming_episodes');
-    assert.equal(customized.rows().filter(x => x.enabled).length, 15);
+    assert.equal(customized.rows().length, 25);
+    assert.equal(customized.rows()[9].id, 'upcoming_episodes');
+    assert.equal(customized.rows().filter(x => x.enabled).length, 16);
 });
 test('custom rearrangement of legacy profile is not migrated', () => {
     const legacy = [
@@ -1093,20 +1252,20 @@ test('custom rearrangement of legacy profile is not migrated', () => {
     const swapped = legacy.splice(3,1)[0];
     legacy.splice(2,0,swapped);
     const app = boot({ saved: legacy });
-    assert.equal(app.rows()[4].id, 'streaming_global');
-    assert.equal(app.rows().filter(x => x.enabled).length, 24);
+    assert.equal(app.rows()[5].id, 'streaming_global');
+    assert.equal(app.rows().filter(x => x.enabled).length, 25);
 });
 test('reset immediately persists factory defaults and schedules screen refresh', () => {
     const app = boot({ saved: [
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.20');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.21');
     const defaults = app.window.LampaShelfManager.resetDefaults();
-    assert.equal(defaults.length, 25);
-    assert.equal(defaults.filter(x => x.enabled).length, 11);
-    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 25);
-    assert.equal(app.rows()[4].id, 'new_movies');
+    assert.equal(defaults.length, 26);
+    assert.equal(defaults.filter(x => x.enabled).length, 10);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2').length, 26);
+    assert.equal(app.rows()[5].id, 'new_movies');
     const refresh = app.timers.find(t => t.ms === 80);
     assert.ok(refresh);
     refresh.fn();
@@ -1276,7 +1435,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.20');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.21');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
@@ -1522,7 +1681,7 @@ test('navigation preferences are independent from factory shelf reset', () => {
     app.stored.set('surs_nav_visible_surs_settings',false);
     app.window.LampaShelfManager.resetDefaults();
     assert.equal(app.stored.get('surs_nav_visible_surs_settings'),false);
-    assert.equal(app.window.LampaShelfManager.getSavedShelves().length,25);
+    assert.equal(app.window.LampaShelfManager.getSavedShelves().length,26);
 });
 test('apply button refreshes home while individual toggles leave settings open', () => {
     const app=boot();
@@ -1649,8 +1808,8 @@ test('TV D-pad uses visible filtered rows and fixed accessible focus', () => {
 });
 test('existing factory configuration and nav buttons are still present', () => {
     const app = boot();
-    assert.equal(app.rows().length,25);
-    assert.equal(app.rows().filter(x=>x.enabled).length,11);
+    assert.equal(app.rows().length,26);
+    assert.equal(app.rows().filter(x=>x.enabled).length,10);
     assert.equal(app.settings.filter(x=>x.param.name && x.param.name.startsWith('surs_nav_visible_')).length,7);
 });
 test('three independent screen profiles have the expected factory defaults', () => {
@@ -1659,8 +1818,8 @@ test('three independent screen profiles have the expected factory defaults', () 
     const main=manager.getSavedShelves();
     const world=manager.getSavedShelves('NEW');
     const russia=manager.getSavedShelves('RUS');
-    assert.equal(main.length,25);
-    assert.equal(main.filter(x=>x.enabled).length,11);
+    assert.equal(main.length,26);
+    assert.equal(main.filter(x=>x.enabled).length,10);
     assert.equal(main.find(x=>x.id==='rus_movies').enabled,false);
     assert.equal(main.find(x=>x.id==='rus_tv').enabled,false);
     assert.equal(main.find(x=>x.id==='new_movies').enabled,false);
@@ -1722,7 +1881,7 @@ test('World profile updates do not change Russia or home', () => {
     manager.saveShelves([{id:'new_tv',enabled:true,title:'Сериалы'}],'NEW');
     assert.equal(manager.getSavedShelves('NEW').length,1);
     assert.equal(manager.getSavedShelves('RUS').filter(x=>x.enabled).length,4);
-    assert.equal(manager.getSavedShelves().filter(x=>x.enabled).length,11);
+    assert.equal(manager.getSavedShelves().filter(x=>x.enabled).length,10);
 });
 test('scope reset restores only that section, source and visible defaults', () => {
     const app=boot({saved:[{id:'rus_movies',enabled:false},{id:'nav_buttons',enabled:true}]});
@@ -1764,7 +1923,7 @@ test('saved home profile uses the original storage key after update', () => {
     const app=boot({saved:custom});
     const manager=app.window.LampaShelfManager;
     manager.saveShelves([{id:'rus_movies',enabled:false}],'RUS');
-    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),['nav_buttons','kp_new_8','us_new_8','rus_movies']);
+    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),['nav_buttons','smart_us_new','kp_new_8','us_new_8','rus_movies']);
     assert.equal(app.stored.get('surs_fixed_shelves_v2'),custom);
 });
 test('main factory reset leaves customized World and Russia profiles untouched', () => {
@@ -1773,7 +1932,7 @@ test('main factory reset leaves customized World and Russia profiles untouched',
     manager.saveShelves([{id:'rus_tv',enabled:false}],'RUS');
     manager.saveShelves([{id:'trend_movies',enabled:false}],'NEW');
     manager.resetDefaults();
-    assert.equal(manager.getSavedShelves().filter(x=>x.enabled).length,11);
+    assert.equal(manager.getSavedShelves().filter(x=>x.enabled).length,10);
     assert.equal(manager.getSavedShelves('RUS')[0].enabled,false);
     assert.equal(manager.getSavedShelves('NEW')[0].enabled,false);
 });
