@@ -692,6 +692,108 @@ test('smart shelf merges only verified KP names of the same year and type', () =
     assert.ok(rows[0].results.every(x=>x.kp_rating===8.9));
     assert.equal(app.window.SURS_PERFORMANCE.smart_us.kp_matches,2);
 });
+
+test('smart 3.9.22 exposes a quality-first 60/15/15/10 score and top-ten diagnostics', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const type=q.includes('discover/tv')?'tv':'movie';
+        done({results:[f.card(type==='movie'?6001:6002,type,'Quality Title',8.3,9000,120,date)],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.equal(cards.length,2);
+    for(const card of cards){
+        const b=card.surs_smart_breakdown;
+        assert.ok(b);
+        assert.ok(Math.abs(b.score-(b.points.quality+b.points.popularity+
+            b.points.freshness+b.points.agreement))<0.05);
+        assert.equal(card.surs_smart_rank>=1,true);
+    }
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.top10[0].score,cards[0].surs_smart_score);
+});
+test('smart 3.9.22 trusts 10000 votes over a 30-vote inflated score', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.includes('discover/tv'))return done({results:[],total_pages:1});
+        done({results:[f.card(6101,'movie','Few Votes',8.5,30,70,date),
+            f.card(6102,'movie','Many Votes',8.0,10000,70,date)],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.equal(cards.length,2);
+    assert.equal(cards[0].id,6102);
+    assert.ok(cards[0].surs_smart_quality>cards[1].surs_smart_quality);
+});
+test('smart 3.9.22 merges only IMDb with exact title, year and media type from KP', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const isTV=q.includes('discover/tv'),type=isTV?'tv':'movie';
+        done({results:[f.card(isTV?6202:6201,type,isTV?'True Show':'True Film',8.0,850,70,date)],total_pages:1});
+    };
+    app.Lampa.Api.sources.KP={list:(params,done)=>{
+        const film=params.filter_url.includes('type=FILM');
+        const tv=params.filter_url.includes('type=TV_SERIES');
+        done({results:[{type:film?'movie':'tv',
+            original_title:film?'True Film':tv?'True Show':'Wrong Title',
+            release_date:date,first_air_date:date,
+            kp_rating:8.2,imdb_rating:8.7,imdb_vote_count:12000,vote_count:1500},
+            {type:'movie',original_title:'Wrong Title',release_date:date,
+            kp_rating:9.9,imdb_rating:9.9}],total_pages:1});
+    }};
+    const cards=app.getMain()[0].results;
+    assert.equal(cards.length,2);
+    assert.ok(cards.every(x=>x.imdb_rating===8.7 && x.surs_smart_source_count===3));
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.imdb_matches,2);
+    assert.ok(cards[0].surs_smart_breakdown.ratings.some(x=>x.source==='IMDb' && x.votes===12000));
+});
+test('smart 3.9.22 accepts typed KP Rating Pro cache but rejects untyped legacy scores', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0];
+    app.stored.set('kp_rating_pro_cache_v1',{
+        'tmdb:movie:6301':{rate:8.2,imdb:8.8,expires:Date.now()+60000},
+        'tmdb:tv:6301':{rate:9.9,imdb:9.9,expires:Date.now()-1000}
+    });
+    app.stored.set('kp_rating',{6301:{kp:9.9,imdb:9.9,timestamp:Date.now()}});
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.includes('discover/tv'))return done({results:[],total_pages:1});
+        done({results:[f.card(6301,'movie','Typed Cache',8.2,900,60,date)],total_pages:1});
+    };
+    const card=app.getMain()[0].results[0];
+    assert.equal(card.kp_rating,8.2);
+    assert.equal(card.imdb_rating,8.8);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.cache_imdb_matches,1);
+});
+test('smart 3.9.22 quality floor rejects popular weak movies independently of popularity', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),fresh=f.dates[0],older=f.dates[2];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.includes('discover/tv'))return done({results:[],total_pages:1});
+        done({results:[f.card(6401,'movie','Popular Weak',6.4,5000,90000,older),
+            f.card(6402,'movie','Recent Promising',7.1,180,10,fresh),
+            f.card(6403,'movie','Established',8.1,2000,30,older)],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.ok(!cards.some(x=>x.id===6401));
+    assert.ok(cards.some(x=>x.id===6402));
+    assert.ok(cards.some(x=>x.id===6403));
+    assert.ok(app.window.SURS_PERFORMANCE.smart_us.rejected_quality>=1);
+});
+test('smart 3.9.22 does not force weak series above better movies', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const isTV=q.includes('discover/tv'),type=isTV?'tv':'movie';
+        const ratings=isTV?[7.2,7.1]:[9.1,9.0,8.9,8.8,8.7,8.6];
+        done({results:ratings.map((v,i)=>f.card((isTV?6600:6500)+i,type,
+            type+' '+i,v,9000,90,date)),total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.ok(cards.length>=6);
+    assert.ok(cards.slice(0,4).every(c=>c.type==='movie'));
+    assert.ok(cards.some(c=>c.type==='tv'));
+});
+
 test('smart shelf cache keeps More pagination stable without network', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures();let count=0;
