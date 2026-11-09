@@ -2243,16 +2243,26 @@ onBack:openSmartDiagnostics});
 }
 
 function smartCatalog(page,owner,params,ok,fail) {
-var cached=readSursPreviewCache(SMART_US_CACHE);
+
+
+params=params||{};
+var session=params._sursSmartSession;
+var cached=session&&Array.isArray(session.results)?
+{results:session.results}:readSursPreviewCache(SMART_US_CACHE);
 function publish(row) {
-var list=row && row.results || [];
+var list=row&&Array.isArray(row.results)?row.results:[];
+if(!session&&list.length) {
+session={results:list.slice(0,SMART_US_LIMIT)};
+params._sursSmartSession=session;
+}
+if(session&&Array.isArray(session.results))list=session.results;
 var start=(page-1)*20,sub=list.slice(start,start+20);
-if(!sub.length) return typeof fail==='function'&&fail();
+if(!sub.length)return typeof fail==='function'&&fail();
 ok({title:SMART_US_TITLE,url:SMART_US_CATALOG_URL,
 source:'SURS',page:page,total_pages:Math.ceil(list.length/20),
 results:sub});
 }
-if(cached) return publish(smartMakeResult(cached.results));
+if(cached)return publish(smartMakeResult(cached.results));
 smartBuild(owner,params,publish);
 }
 
@@ -2447,6 +2457,7 @@ return { from: year - 1, to: year };
 }
 
 var kp8DependencyStatus = 'idle';
+var kp8DependencyFailedAt = 0;
 var kp8DependencyWaiters = [];
 var kp8DependencyError = '';
 function kp8RegisteredSource() {
@@ -2469,9 +2480,13 @@ return;
 kp8DependencyWaiters.push(done);
 if (kp8DependencyStatus === 'loading') return;
 if (kp8DependencyStatus === 'failed') {
-var failedWaiters = kp8DependencyWaiters.splice(0);
-failedWaiters.forEach(function(fn) { try { fn(null); } catch(e) {} });
+
+if(Date.now()-kp8DependencyFailedAt<15*60000){
+var failedWaiters=kp8DependencyWaiters.splice(0);
+failedWaiters.forEach(function(fn){try{fn(null);}catch(e){}});
 return;
+}
+kp8DependencyStatus='idle';
 }
 
 kp8DependencyStatus = 'loading';
@@ -2483,6 +2498,7 @@ if (settled) return;
 settled = true;
 clearTimeout(timer);
 kp8DependencyStatus = found ? 'ready' : 'failed';
+kp8DependencyFailedAt=found?0:Date.now();
 kp8DependencyError = found ? '' : (error || 'not_registered');
 window.SURS_PERFORMANCE.kp8_dependency = {
 status: kp8DependencyStatus,
