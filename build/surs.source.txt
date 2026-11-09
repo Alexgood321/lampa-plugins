@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.22 (US Premieres Balanced Quality)
+ * Версия: 3.9.23 (US Premieres Balanced Quality)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1749,7 +1749,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var SMART_US_ID = 'smart_us_new';
     var SMART_US_TITLE = 'Лучшие новинки США';
     var SMART_US_CATALOG_URL = 'surs_smart_us_new';
-    var SMART_US_CACHE = 'smart_us_v2';
+    var SMART_US_CACHE = 'smart_us_v3';
     var SMART_US_LIMIT = 40;
     var smartRunning = false, smartWaiters = [];
 
@@ -1995,126 +1995,274 @@ function smartRank(cards,dates) {
             results:cards.slice(0,SMART_US_LIMIT),
             params:{items:{view:20,mapping:'line'}} };
     }
-    function smartBuild(owner,params,done) {
-        if (smartRunning) {smartWaiters.push(done);return;}
-        smartRunning=true;smartWaiters.push(done);
-        var dates=smartWindow(),seen={},cards=[],kpCards=[],metrics={
-            status:'loading',tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
-            kp_requests:0,kp_done:0,kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
-            candidates:0,selected:0,timeout:false
-        };
+
+    var SMART_DIAG_KEY='surs_smart_diagnostics_v1';
+    var SMART_BACKGROUND_MS=20000,SMART_TARGET_MAX=8;
+    var smartLastBuild=0;
+    function smartReadDiagnostic(){
+        try{return Lampa.Storage.get(SMART_DIAG_KEY,null);}catch(e){return null;}
+    }
+    function smartTopTen(cards){
+        return (cards||[]).slice(0,10).map(function(c,i){
+            return {rank:i+1,id:c.id,type:c.type,title:c.title||c.name||'Без названия',
+                score:c.surs_smart_score,breakdown:c.surs_smart_breakdown};
+        });
+    }
+    function smartBuild(owner,params,done){
+        if(smartRunning){if(typeof done==='function')smartWaiters.push(done);return;}
+        smartRunning=true;smartLastBuild=Date.now();
+        if(typeof done==='function')smartWaiters.push(done);
+        var oldCache=readSursPreviewCache(SMART_US_CACHE),oldDiag=smartReadDiagnostic();
+        var dates=smartWindow(),cards=[],kpCards=[],seen={};
+        var metrics={version:'3.9.23',phase:'loading',status:'loading',started_at:Date.now(),
+            tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
+            kp_requests:0,kp_done:0,kp_failed:0,kp_status:'loading',
+            kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
+            targeted_requests:0,candidates:0,selected:0,rejected_quality:0,
+            top10:[],timeout:false};
         window.SURS_PERFORMANCE.smart_us=metrics;
-        var settled=false,tmdbDone=false,kpDone=false;
-        var kpGrace=null;
-        var timer=setTimeout(function(){metrics.timeout=true;finish();},4200);
-        function finish() {
-            if (settled) return;
-            settled=true;clearTimeout(timer);if(kpGrace!==null)clearTimeout(kpGrace);
-            var cacheMatches=smartEnrichFromCache(cards),kpMatches=smartMergeKp(cards,kpCards);
-            metrics.cache_kp_matches=cacheMatches.kp;
-            metrics.cache_imdb_matches=cacheMatches.imdb;
-            metrics.kp_matches=kpMatches.kp;
-            metrics.imdb_matches=kpMatches.imdb;
-            var picked=smartRank(cards,dates),result=smartMakeResult(picked);
-            metrics.candidates=cards.length;metrics.selected=picked.length;
-            metrics.rejected_quality=cards.filter(function(c){return !c.surs_smart_passes_quality;}).length;
-            metrics.top10=picked.slice(0,10).map(function(c){return {
-                rank:c.surs_smart_rank,id:c.id,type:c.type,title:c.title||c.name,
-                score:c.surs_smart_score,breakdown:c.surs_smart_breakdown
-            };});
-            metrics.status=picked.length?'ready':'empty';
-            if(picked.length)saveSursPreviewCache(SMART_US_CACHE,result);
-            smartRunning=false;
-            var waiting=smartWaiters.splice(0);
-            waiting.forEach(function(fn) {try{fn(result);}catch(e){}});
+        var previewSent=false,finished=false,tmdbDone=false,broadDone=false,kpDone=false,
+            cacheMerged=false,targetStarted=false,kpReady=null,graceTimer=null;
+        var fastTimer=setTimeout(preview,4200);
+        var hardTimer=setTimeout(function(){metrics.timeout=true;metrics.kp_status='timeout';finish();},
+            SMART_BACKGROUND_MS);
+        function cacheRatings(){
+            if(cacheMerged)return;
+            cacheMerged=true;
+            var m=smartEnrichFromCache(cards);
+            metrics.cache_kp_matches=m.kp;metrics.cache_imdb_matches=m.imdb;
         }
-        function maybeFinish() {
-            if(!tmdbDone || settled)return;
-            if(kpDone)return finish();
-            // Do not block the rest of Lampa's home for a slow KP dependency.
-            if(kpGrace===null)kpGrace=setTimeout(finish,650);
+        function ranked(){
+            cacheRatings();
+            var m=smartMergeKp(cards,kpCards);
+            metrics.kp_matches+=m.kp;metrics.imdb_matches+=m.imdb;
+            var selected=smartRank(cards,dates);
+            metrics.candidates=cards.length;metrics.selected=selected.length;
+            metrics.rejected_quality=cards.filter(function(c){return !c.surs_smart_passes_quality;}).length;
+            metrics.top10=smartTopTen(selected);
+            return selected;
+        }
+        function deliver(result){
+            if(previewSent)return;
+            previewSent=true;
+            smartWaiters.splice(0).forEach(function(fn){try{fn(result);}catch(e){}});
+        }
+        function preview(){
+            if(previewSent||finished)return;
+            metrics.phase='provisional';metrics.status='provisional';
+            var selected=ranked();
+            if(selected.length){
+                if(!oldCache)saveSursPreviewCache(SMART_US_CACHE,smartMakeResult(selected));
+                deliver(smartMakeResult(selected));
+            }else deliver(oldCache?smartMakeResult(oldCache.results):{results:[]});
+        }
+        function finish(){
+            if(finished)return;
+            finished=true;clearTimeout(fastTimer);clearTimeout(hardTimer);
+            if(graceTimer!==null)clearTimeout(graceTimer);
+            var selected=ranked(),result=smartMakeResult(selected);
+            var complete=tmdbDone&&kpDone&&!metrics.tmdb_failed&&!metrics.kp_failed&&
+                metrics.kp_status==='ready'&&!metrics.timeout;
+            metrics.phase=complete?'complete':'partial';
+            metrics.status=selected.length?metrics.phase:'empty';
+            metrics.checked_at=Date.now();
+            if(selected.length&&(complete||!oldCache||!oldDiag||oldDiag.phase!=='complete'))
+                saveSursPreviewCache(SMART_US_CACHE,result);
+            try{
+                if(complete||!oldDiag||oldDiag.phase!=='complete'||!oldDiag.top10||!oldDiag.top10.length)
+                    Lampa.Storage.set(SMART_DIAG_KEY,Object.assign({},metrics));
+                else Lampa.Storage.set(SMART_DIAG_KEY,Object.assign({},oldDiag,{
+                    last_attempt_at:Date.now(),last_attempt_status:metrics.kp_status
+                }));
+            }catch(e){}
+            if(!previewSent)deliver(selected.length?result:
+                oldCache?smartMakeResult(oldCache.results):{results:[]});
+            smartRunning=false;
+        }
+        function progress(){
+            if(finished)return;
+            if(tmdbDone&&kpDone)return finish();
+            if(tmdbDone&&!previewSent&&graceTimer===null)
+                graceTimer=setTimeout(preview,650);
+        }
+        function searchMissing(){
+            if(targetStarted||finished||!tmdbDone||!broadDone)return;
+            targetStarted=true;
+            if(!kpReady){kpDone=true;progress();return;}
+            cacheRatings();var priorMatches=smartMergeKp(cards,kpCards);
+            metrics.kp_matches+=priorMatches.kp;metrics.imdb_matches+=priorMatches.imdb;
+            var missing=smartRank(cards.slice(),dates).filter(function(c){
+                return !smartValidRate(c.kp_rating)||!smartValidRate(c.imdb_rating);
+            }).slice(0,SMART_TARGET_MAX);
+            if(!missing.length){kpDone=true;metrics.kp_status='ready';progress();return;}
+            var index=0,active=0,left=missing.length;
+            function pump(){
+                while(index<missing.length&&active<2&&!finished){
+                    (function(c){
+                        active++;metrics.kp_requests++;metrics.targeted_requests++;
+                        var replied=false,timer=setTimeout(function(){receive(null);},8000);
+                        function receive(data){
+                            if(replied)return;
+                            replied=true;clearTimeout(timer);metrics.kp_done++;
+                            if(data&&Array.isArray(data.results))kpCards=kpCards.concat(data.results);
+                            else metrics.kp_failed++;
+                            left--;active--;
+                            if(left===0){kpDone=true;metrics.kp_status='ready';progress();}
+                            else pump();
+                        }
+                        var title=c.original_title||c.original_name||c.title||c.name;
+                        try{
+                            kpReady.source.list({
+                                url:'api/v2.1/films/search-by-keyword',
+                                query:encodeURIComponent(String(title||'')),page:1
+                            },receive,function(){receive(null);});
+                        }catch(e){receive(null);}
+                    })(missing[index++]);
+                }
+            }
+            pump();
+        }
+        function kpSource(ready){
+            if(finished)return;
+            if(!ready){metrics.kp_status='unavailable';broadDone=true;kpDone=true;progress();return;}
+            kpReady=ready;
+            var y=new Date().getFullYear(),jobs=[];
+            [y,y-1].forEach(function(year){
+                KP8_TYPES.forEach(function(t){jobs.push({year:year,type:t});});
+            });
+            var left=jobs.length;
+            jobs.forEach(function(job){
+                metrics.kp_requests++;
+                var replied=false,timer=setTimeout(function(){receive(null);},9000);
+                function receive(data){
+                    if(replied)return;
+                    replied=true;clearTimeout(timer);metrics.kp_done++;
+                    if(data&&Array.isArray(data.results))kpCards=kpCards.concat(data.results);
+                    else metrics.kp_failed++;
+                    if(--left===0){
+                        broadDone=true;metrics.kp_status='ready';
+                        searchMissing();progress();
+                    }
+                }
+                var url='api/v2.2/films?order=YEAR&countries='+KP8_US_COUNTRY_ID+
+                    '&ratingFrom=0&ratingTo=10&yearFrom='+job.year+'&yearTo='+job.year+
+                    '&type='+job.type.sourceType;
+                try{ready.source.list({url:'filter',filter_url:url,page:1},
+                    receive,function(){receive(null);});}
+                catch(e){receive(null);}
+            });
         }
         var jobs=smartQueries(dates);
-        function batch(list,onBatch) {
-            if(!list.length)return onBatch();
+        function batch(list,doneBatch){
+            if(!list.length)return doneBatch();
             var pending=list.length;
-            list.forEach(function(job) {
+            list.forEach(function(job){
                 metrics.tmdb_requests++;
                 var replied=false;
-                function receive(json) {
-                    if(replied)return;replied=true;
-                    if(!settled) {
+                function receive(json){
+                    if(replied)return;
+                    replied=true;
+                    if(!finished){
                         metrics.tmdb_done++;
-                        if(!json || !Array.isArray(json.results)) metrics.tmdb_failed++;
-                        else smartCandidate(json,job.type,dates,seen,cards);
+                        if(json&&Array.isArray(json.results))smartCandidate(json,job.type,dates,seen,cards);
+                        else metrics.tmdb_failed++;
                     }
-                    if(--pending===0 && !settled)onBatch();
+                    if(--pending===0&&!finished)doneBatch();
                 }
                 try{owner.get(job.url,params,receive,function(){receive(null);});}
                 catch(e){receive(null);}
             });
         }
+        function tmdbFinished(){tmdbDone=true;searchMissing();progress();}
         batch(jobs.filter(function(j){return /[?&]page=1(?:&|$)/.test(j.url);}),function(){
-            if(cards.filter(function(c){smartRate(c,dates);return c.surs_smart_passes_quality;}).length>=60){
-                tmdbDone=true;return maybeFinish();
-            }
-            batch(jobs.filter(function(j){return /[?&]page=2(?:&|$)/.test(j.url);}),function(){
-                tmdbDone=true;maybeFinish();
-            });
+            var enough=cards.filter(function(c){smartRate(c,dates);return c.surs_smart_passes_quality;}).length>=60;
+            if(enough)tmdbFinished();
+            else batch(jobs.filter(function(j){return /[?&]page=2(?:&|$)/.test(j.url);}),tmdbFinished);
         });
-        // Query the original KP source only through its public list API.
-        // A failed or missing KP dependency never hides TMDB candidates.
-        kp8FindSource(function(ready) {
-            if (settled) return;
-            if (!ready) {kpDone=true;return maybeFinish();}
-            var y=new Date().getFullYear(),tasks=[];
-            [y,y-1].forEach(function(year) {
-                KP8_TYPES.forEach(function(t){
-                    tasks.push({type:t,year:year});
-                });
-            });
-            var kpPending=tasks.length;
-            tasks.forEach(function(task) {
-                metrics.kp_requests++;
-                var replied=false;
-                kp8Fetch(task.type,1,ready,function(json) {
-                    if(replied)return;replied=true;
-                    if(!settled && json && Array.isArray(json.results))
-                        kpCards=kpCards.concat(json.results);
-                    metrics.kp_done++;
-                    if(--kpPending===0) {kpDone=true;maybeFinish();}
-                },{from:task.year,to:task.year});
-            });
-        });
+        kp8FindSource(kpSource);
     }
-    function smartPreview(owner,params,callback) {
+    function smartPreview(owner,params,callback){
         var cached=readSursPreviewCache(SMART_US_CACHE);
-        if(cached) {
+        if(cached){
             callback(smartMakeResult(cached.results));
-            window.SURS_PERFORMANCE.smart_us={
-                status:'cached',cache_hit:true,selected:cached.results.length,
-                top10:cached.results.slice(0,10).map(function(c){return {
-                    rank:c.surs_smart_rank,id:c.id,type:c.type,title:c.title||c.name,
-                    score:c.surs_smart_score,breakdown:c.surs_smart_breakdown
-                };})
-            };
-            if(cached.age<4*3600000) return;
-            smartBuild(owner,params,function(){});
+            if(!smartRunning)window.SURS_PERFORMANCE.smart_us=Object.assign({},
+                smartReadDiagnostic()||{},{status:'cached',cache_hit:true,
+                    cache_age_ms:cached.age,selected:cached.results.length,
+                    top10:smartTopTen(cached.results)});
+            var last=smartReadDiagnostic(),incomplete=!last||last.phase!=='complete';
+            if(cached.age>=(incomplete?15*60000:4*3600000)&&
+                Date.now()-smartLastBuild>5*60000)
+                smartBuild(owner,params,function(){});
             return;
         }
         smartBuild(owner,params,callback);
     }
+    function smartDetailItems(c){
+        var d=c.breakdown||{},p=d.points||{};
+        return [
+            {title:'Качество '+(p.quality||0)+'/60 · Популярность '+(p.popularity||0)+'/15'},
+            {title:'Свежесть '+(p.freshness||0)+'/15 · Согласованность '+(p.agreement||0)+'/10'},
+            {title:'SURS '+c.score+' · качество '+(d.quality||0)+'/10 · порог '+(d.floor||0)}
+        ].concat((d.ratings||[]).map(function(r){
+            return {title:r.source+' '+r.rating+' · голосов '+(r.votes||'неизвестно')+
+                ' · скорр. '+r.adjusted+' · доверие '+Math.round(r.confidence*100)+'%'};
+        }));
+    }
+    function openSmartDiagnostics(){
+        if(!Lampa.Select||!Lampa.Select.show)return;
+        var live=window.SURS_PERFORMANCE.smart_us||{};
+        var data=live.top10&&live.top10.length?live:(smartReadDiagnostic()||live);
+        var items=[
+            {title:'Состояние: '+(live.phase==='loading'?'обновление в фоне':data.phase||'кэш')},
+            {title:'TMDB '+(data.tmdb_done||0)+'/'+(data.tmdb_requests||0)+
+                ' · ошибок '+(data.tmdb_failed||0)},
+            {title:'КП '+(data.kp_done||0)+'/'+(data.kp_requests||0)+
+                ' · '+(data.kp_status||'нет данных')+' · ошибок '+(data.kp_failed||0)},
+            {title:'Кандидатов '+(data.candidates||0)+' · отобрано '+(data.selected||0)+
+                ' · исключено '+(data.rejected_quality||0)},
+            {title:'КП совпадений '+(data.kp_matches||0)+' · IMDb '+(data.imdb_matches||0)+
+                ' · адресных запросов '+(data.targeted_requests||0)},
+            {title:'Расчёт '+(data.checked_at?
+                new Date(data.checked_at).toLocaleString('ru-RU'):'ещё не завершён')},
+            {title:'Пересчитать в фоне',action:'refresh'}
+        ];
+        (data.top10||[]).forEach(function(c){
+            items.push({title:'#'+c.rank+' · '+c.title+' · SURS '+c.score,
+                action:'card',card:c});
+        });
+        Lampa.Select.show({title:'SURS · Лучшие новинки США',items:items,
+            onSelect:function(item){
+                if(item.action==='refresh'&&Lampa.Api&&Lampa.Api.sources&&Lampa.Api.sources.SURS){
+                    smartBuild(Lampa.Api.sources.SURS,{},function(){});
+                    if(Lampa.Noty)Lampa.Noty.show('Пересчёт запущен. Новый порядок при следующем открытии.');
+                }else if(item.action==='card'&&item.card)
+                    Lampa.Select.show({title:'#'+item.card.rank+' · '+item.card.title,
+                        items:smartDetailItems(item.card),onSelect:function(){},
+                        onBack:openSmartDiagnostics});
+            }});
+    }
+
     function smartCatalog(page,owner,params,ok,fail) {
-        var cached=readSursPreviewCache(SMART_US_CACHE);
+        // Pin one ordered snapshot for the full native "More" session.
+        // Background refresh must not shuffle page 2 relative to page 1.
+        params=params||{};
+        var session=params._sursSmartSession;
+        var cached=session&&Array.isArray(session.results)?
+            {results:session.results}:readSursPreviewCache(SMART_US_CACHE);
         function publish(row) {
-            var list=row && row.results || [];
+            var list=row&&Array.isArray(row.results)?row.results:[];
+            if(!session&&list.length) {
+                session={results:list.slice(0,SMART_US_LIMIT)};
+                params._sursSmartSession=session;
+            }
+            if(session&&Array.isArray(session.results))list=session.results;
             var start=(page-1)*20,sub=list.slice(start,start+20);
-            if(!sub.length) return typeof fail==='function'&&fail();
+            if(!sub.length)return typeof fail==='function'&&fail();
             ok({title:SMART_US_TITLE,url:SMART_US_CATALOG_URL,
                 source:'SURS',page:page,total_pages:Math.ceil(list.length/20),
                 results:sub});
         }
-        if(cached) return publish(smartMakeResult(cached.results));
+        if(cached)return publish(smartMakeResult(cached.results));
         smartBuild(owner,params,publish);
     }
 
@@ -2309,6 +2457,7 @@ function smartRank(cards,dates) {
     }
 
     var kp8DependencyStatus = 'idle';
+    var kp8DependencyFailedAt = 0;
     var kp8DependencyWaiters = [];
     var kp8DependencyError = '';
     function kp8RegisteredSource() {
@@ -2331,9 +2480,13 @@ function smartRank(cards,dates) {
         kp8DependencyWaiters.push(done);
         if (kp8DependencyStatus === 'loading') return;
         if (kp8DependencyStatus === 'failed') {
-            var failedWaiters = kp8DependencyWaiters.splice(0);
-            failedWaiters.forEach(function(fn) { try { fn(null); } catch(e) {} });
-            return;
+            // Only retry the original pinned dependency after a cooldown.
+            if(Date.now()-kp8DependencyFailedAt<15*60000){
+                var failedWaiters=kp8DependencyWaiters.splice(0);
+                failedWaiters.forEach(function(fn){try{fn(null);}catch(e){}});
+                return;
+            }
+            kp8DependencyStatus='idle';
         }
 
         kp8DependencyStatus = 'loading';
@@ -2345,6 +2498,7 @@ function smartRank(cards,dates) {
             settled = true;
             clearTimeout(timer);
             kp8DependencyStatus = found ? 'ready' : 'failed';
+            kp8DependencyFailedAt=found?0:Date.now();
             kp8DependencyError = found ? '' : (error || 'not_registered');
             window.SURS_PERFORMANCE.kp8_dependency = {
                 status: kp8DependencyStatus,
@@ -3789,7 +3943,7 @@ function smartRank(cards,dates) {
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.22';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.23';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4152,6 +4306,14 @@ function smartRank(cards,dates) {
 
             Lampa.SettingsApi.addParam({
                 component: 'surs',
+                param: {name:'surs_smart_diagnostics',type:'button'},
+                field: {name:'Диагностика «Лучшие новинки США»',
+                    description:'Баллы SURS, рейтинги КП/IMDb/TMDB, статус загрузки'},
+                onChange:openSmartDiagnostics
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: 'surs',
                 param: { name: 'surs_open_world_editor', type: 'button' },
                 field: {
                     name: 'Настроить «Новинки Мир»',
@@ -4292,7 +4454,7 @@ function smartRank(cards,dates) {
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v3.9.22 (Fixed & Configurable) успешно инициализирован.');
+            console.log('SURS Pro v3.9.23 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4321,7 +4483,10 @@ function smartRank(cards,dates) {
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        version: '3.9.22'
+        smartDiagnostics: smartReadDiagnostic,
+        openSmartDiagnostics: openSmartDiagnostics,
+        refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
+        version: '3.9.23'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
