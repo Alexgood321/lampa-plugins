@@ -1301,9 +1301,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var SURS_BASE_SHELVES = [
         { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
         { id: 'smart_us_new', title: 'Лучшие новинки США', cat: 'surs', def: true, desc: 'Отбор новых фильмов и сериалов США: TMDB + подтверждённый КП, качество, популярность, свежесть' },
-        { id: 'hot_us_new', title: 'Горячие новинки США · тест', cat: 'surs', def: false, desc: 'Hot Discovery 4.0: серверная подборка через GitHub Actions, сравнение с 3.9.26' },
         { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', cat: 'surs', def: false, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 7,5+ (текущий и предыдущий год); требуется источник KP' },
         { id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: false, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
+        { id: 'hot_us_new', title: 'Горячие новинки США · тест', cat: 'surs', def: false, desc: 'Hot Discovery 4.0: серверная подборка через GitHub Actions, сравнение с 3.9.26' },
         { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
         { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
         { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -1491,9 +1491,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         return [
             { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
             { id: 'smart_us_new', title: 'Лучшие новинки США', enabled: true, cat: 'surs' },
-            { id: 'hot_us_new', title: 'Горячие новинки США · тест', enabled: false, cat: 'surs' },
             { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', enabled: false, cat: 'surs' },
             { id: 'us_new_8', title: 'Новинки США 8+', enabled: false, cat: 'surs' },
+            { id: 'hot_us_new', title: 'Горячие новинки США · тест', enabled: false, cat: 'surs' },
             { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
             { id: 'new_movies', title: 'Новинки мирового кино', enabled: false, cat: 'surs' },
             { id: 'new_tv', title: 'Новинки зарубежных сериалов', enabled: false, cat: 'surs' },
