@@ -143,14 +143,19 @@ function trendScore(c,peers) {
   return round(Math.min(1,.8*trend+.2*pop),3);
 }
 function growthFor(c,history,now) {
-  const current=number(c.popularity);
-  const snapshots=(history&&history.snapshots||[]).filter(s=>daysSince(s.date,now)>=3)
-    .sort((a,b)=>b.date.localeCompare(a.date));
-  const old=snapshots.find(s=>s.items&&s.items[identity(c)]);
-  if(!old)return {score:.5,measured:false};
-  const previous=number(old.items[identity(c)].p);
-  const change=Math.log((current+1)/(previous+1));
-  return {score:round(Math.min(1,Math.max(0,.5+change*.38)),3),measured:true};
+  const snapshots=(history&&history.snapshots||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const key=identity(c),current=number(c.popularity),periods={};
+  for(const horizon of [3,7,14]) {
+    const old=snapshots.find(s=>daysSince(s.date,now)>=horizon&&
+      daysSince(s.date,now)<=horizon+2&&s.items&&s.items[key]);
+    if(!old)continue;
+    const last=number(old.items[key].p);
+    const ratio=Math.log((current+1)/(last+1));
+    periods[horizon+'d']=round(Math.min(1,Math.max(0,.5+ratio*.38)),3);
+  }
+  const values=Object.values(periods);
+  return {score:values.length?round(values.reduce((a,b)=>a+b,0)/values.length,3):.5,
+    measured:values.length>0,periods};
 }
 function scoreCandidates(candidates,history,now,previous) {
   for(const c of candidates) {
@@ -163,6 +168,7 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_heat=heat;
     c.surs_hot_growth=growth.score;
     c.surs_hot_growth_measured=growth.measured;
+    c.surs_hot_growth_periods=growth.periods;
     c.surs_hot_freshness=freshness;
     c.surs_hot_age=age;
     c.surs_hot_provisional=number(c.vote_count)<80||

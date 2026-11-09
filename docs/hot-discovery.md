@@ -25,7 +25,7 @@ https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discov
 - Per-season episode rating only when at least 30 votes, else season-wide rating treated as a provisional series proxy.
 - Bayes quality + interest + measured 3–14-day growth + smooth freshness. Experimental weights: 55/25/10/10, not a claimed optimum.
 - Optional MDBList enriches ratings and, with explicit list IDs, adds independent candidates.
-- Historical snapshots in repo for 31 days; absent trend treated neutrally.
+- Historical snapshots in repo for 31 days; growth explicitly compares 3/7/14-day observations when available, with a neutral fallback for missing history.
 - Publish 12–40 verified unique cards only; failed API calls cannot replace previous valid data.
 - Order always follows descending visible score. Previous position is used only for exactly equal scores.
 

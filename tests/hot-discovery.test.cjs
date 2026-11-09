@@ -40,7 +40,8 @@ test('score excludes stale items and highly popular confirmed weak items',()=>{
 });
 test('growth history starts neutral, then reflects observed change',()=>{
   const card={type:'movie',id:3,popularity:90};
-  assert.deepEqual(hot.growthFor(card,{snapshots:[]},NOW),{score:.5,measured:false});
+  assert.equal(hot.growthFor(card,{snapshots:[]},NOW).score,.5);
+  assert.equal(hot.growthFor(card,{snapshots:[]},NOW).measured,false);
   assert.ok(hot.growthFor(card,{snapshots:[{date:day(7),items:{'movie:3':{p:15}}}]},NOW).score>.5);
   const history=hot.nextHistory({snapshots:[{date:day(40),items:{}}]},
     [card],NOW);
@@ -123,4 +124,19 @@ test('a new digital listing does not reclassify decades-old movies as a new rele
   const cards=[{...m,type:'movie',surs_hot_premiere_date:premiere.date,
     surs_hot_original_date:premiere.original,surs_hot_premiere_kind:'digital'}];
   assert.equal(hot.scoreCandidates(cards,{snapshots:[]},NOW,null).length,0);
+});
+
+test('growth measures independent 3, 7 and 14 day periods without inventing missing history',()=>{
+  const c={type:'movie',id:111,popularity:90};
+  const history={snapshots:[3,7,14].map(n=>({
+    date:day(n),items:{'movie:111':{p:10+n,v:100}}
+  }))};
+  const g=hot.growthFor(c,history,NOW);
+  assert.equal(g.measured,true);
+  assert.equal(Object.keys(g.periods).length,3);
+  assert.ok(g.periods['3d']>.5&&g.periods['7d']>.5&&g.periods['14d']>.5);
+  const stale=hot.growthFor(c,{snapshots:[{
+    date:day(30),items:{'movie:111':{p:3}}
+  }]},NOW);
+  assert.equal(stale.measured,false);
 });
