@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.24 (US Premieres Balanced Quality)
+ * Версия: 3.9.25 (US Premieres Balanced Quality)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1749,7 +1749,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var SMART_US_ID = 'smart_us_new';
     var SMART_US_TITLE = 'Лучшие новинки США';
     var SMART_US_CATALOG_URL = 'surs_smart_us_new';
-    var SMART_US_CACHE = 'smart_us_v4';
+    var SMART_US_CACHE = 'smart_us_v5';
     var SMART_US_LIMIT = 40;
     var smartRunning = false, smartWaiters = [];
 
@@ -2018,8 +2018,18 @@ function smartRate(card,dates) {
     var round=function(x){return Math.round(x*100)/100;};
     var points={quality:round(60*quality/10),popularity:round(15*popularity),
         freshness:round(15*freshness),agreement:round(10*agreement)};
-    var score=60*quality/10+15*popularity+15*freshness+10*agreement;
+    // Keep the original 60/15/15/10 weighting for inspection, but prevent
+    // popularity and recency from overriding a substantially better film.
+    // 1.2 points is the MAXIMUM combined influence of secondary factors.
+    // Therefore a quality advantage > 0.122/10 always wins, even if the
+    // weaker candidate is newer and much more popular.
+    var weightedScore=60*quality/10+15*popularity+15*freshness+10*agreement;
+    var secondaryRaw=15*popularity+15*freshness+10*agreement;
+    var secondaryRatio=secondaryRaw/40;
+    var score=98.8*quality/10+1.2*secondaryRatio;
+    card.surs_smart_raw_score=score;
     card.surs_smart_score=round(score);
+    card.surs_smart_weighted_score=round(weightedScore);
     card.surs_smart_quality=round(quality);
     card.surs_smart_quality_floor=qualityFloor;
     card.surs_smart_passes_quality=quality>=qualityFloor;
@@ -2027,6 +2037,11 @@ function smartRate(card,dates) {
     card.surs_smart_breakdown={
         score:round(score),quality:round(quality),floor:qualityFloor,
         passes:quality>=qualityFloor,points:points,
+        weighted_score:round(weightedScore),
+        ranking_method:'quality_first',
+        ranking_quality_points:round(98.8*quality/10),
+        ranking_secondary_points:round(1.2*secondaryRatio),
+        ranking_secondary_cap:1.2,
         rating_coverage:coverage,coverage_percent:Math.round(coverage/3*100),
         quality_before_coverage:round(qualityRaw),
         coverage_penalty:round(coveragePenalty),
@@ -2044,25 +2059,19 @@ function smartRank(cards,dates) {
     cards.forEach(function(c){smartRate(c,dates);});
     var qualityCandidates=cards.filter(function(c){return c.surs_smart_passes_quality;});
     qualityCandidates.sort(function(a,b){
-        if(a.surs_smart_score!==b.surs_smart_score)return b.surs_smart_score-a.surs_smart_score;
-        if(a.surs_smart_quality!==b.surs_smart_quality)return b.surs_smart_quality-a.surs_smart_quality;
-        if(Number(a.vote_count||0)!==Number(b.vote_count||0))
-            return Number(b.vote_count||0)-Number(a.vote_count||0);
-        return String(a.type)+a.id<String(b.type)+b.id?-1:1;
+        // A single score drives BOTH ranking and the visible SURS number.
+        // No alternating genres or reshuffling after sorting.
+        var scoreDiff=b.surs_smart_raw_score-a.surs_smart_raw_score;
+        if(Math.abs(scoreDiff)>1e-10)return scoreDiff;
+        if(a.surs_smart_quality!==b.surs_smart_quality)
+            return b.surs_smart_quality-a.surs_smart_quality;
+        var votes=Number(b.vote_count||0)-Number(a.vote_count||0);
+        if(votes)return votes;
+        var aKey=String(a.type)+':'+String(a.id);
+        var bKey=String(b.type)+':'+String(b.id);
+        return aKey<bKey?-1:aKey>bKey?1:0;
     });
     var selected=qualityCandidates.slice(0,SMART_US_LIMIT);
-    // Prefer variation only for near-ties, never force weak TV above stronger films.
-    for(var i=3;i<Math.min(selected.length,10);i++){
-        var type=selected[i].type;
-        if(selected[i-1].type!==type||selected[i-2].type!==type||selected[i-3].type!==type)continue;
-        for(var j=i+1;j<Math.min(selected.length,i+8);j++){
-            var alternative=selected[j];
-            if(alternative.type===type)continue;
-            if(selected[i].surs_smart_score-alternative.surs_smart_score>1.0)continue;
-            if(selected[i].surs_smart_quality-alternative.surs_smart_quality>.15)continue;
-            selected.splice(j,1);selected.splice(i,0,alternative);break;
-        }
-    }
     selected.forEach(function(c,i){c.surs_smart_rank=i+1;});
     return selected;
 }
@@ -2092,7 +2101,7 @@ function smartRank(cards,dates) {
         if(typeof done==='function')smartWaiters.push(done);
         var oldCache=readSursPreviewCache(SMART_US_CACHE),oldDiag=smartReadDiagnostic();
         var dates=smartWindow(),cards=[],kpCards=[],seen={};
-        var metrics={version:'3.9.24',phase:'loading',status:'loading',started_at:Date.now(),
+        var metrics={version:'3.9.25',phase:'loading',status:'loading',started_at:Date.now(),
             tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
             kp_requests:0,kp_done:0,kp_failed:0,kp_status:'loading',
             kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
@@ -2321,6 +2330,9 @@ function smartRank(cards,dates) {
             {title:'Качество '+(p.quality||0)+'/60 · Популярность '+(p.popularity||0)+'/15'},
             {title:'Свежесть '+(p.freshness||0)+'/15 · Согласованность '+(p.agreement||0)+'/10'},
             {title:'SURS '+c.score+' · качество '+quality+'/10 · порог '+(d.floor||0)},
+            {title:'Приоритет качества: '+(d.ranking_quality_points||0)+
+                ' · дополнительные факторы: '+(d.ranking_secondary_points||0)+' из 1,2'},
+            {title:'Контрольная формула 60/15/15/10: '+(d.weighted_score||0)},
             {title:'Коррекция за неполные данные: −'+(d.coverage_penalty||0)+
                 ' · до коррекции '+raw+'/10'}
         ];
@@ -2343,8 +2355,10 @@ function smartRank(cards,dates) {
         var data=live.top10&&live.top10.length?live:(smartReadDiagnostic()||live);
         var state=live.phase==='loading'?'loading':(data.phase||'cached');
         var items=[
-            {title:'Версия SURS '+(data.version||'3.9.24')+' · '+smartStatusText(state)},
+            {title:'Версия SURS '+(data.version||'3.9.25')+' · '+smartStatusText(state)},
             {title:'Статус отражает завершение запросов, а не полноту рейтингов'},
+            {title:'Порядок: качество прежде всего; остальные факторы только при близких оценках'},
+            {title:'SURS: качество 98,8 балла + вторичные факторы до 1,2 балла'},
             {title:'TMDB '+(data.tmdb_done||0)+'/'+(data.tmdb_requests||0)+
                 ' · ошибок '+(data.tmdb_failed||0)},
             {title:'КП '+(data.kp_done||0)+'/'+(data.kp_requests||0)+
@@ -4081,7 +4095,7 @@ function smartRank(cards,dates) {
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.24';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.25';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4592,7 +4606,7 @@ function smartRank(cards,dates) {
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v3.9.24 (Fixed & Configurable) успешно инициализирован.');
+            console.log('SURS Pro v3.9.25 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4624,7 +4638,7 @@ function smartRank(cards,dates) {
         smartDiagnostics: smartReadDiagnostic,
         openSmartDiagnostics: openSmartDiagnostics,
         refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-        version: '3.9.24'
+        version: '3.9.25'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
