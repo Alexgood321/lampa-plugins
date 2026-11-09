@@ -1928,6 +1928,10 @@ var currentId=String(c.imdb_id||'').trim().toLowerCase();
 if(/^tt\d{5,12}$/.test(currentId)&&
 /^tt\d{5,12}$/.test(kpImdb)&&currentId!==kpImdb)return;
 var cOriginal=smartNormalize(c.original_title||c.original_name||'');
+
+
+if(difference===1&&!(original&&name===original&&name===cOriginal))
+return;
 var score=(difference===0?8:2)+
 (name===original&&name===cOriginal?5:
 name===original||name===cOriginal?3:1);

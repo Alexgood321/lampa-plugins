@@ -1015,6 +1015,27 @@ test('smart 3.9.24 exposes rating coverage and penalizes missing sources inside 
     assert.ok(dialogs[1].items.some(x=>x.title.includes('Не получено: КП, IMDb')));
 });
 
+
+test('smart 3.9.24 refuses translated-only identity with a different release year', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=f.dates[0],oldYear=Number(day.slice(0,4))-1;
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        if(q.includes('discover/tv'))return done({results:[],total_pages:1});
+        const c=f.card(8501,'movie','English Original',8.2,1200,50,day);
+        c.title='Переведённое название';
+        done({results:[c],total_pages:1});
+    };
+    app.Lampa.Api.sources.KP={list:(p,done)=>{
+        if(p.url!=='filter')return done({results:[],total_pages:1});
+        done({results:[{type:'movie',original_title:'Переведённое название',
+            release_date:String(oldYear),kp_rating:9.7,imdb_rating:9.4,vote_count:2000}],
+            total_pages:1});
+    }};
+    const card=app.getMain()[0].results[0];
+    assert.equal(card.kp_rating,undefined);
+    assert.equal(card.imdb_rating,undefined);
+});
+
 test('smart shelf cache keeps More pagination stable without network', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures();let count=0;
