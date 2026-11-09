@@ -1843,6 +1843,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             var data=stored[String(c.id)];
             if (!data || !Number(data.timestamp) ||
                 Date.now()-Number(data.timestamp)>14*86400000) return;
+            // Legacy rating.js uses TMDB numeric IDs for both movies and TV.
+            // Without title, media type and year its cache is not safe to join.
+            if (data.type!==c.type ||
+                Number(data.year)!==Number(smartDate(c).slice(0,4)) ||
+                smartTitles(c).indexOf(smartNormalize(data.title))<0) return;
             if (Number(data.kp)>=1 && Number(data.kp)<=10) {
                 c.kp_rating=Number(data.kp);
                 c.surs_smart_kp_votes=0;
@@ -1890,13 +1895,17 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var votes=Number(card.vote_count)||0;
         var tm=smartBayes(card.vote_average,votes,card.type==='tv'?65:110);
         var kp=Number(card.kp_rating)||0,kpv=Number(card.surs_smart_kp_votes)||0;
-        var kpWeighted=kp?smartBayes(kp,kpv, kpv?140:35):0;
-        var quality=kp ? .58*tm+.42*kpWeighted : tm;
+        // An unreported KP vote count must not be interpreted as zero trust
+        // or as a fake disagreement with TMDB.
+        var kpWeighted=kp?(kpv>0?smartBayes(kp,kpv,140):kp):0;
+        var kpConfidence=kpv>0?kpv/(kpv+140):.18;
+        var quality=kp ? (1-.42*kpConfidence)*tm+
+            .42*kpConfidence*kpWeighted : tm;
         var pop=Math.max(0,Number(card.popularity)||0);
         var interest=Math.min(1,Math.log(1+pop)/Math.log(1+250));
         var age=smartAge(smartDate(card));
         var freshness=Math.max(0,1-age/550);
-        var consensus=kp?Math.max(0,1-Math.abs(tm-kpWeighted)/3):.5;
+        var consensus=kp && kpv>0?Math.max(0,1-Math.abs(tm-kpWeighted)/3):.5;
         var score= .45*quality/10+.25*interest+
             .20*freshness+.10*consensus;
         card.surs_smart_score=Math.round(score*10000)/100;

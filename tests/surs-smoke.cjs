@@ -733,6 +733,47 @@ test('smart shelf cache survives temporary TMDB outages and preserves other prof
     assert.ok(!app.window.LampaShelfManager.getSavedShelves('NEW').some(x=>x.id==='smart_us_new'));
 });
 
+
+test('smart shelf refuses ambiguous legacy ratings without verified movie identity', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0],year=date.slice(0,4);
+    app.stored.set('kp_rating',{
+        100:{kp:9.9,imdb:9.9,timestamp:Date.now()},
+        101:{kp:9.1,imdb:9.1,timestamp:Date.now(),
+            title:'Another Film',type:'movie',year:Number(year)}
+    });
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const type=q.includes('discover/tv')?'tv':'movie';
+        done({results:[f.card(type==='tv'?400:100,type,
+            type==='tv'?'Series':'True Movie',8.1,800,100,date)],total_pages:1});
+    };
+    const cards=app.getMain()[0].results;
+    assert.ok(cards.every(x=>!x.kp_rating));
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.cache_kp_matches,0);
+});
+test('smart shelf verifies previous-year and mismatched KP titles before enrichment', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),date=f.dates[0],year=Number(date.slice(0,4));
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const type=q.includes('discover/tv')?'tv':'movie';
+        done({results:[f.card(type==='tv'?20:10,type,
+            type==='tv'?'Correct Series':'Correct Movie',8.2,800,80,date)],total_pages:1});
+    };
+    app.Lampa.Api.sources.KP={list:(p,done)=>{
+        const type=p.filter_url.includes('type=FILM')?'movie':'tv';
+        done({results:[{
+            id:'KP_wrong_'+type,type,kp_rating:9.8,vote_count:1500,
+            original_title:type==='tv'?'Correct Series':'Correct Movie',
+            release_date:String(year-1)+'-06-01',
+            first_air_date:String(year-1)+'-06-01'
+        }],total_pages:1});
+    }};
+    const rows=app.getMain();
+    assert.equal(rows[0].results.length,2);
+    assert.ok(rows[0].results.every(x=>!x.kp_rating));
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.kp_matches,0);
+});
+
 test('editor JavaScript and stylesheet are deferred', () => {
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
     assert.doesNotMatch(mainSource, /function renderModalContent\(/);
