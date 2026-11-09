@@ -1477,8 +1477,14 @@ test('progressive Lampa3 displays nav before TMDB and appends rows in order', ()
     flush();
     assert.equal(initial.length,1);
     assert.equal(initial[0].title,'Быстрый переход');
-    Object.keys(requests).filter(key=>key.indexOf('discover/')===0)
-        .forEach(key=>requests[key]({results:[],total_pages:1}));
+    const discovered=new Set();
+    for (let round=0; round<3; round++) {
+        Object.keys(requests).filter(key=>key.indexOf('discover/')===0 &&
+            !discovered.has(key)).forEach(key=>{
+                discovered.add(key);
+                requests[key]({results:[],total_pages:1});
+            });
+    }
     flush();
     requests['trending/tv/week']({results:[{id:2,title:'Сериал'}]});
     flush();
