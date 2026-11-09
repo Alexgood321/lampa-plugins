@@ -219,7 +219,7 @@ test('KP source autoloads a pinned original dependency and shares one download',
     }};
     scripts[0].onload();
     assert.equal(results.length,2);
-    assert.equal(results[0][0].title,'Новинки США · КП 8+');
+    assert.equal(results[0][0].title,'Новинки США · КП 7,5+');
     assert.equal(results[0][0].results.length,3);
     assert.equal(calls,6); // Two independent main() invocations, three requests each.
     assert.equal(app.window.SURS_PERFORMANCE.kp8_dependency.status,'ready');
@@ -257,7 +257,7 @@ test('KP 8+ is registered and enabled directly below navigation by default', () 
     assert.ok(!mainSource.includes('cors.kp556.workers.dev'));
 });
 test('KP 8+ uses native source filters, excludes weak ratings and offers More', () => {
-    const app = boot({saved:[{id:'kp_new_8',title:'Новинки США · КП 8+',enabled:true}]});
+    const app = boot({saved:[{id:'kp_new_8',title:'Новинки США · КП 7,5+',enabled:true}]});
     const requests = [];
     app.Lampa.Api.sources.KP = {
         kpFilters: (params, cb) => cb([], [{id:1,title:'США'}], {}, {'США':1}),
@@ -281,13 +281,13 @@ test('KP 8+ uses native source filters, excludes weak ratings and offers More', 
     };
     const result = app.getMain();
     assert.equal(result.length,1);
-    assert.equal(result[0].title,'Новинки США · КП 8+');
+    assert.equal(result[0].title,'Новинки США · КП 7,5+');
     assert.ok(result[0].results.length > 0);
     assert.ok(result[0].results.every(x=>x.kp_rating >= 8 && x.source === 'KP'));
     assert.ok(requests.length === 6);
     assert.ok(result[0].results.some(x => x.vote_count === 0));
     assert.ok(result[0].results.every(x => x.vote_count === 0 || x.vote_count >= 150));
-    assert.ok(requests.every(x=>x.includes('countries=1') && x.includes('ratingFrom=8') && x.includes('yearFrom=')));
+    assert.ok(requests.every(x=>x.includes('countries=1') && x.includes('ratingFrom=7.5') && x.includes('yearFrom=')));
     assert.equal(result[0].url,'surs_kp_new_8');
     let catalog;
     const p = {url:'surs_kp_new_8',page:1};
@@ -317,7 +317,7 @@ test('KP 8+ does not depend on filters endpoint and uses documented US country i
     const result = app.getMain();
     assert.equal(calls.length,3);
     assert.ok(calls.every(query=>query.includes('countries=1')));
-    assert.ok(result.some(row=>row.title==='Новинки США · КП 8+'));
+    assert.ok(result.some(row=>row.title==='Новинки США · КП 7,5+'));
     assert.equal(app.window.SURS_PERFORMANCE.kp8_preview.status,'ready');
     assert.equal(notes.length,0);
 });
@@ -347,7 +347,7 @@ test('KP 8+ checks second page whenever fewer than 20 cards match', () => {
         requests.push(params);
         const type = params.filter_url.includes('type=FILM')?'movie':'tv';
         cb({results:[{id:'KP_'+requests.length,source:'KP',type,release_date:year,
-            first_air_date:year,vote_count:450,kp_rating:params.page===1?7.5:8.6,
+            first_air_date:year,vote_count:450,kp_rating:params.page===1?7.4:8.6,
             genres:[{name:'драма'}],production_countries:[{name:'США'}]}],total_pages:2});
     }};
     const rows=app.getMain();
@@ -374,7 +374,7 @@ test('KP 8+ preview scans deeper pages to collect at least 20 valid cards', () =
     const rows=app.getMain();
     assert.equal(rows.length,1);
     assert.ok(rows[0].results.length>=20);
-    assert.ok(rows[0].results.every(x=>x.kp_rating>=8));
+    assert.ok(rows[0].results.every(x=>x.kp_rating>=7.5));
     assert.equal(new Set(rows[0].results.map(x=>x.id)).size,rows[0].results.length);
     assert.ok(Math.max(...requests.map(x=>x.page))>2);
     assert.equal(app.window.SURS_PERFORMANCE.kp8_preview.stop_reason,'target');
@@ -415,7 +415,7 @@ test('KP 8+ preview stops at API page count and rejects low ratings', () => {
     assert.equal(requests.length,9);
     assert.equal(rows[0].results.length,9);
     assert.equal(app.window.SURS_PERFORMANCE.kp8_preview.stop_reason,'exhausted');
-    assert.ok(rows[0].results.every(x=>x.kp_rating>=8));
+    assert.ok(rows[0].results.every(x=>x.kp_rating>=7.5));
 });
 test('KP 8+ uses a new preview cache key instead of old four-card cache', () => {
     const app=boot({saved:[{id:'kp_new_8',enabled:true}]});
@@ -436,7 +436,7 @@ test('KP 8+ uses a new preview cache key instead of old four-card cache', () => 
     assert.ok(calls>3);
     assert.ok(rows[0].results.length>3);
     assert.ok(!rows[0].results.some(x=>x.id==='KP_old'));
-    const fresh=app.stored.get('surs_preview_cache_v1_kp_new_8_deep_v1');
+    const fresh=app.stored.get('surs_preview_cache_v1_kp_new_8_rating75_v1');
     assert.ok(fresh && fresh.results.length>3);
     assert.equal(app.stored.get('surs_preview_cache_v1_kp_new_8'),prior);
 });
@@ -462,6 +462,101 @@ test('KP 8+ deadline returns partial results without accepting late requests', (
     assert.equal(delivered,1);
 });
 
+
+test('KP 7.5 threshold matches exactly 7.5 and rejects 7.49', () => {
+    const app=boot({saved:[{id:'kp_new_8',enabled:true}]});
+    const year=String(new Date().getFullYear()),queries=[];
+    app.Lampa.Api.sources.KP={list:(p,ok)=>{
+        queries.push(p.filter_url);
+        const type=p.filter_url.includes('type=FILM')?'movie':'tv';
+        ok({results:[
+            {id:'KP_equal_'+queries.length,type,kp_rating:7.5,vote_count:410,
+             release_date:year,first_air_date:year,
+             genres:[{name:'драма'}],production_countries:[{name:'США'}]},
+            {id:'KP_below_'+queries.length,type,kp_rating:7.49,vote_count:410,
+             release_date:year,first_air_date:year},
+            {id:'KP_invalid_'+queries.length,type,kp_rating:null,vote_count:410,
+             release_date:year,first_air_date:year}
+        ],total_pages:1});
+    }};
+    const rows=app.getMain();
+    assert.equal(queries.length,3);
+    assert.ok(queries.every(q=>q.includes('ratingFrom=7.5')));
+    assert.equal(rows[0].results.length,3);
+    assert.equal(rows[0].title,'Новинки США · КП 7,5+');
+    assert.ok(rows[0].results.every(x=>x.kp_rating===7.5));
+});
+test('KP catalog searches current and previous years in separate windows', () => {
+    const app=boot({saved:[{id:'kp_new_8',enabled:true}]});
+    const year=new Date().getFullYear(),requests=[];
+    app.Lampa.Api.sources.KP={list:(p,ok)=>{
+        const y=Number((p.filter_url.match(/yearFrom=(\d{4})/)||[])[1]);
+        const to=Number((p.filter_url.match(/yearTo=(\d{4})/)||[])[1]);
+        requests.push({year:y,page:p.page,url:p.filter_url});
+        assert.equal(y,to);
+        const type=p.filter_url.includes('type=FILM')?'movie':'tv';
+        ok({results:Array.from({length:5},(_,i)=>({
+            id:'KP_'+y+'_'+p.filter_url.split('type=')[1]+'_'+i,
+            type,kp_rating:7.5+i/10,vote_count:500,
+            release_date:String(y),first_air_date:String(y),
+            genres:[{name:'драма'}],production_countries:[{name:'США'}]
+        })),total_pages:1});
+    }};
+    const params={url:'surs_kp_new_8',page:1};
+    let first;
+    app.Lampa.Api.sources.SURS.list(params,x=>{first=x;},()=>{throw Error('Empty first catalog page')});
+    assert.equal(requests.length,6);
+    assert.equal(new Set(requests.map(x=>x.year)).size,2);
+    assert.ok(requests.some(x=>x.year===year));
+    assert.ok(requests.some(x=>x.year===year-1));
+    assert.ok(requests.every(x=>x.url.includes('ratingFrom=7.5')));
+    assert.equal(first.results.length,20);
+    assert.equal(first.total_pages,2);
+    params.page=2;
+    let second;
+    app.Lampa.Api.sources.SURS.list(params,x=>{second=x;},()=>{throw Error('Empty second catalog page')});
+    assert.equal(second.results.length,10);
+    assert.equal(new Set(first.results.concat(second.results).map(x=>x.id)).size,30);
+    assert.equal(requests.length,6);
+});
+test('KP catalog request depth is capped at 30 across both years', () => {
+    const app=boot({saved:[{id:'kp_new_8',enabled:true}]});
+    const calls=[];
+    app.Lampa.Api.sources.KP={list:(p,ok)=>{
+        calls.push(p);
+        const type=p.filter_url.includes('type=FILM')?'movie':'tv';
+        const y=Number((p.filter_url.match(/yearFrom=(\d{4})/)||[])[1]);
+        ok({results:[{id:'KP_low_'+y+'_'+p.page+'_'+p.filter_url.split('type=')[1],
+            type,kp_rating:7.49,vote_count:400,release_date:String(y),
+            first_air_date:String(y)}],total_pages:100});
+    }};
+    let noResults=false;
+    app.Lampa.Api.sources.SURS.list({url:'surs_kp_new_8',page:1},
+        ()=>{throw Error('Unexpected result')},()=>{noResults=true});
+    assert.equal(noResults,true);
+    assert.equal(calls.length,30);
+    assert.equal(Math.max(...calls.map(c=>c.page)),5);
+    assert.equal(app.window.SURS_PERFORMANCE.kp8_catalog.pages_requested,30);
+});
+test('KP 7.5 release ignores cached 8.0 selections', () => {
+    const app=boot({saved:[{id:'kp_new_8',enabled:true}]});
+    app.stored.set('surs_preview_cache_v1_kp_new_8_deep_v1',{
+        saved_at:Date.now(),results:[{id:'KP_old',kp_rating:8.2}],total_pages:2
+    });
+    const year=String(new Date().getFullYear());
+    app.Lampa.Api.sources.KP={list:(p,ok)=>{
+        const type=p.filter_url.includes('type=FILM')?'movie':'tv';
+        ok({results:[{id:'KP_new_'+p.filter_url.split('type=')[1],
+            type,kp_rating:7.5,vote_count:450,
+            release_date:year,first_air_date:year,
+            genres:[{name:'драма'}],production_countries:[{name:'США'}]}],total_pages:1});
+    }};
+    const rows=app.getMain();
+    assert.equal(rows[0].results.length,3);
+    assert.ok(rows[0].results.every(x=>x.kp_rating===7.5));
+    assert.ok(app.stored.has('surs_preview_cache_v1_kp_new_8_rating75_v1'));
+});
+
 test('editor JavaScript and stylesheet are deferred', () => {
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
     assert.doesNotMatch(mainSource, /function renderModalContent\(/);
@@ -478,8 +573,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.19/);
-    assert.match(readableSource, /Версия: 3\.9\.19/);
+    assert.match(mainSource, /Версия: 3\.9\.20/);
+    assert.match(readableSource, /Версия: 3\.9\.20/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -907,7 +1002,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.19/);
+    assert.match(source, /Версия: 3\.9\.20/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -990,7 +1085,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '3.9.19');
+    assert.equal(app.window.LampaShelfManager.version, '3.9.20');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 25);
     assert.equal(defaults.filter(x => x.enabled).length, 11);
@@ -1165,7 +1260,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'3.9.19');
+    assert.equal(app.window.LampaShelfManager.version,'3.9.20');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
