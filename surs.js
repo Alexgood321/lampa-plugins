@@ -1754,10 +1754,10 @@ var SMART_US_LIMIT = 40;
 var smartRunning = false, smartWaiters = [];
 
 function smartWindow() {
-var now = new Date();
-var end = now.toISOString().slice(0, 10);
-now.setMonth(now.getMonth() - 18);
-return {start:now.toISOString().slice(0, 10),end:end};
+
+var now=new Date(),end=now.toISOString().slice(0,10);
+var start=new Date(now.getTime()-550*86400000).toISOString().slice(0,10);
+return {start:start,end:end};
 }
 function smartQueries(windowDates) {
 var jobs=[];
