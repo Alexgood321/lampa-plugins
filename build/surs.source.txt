@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 3.9.23 (US Premieres Balanced Quality)
+ * Версия: 3.9.24 (US Premieres Balanced Quality)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1749,7 +1749,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var SMART_US_ID = 'smart_us_new';
     var SMART_US_TITLE = 'Лучшие новинки США';
     var SMART_US_CATALOG_URL = 'surs_smart_us_new';
-    var SMART_US_CACHE = 'smart_us_v3';
+    var SMART_US_CACHE = 'smart_us_v4';
     var SMART_US_LIMIT = 40;
     var smartRunning = false, smartWaiters = [];
 
@@ -1877,37 +1877,98 @@ function smartEnrichFromCache(cards) {
     return count;
 }
 function smartMergeKp(cards,kpCards) {
-    var index={},ambiguous={},used={},count={kp:0,imdb:0};
-    cards.forEach(function(card){
-        var year=smartDate(card).slice(0,4);
-        smartTitles(card).forEach(function(name){
-            var key=card.type+'|'+year+'|'+name;
-            if(index[key]&&index[key]!==card)ambiguous[key]=true;
-            else index[key]=card;
+    var titleMap={},imdbMap={},matched={},count={
+        kp:0,imdb:0,items:0,by_imdb:0,by_title:0,
+        year_offset:0,ambiguous:0
+    };
+    function year(card) {
+        var n=Number(smartDate(card).slice(0,4));
+        return n>=1900&&n<=2200?n:0;
+    }
+    cards.forEach(function(c){
+        var y=year(c);
+        smartTitles(c).forEach(function(name){
+            if(!y||name.length<3)return;
+            var key=c.type+'|'+name;
+            if(!titleMap[key])titleMap[key]=[];
+            if(titleMap[key].indexOf(c)<0)titleMap[key].push(c);
         });
+        var id=String(c.imdb_id||'').trim().toLowerCase();
+        if(/^tt\d{5,12}$/.test(id)){
+            var imdbKey=c.type+'|'+id;
+            if(!imdbMap[imdbKey])imdbMap[imdbKey]=[];
+            imdbMap[imdbKey].push(c);
+        }
     });
-    kpCards.forEach(function(kp){
-        if(!kp||(!smartValidRate(kp.kp_rating)&&!smartValidRate(kp.imdb_rating)))return;
-        var chosen=null,conflict=false,year=smartDate(kp).slice(0,4);
-        smartTitles(kp).forEach(function(name){
-            var key=kp.type+'|'+year+'|'+name;
-            var found=!ambiguous[key]&&index[key];
-            if(!found)return;
-            if(chosen&&chosen!==found)conflict=true;
-            else chosen=found;
-        });
-        if(!chosen||conflict||used[chosen.type+':'+chosen.id])return;
-        if(smartValidRate(kp.kp_rating)&&!smartValidRate(chosen.kp_rating)){
-            chosen.kp_rating=smartValidRate(kp.kp_rating);
-            chosen.surs_smart_kp_votes=smartVotes(kp,['vote_count','kp_vote_count','ratingKinopoiskVoteCount']);
+    (kpCards||[]).forEach(function(kp){
+        if(!kp||!['movie','tv'].includes(kp.type))return;
+        var kpRate=smartValidRate(kp.kp_rating),
+            imdbRate=smartValidRate(kp.imdb_rating);
+        if(!kpRate&&!imdbRate)return;
+        var kpYear=year(kp),kpImdb=String(kp.imdb_id||'').trim().toLowerCase();
+        var chosen=null,method='',delta=0;
+        if(/^tt\d{5,12}$/.test(kpImdb)){
+            var ids=imdbMap[kp.type+'|'+kpImdb]||[];
+            var eligible=ids.filter(function(c){
+                var y=year(c);return !kpYear||!y||Math.abs(y-kpYear)<=2;
+            });
+            if(eligible.length===1){chosen=eligible[0];method='imdb';}
+            else if(eligible.length>1){count.ambiguous++;return;}
+        }
+        if(!chosen){
+            if(!kpYear)return;
+            var original=smartNormalize(kp.original_title||kp.original_name||'');
+            var names=smartTitles(kp),found=[],scoreByCard=[];
+            names.forEach(function(name){
+                if(name.length<3)return;
+                (titleMap[kp.type+'|'+name]||[]).forEach(function(c){
+                    var y=year(c),difference=Math.abs(y-kpYear);
+                    if(!y||difference>1)return;
+                    var currentId=String(c.imdb_id||'').trim().toLowerCase();
+                    if(/^tt\d{5,12}$/.test(currentId)&&
+                        /^tt\d{5,12}$/.test(kpImdb)&&currentId!==kpImdb)return;
+                    var cOriginal=smartNormalize(c.original_title||c.original_name||'');
+                    var score=(difference===0?8:2)+
+                        (name===original&&name===cOriginal?5:
+                        name===original||name===cOriginal?3:1);
+                    var pos=found.indexOf(c);
+                    if(pos<0){found.push(c);scoreByCard.push(score);}
+                    else if(score>scoreByCard[pos])scoreByCard[pos]=score;
+                });
+            });
+            if(!found.length)return;
+            var order=found.map(function(c,i){return {c:c,s:scoreByCard[i]};});
+            order.sort(function(a,b){return b.s-a.s;});
+            if(order.length>1&&order[0].s===order[1].s){
+                count.ambiguous++;return;
+            }
+            chosen=order[0].c;method='title';
+        }
+        if(!chosen)return;
+        var id=chosen.type+':'+chosen.id;
+        if(!matched[id]){matched[id]=true;count.items++;}
+        if(method==='imdb')count.by_imdb++;
+        else count.by_title++;
+        if(kpYear&&year(chosen)&&year(chosen)!==kpYear){
+            count.year_offset++;delta=year(chosen)-kpYear;
+        }
+        if(kpRate&&!smartValidRate(chosen.kp_rating)){
+            chosen.kp_rating=kpRate;
+            chosen.surs_smart_kp_votes=smartVotes(kp,[
+                'vote_count','kp_vote_count','ratingKinopoiskVoteCount'
+            ]);
+            chosen.surs_smart_kp_match=method+(delta?'_year_offset':'');
+            chosen.surs_smart_kp_id=kp.kinopoisk_id||kp.id||'';
             count.kp++;
         }
-        if(smartValidRate(kp.imdb_rating)&&!smartValidRate(chosen.imdb_rating)){
-            chosen.imdb_rating=smartValidRate(kp.imdb_rating);
-            chosen.surs_smart_imdb_votes=smartVotes(kp,['imdb_vote_count','imdb_votes','imdbVoteCount','ratingImdbVoteCount']);
+        if(imdbRate&&!smartValidRate(chosen.imdb_rating)){
+            chosen.imdb_rating=imdbRate;
+            chosen.surs_smart_imdb_votes=smartVotes(kp,[
+                'imdb_vote_count','imdb_votes','imdbVoteCount','ratingImdbVoteCount'
+            ]);
+            chosen.surs_smart_imdb_match=method+(delta?'_year_offset':'');
             count.imdb++;
         }
-        used[chosen.type+':'+chosen.id]=true;
     });
     return count;
 }
@@ -1933,7 +1994,12 @@ function smartRate(card,dates) {
     if(imdb)sources.push(imdb);
     var total=0,weights=0;
     sources.forEach(function(s){if(s){total+=s.adjusted*s.weight;weights+=s.weight;}});
-    var quality=weights?total/weights:0;
+    var qualityRaw=weights?total/weights:0;
+    var coverage=sources.filter(Boolean).length;
+    // Reliability belongs to the 60% quality component, not a new bonus.
+    // Missing independent ratings lower certainty but never manufacture good scores.
+    var coveragePenalty=coverage===1?.12:(coverage===2?.04:0);
+    var quality=Math.max(0,qualityRaw-coveragePenalty);
     var popularity=Math.min(1,Math.log(1+Math.max(0,Number(card.popularity)||0))/Math.log(251));
     var age=smartAge(smartDate(card));
     var freshness=Math.max(0,1-age/550);
@@ -1957,6 +2023,14 @@ function smartRate(card,dates) {
     card.surs_smart_breakdown={
         score:round(score),quality:round(quality),floor:qualityFloor,
         passes:quality>=qualityFloor,points:points,
+        rating_coverage:coverage,coverage_percent:Math.round(coverage/3*100),
+        quality_before_coverage:round(qualityRaw),
+        coverage_penalty:round(coveragePenalty),
+        missing_sources:['TMDB','КП','IMDb'].filter(function(name){
+            return !sources.some(function(s){return s.source===name;});
+        }),
+        kp_match:card.surs_smart_kp_match||'',
+        imdb_match:card.surs_smart_imdb_match||'',
         ratings:sources.map(function(s){return {source:s.source,rating:s.raw,votes:s.votes,
             adjusted:round(s.adjusted),confidence:round(s.confidence)};})
     };
@@ -2014,7 +2088,7 @@ function smartRank(cards,dates) {
         if(typeof done==='function')smartWaiters.push(done);
         var oldCache=readSursPreviewCache(SMART_US_CACHE),oldDiag=smartReadDiagnostic();
         var dates=smartWindow(),cards=[],kpCards=[],seen={};
-        var metrics={version:'3.9.23',phase:'loading',status:'loading',started_at:Date.now(),
+        var metrics={version:'3.9.24',phase:'loading',status:'loading',started_at:Date.now(),
             tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
             kp_requests:0,kp_done:0,kp_failed:0,kp_status:'loading',
             kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
@@ -3943,7 +4017,7 @@ function smartRank(cards,dates) {
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.23';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.24';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4454,7 +4528,7 @@ function smartRank(cards,dates) {
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v3.9.23 (Fixed & Configurable) успешно инициализирован.');
+            console.log('SURS Pro v3.9.24 (Fixed & Configurable) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4486,7 +4560,7 @@ function smartRank(cards,dates) {
         smartDiagnostics: smartReadDiagnostic,
         openSmartDiagnostics: openSmartDiagnostics,
         refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-        version: '3.9.23'
+        version: '3.9.24'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
