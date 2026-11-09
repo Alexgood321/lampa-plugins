@@ -2139,8 +2139,27 @@ try{return Lampa.Storage.get(SMART_DIAG_KEY,null);}catch(e){return null;}
 function smartTopTen(cards){
 return (cards||[]).slice(0,10).map(function(c,i){
 return {rank:i+1,id:c.id,type:c.type,title:c.title||c.name||'Без названия',
-score:c.surs_smart_score,breakdown:c.surs_smart_breakdown};
+score:c.surs_smart_score,premiere:smartDate(c),
+period:smartPeriodLabel(smartPeriod(c)),
+season:c.surs_smart_season_number||0,
+breakdown:c.surs_smart_breakdown};
 });
+}
+var SMART_TV_SEASON_DETAILS_LIMIT=20;
+function smartFindRecentSeason(details,dates){
+if(!details||!Array.isArray(details.seasons))return null;
+var best=null;
+details.seasons.forEach(function(s){
+if(!s||Number(s.season_number)<2||!Number.isInteger(Number(s.season_number)))
+return;
+var day=String(s.air_date||'').slice(0,10);
+if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||day<dates.start||day>dates.end)
+return;
+if(!isFinite(Date.parse(day+'T00:00:00Z')))return;
+if(!best||day>best.date)
+best={date:day,number:Number(s.season_number)};
+});
+return best;
 }
 function smartBuild(owner,params,done){
 if(smartRunning){if(typeof done==='function')smartWaiters.push(done);return;}
@@ -2153,6 +2172,9 @@ tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
 kp_requests:0,kp_done:0,kp_failed:0,kp_status:'loading',
 kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
 targeted_requests:0,candidates:0,selected:0,rejected_quality:0,
+season_candidates:0,season_detail_requests:0,season_detail_done:0,
+season_detail_failed:0,season_verified:0,season_unverified:0,
+period_recent:0,period_mid:0,period_reserve:0,recent_top10:0,
 top10:[],timeout:false};
 window.SURS_PERFORMANCE.smart_us=metrics;
 var previewSent=false,finished=false,tmdbDone=false,broadDone=false,kpDone=false,
@@ -2173,6 +2195,11 @@ metrics.kp_matches+=m.kp;metrics.imdb_matches+=m.imdb;
 var selected=smartRank(cards,dates);
 metrics.candidates=cards.length;metrics.selected=selected.length;
 metrics.rejected_quality=cards.filter(function(c){return !c.surs_smart_passes_quality;}).length;
+metrics.season_unverified=cards.filter(function(c){return c.surs_smart_pending_season;}).length;
+metrics.period_recent=selected.filter(function(c){return smartPeriod(c)===0;}).length;
+metrics.period_mid=selected.filter(function(c){return smartPeriod(c)===1;}).length;
+metrics.period_reserve=selected.filter(function(c){return smartPeriod(c)===2;}).length;
+metrics.recent_top10=selected.slice(0,10).filter(function(c){return smartPeriod(c)===0;}).length;
 metrics.coverage_two=selected.filter(function(c){return c.surs_smart_source_count>=2;}).length;
 metrics.coverage_three=selected.filter(function(c){return c.surs_smart_source_count>=3;}).length;
 metrics.coverage_kp=selected.filter(function(c){return smartValidRate(c.kp_rating)>0;}).length;
@@ -2329,7 +2356,7 @@ if(replied)return;
 replied=true;
 if(!finished){
 metrics.tmdb_done++;
-if(json&&Array.isArray(json.results))smartCandidate(json,job.type,dates,seen,cards);
+if(json&&Array.isArray(json.results))smartCandidate(json,job.type,dates,seen,cards,job);
 else metrics.tmdb_failed++;
 }
 if(--pending===0&&!finished)doneBatch();
@@ -2338,11 +2365,67 @@ try{owner.get(job.url,params,receive,function(){receive(null);});}
 catch(e){receive(null);}
 });
 }
-function tmdbFinished(){tmdbDone=true;searchMissing();progress();}
-batch(jobs.filter(function(j){return /[?&]page=1(?:&|$)/.test(j.url);}),function(){
-var enough=cards.filter(function(c){smartRate(c,dates);return c.surs_smart_passes_quality;}).length>=60;
-if(enough)tmdbFinished();
-else batch(jobs.filter(function(j){return /[?&]page=2(?:&|$)/.test(j.url);}),tmdbFinished);
+function seasonDetailsDone(){
+tmdbDone=true;searchMissing();progress();
+}
+function verifySeasonPremieres(){
+var candidates=cards.filter(function(c){
+return c.type==='tv'&&c.surs_smart_season_candidate;
+});
+metrics.season_candidates=candidates.length;
+candidates.sort(function(a,b){
+if(!!a.surs_smart_pending_season!==!!b.surs_smart_pending_season)
+return a.surs_smart_pending_season?-1:1;
+return Number(b.vote_count||0)-Number(a.vote_count||0);
+});
+var queue=candidates.slice(0,SMART_TV_SEASON_DETAILS_LIMIT);
+if(!queue.length)return seasonDetailsDone();
+var index=0,active=0,left=queue.length;
+function pump(){
+if(finished)return;
+while(index<queue.length&&active<3&&!finished){
+(function(c){
+active++;metrics.tmdb_requests++;metrics.season_detail_requests++;
+var replied=false,timer=setTimeout(function(){receive(null);},7500);
+function receive(details){
+if(replied)return;
+replied=true;clearTimeout(timer);
+if(finished)return;
+active--;left--;
+metrics.tmdb_done++;metrics.season_detail_done++;
+if(!details||!Array.isArray(details.seasons)){
+metrics.season_detail_failed++;
+metrics.tmdb_failed++;
+}else if(!details.id||String(details.id)===String(c.id)){
+var latest=smartFindRecentSeason(details,dates);
+if(latest){
+c.surs_smart_premiere_date=latest.date;
+c.surs_smart_premiere_type='season';
+c.surs_smart_season_number=latest.number;
+c.surs_smart_pending_season=false;
+metrics.season_verified++;
+}
+}else{
+metrics.season_detail_failed++;
+metrics.tmdb_failed++;
+}
+if(left===0)seasonDetailsDone();
+else pump();
+}
+try{owner.get('tv/'+c.id,params,receive,function(){receive(null);});}
+catch(e){receive(null);}
+})(queue[index++]);
+}
+}
+pump();
+}
+batch(jobs.filter(function(j){return j.page===1;}),function(){
+var enough=cards.filter(function(c){
+smartRate(c,dates);
+return !c.surs_smart_pending_season&&c.surs_smart_passes_quality;
+}).length>=60;
+if(enough)verifySeasonPremieres();
+else batch(jobs.filter(function(j){return j.page===2;}),verifySeasonPremieres);
 });
 kp8FindSource(kpSource);
 }
@@ -2372,6 +2455,9 @@ d.kp_match.indexOf('year_offset')>=0?'по названию, соседний г
 if(d.imdb_match)matches.push('IMDb: '+(d.imdb_match==='imdb'?'по IMDb ID':
 d.imdb_match.indexOf('year_offset')>=0?'по названию, соседний год':'по названию и году'));
 var items=[
+{title:'Премьера: '+(d.premiere_date||c.premiere||'неизвестна')+
+' · '+(d.premiere_kind||'фильм/сериал')+
+' · период '+(d.period||c.period||'неизвестен')},
 {title:'Источников: '+(d.rating_coverage||1)+'/3 · покрытие '+(d.coverage_percent||33)+'%'},
 {title:'Не получено: '+(missing.length?missing.join(', '):'все источники представлены')},
 {title:'Качество '+(p.quality||0)+'/60 · Популярность '+(p.popularity||0)+'/15'},
@@ -2404,7 +2490,8 @@ var state=live.phase==='loading'?'loading':(data.phase||'cached');
 var items=[
 {title:'Версия SURS '+(data.version||'3.9.26')+' · '+smartStatusText(state)},
 {title:'Статус отражает завершение запросов, а не полноту рейтингов'},
-{title:'Порядок: качество прежде всего; остальные факторы только при близких оценках'},
+{title:'Порядок: сначала 0–180, затем 181–365, затем 366–550 дней'},
+{title:'Внутри каждого периода: качество прежде всего; популярность при равенстве'},
 {title:'SURS: качество 98,8 балла + вторичные факторы до 1,2 балла'},
 {title:'TMDB '+(data.tmdb_done||0)+'/'+(data.tmdb_requests||0)+
 ' · ошибок '+(data.tmdb_failed||0)},
@@ -2412,6 +2499,14 @@ var items=[
 ' · '+smartStatusText(data.kp_status)+' · ошибок '+(data.kp_failed||0)},
 {title:'Кандидатов '+(data.candidates||0)+' · отобрано '+(data.selected||0)+
 ' · исключено '+(data.rejected_quality||0)},
+{title:'Релизы 0–180 дней: '+(data.period_recent||0)+
+' · 181–365: '+(data.period_mid||0)+
+' · 366–550: '+(data.period_reserve||0)},
+{title:'Свежих в топ-10: '+(data.recent_top10||0)+
+' · подтверждено новых сезонов '+(data.season_verified||0)},
+{title:'Проверено сезонов: '+(data.season_detail_done||0)+'/'+
+(data.season_detail_requests||0)+' · без подтверждения '+
+(data.season_unverified||0)+' · ошибок '+(data.season_detail_failed||0)},
 {title:'Покрытие рейтингов: '+(data.coverage_percent||0)+
 '% · 2+ источника '+(data.coverage_two||0)+'/'+(data.selected||0)+
 ' · все три '+(data.coverage_three||0)},
@@ -2425,7 +2520,8 @@ new Date(data.checked_at).toLocaleString('ru-RU'):'ещё не завершён'
 (data.top10||[]).forEach(function(c){
 var d=c.breakdown||{};
 var found=(d.ratings||[]).map(function(r){return r.source;}).join('+')||'нет данных';
-items.push({title:'#'+c.rank+' · '+c.title+' · SURS '+c.score+
+items.push({title:'#'+c.rank+' · '+c.title+' · '+(c.premiere||'?')+
+' · '+(c.period||'?')+' · SURS '+c.score+
 ' · '+found+' ('+(d.rating_coverage||1)+'/3)',
 action:'card',card:c});
 });
