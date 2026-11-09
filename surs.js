@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 3.9.21 (US Premieres Balanced Quality)
+* Версия: 3.9.22 (US Premieres Balanced Quality)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1749,7 +1749,7 @@ results: result.results.slice(0, 60)
 var SMART_US_ID = 'smart_us_new';
 var SMART_US_TITLE = 'Лучшие новинки США';
 var SMART_US_CATALOG_URL = 'surs_smart_us_new';
-var SMART_US_CACHE = 'smart_us_v1';
+var SMART_US_CACHE = 'smart_us_v2';
 var SMART_US_LIMIT = 40;
 var smartRunning = false, smartWaiters = [];
 
@@ -1830,114 +1830,165 @@ source:'tmdb',type:type,media_type:type
 cards.push(card);
 });
 }
+function smartValidRate(v) {
+var n=Number(v);return isFinite(n)&&n>=1&&n<=10?n:0;
+}
+function smartVotes(data,keys) {
+if(!data)return 0;
+for(var i=0;i<keys.length;i++){
+var n=Number(data[keys[i]]);
+if(isFinite(n)&&n>0)return Math.floor(n);
+}
+return 0;
+}
 function smartOldKpCache() {
 try {
-var raw=Lampa.Storage.cache ? Lampa.Storage.cache('kp_rating',500,{}) :
-Lampa.Storage.get('kp_rating',{});
-return raw && typeof raw==='object' ? raw : {};
-} catch(e) {return {};}
+var raw=Lampa.Storage.cache?Lampa.Storage.cache('kp_rating',500,{}):Lampa.Storage.get('kp_rating',{});
+return raw&&typeof raw==='object'?raw:{};
+}catch(e){return {};}
 }
 function smartEnrichFromCache(cards) {
-var stored=smartOldKpCache(), count=0;
+var legacy=smartOldKpCache(),typed={};
+try {typed=Lampa.Storage.get('kp_rating_pro_cache_v1',{})||{};}catch(e){}
+var count={kp:0,imdb:0},now=Date.now();
 cards.forEach(function(c) {
-var data=stored[String(c.id)];
-if (!data || !Number(data.timestamp) ||
-Date.now()-Number(data.timestamp)>14*86400000) return;
+var old=legacy[String(c.id)];
 
+if(old&&Number(old.timestamp)>0&&now-Number(old.timestamp)<=14*86400000&&
+old.type===c.type&&Number(old.year)===Number(smartDate(c).slice(0,4))&&
+smartTitles(c).indexOf(smartNormalize(old.title))>=0) {
+if(!smartValidRate(c.kp_rating)&&smartValidRate(old.kp)){
+c.kp_rating=smartValidRate(old.kp);c.surs_smart_kp_votes=0;count.kp++;
+}
+if(!smartValidRate(c.imdb_rating)&&smartValidRate(old.imdb)){
+c.imdb_rating=smartValidRate(old.imdb);c.surs_smart_imdb_votes=0;count.imdb++;
+}
+}
 
-if (data.type!==c.type ||
-Number(data.year)!==Number(smartDate(c).slice(0,4)) ||
-smartTitles(c).indexOf(smartNormalize(data.title))<0) return;
-if (Number(data.kp)>=1 && Number(data.kp)<=10) {
-c.kp_rating=Number(data.kp);
-c.surs_smart_kp_votes=0;
-count++;
+var item=typed['tmdb:'+c.type+':'+c.id];
+if(!item||!Number(item.expires)||Number(item.expires)<=now)return;
+if(!smartValidRate(c.kp_rating)&&smartValidRate(item.rate)){
+c.kp_rating=smartValidRate(item.rate);c.surs_smart_kp_votes=0;count.kp++;
+}
+if(!smartValidRate(c.imdb_rating)&&smartValidRate(item.imdb)){
+c.imdb_rating=smartValidRate(item.imdb);c.surs_smart_imdb_votes=0;count.imdb++;
 }
 });
 return count;
 }
 function smartMergeKp(cards,kpCards) {
-var tmdbIndex={},ambiguous={},matches=0;
-cards.forEach(function(card) {
+var index={},ambiguous={},used={},count={kp:0,imdb:0};
+cards.forEach(function(card){
 var year=smartDate(card).slice(0,4);
-smartTitles(card).forEach(function(name) {
+smartTitles(card).forEach(function(name){
 var key=card.type+'|'+year+'|'+name;
-if (tmdbIndex[key] && tmdbIndex[key]!==card) ambiguous[key]=true;
-else tmdbIndex[key]=card;
+if(index[key]&&index[key]!==card)ambiguous[key]=true;
+else index[key]=card;
 });
 });
-var used={};
-kpCards.forEach(function(kp) {
-if (!kp || !Number(kp.kp_rating) ||
-Number(kp.kp_rating)<1 || Number(kp.kp_rating)>10) return;
-var year=smartDate(kp).slice(0,4);
-var chosen=null;
-smartTitles(kp).forEach(function(name) {
+kpCards.forEach(function(kp){
+if(!kp||(!smartValidRate(kp.kp_rating)&&!smartValidRate(kp.imdb_rating)))return;
+var chosen=null,conflict=false,year=smartDate(kp).slice(0,4);
+smartTitles(kp).forEach(function(name){
 var key=kp.type+'|'+year+'|'+name;
-if (!ambiguous[key] && tmdbIndex[key] &&
-(!chosen || chosen===tmdbIndex[key]))
-chosen=tmdbIndex[key];
+var found=!ambiguous[key]&&index[key];
+if(!found)return;
+if(chosen&&chosen!==found)conflict=true;
+else chosen=found;
 });
-if (!chosen || used[chosen.type+':'+chosen.id]) return;
-
-if (!Number(chosen.kp_rating)) chosen.kp_rating=Number(kp.kp_rating);
-chosen.surs_smart_kp_votes=Number(kp.vote_count)||0;
+if(!chosen||conflict||used[chosen.type+':'+chosen.id])return;
+if(smartValidRate(kp.kp_rating)&&!smartValidRate(chosen.kp_rating)){
+chosen.kp_rating=smartValidRate(kp.kp_rating);
+chosen.surs_smart_kp_votes=smartVotes(kp,['vote_count','kp_vote_count','ratingKinopoiskVoteCount']);
+count.kp++;
+}
+if(smartValidRate(kp.imdb_rating)&&!smartValidRate(chosen.imdb_rating)){
+chosen.imdb_rating=smartValidRate(kp.imdb_rating);
+chosen.surs_smart_imdb_votes=smartVotes(kp,['imdb_vote_count','imdb_votes','imdbVoteCount','ratingImdbVoteCount']);
+count.imdb++;
+}
 used[chosen.type+':'+chosen.id]=true;
-matches++;
 });
-return matches;
+return count;
 }
 function smartBayes(rating,votes,prior) {
-var n=Math.max(0,Number(votes)||0), r=Math.max(0,Math.min(10,Number(rating)||0));
-return (n*r+prior*6.8)/(n+prior);
+var n=Math.max(0,Number(votes)||0),r=smartValidRate(rating);
+return r?(n*r+prior*6.8)/(n+prior):0;
 }
-function smartRate(card,windowDates) {
-var votes=Number(card.vote_count)||0;
-var tm=smartBayes(card.vote_average,votes,card.type==='tv'?65:110);
-var kp=Number(card.kp_rating)||0,kpv=Number(card.surs_smart_kp_votes)||0;
+function smartEvidence(rating,votes,prior,name){
+var r=smartValidRate(rating),n=Math.max(0,Number(votes)||0);
+if(!r)return null;
+var confidence=n?n/(n+prior):.25;
 
-
-var kpWeighted=kp?(kpv>0?smartBayes(kp,kpv,140):kp):0;
-var kpConfidence=kpv>0?kpv/(kpv+140):.18;
-var quality=kp ? (1-.42*kpConfidence)*tm+
-.42*kpConfidence*kpWeighted : tm;
-var pop=Math.max(0,Number(card.popularity)||0);
-var interest=Math.min(1,Math.log(1+pop)/Math.log(1+250));
+return {source:name,raw:r,votes:n,confidence:confidence,
+adjusted:n?smartBayes(r,n,prior):6.8+(r-6.8)*.32,
+weight:.30+.70*confidence};
+}
+function smartRate(card,dates) {
+var tmdbVotes=smartVotes(card,['vote_count']);
+var sources=[smartEvidence(card.vote_average,tmdbVotes,card.type==='tv'?155:180,'TMDB')];
+var kp=smartEvidence(card.kp_rating,card.surs_smart_kp_votes,180,'КП');
+var imdb=smartEvidence(card.imdb_rating,card.surs_smart_imdb_votes,240,'IMDb');
+if(kp)sources.push(kp);
+if(imdb)sources.push(imdb);
+var total=0,weights=0;
+sources.forEach(function(s){if(s){total+=s.adjusted*s.weight;weights+=s.weight;}});
+var quality=weights?total/weights:0;
+var popularity=Math.min(1,Math.log(1+Math.max(0,Number(card.popularity)||0))/Math.log(251));
 var age=smartAge(smartDate(card));
 var freshness=Math.max(0,1-age/550);
-var consensus=kp && kpv>0?Math.max(0,1-Math.abs(tm-kpWeighted)/3):.5;
-var score= .45*quality/10+.25*interest+
-.20*freshness+.10*consensus;
-card.surs_smart_score=Math.round(score*10000)/100;
-card.surs_smart_source_count=kp?2:1;
+var agreement=.5;
+if(sources.length>1){
+var maxDifference=0;
+for(var i=0;i<sources.length;i++)for(var j=i+1;j<sources.length;j++)
+maxDifference=Math.max(maxDifference,Math.abs(sources[i].adjusted-sources[j].adjusted));
+agreement=Math.max(0,1-maxDifference/3);
+}
+var qualityFloor=age<=45?6.75:(age<=120?6.95:7.10);
+var round=function(x){return Math.round(x*100)/100;};
+var points={quality:round(60*quality/10),popularity:round(15*popularity),
+freshness:round(15*freshness),agreement:round(10*agreement)};
+var score=60*quality/10+15*popularity+15*freshness+10*agreement;
+card.surs_smart_score=round(score);
+card.surs_smart_quality=round(quality);
+card.surs_smart_quality_floor=qualityFloor;
+card.surs_smart_passes_quality=quality>=qualityFloor;
+card.surs_smart_source_count=sources.length;
+card.surs_smart_breakdown={
+score:round(score),quality:round(quality),floor:qualityFloor,
+passes:quality>=qualityFloor,points:points,
+ratings:sources.map(function(s){return {source:s.source,rating:s.raw,votes:s.votes,
+adjusted:round(s.adjusted),confidence:round(s.confidence)};})
+};
 return score;
 }
 function smartRank(cards,dates) {
-cards.forEach(function(card){smartRate(card,dates);});
-cards.sort(function(a,b) {
-if (a.surs_smart_score!==b.surs_smart_score)
-return b.surs_smart_score-a.surs_smart_score;
+cards.forEach(function(c){smartRate(c,dates);});
+var qualityCandidates=cards.filter(function(c){return c.surs_smart_passes_quality;});
+qualityCandidates.sort(function(a,b){
+if(a.surs_smart_score!==b.surs_smart_score)return b.surs_smart_score-a.surs_smart_score;
+if(a.surs_smart_quality!==b.surs_smart_quality)return b.surs_smart_quality-a.surs_smart_quality;
+if(Number(a.vote_count||0)!==Number(b.vote_count||0))
 return Number(b.vote_count||0)-Number(a.vote_count||0);
+return String(a.type)+a.id<String(b.type)+b.id?-1:1;
 });
+var selected=qualityCandidates.slice(0,SMART_US_LIMIT);
 
-var selected=[],seen={},counts={movie:0,tv:0};
-cards.forEach(function(card) {
-var type=card.type;
-if (selected.length>=SMART_US_LIMIT) return;
-if (counts[type]>=Math.floor(SMART_US_LIMIT*.65)) return;
-if (selected.length>=3 &&
-selected.slice(-3).every(function(x){return x.type===type})) return;
-var key=type+':'+card.id;
-if (seen[key]) return;
-seen[key]=true;counts[type]++;selected.push(card);
-});
-cards.forEach(function(card) {
-if (selected.length>=SMART_US_LIMIT) return;
-var key=card.type+':'+card.id;
-if (!seen[key]) {seen[key]=true;selected.push(card);}
-});
+for(var i=3;i<Math.min(selected.length,10);i++){
+var type=selected[i].type;
+if(selected[i-1].type!==type||selected[i-2].type!==type||selected[i-3].type!==type)continue;
+for(var j=i+1;j<Math.min(selected.length,i+8);j++){
+var alternative=selected[j];
+if(alternative.type===type)continue;
+if(selected[i].surs_smart_score-alternative.surs_smart_score>1.0)continue;
+if(selected[i].surs_smart_quality-alternative.surs_smart_quality>.15)continue;
+selected.splice(j,1);selected.splice(i,0,alternative);break;
+}
+}
+selected.forEach(function(c,i){c.surs_smart_rank=i+1;});
 return selected;
 }
+
 function smartMakeResult(cards) {
 return { title:SMART_US_TITLE,url:SMART_US_CATALOG_URL,
 source:'SURS',page:1,total_pages:Math.max(1,Math.ceil(cards.length/20)),
@@ -1949,7 +2000,7 @@ if (smartRunning) {smartWaiters.push(done);return;}
 smartRunning=true;smartWaiters.push(done);
 var dates=smartWindow(),seen={},cards=[],kpCards=[],metrics={
 status:'loading',tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
-kp_requests:0,kp_done:0,kp_matches:0,cache_kp_matches:0,
+kp_requests:0,kp_done:0,kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
 candidates:0,selected:0,timeout:false
 };
 window.SURS_PERFORMANCE.smart_us=metrics;
@@ -1959,10 +2010,18 @@ var timer=setTimeout(function(){metrics.timeout=true;finish();},4200);
 function finish() {
 if (settled) return;
 settled=true;clearTimeout(timer);if(kpGrace!==null)clearTimeout(kpGrace);
-metrics.cache_kp_matches=smartEnrichFromCache(cards);
-metrics.kp_matches=smartMergeKp(cards,kpCards);
+var cacheMatches=smartEnrichFromCache(cards),kpMatches=smartMergeKp(cards,kpCards);
+metrics.cache_kp_matches=cacheMatches.kp;
+metrics.cache_imdb_matches=cacheMatches.imdb;
+metrics.kp_matches=kpMatches.kp;
+metrics.imdb_matches=kpMatches.imdb;
 var picked=smartRank(cards,dates),result=smartMakeResult(picked);
 metrics.candidates=cards.length;metrics.selected=picked.length;
+metrics.rejected_quality=cards.filter(function(c){return !c.surs_smart_passes_quality;}).length;
+metrics.top10=picked.slice(0,10).map(function(c){return {
+rank:c.surs_smart_rank,id:c.id,type:c.type,title:c.title||c.name,
+score:c.surs_smart_score,breakdown:c.surs_smart_breakdown
+};});
 metrics.status=picked.length?'ready':'empty';
 if(picked.length)saveSursPreviewCache(SMART_US_CACHE,result);
 smartRunning=false;
@@ -1996,7 +2055,9 @@ catch(e){receive(null);}
 });
 }
 batch(jobs.filter(function(j){return /[?&]page=1(?:&|$)/.test(j.url);}),function(){
-if(cards.length>=70) {tmdbDone=true;return maybeFinish();}
+if(cards.filter(function(c){smartRate(c,dates);return c.surs_smart_passes_quality;}).length>=60){
+tmdbDone=true;return maybeFinish();
+}
 batch(jobs.filter(function(j){return /[?&]page=2(?:&|$)/.test(j.url);}),function(){
 tmdbDone=true;maybeFinish();
 });
@@ -2031,7 +2092,11 @@ var cached=readSursPreviewCache(SMART_US_CACHE);
 if(cached) {
 callback(smartMakeResult(cached.results));
 window.SURS_PERFORMANCE.smart_us={
-status:'cached',cache_hit:true,selected:cached.results.length
+status:'cached',cache_hit:true,selected:cached.results.length,
+top10:cached.results.slice(0,10).map(function(c){return {
+rank:c.surs_smart_rank,id:c.id,type:c.type,title:c.title||c.name,
+score:c.surs_smart_score,breakdown:c.surs_smart_breakdown
+};})
 };
 if(cached.age<4*3600000) return;
 smartBuild(owner,params,function(){});
@@ -3724,7 +3789,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.21';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.22';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -4227,7 +4292,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v3.9.21 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v3.9.22 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4256,7 +4321,7 @@ if (defaults) refreshSursHome(name);
 return defaults;
 },
 getDefaultSectionShelves: getDefaultSectionShelves,
-version: '3.9.21'
+version: '3.9.22'
 };
 
 
