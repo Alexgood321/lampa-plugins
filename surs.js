@@ -2113,6 +2113,13 @@ metrics.kp_matches+=m.kp;metrics.imdb_matches+=m.imdb;
 var selected=smartRank(cards,dates);
 metrics.candidates=cards.length;metrics.selected=selected.length;
 metrics.rejected_quality=cards.filter(function(c){return !c.surs_smart_passes_quality;}).length;
+metrics.coverage_two=selected.filter(function(c){return c.surs_smart_source_count>=2;}).length;
+metrics.coverage_three=selected.filter(function(c){return c.surs_smart_source_count>=3;}).length;
+metrics.coverage_kp=selected.filter(function(c){return smartValidRate(c.kp_rating)>0;}).length;
+metrics.coverage_imdb=selected.filter(function(c){return smartValidRate(c.imdb_rating)>0;}).length;
+metrics.coverage_percent=selected.length?Math.round(
+selected.reduce(function(total,c){return total+c.surs_smart_source_count;},0)/
+(selected.length*3)*100):0;
 metrics.top10=smartTopTen(selected);
 return selected;
 }
@@ -2297,35 +2304,64 @@ smartBuild(owner,params,callback);
 }
 function smartDetailItems(c){
 var d=c.breakdown||{},p=d.points||{};
-return [
+var quality=Number(d.quality)||0, raw=Number(d.quality_before_coverage)||0;
+var missing=d.missing_sources||[];
+var matches=[];
+if(d.kp_match)matches.push('КП: '+(d.kp_match==='imdb'?'по IMDb ID':
+d.kp_match.indexOf('year_offset')>=0?'по названию, соседний год':'по названию и году'));
+if(d.imdb_match)matches.push('IMDb: '+(d.imdb_match==='imdb'?'по IMDb ID':
+d.imdb_match.indexOf('year_offset')>=0?'по названию, соседний год':'по названию и году'));
+var items=[
+{title:'Источников: '+(d.rating_coverage||1)+'/3 · покрытие '+(d.coverage_percent||33)+'%'},
+{title:'Не получено: '+(missing.length?missing.join(', '):'все источники представлены')},
 {title:'Качество '+(p.quality||0)+'/60 · Популярность '+(p.popularity||0)+'/15'},
 {title:'Свежесть '+(p.freshness||0)+'/15 · Согласованность '+(p.agreement||0)+'/10'},
-{title:'SURS '+c.score+' · качество '+(d.quality||0)+'/10 · порог '+(d.floor||0)}
-].concat((d.ratings||[]).map(function(r){
+{title:'SURS '+c.score+' · качество '+quality+'/10 · порог '+(d.floor||0)},
+{title:'Коррекция за неполные данные: −'+(d.coverage_penalty||0)+
+' · до коррекции '+raw+'/10'}
+];
+if(matches.length)items.push({title:'Сопоставление: '+matches.join(' · ')});
+return items.concat((d.ratings||[]).map(function(r){
 return {title:r.source+' '+r.rating+' · голосов '+(r.votes||'неизвестно')+
 ' · скорр. '+r.adjusted+' · доверие '+Math.round(r.confidence*100)+'%'};
 }));
+}
+function smartStatusText(s){
+var values={loading:'обновление',provisional:'предварительная выдача',
+complete:'запросы завершены',partial:'завершено с ограничениями',
+cached:'из кэша',ready:'источник ответил',unavailable:'недоступен',
+timeout:'превышено время ожидания'};
+return values[s]||s||'нет данных';
 }
 function openSmartDiagnostics(){
 if(!Lampa.Select||!Lampa.Select.show)return;
 var live=window.SURS_PERFORMANCE.smart_us||{};
 var data=live.top10&&live.top10.length?live:(smartReadDiagnostic()||live);
+var state=live.phase==='loading'?'loading':(data.phase||'cached');
 var items=[
-{title:'Состояние: '+(live.phase==='loading'?'обновление в фоне':data.phase||'кэш')},
+{title:'Версия SURS '+(data.version||'3.9.24')+' · '+smartStatusText(state)},
+{title:'Статус отражает завершение запросов, а не полноту рейтингов'},
 {title:'TMDB '+(data.tmdb_done||0)+'/'+(data.tmdb_requests||0)+
 ' · ошибок '+(data.tmdb_failed||0)},
 {title:'КП '+(data.kp_done||0)+'/'+(data.kp_requests||0)+
-' · '+(data.kp_status||'нет данных')+' · ошибок '+(data.kp_failed||0)},
+' · '+smartStatusText(data.kp_status)+' · ошибок '+(data.kp_failed||0)},
 {title:'Кандидатов '+(data.candidates||0)+' · отобрано '+(data.selected||0)+
 ' · исключено '+(data.rejected_quality||0)},
-{title:'КП совпадений '+(data.kp_matches||0)+' · IMDb '+(data.imdb_matches||0)+
-' · адресных запросов '+(data.targeted_requests||0)},
-{title:'Расчёт '+(data.checked_at?
+{title:'Покрытие рейтингов: '+(data.coverage_percent||0)+
+'% · 2+ источника '+(data.coverage_two||0)+'/'+(data.selected||0)+
+' · все три '+(data.coverage_three||0)},
+{title:'У отобранных: КП '+(data.coverage_kp||0)+' · IMDb '+(data.coverage_imdb||0)},
+{title:'Новых оценок: КП '+(data.kp_matches||0)+' · IMDb '+(data.imdb_matches||0)+
+' · адресных проверок '+(data.targeted_requests||0)},
+{title:'Последний расчёт '+(data.checked_at?
 new Date(data.checked_at).toLocaleString('ru-RU'):'ещё не завершён')},
-{title:'Пересчитать в фоне',action:'refresh'}
+{title:'Пересчитать подборку в фоне',action:'refresh'}
 ];
 (data.top10||[]).forEach(function(c){
-items.push({title:'#'+c.rank+' · '+c.title+' · SURS '+c.score,
+var d=c.breakdown||{};
+var found=(d.ratings||[]).map(function(r){return r.source;}).join('+')||'нет данных';
+items.push({title:'#'+c.rank+' · '+c.title+' · SURS '+c.score+
+' · '+found+' ('+(d.rating_coverage||1)+'/3)',
 action:'card',card:c});
 });
 Lampa.Select.show({title:'SURS · Лучшие новинки США',items:items,
