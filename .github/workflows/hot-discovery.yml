@@ -1,6 +1,11 @@
 name: SURS Hot Discovery builder
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/hot-discovery.cjs
+      - .github/workflows/hot-discovery.yml
   schedule:
     - cron: '17 */3 * * *'
   workflow_dispatch:
