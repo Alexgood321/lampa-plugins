@@ -885,6 +885,34 @@ test('smart 3.9.23 background requests are bounded even with many TMDB candidate
     assert.equal(m.phase,'complete');
 });
 
+
+test('smart 3.9.23 freezes More pagination while a new ranking replaces cache', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
+    const f=smartFixtures(),day=f.dates[0];
+    app.Lampa.Api.sources.SURS.get=(q,p,done)=>{
+        const tv=q.includes('discover/tv');
+        done({results:Array.from({length:20},(_,i)=>f.card(
+            (tv?8000:9000)+i,tv?'tv':'movie','Paged '+(tv?'Series ':'Movie ')+i,
+            8.1,3000,150-i,day)),total_pages:1});
+    };
+    app.getMain();
+    const initial=app.stored.get('surs_preview_cache_v1_smart_us_v3');
+    assert.ok(initial&&initial.results.length===40);
+    const expected=initial.results.map(x=>x.type+':'+x.id);
+    const params={url:'surs_smart_us_new',page:1};
+    let first,second;
+    app.Lampa.Api.sources.SURS.list(params,x=>first=x,()=>{});
+    assert.equal(first.results.length,20);
+    assert.ok(params._sursSmartSession);
+    app.stored.set('surs_preview_cache_v1_smart_us_v3',{
+        saved_at:Date.now(),total_pages:2,results:initial.results.slice().reverse()
+    });
+    params.page=2;
+    app.Lampa.Api.sources.SURS.list(params,x=>second=x,()=>{});
+    assert.equal(second.results.length,20);
+    assert.deepEqual(first.results.concat(second.results).map(x=>x.type+':'+x.id),expected);
+});
+
 test('smart shelf cache keeps More pagination stable without network', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
     const f=smartFixtures();let count=0;
