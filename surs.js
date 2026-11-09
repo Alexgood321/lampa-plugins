@@ -2071,7 +2071,7 @@ params:{items:{view:20,mapping:'line'}} };
 }
 
 var SMART_DIAG_KEY='surs_smart_diagnostics_v1';
-var SMART_BACKGROUND_MS=20000,SMART_TARGET_MAX=8;
+var SMART_BACKGROUND_MS=24000,SMART_TARGET_MAX=20;
 var smartLastBuild=0;
 function smartReadDiagnostic(){
 try{return Lampa.Storage.get(SMART_DIAG_KEY,null);}catch(e){return null;}
@@ -2171,10 +2171,10 @@ return !smartValidRate(c.kp_rating)||!smartValidRate(c.imdb_rating);
 if(!missing.length){kpDone=true;metrics.kp_status='ready';progress();return;}
 var index=0,active=0,left=missing.length;
 function pump(){
-while(index<missing.length&&active<2&&!finished){
+while(index<missing.length&&active<3&&!finished){
 (function(c){
 active++;metrics.kp_requests++;metrics.targeted_requests++;
-var replied=false,timer=setTimeout(function(){receive(null);},8000);
+var replied=false,timer=setTimeout(function(){receive(null);},7500);
 function receive(data){
 if(replied)return;
 replied=true;clearTimeout(timer);metrics.kp_done++;
@@ -2198,33 +2198,57 @@ pump();
 }
 function kpSource(ready){
 if(finished)return;
-if(!ready){metrics.kp_status='unavailable';broadDone=true;kpDone=true;progress();return;}
+if(!ready){
+metrics.kp_status='unavailable';broadDone=true;kpDone=true;
+progress();return;
+}
 kpReady=ready;
-var y=new Date().getFullYear(),jobs=[];
+var y=new Date().getFullYear(),queue=[],active=0,pending=0;
 [y,y-1].forEach(function(year){
-KP8_TYPES.forEach(function(t){jobs.push({year:year,type:t});});
+KP8_TYPES.forEach(function(t){
+queue.push({year:year,type:t,page:1});
+pending++;
 });
-var left=jobs.length;
-jobs.forEach(function(job){
-metrics.kp_requests++;
-var replied=false,timer=setTimeout(function(){receive(null);},9000);
+});
+metrics.kp_broad_pages=0;
+function pump(){
+if(finished)return;
+while(queue.length&&active<3&&!finished){
+(function(job){
+active++;metrics.kp_requests++;metrics.kp_broad_pages++;
+var replied=false;
+var timer=setTimeout(function(){receive(null);},8500);
 function receive(data){
 if(replied)return;
-replied=true;clearTimeout(timer);metrics.kp_done++;
-if(data&&Array.isArray(data.results))kpCards=kpCards.concat(data.results);
-else metrics.kp_failed++;
-if(--left===0){
+replied=true;clearTimeout(timer);
+active--;metrics.kp_done++;
+if(data&&Array.isArray(data.results)){
+kpCards=kpCards.concat(data.results);
+
+
+if(job.page===1&&(Number(data.total_pages)>1||
+(data.total_pages==null&&data.results.length>=20))){
+pending++;
+queue.push({year:job.year,type:job.type,page:2});
+}
+}else metrics.kp_failed++;
+pending--;
+if(pending===0){
 broadDone=true;metrics.kp_status='ready';
 searchMissing();progress();
-}
+}else pump();
 }
 var url='api/v2.2/films?order=YEAR&countries='+KP8_US_COUNTRY_ID+
-'&ratingFrom=0&ratingTo=10&yearFrom='+job.year+'&yearTo='+job.year+
-'&type='+job.type.sourceType;
-try{ready.source.list({url:'filter',filter_url:url,page:1},
-receive,function(){receive(null);});}
-catch(e){receive(null);}
-});
+'&ratingFrom=0&ratingTo=10&yearFrom='+job.year+
+'&yearTo='+job.year+'&type='+job.type.sourceType;
+try{
+ready.source.list({url:'filter',filter_url:url,page:job.page},
+receive,function(){receive(null);});
+}catch(e){receive(null);}
+})(queue.shift());
+}
+}
+pump();
 }
 var jobs=smartQueries(dates);
 function batch(list,doneBatch){
