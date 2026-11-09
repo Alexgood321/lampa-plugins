@@ -1945,10 +1945,11 @@ candidates:0,selected:0,timeout:false
 };
 window.SURS_PERFORMANCE.smart_us=metrics;
 var settled=false,tmdbDone=false,kpDone=false;
-var timer=setTimeout(function(){metrics.timeout=true;finish();},7200);
+var kpGrace=null;
+var timer=setTimeout(function(){metrics.timeout=true;finish();},4200);
 function finish() {
 if (settled) return;
-settled=true;clearTimeout(timer);
+settled=true;clearTimeout(timer);if(kpGrace!==null)clearTimeout(kpGrace);
 metrics.cache_kp_matches=smartEnrichFromCache(cards);
 metrics.kp_matches=smartMergeKp(cards,kpCards);
 var picked=smartRank(cards,dates),result=smartMakeResult(picked);
@@ -1959,22 +1960,37 @@ smartRunning=false;
 var waiting=smartWaiters.splice(0);
 waiting.forEach(function(fn) {try{fn(result);}catch(e){}});
 }
-function maybeFinish(){if(tmdbDone && kpDone) finish();}
-var jobs=smartQueries(dates),pending=jobs.length;
-jobs.forEach(function(job) {
+function maybeFinish() {
+if(!tmdbDone || settled)return;
+if(kpDone)return finish();
+
+if(kpGrace===null)kpGrace=setTimeout(finish,650);
+}
+var jobs=smartQueries(dates);
+function batch(list,onBatch) {
+if(!list.length)return onBatch();
+var pending=list.length;
+list.forEach(function(job) {
 metrics.tmdb_requests++;
 var replied=false;
 function receive(json) {
-if (replied) return;replied=true;
-if (!settled) {
+if(replied)return;replied=true;
+if(!settled) {
 metrics.tmdb_done++;
-if (!json || !Array.isArray(json.results)) metrics.tmdb_failed++;
+if(!json || !Array.isArray(json.results)) metrics.tmdb_failed++;
 else smartCandidate(json,job.type,dates,seen,cards);
 }
-if (--pending===0) {tmdbDone=true;maybeFinish();}
+if(--pending===0 && !settled)onBatch();
 }
 try{owner.get(job.url,params,receive,function(){receive(null);});}
 catch(e){receive(null);}
+});
+}
+batch(jobs.filter(function(j){return /[?&]page=1(?:&|$)/.test(j.url);}),function(){
+if(cards.length>=70) {tmdbDone=true;return maybeFinish();}
+batch(jobs.filter(function(j){return /[?&]page=2(?:&|$)/.test(j.url);}),function(){
+tmdbDone=true;maybeFinish();
+});
 });
 
 
@@ -2695,7 +2711,7 @@ finish({ results: [] });
 
 function shelfTimeout(id) {
 if (id === 'us_new_8') return 8500;
-if (id === 'smart_us_new') return 8500;
+if (id === 'smart_us_new') return 5500;
 if (id === 'kp_new_8') return 8000;
 if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
 if (/^(trakt_|ext_Trakt)/i.test(id)) return 5500;

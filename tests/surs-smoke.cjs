@@ -638,7 +638,7 @@ test('smart shelf collects two media types from TMDB with bounded requests', () 
         ok({results:items,total_pages:2});
     };
     const rows=app.getMain();
-    assert.equal(queries.length,8);
+    assert.equal(queries.length,4);
     assert.ok(queries.every(q=>q.includes('with_origin_country=US') &&
         q.includes('without_genres=') && q.includes('vote_average.gte=6.3')));
     assert.equal(rows.length,1);
@@ -649,7 +649,7 @@ test('smart shelf collects two media types from TMDB with bounded requests', () 
     assert.ok(rows[0].results.some(x=>x.type==='movie'));
     assert.ok(rows[0].results.some(x=>x.type==='tv'));
     assert.ok(!app.window.SURS_PERFORMANCE.smart_us.kp_matches);
-    assert.equal(app.window.SURS_PERFORMANCE.smart_us.tmdb_requests,8);
+    assert.equal(app.window.SURS_PERFORMANCE.smart_us.tmdb_requests,4);
 });
 test('smart shelf rejects low vote, future, non-US TV, animation, and duplicate candidates', () => {
     const app=boot({saved:[{id:'smart_us_new',enabled:true}]});
@@ -1477,6 +1477,9 @@ test('progressive Lampa3 displays nav before TMDB and appends rows in order', ()
     flush();
     assert.equal(initial.length,1);
     assert.equal(initial[0].title,'Быстрый переход');
+    Object.keys(requests).filter(key=>key.indexOf('discover/')===0)
+        .forEach(key=>requests[key]({results:[],total_pages:1}));
+    flush();
     requests['trending/tv/week']({results:[{id:2,title:'Сериал'}]});
     flush();
     assert.equal(late.length,0);
@@ -1485,7 +1488,7 @@ test('progressive Lampa3 displays nav before TMDB and appends rows in order', ()
     assert.deepEqual(Array.from(late,x=>x.title),[
         'В тренде: Фильмы недели','В тренде: Сериалы недели','Жанры кино и сериалов'
     ]);
-    assert.equal(app.window.SURS_PERFORMANCE.screens.MAIN.completed,5);
+    assert.equal(app.window.SURS_PERFORMANCE.screens.MAIN.completed,6);
     assert.equal(typeof app.window.SURS_PERFORMANCE.screens.MAIN.first_row_ms,'number');
 });
 test('progressive loader drops late callbacks when page is no longer current', () => {
