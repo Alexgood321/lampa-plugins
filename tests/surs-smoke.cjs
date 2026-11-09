@@ -1461,8 +1461,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 3\.9\.26/);
-    assert.match(readableSource, /Версия: 3\.9\.26/);
+    assert.match(mainSource, /Версия: 4\.0\.0-beta\.1/);
+    assert.match(readableSource, /Версия: 4\.0\.0-beta\.1/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -1890,7 +1890,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 3\.9\.26/);
+    assert.match(source, /Версия: 4\.0\.0-beta\.1/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
