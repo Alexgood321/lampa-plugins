@@ -2090,7 +2090,7 @@ if(targetStarted||finished||!tmdbDone||!broadDone)return;
 targetStarted=true;
 if(!kpReady){kpDone=true;progress();return;}
 cacheRatings();var priorMatches=smartMergeKp(cards,kpCards);
-            metrics.kp_matches+=priorMatches.kp;metrics.imdb_matches+=priorMatches.imdb;
+metrics.kp_matches+=priorMatches.kp;metrics.imdb_matches+=priorMatches.imdb;
 var missing=smartRank(cards.slice(),dates).filter(function(c){
 return !smartValidRate(c.kp_rating)||!smartValidRate(c.imdb_rating);
 }).slice(0,SMART_TARGET_MAX);
