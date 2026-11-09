@@ -1919,7 +1919,10 @@ kp:0,imdb:0,items:0,by_imdb:0,by_title:0,
 year_offset:0,ambiguous:0
 };
 function year(card) {
-var n=Number(smartDate(card).slice(0,4));
+
+var identityDate=card.type==='tv'&&card.first_air_date?
+card.first_air_date:smartDate(card);
+var n=Number(String(identityDate).slice(0,4));
 return n>=1900&&n<=2200?n:0;
 }
 cards.forEach(function(c){
@@ -2370,7 +2373,10 @@ tmdbDone=true;searchMissing();progress();
 }
 function verifySeasonPremieres(){
 var candidates=cards.filter(function(c){
-return c.type==='tv'&&c.surs_smart_season_candidate;
+
+return c.type==='tv'&&c.surs_smart_season_candidate&&
+(c.surs_smart_pending_season||
+smartAge(c.first_air_date)>180);
 });
 metrics.season_candidates=candidates.length;
 candidates.sort(function(a,b){
