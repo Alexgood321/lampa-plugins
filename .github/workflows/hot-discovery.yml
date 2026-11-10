@@ -41,9 +41,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "$TMDB_READ_ACCESS_TOKEN" && -z "$TMDB_API_KEY" ]]; then
-            echo "status=not_configured" >> "$GITHUB_OUTPUT"
-            echo "## Hot Discovery inactive: add TMDB_READ_ACCESS_TOKEN secret" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error title=TMDB credentials missing::Configure TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY in repository Actions secrets."
+            echo "## Hot Discovery not configured: no feed was generated" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           node scripts/hot-discovery.cjs
           echo "status=generated" >> "$GITHUB_OUTPUT"
