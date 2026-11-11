@@ -1657,8 +1657,16 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                         Object.assign({}, s, {title: 'Новинки США · КП 7,5+'}) : s);
                 }
             });
-            // Нельзя оставлять пользователя без доступа к менеджеру полок.
-            if (!unique.length) return profile ? getDefaultSectionShelves(name) : [getDefaultShelvesList()[0]];
+            // If a saved MAIN profile contained only the retired Smart shelf,
+            // rebuild a minimal navigable home with Hot; an explicitly empty
+            // profile without Smart retains its existing navigation-only fallback.
+            if (!unique.length) {
+                if (profile) return getDefaultSectionShelves(name);
+                var fallback = hadSmart ? getDefaultShelvesList().slice(0, 2) :
+                    [getDefaultShelvesList()[0]];
+                if (hadSmart) saveShelves(fallback, 'MAIN');
+                return fallback;
+            }
             // Hot Discovery is the only primary US shelf. Add it on migration
             // without changing the saved order; preserve explicit Hot opt-outs.
             if (!profile && seen.nav_buttons && !seen.hot_us_new &&
@@ -1672,8 +1680,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             // Persist removal of retired Smart US; retain every other row and
             // explicit on/off choice, including those for Hot Discovery.
             if (hadSmart) saveShelves(unique, 'MAIN');
-            // For empty saved homes keep navigation reachable.
-            if (!unique.length) return profile ? getDefaultSectionShelves(name) : [getDefaultShelvesList()[0]];
             return unique;
         }
 
