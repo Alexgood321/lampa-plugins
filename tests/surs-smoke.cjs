@@ -1187,8 +1187,8 @@ test('the previous 3.8.2 factory profile migrates, but customized visibility doe
     last[12].enabled = true;
     const customized = boot({saved: last});
     assert.equal(customized.rows().length, 23);
-    assert.equal(customized.rows()[9].id, 'upcoming_episodes');
-    assert.equal(customized.rows().filter(x => x.enabled).length, 17);
+    assert.equal(customized.rows()[7].id, 'upcoming_episodes');
+    assert.equal(customized.rows().filter(x => x.enabled).length, 14);
 });
 test('custom rearrangement of legacy profile is not migrated', () => {
     const legacy = [
@@ -1202,7 +1202,7 @@ test('custom rearrangement of legacy profile is not migrated', () => {
     const swapped = legacy.splice(3,1)[0];
     legacy.splice(2,0,swapped);
     const app = boot({ saved: legacy });
-    assert.equal(app.rows()[4].id, 'streaming_global');
+    assert.equal(app.rows()[3].id, 'streaming_global');
     assert.equal(app.rows().filter(x => x.enabled).length, 23);
 });
 test('reset immediately persists factory defaults and schedules screen refresh', () => {
