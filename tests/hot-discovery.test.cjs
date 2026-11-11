@@ -94,7 +94,10 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.1');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.2');
+  assert.equal(result.feed.diagnostics.primary_window_days,60);
+  assert.deepEqual(Object.keys(result.feed.diagnostics.selected_by_recency),
+    ['0-60','61-120','121-365','366+']);
   assert.equal(result.feed.diagnostics.quality_floor,7.2);
   assert.ok(result.feed.items.some(x=>x.type==='movie'));
   assert.ok(result.feed.items.some(x=>x.type==='tv'));
@@ -210,4 +213,65 @@ test('weights omit unmeasured growth instead of adding neutral scores',()=>{
   }]},NOW,null)[0];
   assert.deepEqual(measured.surs_hot_weights,{quality:.60,heat:.25,growth:.15});
   assert.equal(measured.surs_hot_growth_measured,true);
+});
+
+test('discovery prioritizes recent 60-day film and series lanes without discarding old sources',()=>{
+  const jobs=hot.discoveryJobs(NOW);
+  assert.ok(jobs.length>40);
+  assert.ok(jobs.slice(0,12).every(x=>x.channel.startsWith('recent_')));
+  assert.ok(jobs.some(x=>x.channel==='recent_digital'));
+  assert.ok(jobs.some(x=>x.channel==='recent_season'));
+  assert.ok(jobs.some(x=>x.channel==='trending_week'&&x.type==='movie'));
+  assert.ok(jobs.some(x=>x.channel==='digital'));
+});
+test('fresh 60-day films and verified seasons sort above higher-rated old movies',()=>{
+  const make=(id,age,rating=8.3)=>({id,type:'movie',poster_path:'/p',
+    vote_average:rating,vote_count:2000,popularity:120,
+    surs_hot_premiere_date:day(age),surs_hot_original_date:day(age)});
+  const season={id:900,type:'tv',poster_path:'/p',
+    vote_average:8.1,vote_count:900,popularity:100,
+    surs_hot_premiere_date:day(40),surs_hot_original_date:day(900),
+    surs_hot_premiere_kind:'season',surs_hot_season_verified:true,
+    surs_hot_season_rating:{value:8.3,votes:150}};
+  const cards=[make(1,183,9.8),make(2,45,8.1),make(3,90,9.7),
+    make(4,420,9.9),make(5,10,8.5),season];
+  const ranked=hot.scoreCandidates(cards,{snapshots:[]},NOW,null);
+  const ids=ranked.map(x=>x.id);
+  assert.equal(ranked.length,6);
+  assert.deepEqual(ids.slice(0,3).sort((a,b)=>a-b),[2,5,900]);
+  assert.equal(ids[3],3);
+  assert.equal(ids[4],1);
+  assert.equal(ids[5],4);
+  assert.deepEqual(ranked.map(x=>x.surs_hot_recency_tier),
+    [0,0,0,1,2,3]);
+  for(let i=1;i<ranked.length;i++)
+    assert.ok(ranked[i-1].surs_hot_score>ranked[i].surs_hot_score);
+});
+test('late streaming listing cannot make a 200-day old film a hot current premiere',()=>{
+  const late={id:431,type:'movie',poster_path:'/p',
+    vote_average:9,vote_count:5000,popularity:200,
+    surs_hot_premiere_date:day(5),surs_hot_original_date:day(210),
+    surs_hot_premiere_kind:'digital'};
+  const fresh={id:432,type:'movie',poster_path:'/p',
+    vote_average:8.3,vote_count:500,popularity:35,
+    surs_hot_premiere_date:day(12),surs_hot_original_date:day(20),
+    surs_hot_premiere_kind:'theatrical'};
+  const ordered=hot.scoreCandidates([late,fresh],{snapshots:[]},NOW,null);
+  assert.deepEqual(ordered.map(x=>x.id),[432,431]);
+  assert.equal(ordered[1].surs_hot_age,5);
+  assert.equal(ordered[1].surs_hot_rank_age,210);
+  assert.equal(ordered[1].surs_hot_recency_tier,2);
+});
+test('recency cutoff has no accidental day-60 and day-61 overlap',()=>{
+  const card=(id,age)=>({id,type:'movie',poster_path:'/p',
+    vote_average:8.2,vote_count:700,popularity:100,
+    surs_hot_premiere_date:day(age),surs_hot_original_date:day(age)});
+  const rows=hot.scoreCandidates([card(60,60),card(61,61),
+    card(120,120),card(121,121),card(365,365),card(366,366)],
+    {snapshots:[]},NOW,null);
+  assert.deepEqual(rows.map(c=>c.id),[60,61,120,121,365,366]);
+  assert.deepEqual(rows.map(c=>c.surs_hot_recency_tier),[0,1,1,2,2,3]);
+  assert.ok(rows[0].surs_hot_score>rows[1].surs_hot_score);
+  assert.ok(rows[2].surs_hot_score>rows[3].surs_hot_score);
+  assert.ok(rows[4].surs_hot_score>rows[5].surs_hot_score);
 });
