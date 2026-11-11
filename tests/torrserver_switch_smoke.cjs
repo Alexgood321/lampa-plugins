@@ -115,10 +115,10 @@ assert.ok(button.removed,'disabling header removes button');
 Lampa.Storage.set('alex_tss_header',true);
 assert.equal(button.removed,false,'re-enabling header inserts button');
 
+Lampa.Storage.set('torrserver_use_link','one');
 Lampa.Storage.set('alex_tss_mode','auto');
 Lampa.Storage.set('alex_tss_fail_count','2');
 Lampa.Storage.set('alex_tss_return_primary',false);
-Lampa.Storage.set('torrserver_use_link','one');
 responses.one={state:'server_down'};
 plugin.check();
 assert.equal(keys.torrserver_use_link,'one','first failure must not switch');
