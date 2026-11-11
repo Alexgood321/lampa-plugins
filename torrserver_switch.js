@@ -1,13 +1,13 @@
 /**
  * TorrServer Switch Pro
- * Version: 2.0.1
+ * Version: 2.1.0
  * Author: Alexgood321
  * Native Lampa settings, two-server health monitoring, guarded AUTO failover.
  */
 (function (window, document) {
     'use strict';
 
-    var VERSION = '2.0.1';
+    var VERSION = '2.1.0';
     var ID = 'alexgood321_torrserver_switch';
     var COMP = 'alexgood321_torrserver_switch_settings';
     var SINGLETON = '__alexgood321TorrServerSwitch';
@@ -20,10 +20,17 @@
         interval: '60', timeout: '5000', fail_count: '3',
         recovery_count: '3', cooldown: '300', return_primary: true,
         pause_player: true, show_status: true, show_latency: false,
-        notify: true, verify_manual: false
+        notify: true, verify_manual: false,
+        layout: 'round', display: 'alternate', animate: true,
+        ts_duration: '3', ping_duration: '2',
+        pause_focus: true, compact_ping: true, auto_badge: true
     };
     var OPTIONS = {
         mode: {manual:'Ручной',auto:'Автоматический'},
+        layout: {round:'Круглая (Lampa)',pill:'Компактная плашка'},
+        display: {alternate:'TS ↔ задержка',server:'Только TS',ping:'Только задержка'},
+        ts_duration: {'2':'2 секунды','3':'3 секунды','4':'4 секунды','5':'5 секунд'},
+        ping_duration: {'1':'1 секунда','2':'2 секунды','3':'3 секунды','4':'4 секунды'},
         interval: {'30':'30 секунд','60':'1 минута','120':'2 минуты','300':'5 минут'},
         timeout: {'3000':'3 секунды','5000':'5 секунд','8000':'8 секунд'},
         fail_count: {'2':'2 ошибки','3':'3 ошибки','5':'5 ошибок'},
@@ -39,6 +46,8 @@
     var initialized = false;
     var button = null;
     var startTimer = null, checkTimer = null, refreshTimer = null;
+    var presentationTimer = null, presentationPhase = 'server';
+    var lastPresentationMode = '', pointerInside = false;
     var inProgress = false, probeGeneration = 0, inFlight = [];
     var lastClick = 0, lastSwitchAt = 0, manualHoldUntil = 0;
     var internalSelection = false;
@@ -118,30 +127,106 @@
             });
         } catch (ignored) {}
     }
+    function displayMode() {
+        var value=get('display');
+        return value==='server'||value==='ping'?value:'alternate';
+    }
+    function pingLabel(st) {
+        if (st.state === 'online' && st.rtt !== null && isFinite(Number(st.rtt))) {
+            var ms=Math.max(0,Math.round(Number(st.rtt)));
+            if (yes('compact_ping') && ms >= 1000) {
+                var seconds=(ms/1000).toFixed(ms < 10000 ? 2 : 1);
+                return {value:seconds.replace(/\.?0+$/,''),unit:'s'};
+            }
+            return {value:String(ms),unit:'ms'};
+        }
+        if (st.state === 'offline') return {value:'OFF',unit:'LINE'};
+        if (st.state === 'unconfigured') return {value:'NO',unit:'URL'};
+        if (st.state === 'checking') return {value:'…',unit:''};
+        return {value:'—',unit:'ms'};
+    }
+    function stopPresentation() {
+        if (presentationTimer !== null) clearTimeout(presentationTimer);
+        presentationTimer = null;
+    }
+    function setPresentationPhase(value) {
+        presentationPhase=value==='ping'?'ping':'server';
+        if (button) button.attr('data-phase',presentationPhase);
+    }
+    function focusPausesPresentation() {
+        if (!yes('pause_focus') || !button) return false;
+        try {
+            if (pointerInside) return true;
+            if (typeof button.hasClass === 'function' &&
+                (button.hasClass('focus') || button.hasClass('hover'))) return true;
+            if (button[0] && button[0].matches && button[0].matches(':hover'))
+                return true;
+        } catch (ignored) {}
+        return false;
+    }
+    function schedulePresentation() {
+        stopPresentation();
+        if (!active || !button || !enabled() || !yes('header') ||
+            displayMode() !== 'alternate') return;
+        var delay = presentationPhase === 'server' ? num('ts_duration') : num('ping_duration');
+        presentationTimer = setTimeout(presentationTick, delay * 1000);
+    }
+    function presentationTick() {
+        presentationTimer = null;
+        if (!active || !button || !enabled() || !yes('header') ||
+            displayMode() !== 'alternate') return;
+        if ((document && document.hidden) || focusPausesPresentation()) {
+            presentationTimer=setTimeout(presentationTick,350);
+            return;
+        }
+        setPresentationPhase(presentationPhase==='server'?'ping':'server');
+        schedulePresentation();
+    }
+    function restartPresentation() {
+        stopPresentation();
+        lastPresentationMode = displayMode();
+        setPresentationPhase(lastPresentationMode==='ping'?'ping':'server');
+        schedulePresentation();
+    }
+    function presentationChanged() {
+        if (!active || !initialized) return;
+        restartPresentation();
+        refreshHeader();
+    }
     function refreshHeader() {
         if (!active || !hasLampa()) return;
         if (!enabled() || !yes('header')) {
+            stopPresentation();
             if (button) {button.remove();button = null;}
+            pointerInside=false;
+            lastPresentationMode='';
             return;
         }
         if (!button) mountHeader();
         if (!button) return;
-        var slot = current(), s = stats[slot], txt = serverName(slot);
-        if (mode() === 'auto') txt += ' AUTO';
-        if (yes('show_latency') && s.state === 'online' && s.rtt !== null)
-            txt += ' ' + s.rtt + 'ms';
-        button.find('.alex-ts-switch-label').text(txt);
-        button.removeClass('alex-ts-state-online alex-ts-state-offline alex-ts-state-unknown');
-        button.addClass('alex-ts-state-' +
-            (yes('show_status') ? (s.state === 'online' || s.state === 'offline' ?
-                s.state : 'unknown') : 'unknown'));
-        button.find('.alex-ts-switch-dot').toggle(yes('show_status'));
+
+        var slot=current(), st=stats[slot];
+        var ping=pingLabel(st), present=displayMode();
+        button.find('.alex-ts-switch-number').text(slot==='two'?'2':'1');
+        button.find('.alex-ts-switch-ping-value').text(ping.value);
+        button.find('.alex-ts-switch-ping-unit').text(ping.unit);
         button.attr('data-server',slot);
         button.attr('data-mode',mode());
+        button.attr('data-layout',get('layout')==='pill'?'pill':'round');
+        button.attr('data-animate',yes('animate')?'on':'off');
+        button.attr('data-ping-status',st.state);
+        button.removeClass('alex-ts-state-online alex-ts-state-offline alex-ts-state-unknown');
+        button.addClass('alex-ts-state-' +
+            (yes('show_status') ? (st.state==='online'||st.state==='offline' ?
+                st.state:'unknown') : 'unknown'));
+        button.find('.alex-ts-switch-dot').toggle(yes('show_status'));
+        button.find('.alex-ts-switch-auto').toggle(mode()==='auto' && yes('auto_badge'));
         button.attr('title',serverName(slot) + ' · ' +
-            (mode() === 'auto' ? 'AUTO' : 'MANUAL') + ' · ' + diagnose(s) +
+            (mode()==='auto'?'AUTO':'MANUAL') + ' · ' + diagnose(st) +
             '. Нажмите для переключения');
         button.attr('aria-label',button.attr('title'));
+        if (present!==lastPresentationMode) restartPresentation();
+        else button.attr('data-phase',presentationPhase);
     }
     function refresh() {
         refreshHeader();
@@ -386,50 +471,97 @@
             style.id=CSS_ID;
             document.head.appendChild(style);
         }
+        // Match native .head__action geometry and inherit Lampa's margins.
         style.textContent =
-            '.head__action.'+BUTTON_CLASS+'{display:inline-flex!important;align-items:center!important;'+
-            'justify-content:center!important;gap:.3em!important;flex-shrink:0!important;'+
-            'width:auto!important;min-width:3.7em!important;height:2.7em!important;'+
-            'padding:0 .6em!important;border-radius:.55em!important;'+
-            'background:rgba(135,145,160,.18)!important;'+
-            'box-shadow:inset 0 0 0 1px rgba(200,210,220,.45)!important;'+
-            'color:#edf1f8!important;box-sizing:border-box!important;cursor:pointer!important}'+
-            '.'+BUTTON_CLASS+' .alex-ts-switch-label{font-size:.77em;font-weight:700;white-space:nowrap}'+
-            '.'+BUTTON_CLASS+' .alex-ts-switch-dot{width:.46em;height:.46em;'+
-            'border-radius:50%;background:#a6acb7;flex-shrink:0}'+
-            '.head__action.'+BUTTON_CLASS+'.alex-ts-state-online{'+
-            'background:rgba(55,127,100,.32)!important;'+
-            'box-shadow:inset 0 0 0 1px rgba(98,209,157,.55)!important}'+
-            '.'+BUTTON_CLASS+'.alex-ts-state-online .alex-ts-switch-dot{background:#62d69c}'+
-            '.head__action.'+BUTTON_CLASS+'.alex-ts-state-offline{'+
-            'background:rgba(148,62,63,.35)!important;'+
-            'box-shadow:inset 0 0 0 1px rgba(240,104,104,.55)!important}'+
-            '.'+BUTTON_CLASS+'.alex-ts-state-offline .alex-ts-switch-dot{background:#f16d6d}'+
-            '.head__action.'+BUTTON_CLASS+'.focus,'+
-            '.head__action.'+BUTTON_CLASS+'.hover{'+
-            'outline:2px solid white!important;outline-offset:2px!important}'+
-            '@media(max-width:480px){.head__action.'+BUTTON_CLASS+'{'+
-            'min-width:3.2em!important;padding:0 .4em!important;height:2.45em!important}}';
+            '.head__action.'+BUTTON_CLASS+'{' +
+                'position:relative!important;box-sizing:border-box!important;' +
+                'display:flex!important;align-items:center!important;justify-content:center!important;' +
+                'width:2.8em!important;min-width:2.8em!important;height:2.8em!important;' +
+                'flex:0 0 2.8em!important;padding:0!important;border-radius:50%!important;' +
+                'background:rgba(43,45,48,.96)!important;color:#f9fafb!important;' +
+                'overflow:visible!important;cursor:pointer!important;' +
+                'transition:background-color .15s ease!important;}' +
+            'body.true--mobile .head__action.'+BUTTON_CLASS+'{' +
+                'width:3em!important;min-width:3em!important;height:3em!important;' +
+                'flex-basis:3em!important;}' +
+            '.head__action.'+BUTTON_CLASS+'[data-layout="pill"]{' +
+                'width:5.6em!important;min-width:5.6em!important;' +
+                'flex-basis:5.6em!important;border-radius:.65em!important;}' +
+            'body.true--mobile .head__action.'+BUTTON_CLASS+'[data-layout="pill"]{' +
+                'width:5.6em!important;min-width:5.6em!important;flex-basis:5.6em!important;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-viewport{' +
+                'position:absolute;top:.22em;bottom:.22em;left:.18em;right:.18em;' +
+                'overflow:hidden;pointer-events:none;border-radius:inherit;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-track{' +
+                'height:200%;width:100%;transform:translateY(0);' +
+                'transition:transform .25s ease;}' +
+            '.'+BUTTON_CLASS+'[data-phase="ping"] .alex-ts-switch-track{' +
+                'transform:translateY(-50%);}' +
+            '.'+BUTTON_CLASS+'[data-animate="off"] .alex-ts-switch-track{' +
+                'transition:none!important;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-face{' +
+                'height:50%;width:100%;box-sizing:border-box;' +
+                'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+                'line-height:1.04;white-space:nowrap;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-kicker{' +
+                'font-size:.63em;font-weight:650;letter-spacing:.02em;line-height:1;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-number{' +
+                'font-size:1.3em;font-weight:700;line-height:1.02;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-ping-value{' +
+                'font-size:1em;font-weight:700;line-height:1.08;letter-spacing:-.04em;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-ping-unit{' +
+                'font-size:.6em;font-weight:600;line-height:1.05;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-dot{' +
+                'position:absolute;z-index:2;top:-.07em;right:-.06em;' +
+                'width:.46em;height:.46em;box-sizing:border-box;border-radius:50%;' +
+                'background:#a7acb5;border:.09em solid #1c1d1e;pointer-events:none;}' +
+            '.'+BUTTON_CLASS+'.alex-ts-state-online .alex-ts-switch-dot{background:#70d99f;}' +
+            '.'+BUTTON_CLASS+'.alex-ts-state-offline .alex-ts-switch-dot{background:#ee7070;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-auto{' +
+                'position:absolute;z-index:2;bottom:-.12em;left:-.08em;' +
+                'display:flex;align-items:center;justify-content:center;' +
+                'width:1.4em;height:1.4em;box-sizing:border-box;' +
+                'background:#496784;color:#fff;border:.16em solid #1c1d1e;' +
+                'border-radius:50%;font-size:.55em;font-weight:700;pointer-events:none;}' +
+            '.head__action.'+BUTTON_CLASS+'.focus,' +
+            '.head__action.'+BUTTON_CLASS+'.hover{' +
+                'background:#fff!important;color:#151719!important;' +
+                'outline:2px solid white!important;outline-offset:2px!important;}' +
+            '@media(prefers-reduced-motion:reduce){' +
+                '.'+BUTTON_CLASS+' .alex-ts-switch-track{transition:none!important;}' +
+            '}';
     }
     function mountHeader() {
         if (!active || !hasLampa() || !enabled() || !yes('header')) return;
         if (button && button.length) return;
         try {
-            var head = Lampa.Head.render();
+            var head=Lampa.Head.render();
             if (!head || !head.find('.head__actions').length) return;
             ensureCss();
-            var content='<div class="head__action selector '+BUTTON_CLASS+'" role="button" tabindex="0">'+
-                '<span class="alex-ts-switch-dot"></span>'+
-                '<span class="alex-ts-switch-label">TS 1</span></div>';
+            var content='<div class="head__action selector '+BUTTON_CLASS+
+                '" role="button" tabindex="0" data-phase="server" data-layout="round" data-animate="on">'+
+                '<span class="alex-ts-switch-viewport"><span class="alex-ts-switch-track">'+
+                '<span class="alex-ts-switch-face alex-ts-switch-server">'+
+                '<span class="alex-ts-switch-kicker">TS</span>'+
+                '<span class="alex-ts-switch-number">1</span></span>'+
+                '<span class="alex-ts-switch-face alex-ts-switch-ping">'+
+                '<span class="alex-ts-switch-ping-value">—</span>'+
+                '<span class="alex-ts-switch-ping-unit">ms</span></span>'+
+                '</span></span><span class="alex-ts-switch-dot"></span>'+
+                '<span class="alex-ts-switch-auto">A</span></div>';
             button=window.$(content);
+            pointerInside=false;
             button.on('click.alex_ts_switch',function (e) {
                 if (e && e.stopPropagation) e.stopPropagation();
                 manualToggle();
             });
+            button.on('mouseenter.alex_ts_switch',function () {pointerInside=true;});
+            button.on('mouseleave.alex_ts_switch',function () {pointerInside=false;});
             Lampa.Head.addElement(button,manualToggle);
-        } catch (e) {
+            lastPresentationMode='';
+        } catch (error) {
             button=null;
-            console.warn('[TorrServer Switch Pro] Header init failed',e);
+            console.warn('[TorrServer Switch Pro] Header init failed',error);
         }
     }
     function configChanged() {
@@ -489,18 +621,41 @@
         addServerAddress('two');
         addTitle('Основные настройки');
         addSetting('trigger','enabled','Включить плагин','Полностью выключает переключатель и проверки.',null,function(){configChanged();});
-        addSetting('trigger','header','Кнопка в верхней панели','Показывать TS 1 / TS 2 в шапке Lampa.',null,refreshHeader);
+        addSetting('trigger','header','Кнопка в верхней панели','Показывать переключатель в шапке Lampa.',null,presentationChanged);
         addSetting('select','mode','Режим переключения',
             'AUTO выбирает доступный резерв после нескольких ошибок, MANUAL не переключает автоматически.',
             OPTIONS.mode,configChanged);
         addSetting('trigger','monitor','Мониторинг серверов',
             'Периодически проверять оба сервера по GET /echo.',null,configChanged);
-        addSetting('trigger','show_status','Цвет состояния кнопки',
-            'Зелёный — доступен, красный — недоступен, серый — проверка невозможна.',null,refreshHeader);
-        addSetting('trigger','show_latency','Время ответа в кнопке',
-            'Показывать HTTP RTT в миллисекундах, если сервер доступен.',null,refreshHeader);
         addSetting('trigger','notify','Уведомления',
             'Сообщения о ручной/автоматической смене и ошибках.',null,refresh);
+        addTitle('Внешний вид кнопки');
+        addSetting('select','layout','Форма кнопки',
+            'Круглая соответствует штатным элементам Lampa; плашка шире.',
+            OPTIONS.layout,presentationChanged);
+        addSetting('select','display','Что показывать',
+            'Только номер TS, только HTTP-задержку или их чередование.',
+            OPTIONS.display,presentationChanged);
+        addSetting('trigger','animate','Плавная прокрутка',
+            'При отключении TS и задержка сменяются без анимации.',null,presentationChanged);
+        addSetting('select','ts_duration','Время показа TS',
+            'Длительность показа номера в режиме чередования.',
+            OPTIONS.ts_duration,presentationChanged);
+        addSetting('select','ping_duration','Время показа задержки',
+            'Длительность показа HTTP RTT в режиме чередования.',
+            OPTIONS.ping_duration,presentationChanged);
+        addSetting('trigger','pause_focus','Пауза при фокусе',
+            'При наведении мыши или выборе пультом содержимое не прокручивается.',
+            null,presentationChanged);
+        addSetting('trigger','compact_ping','Сокращать большую задержку',
+            'Например, 1250 ms → 1.25 s, чтобы число помещалось в круге.',
+            null,presentationChanged);
+        addSetting('trigger','show_status','Точка состояния',
+            'Зелёная — доступен, красная — недоступен, серая — статус неизвестен.',
+            null,presentationChanged);
+        addSetting('trigger','auto_badge','Метка AUTO',
+            'Показывать маленькую букву A при автоматическом режиме.',
+            null,presentationChanged);
         addTitle('Проверки и резервирование');
         addSetting('select','interval','Интервал проверок','Частота запросов к обоим серверам.',
             OPTIONS.interval,configChanged);
@@ -547,6 +702,7 @@
         if (event.name === SELECT_KEY) {
             if (!internalSelection && mode()==='auto')
                 manualHoldUntil=Date.now()+num('cooldown')*1000;
+            restartPresentation();
             refresh();
             return;
         }
@@ -556,7 +712,13 @@
             configChanged();
             return;
         }
-        if (event.name.indexOf(P) === 0) configChanged();
+        if (event.name.indexOf(P) === 0) {
+            var uiKey=event.name.slice(P.length);
+            if ({header:1,show_status:1,show_latency:1,notify:1,
+                 layout:1,display:1,animate:1,ts_duration:1,ping_duration:1,
+                 pause_focus:1,compact_ping:1,auto_badge:1}[uiKey]) presentationChanged();
+            else configChanged();
+        }
     }
     function init() {
         if (!active || initialized || !hasLampa()) return false;
@@ -600,6 +762,7 @@
             if (startTimer!==null) clearInterval(startTimer);
             if (checkTimer!==null) clearTimeout(checkTimer);
             if (refreshTimer!==null) clearTimeout(refreshTimer);
+            stopPresentation();
             abortAll();
             if (window.removeEventListener) window.removeEventListener('focus',onFocus);
             if (button) {button.remove();button=null;}
