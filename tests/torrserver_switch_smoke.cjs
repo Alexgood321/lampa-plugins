@@ -4,7 +4,7 @@ const vm = require('vm');
 const assert = require('node:assert/strict');
 
 const original = fs.readFileSync(require('node:path').join(__dirname,'..','torrserver_switch.js'),'utf8');
-assert.match(original, /Version: 2\.1\.1/);
+assert.match(original, /Version: 2\.1\.2/);
 const keys={torrserver_use_link:'one',torrserver_url:'http://primary:8090',
     torrserver_url_two:'http://secondary:8090'};
 const callbacks={};
@@ -108,7 +108,7 @@ const context={
 context.window.document=context.document;
 vm.runInNewContext(original,context);
 const plugin=context.window.__alexgood321TorrServerSwitch;
-assert.equal(plugin.version,'2.1.1');
+assert.equal(plugin.version,'2.1.2');
 assert.ok(sections.alexgood321_torrserver_switch_settings);
 assert.ok(params.alexgood321_torrserver_switch_settings.length>=20);
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='torrserver_url' && p.param.type==='input'));
@@ -123,6 +123,8 @@ assert.match(style,/alex-ts-switch-ping\{opacity:0;transform:translate3d\(0,105%
 assert.match(style,/data-phase="ping"] .alex-ts-switch-server/,'server hidden during ping');
 assert.match(style,/max-width:640px/,'small viewport title protection');
 assert.match(style,/prefers-reduced-motion:reduce/,'reduced motion fallback');
+assert.match(style,/alex-ts-switch-ping-unit\{display:block;font-size:\.7em;font-weight:600;line-height:1\.05/,'readable ms label');
+assert.match(style,/alex-ts-switch-dot\{position:absolute;z-index:2;top:\.2em;right:\.2em/,'status dot is inset inside circle');
 assert.doesNotMatch(style,/height:200%;width:100%;transform:translateY/,'broken inline track must not return');
 const settings=params.alexgood321_torrserver_switch_settings;
 for(const name of ['layout','display','animate','ts_duration','ping_duration',
@@ -222,4 +224,4 @@ Lampa.Storage.set('alex_tss_display','alternate');
 assert.equal(button.attr('data-phase'),'server');
 plugin.destroy();
 assert.equal(sections.alexgood321_torrserver_switch_settings,undefined);
-console.log('TorrServer Switch Pro 2.1.1: smoke, CSS layout and presentation checks passed');
+console.log('TorrServer Switch Pro 2.1.2: smoke, CSS layout and presentation checks passed');

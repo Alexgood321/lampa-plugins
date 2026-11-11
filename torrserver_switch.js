@@ -1,13 +1,13 @@
 /**
  * TorrServer Switch Pro
- * Version: 2.1.1
+ * Version: 2.1.2
  * Author: Alexgood321
  * Native Lampa settings, two-server health monitoring, guarded AUTO failover.
  */
 (function (window, document) {
     'use strict';
 
-    var VERSION = '2.1.1';
+    var VERSION = '2.1.2';
     var ID = 'alexgood321_torrserver_switch';
     var COMP = 'alexgood321_torrserver_switch_settings';
     var SINGLETON = '__alexgood321TorrServerSwitch';
@@ -528,9 +528,9 @@
             '.'+BUTTON_CLASS+' .alex-ts-switch-ping-value{' +
                 'display:block;font-size:1em;font-weight:700;line-height:1.08;letter-spacing:-.04em;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-ping-unit{' +
-                'display:block;font-size:.6em;font-weight:600;line-height:1.05;}' +
+                'display:block;font-size:.7em;font-weight:600;line-height:1.05;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-dot{' +
-                'position:absolute;z-index:2;top:.08em;right:.08em;' +
+                'position:absolute;z-index:2;top:.2em;right:.2em;' +
                 'width:.46em;height:.46em;box-sizing:border-box;border-radius:50%;' +
                 'background:#a7acb5;border:.09em solid #1c1d1e;pointer-events:none;}' +
             '.'+BUTTON_CLASS+'.alex-ts-state-online .alex-ts-switch-dot{background:#70d99f;}' +
