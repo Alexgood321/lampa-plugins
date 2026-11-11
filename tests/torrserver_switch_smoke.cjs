@@ -110,6 +110,8 @@ assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='
 assert.ok(button);
 assert.match(button.find('.alex-ts-switch-label').text(),/TS 1/);
 assert.equal(keys.torrserver_use_link,'one');
+assert.equal(keys.torrserver_url,'http://primary:8090','native primary address is preserved');
+assert.equal(keys.torrserver_url_two,'http://secondary:8090','native backup address is preserved');
 
 plugin.toggle();
 assert.equal(keys.torrserver_use_link,'two','manual button selects backup');
