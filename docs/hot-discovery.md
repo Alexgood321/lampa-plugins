@@ -1,39 +1,27 @@
-# SURS Hot Discovery 4.0
+# SURS Hot Discovery 4.0 (SURS Pro 4.0.3)
 
-Status: SHADOW. The working SURS 3.9.26 shelf remains untouched. In SURS Pro 4.0.2 the Hot shelf is enabled by default for new MAIN profiles and migrated into existing MAIN profiles with SURS navigation. It remains an independent experimental shelf and can be disabled.
+Status: PRIMARY. Hot Discovery is the only primary US recommendation shelf. The legacy client-side “Лучшие новинки США” (Smart US) has been retired; its catalog, settings, source code and automatic loader were removed in 4.0.3. Old saved MAIN profiles are migrated without losing other shelves or their ordering. Explicit Hot disable/removal is preserved.
 
 ## Setup
 
-Repository: Settings / Secrets and variables / Actions.
+Required GitHub Actions secret: TMDB_READ_ACCESS_TOKEN (or TMDB_API_KEY).
+Optional secret: MDBLIST_API_KEY. Without this, IMDb/critic ratings are not filled in.
+Optional variable: MDBLIST_LIST_IDS, comma-separated list IDs; no guessed identifiers.
+Missing TMDB credentials fail the workflow; the previous valid feed stays published.
 
-Required secret: TMDB_READ_ACCESS_TOKEN from your own TMDB account. Alternatively use TMDB_API_KEY.
-Optional secret: MDBLIST_API_KEY. Without this, no IMDb/critic scores are invented.
-Optional variable: MDBLIST_LIST_IDS, comma-separated numerical IDs of selected MDBList lists, to add independent discovery candidates.
+Generated JSON: https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json
+GitHub Actions collects historical observations on a schedule; the public top 40 is published once per UTC day.
 
-Go to Actions / SURS Hot Discovery builder / Run workflow. Without a TMDB secret the workflow fails with a clear error and does not manufacture data.
+## Current algorithm and caveats
 
-Source snapshots run every 3 hours (UTC); the public top-40 refreshes once per UTC day to avoid intraday reshuffling. The job publishes JSON using the scoped GitHub Actions token; no VPS or new subscription.
+Candidate sources: TMDB Trending (day/week), Discover, US digital releases, returning TV seasons, and optional MDBList.
+Eligibility: US involvement, excluded genres, confirmed non-future premiere within 550 days, posters, minimum adjusted TMDB quality and vote threshold. Streaming availability is not currently proven by the feed.
+Ranking: Bayesian-adjusted TMDB quality, TMDB interest, 3/7/14-day popularity change once history accumulates, and premiere freshness. Experimental weights 55/25/10/10. Up to 40 cards. Season ratings use episode votes when adequate, otherwise an explicit provisional series-wide proxy.
+Known limitations: the current vote floor is permissive (8 votes); independent IMDb/critic ratings require an MDBList key; TMDB interest is not actual playback; title display year can differ from ranked premiere. This algorithm should be evaluated and refined without creating unverified quality or audience signals.
 
-Public data URL:
-https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json
+## Verification
 
-## Discovery and ranking
-
-- TMDB Trending day/week, Discover date/popularity/rating, US digital premieres, returning TV seasons.
-- No quality-vote floor during initial search. Verify US origin/production and actual dates before scoring.
-- Digital US release date for movies when confirmed, otherwise theatrical/primary; real season premiere for TV.
-- Per-season episode rating only when at least 30 votes, else season-wide rating treated as a provisional series proxy.
-- Bayes quality + interest + measured 3–14-day growth + smooth freshness. Experimental weights: 55/25/10/10, not a claimed optimum.
-- Optional MDBList enriches ratings and, with explicit list IDs, adds independent candidates.
-- Historical snapshots in repo for 31 days; growth explicitly compares 3/7/14-day observations when available, with a neutral fallback for missing history.
-- Publish 12–40 verified unique cards only; failed API calls cannot replace previous valid data.
-- Order always follows descending visible score. Previous position is used only for exactly equal scores.
-
-## Safety and rollout
-
-The old SURS "Лучшие новинки США" remains unchanged. Hot is an additional default-enabled test shelf for shadow comparison. Manual disabling/removal must be preserved, and customized profiles without SURS navigation are not modified. Do not promote until side-by-side validation for 30 days. Kinopoisk stays in the original client-side shelf; no unauthorized API is added to the server. Simkl and Trakt are not integrated pending their licensing conditions.
-
-Offline test: node --test tests/hot-discovery.test.cjs.
-Full regression: node scripts/build-surs.cjs --check && node tests/surs-smoke.cjs.
-
-Rollback: disable the additional Hot shelf. JSON data remains recoverable using the Git history. Real iPhone/TV requests require a verified published feed and device validation.
+Build: `node scripts/build-surs.cjs --check`
+Client regression: `node tests/surs-smoke.cjs`
+Builder unit tests: `node --test tests/hot-discovery.test.cjs`
+Rollback: revert the SURS Pro release commit or restore a previous My Store-pinned version; Hot can also be disabled manually.
