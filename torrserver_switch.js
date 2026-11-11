@@ -1,13 +1,13 @@
 /**
  * TorrServer Switch Pro
- * Version: 2.1.0
+ * Version: 2.1.1
  * Author: Alexgood321
  * Native Lampa settings, two-server health monitoring, guarded AUTO failover.
  */
 (function (window, document) {
     'use strict';
 
-    var VERSION = '2.1.0';
+    var VERSION = '2.1.1';
     var ID = 'alexgood321_torrserver_switch';
     var COMP = 'alexgood321_torrserver_switch_settings';
     var SINGLETON = '__alexgood321TorrServerSwitch';
@@ -198,6 +198,7 @@
         if (!enabled() || !yes('header')) {
             stopPresentation();
             if (button) {button.remove();button = null;}
+            markHeaderLayout(false);
             pointerInside=false;
             lastPresentationMode='';
             return;
@@ -463,6 +464,14 @@
             });
         } else changeServer(next,'manual');
     }
+    function markHeaderLayout(present) {
+        try {
+            var head=Lampa.Head.render();
+            if (!head || !head.find) return;
+            var body=head.find('.head__body');
+            if (body && body.length) body.toggleClass('alex-ts-header-present',!!present);
+        } catch (ignored) {}
+    }
     function ensureCss() {
         if (!document || !document.head || !document.createElement) return;
         var style = document.getElementById(CSS_ID);
@@ -471,7 +480,9 @@
             style.id=CSS_ID;
             document.head.appendChild(style);
         }
-        // Match native .head__action geometry and inherit Lampa's margins.
+        // Lampa's own .head__action is 2.8em round; native mobile is 3em.
+        // Faces must be absolutely positioned: inline span height/transform
+        // caused both frames to overlap in v2.1.0 on iOS WebKit.
         style.textContent =
             '.head__action.'+BUTTON_CLASS+'{' +
                 'position:relative!important;box-sizing:border-box!important;' +
@@ -490,35 +501,42 @@
             'body.true--mobile .head__action.'+BUTTON_CLASS+'[data-layout="pill"]{' +
                 'width:5.6em!important;min-width:5.6em!important;flex-basis:5.6em!important;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-viewport{' +
-                'position:absolute;top:.22em;bottom:.22em;left:.18em;right:.18em;' +
-                'overflow:hidden;pointer-events:none;border-radius:inherit;}' +
-            '.'+BUTTON_CLASS+' .alex-ts-switch-track{' +
-                'height:200%;width:100%;transform:translateY(0);' +
-                'transition:transform .25s ease;}' +
-            '.'+BUTTON_CLASS+'[data-phase="ping"] .alex-ts-switch-track{' +
-                'transform:translateY(-50%);}' +
-            '.'+BUTTON_CLASS+'[data-animate="off"] .alex-ts-switch-track{' +
-                'transition:none!important;}' +
+                'display:block!important;position:absolute!important;' +
+                'top:.22em;bottom:.22em;left:.18em;right:.18em;' +
+                'box-sizing:border-box;overflow:hidden!important;' +
+                'pointer-events:none;border-radius:inherit;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-face{' +
-                'height:50%;width:100%;box-sizing:border-box;' +
-                'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-                'line-height:1.04;white-space:nowrap;}' +
+                'display:flex!important;position:absolute!important;' +
+                'top:0;right:0;bottom:0;left:0;inset:0;' +
+                'width:100%;height:100%;box-sizing:border-box;' +
+                'flex-direction:column;align-items:center;justify-content:center;' +
+                'white-space:nowrap;line-height:1.04;opacity:1;' +
+                'transform:translate3d(0,0,0);' +
+                'transition:transform .25s ease,opacity .18s ease;}' +
+            '.'+BUTTON_CLASS+' .alex-ts-switch-ping{' +
+                'opacity:0;transform:translate3d(0,105%,0);}' +
+            '.'+BUTTON_CLASS+'[data-phase="ping"] .alex-ts-switch-server{' +
+                'opacity:0;transform:translate3d(0,-105%,0);}' +
+            '.'+BUTTON_CLASS+'[data-phase="ping"] .alex-ts-switch-ping{' +
+                'opacity:1;transform:translate3d(0,0,0);}' +
+            '.'+BUTTON_CLASS+'[data-animate="off"] .alex-ts-switch-face{' +
+                'transition:none!important;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-kicker{' +
-                'font-size:.63em;font-weight:650;letter-spacing:.02em;line-height:1;}' +
+                'display:block;font-size:.63em;font-weight:650;letter-spacing:.02em;line-height:1;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-number{' +
-                'font-size:1.3em;font-weight:700;line-height:1.02;}' +
+                'display:block;font-size:1.3em;font-weight:700;line-height:1.02;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-ping-value{' +
-                'font-size:1em;font-weight:700;line-height:1.08;letter-spacing:-.04em;}' +
+                'display:block;font-size:1em;font-weight:700;line-height:1.08;letter-spacing:-.04em;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-ping-unit{' +
-                'font-size:.6em;font-weight:600;line-height:1.05;}' +
+                'display:block;font-size:.6em;font-weight:600;line-height:1.05;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-dot{' +
-                'position:absolute;z-index:2;top:-.07em;right:-.06em;' +
+                'position:absolute;z-index:2;top:.08em;right:.08em;' +
                 'width:.46em;height:.46em;box-sizing:border-box;border-radius:50%;' +
                 'background:#a7acb5;border:.09em solid #1c1d1e;pointer-events:none;}' +
             '.'+BUTTON_CLASS+'.alex-ts-state-online .alex-ts-switch-dot{background:#70d99f;}' +
             '.'+BUTTON_CLASS+'.alex-ts-state-offline .alex-ts-switch-dot{background:#ee7070;}' +
             '.'+BUTTON_CLASS+' .alex-ts-switch-auto{' +
-                'position:absolute;z-index:2;bottom:-.12em;left:-.08em;' +
+                'position:absolute;z-index:2;bottom:.04em;left:.04em;' +
                 'display:flex;align-items:center;justify-content:center;' +
                 'width:1.4em;height:1.4em;box-sizing:border-box;' +
                 'background:#496784;color:#fff;border:.16em solid #1c1d1e;' +
@@ -527,8 +545,16 @@
             '.head__action.'+BUTTON_CLASS+'.hover{' +
                 'background:#fff!important;color:#151719!important;' +
                 'outline:2px solid white!important;outline-offset:2px!important;}' +
+            '@media screen and (max-width:480px){' +
+                'body.true--mobile .head__action.'+BUTTON_CLASS+'[data-layout="pill"]{' +
+                    'width:3em!important;min-width:3em!important;height:3em!important;' +
+                    'flex-basis:3em!important;border-radius:50%!important;}' +
+            '}' +
+            '@media screen and (max-width:640px){' +
+                '.head__body.alex-ts-header-present .head__title{display:none!important;}' +
+            '}' +
             '@media(prefers-reduced-motion:reduce){' +
-                '.'+BUTTON_CLASS+' .alex-ts-switch-track{transition:none!important;}' +
+                '.'+BUTTON_CLASS+' .alex-ts-switch-face{transition:none!important;}' +
             '}';
     }
     function mountHeader() {
@@ -540,14 +566,14 @@
             ensureCss();
             var content='<div class="head__action selector '+BUTTON_CLASS+
                 '" role="button" tabindex="0" data-phase="server" data-layout="round" data-animate="on">'+
-                '<span class="alex-ts-switch-viewport"><span class="alex-ts-switch-track">'+
+                '<span class="alex-ts-switch-viewport">'+
                 '<span class="alex-ts-switch-face alex-ts-switch-server">'+
                 '<span class="alex-ts-switch-kicker">TS</span>'+
                 '<span class="alex-ts-switch-number">1</span></span>'+
                 '<span class="alex-ts-switch-face alex-ts-switch-ping">'+
                 '<span class="alex-ts-switch-ping-value">—</span>'+
                 '<span class="alex-ts-switch-ping-unit">ms</span></span>'+
-                '</span></span><span class="alex-ts-switch-dot"></span>'+
+                '</span><span class="alex-ts-switch-dot"></span>'+
                 '<span class="alex-ts-switch-auto">A</span></div>';
             button=window.$(content);
             pointerInside=false;
@@ -558,9 +584,11 @@
             button.on('mouseenter.alex_ts_switch',function () {pointerInside=true;});
             button.on('mouseleave.alex_ts_switch',function () {pointerInside=false;});
             Lampa.Head.addElement(button,manualToggle);
+            markHeaderLayout(true);
             lastPresentationMode='';
         } catch (error) {
             button=null;
+            markHeaderLayout(false);
             console.warn('[TorrServer Switch Pro] Header init failed',error);
         }
     }
@@ -766,6 +794,7 @@
             abortAll();
             if (window.removeEventListener) window.removeEventListener('focus',onFocus);
             if (button) {button.remove();button=null;}
+            markHeaderLayout(false);
             try {if (window.Lampa && Lampa.SettingsApi && Lampa.SettingsApi.removeComponent)
                 Lampa.SettingsApi.removeComponent(COMP);} catch (ignored) {}
         }
