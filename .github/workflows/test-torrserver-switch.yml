@@ -1,0 +1,27 @@
+name: TorrServer Switch Pro checks
+on:
+  push:
+    paths:
+      - 'torrserver_switch.js'
+      - 'tests/torrserver_switch_smoke.cjs'
+      - '.github/workflows/test-torrserver-switch.yml'
+  pull_request:
+    paths:
+      - 'torrserver_switch.js'
+      - 'tests/torrserver_switch_smoke.cjs'
+      - '.github/workflows/test-torrserver-switch.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: node --check torrserver_switch.js && node --check tests/torrserver_switch_smoke.cjs
+      - name: Simulated Lampa integration
+        run: node tests/torrserver_switch_smoke.cjs
