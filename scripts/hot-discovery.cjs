@@ -9,7 +9,12 @@ const DAY = 86400000;
 const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
 const MAX_SEASON_CALLS = 45;
 const QUALITY_FLOOR = 7.2, MIN_VOTES = 100, ORIGINAL_MAX_AGE = 730;
-const RECENT_DAYS = 60; // Priority window, NOT a hard exclusion window.
+const RECENT_DAYS = 60; // The main discovery window, not a hard age cutoff.
+// Interest-first curation: quality blocks weak releases but strong, verified
+// audience attention can rescue a mixed-review breakout.
+const BREAKOUT_QUALITY_FLOOR = 6.55;
+const TOP10_RETURNING_LIMIT = 3, TOP20_RETURNING_LIMIT = 6,
+  TOP40_RETURNING_LIMIT = 12;
 const EXCLUDED = {movie:[16,99,10770],tv:[16,99,10763,10764,10766,10767]};
 const round = (n,dp=2) => Math.round(n * 10**dp) / 10**dp;
 const dateOnly = d => new Date(d).toISOString().slice(0,10);
@@ -163,16 +168,29 @@ function qualityFor(c) {
   } else if(c.surs_hot_premiere_kind==='season')quality-=.22; // series-wide proxy
   return {score:round(quality,3),confidence:round(Math.min(1,votes/(votes+140)),3),source_count:count};
 }
-function trendScore(c,peers) {
-  const d=c.surs_hot_trend_day,w=c.surs_hot_trend_week;
-  const trendRank=n=>n?1/(1+Math.log10(1+n)*.45):0;
-  const trend=d?trendRank(d):w?trendRank(w)*.85:0;
-  const ordered=peers.filter(x=>x.type===c.type).map(x=>number(x.popularity))
-    .sort((a,b)=>b-a);
-  const rank=ordered.findIndex(x=>x<=number(c.popularity));
-  const pop=ordered.length>1?1-rank/(ordered.length-1):.5;
-  return round(Math.min(1,.8*trend+.2*pop),3);
+// Normalized TMDB attention proxies. These are NOT counted as streams or
+// cross-platform demand: the data source is TMDB only.
+function rankHeat(rank,maxRank=80) {
+  if(!Number.isInteger(rank)||rank<1)return 0;
+  return round(Math.max(0,1-Math.log(1+rank)/Math.log(1+maxRank)),4);
 }
+function attentionFor(c,peers) {
+  const day=rankHeat(c.surs_hot_trend_day),week=rankHeat(c.surs_hot_trend_week);
+  const ordered=peers.filter(x=>x.type===c.type)
+    .map(x=>number(x.popularity)).sort((a,b)=>b-a);
+  const index=ordered.findIndex(p=>p<=number(c.popularity));
+  const pop=ordered.length>1?1-index/(ordered.length-1):.5;
+  const activeDay=!!c.surs_hot_trend_day,activeWeek=!!c.surs_hot_trend_week;
+  // A historically popular but currently untrending series should not top
+  // the feed purely because its cumulative rating is excellent.
+  const interest=activeDay||activeWeek?
+    .52*day+.30*week+.18*pop:.25*pop;
+  return {score:round(Math.min(1,interest),3),day,week,
+    popularity_percentile:round(pop,3),
+    trend_confirmed:activeDay&&activeWeek,
+    source_count:Number(activeDay)+Number(activeWeek)};
+}
+function trendScore(c,peers) {return attentionFor(c,peers).score;}
 // Season launch must be backed by at least one actually aired regular episode.
 // The whole-series rating is not accepted as a new-season rating by itself.
 function verifySeason(c,details,now) {
@@ -196,44 +214,60 @@ function verifySeason(c,details,now) {
   return true;
 }
 function growthFor(c,history,now) {
-  const snapshots=(history&&history.snapshots||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
-  const key=identity(c),current=number(c.popularity),periods={};
-  for(const horizon of [3,7,14]) {
+  const snapshots=(history&&history.snapshots||[]).slice()
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const key=identity(c),current=number(c.popularity),votes=number(c.vote_count),
+    periods={};
+  for(const horizon of [1,3,7,14]) {
     const old=snapshots.find(s=>daysSince(s.date,now)>=horizon&&
-      daysSince(s.date,now)<=horizon+2&&s.items&&s.items[key]);
+      daysSince(s.date,now)<=horizon+(horizon===1?0:2)&&s.items&&s.items[key]);
     if(!old)continue;
-    const last=number(old.items[key].p);
-    const ratio=Math.log((current+1)/(last+1));
-    periods[horizon+'d']=round(Math.min(1,Math.max(0,.5+ratio*.38)),3);
+    const prev=old.items[key],prior=number(prev.p);
+    const popDelta=Math.log((current+1)/(prior+1));
+    let score=Math.min(1,Math.max(0,.5+popDelta*.28));
+    if(Number.isFinite(Number(prev.v))&&votes>=number(prev.v)){
+      const voteGain=Math.max(0,votes-number(prev.v));
+      const volume=Math.min(1,Math.log1p(voteGain)/Math.log(101));
+      score=.75*score+.25*(.5+.5*volume);
+    }
+    periods[horizon+'d']=round(score,3);
   }
   const values=Object.values(periods);
-  return {score:values.length?round(values.reduce((a,b)=>a+b,0)/values.length,3):.5,
+  return {score:values.length?
+      round(values.reduce((a,b)=>a+b,0)/values.length,3):.5,
     measured:values.length>0,periods};
 }
 function eligibilityReason(c,now) {
   if(!c.poster_path)return 'poster_missing';
   if(c.surs_hot_age<0||c.surs_hot_age>550)return 'premiere_outside_window';
-  // Long-running TV shows can legitimately have a new season this month.
-  // The original-release cutoff is only relevant to old film reissues.
   if(c.type==='movie'&&c.surs_hot_original_date&&
     daysSince(c.surs_hot_original_date,now)>ORIGINAL_MAX_AGE)
     return 'original_too_old';
   if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_verified)
     return 'season_not_verified';
-  if(c.surs_hot_quality<QUALITY_FLOOR)return 'quality_below_floor';
+  if(c.surs_hot_quality<BREAKOUT_QUALITY_FLOOR)return 'quality_below_floor';
   const votes=number(c.vote_count);
-  if(votes<MIN_VOTES){
-    // Narrow exception for a very recent, trending premiere with a credible
-    // independent IMDb rating; no TMDB-only 10-vote inflated scores.
+  if(votes<MIN_VOTES) {
     const imdb=c.surs_hot_ratings&&c.surs_hot_ratings.imdb;
-    const strongExternal=imdb&&number(imdb.votes)>=1000&&
-      number(imdb.value)>=7.7;
-    const trending=(c.surs_hot_trend_day&&c.surs_hot_trend_day<=20)||
+    const external=imdb&&number(imdb.votes)>=1000&&number(imdb.value)>=7.7;
+    const strongTrend=(c.surs_hot_trend_day&&c.surs_hot_trend_day<=20)||
       (c.surs_hot_trend_week&&c.surs_hot_trend_week<=20);
     if(!(votes>=50&&c.surs_hot_age<=45&&c.surs_hot_quality>=7.6&&
-      strongExternal&&trending))return 'insufficient_votes';
+      external&&strongTrend))return 'insufficient_votes';
   }
-  if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating){
+  if(c.surs_hot_quality<QUALITY_FLOOR) {
+    // Below the normal quality bar: require strong simultaneous 24h and 7d
+    // TMDB interest plus popularity breadth; do not equate a high one-day
+    // spike to demonstrated popularity on other services.
+    const day=number(c.surs_hot_trend_day),week=number(c.surs_hot_trend_week);
+    const pop=number(c.surs_hot_attention_pop_percentile);
+    const sustained=day>=1&&day<=12&&week>=1&&week<=35&&pop>=.6;
+    const rising=day>=1&&day<=8&&pop>=.75&&
+      c.surs_hot_growth_measured&&c.surs_hot_growth>=.65;
+    if(!(votes>=MIN_VOTES&&c.surs_hot_rank_age<=60&&
+      (sustained||rising)))return 'buzz_not_confirmed';
+  }
+  if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating) {
     const trending=(c.surs_hot_trend_day&&c.surs_hot_trend_day<=25)||
       (c.surs_hot_trend_week&&c.surs_hot_trend_week<=25);
     if(!(c.surs_hot_age<=90&&votes>=500&&
@@ -251,15 +285,69 @@ function recencyTier(c,now) {
   const age=c.type==='movie'?Math.max(premiereAge,originalAge):premiereAge;
   return {age,tier:age<=60?0:age<=120?1:age<=365?2:3};
 }
+function isReturning(c) {
+  return c.type==='tv'&&c.surs_hot_premiere_kind==='season';
+}
+function kindOf(c) {
+  return isReturning(c)?'returning_tv':c.type==='movie'?'movie':'new_tv';
+}
+function diversityPenalty(candidate,chosen) {
+  const recent=chosen.slice(-5),kind=kindOf(candidate);
+  const sameKind=recent.filter(x=>kindOf(x)===kind).length;
+  // Only a small within-band penalty. Date and actual buzz remain dominant.
+  const genres=Array.isArray(candidate.genre_ids)?candidate.genre_ids:[];
+  const first=genres[0];
+  const repeats=first==null?0:recent.filter(x=>
+    Array.isArray(x.genre_ids)&&x.genre_ids[0]===first).length;
+  return Math.max(0,sameKind-2)*.45+Math.max(0,repeats-2)*.30;
+}
+function curatedSelection(candidates,previous) {
+  const remaining=candidates.slice(),picked=[];
+  const previousRank=new Map((previous?.items||[])
+    .map((c,i)=>[identity(c),i]));
+  let returning=0,breakouts=0,lastScore=100;
+  for(let position=1;position<=MAX_ITEMS&&remaining.length;position++) {
+    const returnLimit=position<=10?TOP10_RETURNING_LIMIT:
+      position<=20?TOP20_RETURNING_LIMIT:TOP40_RETURNING_LIMIT;
+    const buzzLimit=position<=10?2:position<=20?5:10;
+    let pool=remaining.filter(c=>!(isReturning(c)&&returning>=returnLimit));
+    if(!pool.length)pool=remaining;
+    const notBreakout=pool.filter(c=>!(
+      c.surs_hot_track==='breakout'&&breakouts>=buzzLimit));
+    if(notBreakout.length)pool=notBreakout;
+    pool.sort((a,b)=>{
+      const sa=a.surs_hot_base_score-diversityPenalty(a,picked);
+      const sb=b.surs_hot_base_score-diversityPenalty(b,picked);
+      if(Math.abs(sb-sa)>.000001)return sb-sa;
+      const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
+      if(pa!==undefined&&pb!==undefined&&pa!==pb)return pa-pb;
+      return identity(a).localeCompare(identity(b));
+    });
+    const winner=pool[0],idx=remaining.indexOf(winner);
+    remaining.splice(idx,1);
+    const effective=winner.surs_hot_base_score-diversityPenalty(winner,picked);
+    lastScore=Math.max(0,round(Math.min(effective,lastScore-.02),2));
+    picked.push({...winner,surs_hot_score:lastScore,
+      surs_hot_rank:position});
+    if(isReturning(winner))returning++;
+    if(winner.surs_hot_track==='breakout')breakouts++;
+  }
+  return picked;
+}
 function scoreCandidates(candidates,history,now,previous) {
   for(const c of candidates) {
     const age=daysSince(c.surs_hot_premiere_date,now);
-    const quality=qualityFor(c),heat=trendScore(c,candidates),
+    const quality=qualityFor(c),attention=attentionFor(c,candidates),
       growth=growthFor(c,history,now);
     c.surs_hot_quality=quality.score;
     c.surs_hot_confidence=quality.confidence;
     c.surs_hot_coverage=quality.source_count;
-    c.surs_hot_heat=heat;
+    c.surs_hot_heat=attention.score;
+    c.surs_hot_attention=attention.score;
+    c.surs_hot_attention_pop_percentile=attention.popularity_percentile;
+    c.surs_hot_attention_day=attention.day;
+    c.surs_hot_attention_week=attention.week;
+    c.surs_hot_attention_sources=attention.source_count;
     c.surs_hot_growth=growth.score;
     c.surs_hot_growth_measured=growth.measured;
     c.surs_hot_growth_periods=growth.periods;
@@ -269,33 +357,27 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_recency_tier=period.tier;
     c.surs_hot_provisional=number(c.vote_count)<MIN_VOTES||
       (c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating);
-    // Freshness is an eligibility gate, not a bonus that overrides quality.
-    // Without measured history, redistribute growth weight instead of
-    // adding the same arbitrary 5 points to every film.
-    const weights=growth.measured?{quality:.60,heat:.25,growth:.15}:
-      {quality:.70,heat:.30,growth:0};
-    const q=Math.min(1,Math.max(0,(quality.score-6.65)/3.35));
+    c.surs_hot_track=quality.score<QUALITY_FLOOR?'breakout':
+      quality.score>=7.8?'critically_strong':'qualified';
+    // Demand first, reliable quality second. Premiere freshness is represented
+    // by priority bands + a smooth decay inside each band.
+    const weights=growth.measured?
+      {attention:.44,quality:.28,freshness:.14,growth:.14}:
+      {attention:.57,quality:.29,freshness:.14,growth:0};
+    const q=Math.min(1,Math.max(0,(quality.score-6.4)/2.8));
+    const duration=period.tier===0?60:period.tier===1?60:
+      period.tier===2?245:185;
+    const start=period.tier===0?0:period.tier===1?60:
+      period.tier===2?120:365;
+    const freshness=Math.max(0,Math.min(1,1-(period.age-start)/duration));
+    c.surs_hot_freshness=round(freshness,3);
     c.surs_hot_weights=weights;
-    const relevance=weights.quality*q+weights.heat*heat+
-      weights.growth*growth.score;
-    // Four NON-overlapping score bands keep the actual visible Hot score
-    // in exactly the same order as the freshness-first ranking.
-    // 0-60d: 75-99.5, 61-120d: 50-74.5,
-    // 121-365d: 25-49.5, older: 0-24.5.
-    // Quality/interest still determine order WITHIN each band.
-    c.surs_hot_score=round(75-25*period.tier+24.5*relevance);
+    const relevance=weights.attention*attention.score+weights.quality*q+
+      weights.freshness*freshness+weights.growth*growth.score;
+    c.surs_hot_base_score=round(75-25*period.tier+24.5*relevance,3);
   }
   const eligible=candidates.filter(c=>!eligibilityReason(c,now));
-  const previousRank=new Map((previous?.items||[]).map((c,i)=>
-    [identity(c),i]));
-  eligible.sort((a,b)=>{
-    const delta=b.surs_hot_score-a.surs_hot_score;
-    if(delta)return delta;
-    const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
-    if(pa!==undefined&&pb!==undefined&&pa!==pb)return pa-pb;
-    return identity(a).localeCompare(identity(b));
-  });
-  return eligible.slice(0,MAX_ITEMS).map((c,i)=>({...c,surs_hot_rank:i+1}));
+  return curatedSelection(eligible,previous);
 }
 function nextHistory(history,candidates,now) {
   const day=dateOnly(now);
@@ -463,11 +545,23 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
     const band=['0-60','61-120','121-365','366+'][c.surs_hot_recency_tier];
     recencyCounts[band]++;
   }
-  const feed={schema:1,algorithm:'hot-discovery-4.2',mode:'primary',
+  const byKind={movie:0,new_tv:0,returning_tv:0};
+  const byTrack={qualified:0,critically_strong:0,breakout:0};
+  for(const c of items){
+    byKind[kindOf(c)]++;
+    byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
+  }
+  const feed={schema:1,algorithm:'hot-discovery-4.3',mode:'primary',
     generated_at:nowDate.toISOString(),sources:{tmdb:true,mdblist:!!mdblistKey},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
-      primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,rejections,
+      primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
+      ranking_model:'interest-quality-freshness-v1',
+      selected_by_kind:byKind,selected_by_track:byTrack,
+      returning_top10:items.slice(0,10).filter(isReturning).length,
+      returning_top20:items.slice(0,20).filter(isReturning).length,
+      breakouts_top10:items.slice(0,10).filter(c=>c.surs_hot_track==='breakout').length,
+      rejections,
       provisional:items.filter(c=>c.surs_hot_provisional).length,
       measured_growth:items.filter(c=>c.surs_hot_growth_measured).length,
       top10:items.slice(0,10).map(c=>({id:c.id,type:c.type,title:c.title,
@@ -504,5 +598,5 @@ async function main(){
 }
 if(require.main===module)main().catch(e=>{console.error(e.message);process.exitCode=1;});
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
-  scoreCandidates,recencyTier,eligibilityReason,verifySeason,nextHistory,validateFeed,
+  scoreCandidates,recencyTier,attentionFor,curatedSelection,eligibilityReason,verifySeason,nextHistory,validateFeed,
   build,parseMdb,daysSince};
