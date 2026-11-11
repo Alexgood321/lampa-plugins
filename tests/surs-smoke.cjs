@@ -574,7 +574,7 @@ test('KP 7.5 label is refreshed for saved shelves without resetting user setting
         ['nav_buttons','hot_us_new','kp_new_8','us_new_8']);
     assert.equal(rows[2].title,'Новинки США · КП 7,5+');
     assert.equal(rows[2].enabled,false);
-    assert.equal(rows[2].title,'Новинки США 8+');
+    assert.equal(rows[3].title,'Новинки США 8+');
     assert.equal(app.stored.get('surs_fixed_shelves_v2'),saved);
 });
 
