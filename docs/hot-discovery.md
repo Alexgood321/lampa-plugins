@@ -1,6 +1,6 @@
 # SURS Hot Discovery 4.0
 
-Status: SHADOW. The working SURS 3.9.26 shelf remains untouched. The Hot shelf is opt-in.
+Status: SHADOW. The working SURS 3.9.26 shelf remains untouched. In SURS Pro 4.0.2 the Hot shelf is enabled by default for new MAIN profiles and migrated into existing MAIN profiles with SURS navigation. It remains an independent experimental shelf and can be disabled.
 
 ## Setup
 
@@ -10,7 +10,7 @@ Required secret: TMDB_READ_ACCESS_TOKEN from your own TMDB account. Alternativel
 Optional secret: MDBLIST_API_KEY. Without this, no IMDb/critic scores are invented.
 Optional variable: MDBLIST_LIST_IDS, comma-separated numerical IDs of selected MDBList lists, to add independent discovery candidates.
 
-Go to Actions / SURS Hot Discovery builder / Run workflow. Without a TMDB secret it reports "not_configured" and does not manufacture data.
+Go to Actions / SURS Hot Discovery builder / Run workflow. Without a TMDB secret the workflow fails with a clear error and does not manufacture data.
 
 Source snapshots run every 3 hours (UTC); the public top-40 refreshes once per UTC day to avoid intraday reshuffling. The job publishes JSON using the scoped GitHub Actions token; no VPS or new subscription.
 
@@ -31,7 +31,7 @@ https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discov
 
 ## Safety and rollout
 
-The old SURS "Лучшие новинки США" remains unchanged. Hot is an additional disabled-by-default shelf for shadow comparison. Do not promote until side-by-side validation for 30 days. Kinopoisk stays in the original client-side shelf; no unauthorized API is added to the server. Simkl and Trakt are not integrated pending their licensing conditions.
+The old SURS "Лучшие новинки США" remains unchanged. Hot is an additional default-enabled test shelf for shadow comparison. Manual disabling/removal must be preserved, and customized profiles without SURS navigation are not modified. Do not promote until side-by-side validation for 30 days. Kinopoisk stays in the original client-side shelf; no unauthorized API is added to the server. Simkl and Trakt are not integrated pending their licensing conditions.
 
 Offline test: node --test tests/hot-discovery.test.cjs.
 Full regression: node scripts/build-surs.cjs --check && node tests/surs-smoke.cjs.
