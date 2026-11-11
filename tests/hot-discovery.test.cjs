@@ -337,7 +337,7 @@ test('top-10 and top-20 have returning-season caps when alternatives exist',()=>
   const rows=hot.scoreCandidates(raw,{snapshots:[]},NOW,null);
   const n=x=>x.filter(c=>c.type==='tv'&&
     c.surs_hot_premiere_kind==='season').length;
-  assert.equal(rows.length,40);
+  assert.equal(rows.length,38); // 26 movies + 12 returning seasons; no forced padding
   assert.ok(n(rows.slice(0,10))<=3);
   assert.ok(n(rows.slice(0,20))<=6);
   assert.ok(n(rows)<=12);
