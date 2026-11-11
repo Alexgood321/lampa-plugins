@@ -2184,7 +2184,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'4.0.1');
+    assert.equal(app.window.LampaShelfManager.version,'4.0.2');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];
