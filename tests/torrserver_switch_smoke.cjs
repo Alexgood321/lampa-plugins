@@ -13,6 +13,8 @@ const params={};
 const calls=[];
 const responses={one:{state:'up'},two:{state:'up'}};
 let playerOpened=false;
+let timeOffset=0;
+class MockDate extends Date {static now(){return Date.now()+timeOffset;}}
 let button=null;
 
 class JQ {
@@ -93,7 +95,7 @@ const context={
     clearInterval:n=>timers.delete(n),
     setTimeout:(fn)=>{timers.set(++nextTimer,fn);return nextTimer;},
     clearTimeout:n=>timers.delete(n),
-    console,Date,unescape,encodeURIComponent
+    console,Date:MockDate,unescape,encodeURIComponent
 };
 context.window.document=context.document;
 vm.runInNewContext(original,context);
@@ -120,6 +122,7 @@ Lampa.Storage.set('alex_tss_mode','auto');
 Lampa.Storage.set('alex_tss_fail_count','2');
 Lampa.Storage.set('alex_tss_return_primary',false);
 responses.one={state:'server_down'};
+timeOffset=360000; // Previous manual switch cooldown has expired.
 plugin.check();
 assert.equal(keys.torrserver_use_link,'one','first failure must not switch');
 plugin.check();
