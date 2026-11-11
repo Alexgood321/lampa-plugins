@@ -675,16 +675,21 @@ test('Hot Discovery opt-in renders verified JSON and preserves both category pag
     assert.equal(second.results[0].id,17020);
     assert.equal(calls,1);
 });
-test('Hot Discovery 4.3 shows real audience model, curation and quality diagnostics', () => {
+test('Hot Discovery 4.4 shows three-source agreement, actual coverage and weights', () => {
     const app=boot({saved:[{id:'hot_us_new',enabled:true}]});
     const day=new Date().toISOString().slice(0,10);
-    const feed={schema:1,mode:'primary',algorithm:'hot-discovery-4.3',
+    const feed={schema:1,mode:'primary',algorithm:'hot-discovery-4.4',
         generated_at:new Date().toISOString(),items:Array.from({length:12},(_,i)=>({
             id:9000+i,type:'movie',source:'tmdb',poster_path:'/p',
             title:'Movie '+i,surs_hot_score:80-i,surs_hot_rank:i+1,
             surs_hot_premiere_date:day
         })),diagnostics:{selected:12,quality_floor:7.2,min_votes:100,
-            primary_window_days:60,ranking_model:'interest-quality-freshness-v1',
+            primary_window_days:60,ranking_model:'attention-quality-consensus-v2',
+            weights_with_growth:{attention:45,quality:35,freshness:5,growth:15},
+            weights_without_growth:{attention:55,quality:40,freshness:5,growth:0},
+            rating_coverage:{tmdb:12,imdb:6,kinopoisk:4,triple:3,
+                triple_agreement:2,double_agreement:1,growth_confirmed:0},
+            kp_calls:20,kp_matched:4,kp_failures:0,
             selected_by_kind:{movie:7,new_tv:3,returning_tv:2},
             returning_top10:2,returning_top20:2,
             selected_by_track:{qualified:6,critically_strong:5,breakout:1},
@@ -692,14 +697,20 @@ test('Hot Discovery 4.3 shows real audience model, curation and quality diagnost
             rejections:{quality_below_floor:22,insufficient_votes:4}}};
     app.Lampa.Reguest.prototype.silent=function(url,ok){ok(feed);};
     app.getMain();
-    assert.equal(app.stored.get('surs_hot_json_v4').algorithm,'hot-discovery-4.3');
+    assert.equal(app.stored.get('surs_hot_json_v5').algorithm,'hot-discovery-4.4');
     let menu=null;
     app.Lampa.Select={show:x=>{menu=x;}};
     app.window.LampaShelfManager.openHotDiagnostics();
     assert.ok(menu);
     const labels=Array.from(menu.items,x=>x.title).join('\\n');
-    assert.ok(labels.includes('hot-discovery-4.3'));
-    assert.ok(labels.includes('Модель: interest-quality-freshness-v1'));
+    assert.ok(labels.includes('hot-discovery-4.4'));
+    assert.ok(labels.includes('Веса с ростом: интерес 45% · качество 35% · свежесть 5% · рост 15%'));
+    assert.ok(labels.includes('Веса без роста: интерес 55% · качество 40% · свежесть 5%'));
+    assert.ok(labels.includes('Рейтинги в подборке: TMDB 12 · IMDb 6 · КП 4'));
+    assert.ok(labels.includes('Три рейтинга: 3 · согласованы 2 · согласованы два 1'));
+    assert.ok(labels.includes('Рост подтверждён за 3+ дней: 0 из 12'));
+    assert.ok(labels.includes('Кинопоиск запросов: 20 · сопоставлено 4 · ошибок 0'));
+    assert.ok(labels.includes('Модель: attention-quality-consensus-v2'));
     assert.ok(labels.includes('Состав: фильмы 7 · новые сериалы 3 · новые сезоны 2'));
     assert.ok(labels.includes('Сезонов в топ-10: 2 · топ-20: 2'));
     assert.ok(labels.includes('Резонансных с неоднозначной оценкой: 1'));
@@ -723,9 +734,9 @@ test('Hot Discovery falls back to prior verified JSON versions on network error'
     assert.equal(requests,1);
     assert.equal(rows[0].results.length,12);
     assert.equal(app.window.SURS_PERFORMANCE.hot_us.status,'cached');
-    assert.equal(app.stored.has('surs_hot_json_v4'),false);
+    assert.equal(app.stored.has('surs_hot_json_v5'),false);
 });
-test('Hot Discovery 4.3 bypasses previous v3 feed cache on the first upgraded boot',()=>{
+test('Hot Discovery 4.4 bypasses previous v4 feed cache on the first upgraded boot',()=>{
     const day=new Date().toISOString().slice(0,10);
     const make=algorithm=>({schema:1,algorithm,generated_at:new Date().toISOString(),
         items:Array.from({length:12},(_,i)=>({
@@ -733,31 +744,31 @@ test('Hot Discovery 4.3 bypasses previous v3 feed cache on the first upgraded bo
             surs_hot_score:80-i,surs_hot_rank:i+1,surs_hot_premiere_date:day
         }))});
     const app=boot({saved:[{id:'hot_us_new',enabled:true}]});
-    app.stored.set('surs_hot_json_v3',make('hot-discovery-4.2'));
+    app.stored.set('surs_hot_json_v4',make('hot-discovery-4.3'));
     let requests=0;
     app.Lampa.Reguest.prototype.silent=(url,ok)=>{
-        requests++;ok(make('hot-discovery-4.3'));
+        requests++;ok(make('hot-discovery-4.4'));
     };
     const rows=app.getMain();
     assert.equal(requests,1);
     assert.equal(rows[0].results.length,12);
-    assert.equal(app.stored.get('surs_hot_json_v4').algorithm,'hot-discovery-4.3');
+    assert.equal(app.stored.get('surs_hot_json_v5').algorithm,'hot-discovery-4.4');
     assert.equal(app.window.SURS_PERFORMANCE.hot_us.status,'ready');
 });
 test('Hot diagnostics recognize an already verified cache without a new network request',()=>{
     const app=boot({saved:[{id:'hot_us_new',enabled:true}]});
     const day=new Date().toISOString().slice(0,10);
-    const old={schema:1,algorithm:'hot-discovery-4.3',
+    const old={schema:1,algorithm:'hot-discovery-4.4',
         generated_at:new Date().toISOString(),items:Array.from({length:12},(_,i)=>({
             id:9500+i,type:'movie',source:'tmdb',poster_path:'/p',
             surs_hot_premiere_date:day,surs_hot_score:80-i
-        })),diagnostics:{selected:12,ranking_model:'interest-quality-freshness-v1'}};
-    app.stored.set('surs_hot_json_v4',old);
+        })),diagnostics:{selected:12,ranking_model:'attention-quality-consensus-v2'}};
+    app.stored.set('surs_hot_json_v5',old);
     let menu=null;
     app.Lampa.Select={show:x=>{menu=x;}};
     app.window.LampaShelfManager.openHotDiagnostics();
     const labels=Array.from(menu.items,x=>x.title).join('|');
-    assert.ok(labels.includes('hot-discovery-4.3 · кэш'));
+    assert.ok(labels.includes('hot-discovery-4.4 · кэш'));
     assert.ok(!labels.includes('не загружен'));
 });
 test('Hot Discovery rejects malformed feeds without changing other shelves', () => {
@@ -787,8 +798,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 4\.0\.6/);
-    assert.match(readableSource, /Версия: 4\.0\.6/);
+    assert.match(mainSource, /Версия: 4\.0\.7/);
+    assert.match(readableSource, /Версия: 4\.0\.7/);
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -1216,7 +1227,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 4\.0\.6/);
+    assert.match(source, /Версия: 4\.0\.7/);
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -1302,7 +1313,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '4.0.6');
+    assert.equal(app.window.LampaShelfManager.version, '4.0.7');
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 26);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -1477,7 +1488,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'4.0.6');
+    assert.equal(app.window.LampaShelfManager.version,'4.0.7');
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];

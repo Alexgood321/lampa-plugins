@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 4.0.6 (Hot Discovery 4.3 interest curation)
+ * Версия: 4.0.7 (Hot Discovery 4.4 three-source quality diagnostics)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1748,8 +1748,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var HOT_US_ID='hot_us_new',HOT_US_TITLE='Горячие новинки США';
     var HOT_US_CATALOG_URL='surs_hot_us_new';
     var HOT_US_URL='https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json';
-    var HOT_CACHE_KEY='surs_hot_json_v4',HOT_OLD_CACHE_KEY='surs_hot_json_v3',
-        HOT_OLDER_CACHE_KEY='surs_hot_json_v2',
+    var HOT_CACHE_KEY='surs_hot_json_v5',HOT_OLD_CACHE_KEY='surs_hot_json_v4',
+        HOT_OLDER_CACHE_KEY='surs_hot_json_v3',
+        HOT_OLDER2_CACHE_KEY='surs_hot_json_v2',
         HOT_OLDEST_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
     var hotRequesting=false,hotCallbacks=[],hotLastTry=0;
     function hotValid(feed){
@@ -1779,9 +1780,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         try{
             var recent=Lampa.Storage.get(HOT_OLD_CACHE_KEY,null),
                 older=Lampa.Storage.get(HOT_OLDER_CACHE_KEY,null),
+                older2=Lampa.Storage.get(HOT_OLDER2_CACHE_KEY,null),
                 oldest=Lampa.Storage.get(HOT_OLDEST_CACHE_KEY,null);
             return hotValid(recent)?recent:
-                hotValid(older)?older:hotValid(oldest)?oldest:null;
+                hotValid(older)?older:hotValid(older2)?older2:
+                hotValid(oldest)?oldest:null;
         }catch(e){return null;}
     }
     function hotRow(feed){
@@ -1867,10 +1870,25 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             algorithm=current.algorithm||cached&&cached.algorithm||'неизвестен',
             rejects=d.rejections||{};
         var status=current.status||(cached?'кэш':'не загружен');
-        var kinds=d.selected_by_kind||{},tracks=d.selected_by_track||{};
+        var kinds=d.selected_by_kind||{},tracks=d.selected_by_track||{},
+            cover=d.rating_coverage||{},
+            w=d.weights_with_growth||{},noGrowth=d.weights_without_growth||{};
         var items=[
             {title:'Алгоритм: '+algorithm+' · '+status},
             {title:'Модель: '+(d.ranking_model||'нет данных')},
+            {title:'Веса с ростом: интерес '+(w.attention||0)+
+                '% · качество '+(w.quality||0)+'% · свежесть '+
+                (w.freshness||0)+'% · рост '+(w.growth||0)+'%'},
+            {title:'Веса без роста: интерес '+(noGrowth.attention||0)+
+                '% · качество '+(noGrowth.quality||0)+'% · свежесть '+
+                (noGrowth.freshness||0)+'%'},
+            {title:'Рейтинги в подборке: TMDB '+(cover.tmdb||0)+
+                ' · IMDb '+(cover.imdb||0)+' · КП '+(cover.kinopoisk||0)},
+            {title:'Три рейтинга: '+(cover.triple||0)+
+                ' · согласованы '+(cover.triple_agreement||0)+
+                ' · согласованы два '+(cover.double_agreement||0)},
+            {title:'Рост подтверждён за 3+ дней: '+
+                (cover.growth_confirmed||0)+' из '+(d.selected||0)},
             {title:'Состав: фильмы '+(kinds.movie||0)+
                 ' · новые сериалы '+(kinds.new_tv||0)+
                 ' · новые сезоны '+(kinds.returning_tv||0)},
@@ -1891,6 +1909,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                     (rejects.season_rating_unconfirmed||0))},
             {title:'TMDB запросов: '+(d.tmdb_calls||0)+' · ошибок '+(d.tmdb_failures||0)},
             {title:'MDBList запросов: '+(d.mdblist_calls||0)+' · ошибок '+(d.mdblist_failures||0)},
+            {title:'Кинопоиск запросов: '+(d.kp_calls||0)+
+                ' · сопоставлено '+(d.kp_matched||0)+
+                ' · ошибок '+(d.kp_failures||0)},
             {title:'Кандидатов: '+(d.discovered||0)+' · США '+(d.us_verified||0)+
                 ' · выбрано '+(d.selected||0)},
             {title:'Перспективных с предварительной оценкой: '+(d.provisional||0)},
@@ -3583,7 +3604,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.6';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.7';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4094,7 +4115,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v4.0.6 (Hot Discovery 4.3 curation) успешно инициализирован.');
+            console.log('SURS Pro v4.0.7 (Hot Discovery 4.4 ratings) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4125,7 +4146,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         getDefaultSectionShelves: getDefaultSectionShelves,
         hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
         openHotDiagnostics: openHotDiagnostics,
-        version: '4.0.6'
+        version: '4.0.7'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
