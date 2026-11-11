@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 4.0.4 (Hot Discovery 4.1 live diagnostics)
+ * Версия: 4.0.5 (Hot Discovery 4.2 recency priority)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1748,7 +1748,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var HOT_US_ID='hot_us_new',HOT_US_TITLE='Горячие новинки США';
     var HOT_US_CATALOG_URL='surs_hot_us_new';
     var HOT_US_URL='https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json';
-    var HOT_CACHE_KEY='surs_hot_json_v2',HOT_OLD_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
+    var HOT_CACHE_KEY='surs_hot_json_v3',HOT_OLD_CACHE_KEY='surs_hot_json_v2',
+        HOT_OLDER_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
     var hotRequesting=false,hotCallbacks=[],hotLastTry=0;
     function hotValid(feed){
         if(!feed||feed.schema!==1||!Array.isArray(feed.items)||
@@ -1775,8 +1776,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     // prevent an immediate fetch of the 4.1 feed on the first upgraded boot.
     function hotReadLegacyCached(){
         try{
-            var f=Lampa.Storage.get(HOT_OLD_CACHE_KEY,null);
-            return hotValid(f)?f:null;
+            var recent=Lampa.Storage.get(HOT_OLD_CACHE_KEY,null),
+                older=Lampa.Storage.get(HOT_OLDER_CACHE_KEY,null);
+            return hotValid(recent)?recent:hotValid(older)?older:null;
         }catch(e){return null;}
     }
     function hotRow(feed){
@@ -1866,6 +1868,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             {title:'JSON: '+(current.generated_at||cached&&cached.generated_at||'пока нет')},
             {title:'Качество от '+(d.quality_floor==null?'нет данных':d.quality_floor)+
                 ' · голосов от '+(d.min_votes==null?'нет данных':d.min_votes)},
+            {title:'Приоритет: до '+(d.primary_window_days||60)+' дней'},
+            {title:'По срокам: 0–60 '+((d.selected_by_recency||{})['0-60']||0)+
+                ' · 61–120 '+((d.selected_by_recency||{})['61-120']||0)+
+                ' · 121–365 '+((d.selected_by_recency||{})['121-365']||0)+
+                ' · 366+ '+((d.selected_by_recency||{})['366+']||0)},
             {title:'Отсеяно: качество '+(rejects.quality_below_floor||0)+
                 ' · голоса '+(rejects.insufficient_votes||0)+
                 ' · сезон '+((rejects.season_not_verified||0)+
@@ -3564,7 +3571,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.4';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.5';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4075,7 +4082,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v4.0.4 (Hot Discovery 4.1 diagnostics) успешно инициализирован.');
+            console.log('SURS Pro v4.0.5 (Hot Discovery 4.2 recency) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4106,7 +4113,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         getDefaultSectionShelves: getDefaultSectionShelves,
         hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
         openHotDiagnostics: openHotDiagnostics,
-        version: '4.0.4'
+        version: '4.0.5'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
