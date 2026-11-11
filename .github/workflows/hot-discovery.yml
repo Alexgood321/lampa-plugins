@@ -60,7 +60,21 @@ jobs:
             exit 0
           fi
           git commit -m 'data(hot): update verified ranking and snapshots [skip ci]'
-          git push origin HEAD:main
+          # A GitHub API edit can land while this 3h collector is running.
+          # Retry non-fast-forward pushes without force-pushing over user changes.
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              pushed=1
+              break
+            fi
+            git fetch --depth=20 origin main
+            git rebase origin/main || { git rebase --abort || true; exit 1; }
+          done
+          if [[ "$pushed" != 1 ]]; then
+            echo "::error::Unable to publish audited feed without overwriting upstream work."
+            exit 1
+          fi
           echo "Updated Hot Discovery; previous good feed preserved in Git history." >> "$GITHUB_STEP_SUMMARY"
           echo "### Candidate audit" >> "$GITHUB_STEP_SUMMARY"
           node -e "const a=require('./data/hot-discovery-audit.json');console.log('Candidates evaluated:',a.candidate_total,'Eligible:',a.eligible,'Selected:',a.selected)" >> "$GITHUB_STEP_SUMMARY"
