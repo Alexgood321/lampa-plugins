@@ -94,12 +94,17 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.3');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.4');
+  assert.equal(result.feed.diagnostics.ranking_model,'attention-quality-consensus-v2');
+  assert.equal(result.audit.candidate_total,36);
+  assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,60);
   assert.deepEqual(Object.keys(result.feed.diagnostics.selected_by_recency),
     ['0-60','61-120','121-365','366+']);
   assert.equal(result.feed.diagnostics.quality_floor,7.2);
-  assert.equal(result.feed.diagnostics.ranking_model,'interest-quality-freshness-v1');
+  assert.equal(result.feed.diagnostics.weights_with_growth.quality,35);
+  assert.equal(result.feed.diagnostics.weights_without_growth.attention,55);
+  assert.equal(result.feed.diagnostics.rating_coverage.kinopoisk,0);
   assert.ok(result.feed.diagnostics.selected_by_kind.movie>0);
   assert.ok(result.feed.diagnostics.selected_by_kind.new_tv>0);
   assert.ok(result.feed.items.some(x=>x.type==='movie'));
@@ -213,11 +218,11 @@ test('weights omit unmeasured growth instead of adding neutral scores',()=>{
   const card=()=>({type:'movie',id:42,poster_path:'/p',popularity:90,
     vote_average:8.4,vote_count:900,surs_hot_premiere_date:day(60)});
   const noHistory=hot.scoreCandidates([card()],{snapshots:[]},NOW,null)[0];
-  assert.deepEqual(noHistory.surs_hot_weights,{attention:.57,quality:.29,freshness:.14,growth:0});
+  assert.deepEqual(noHistory.surs_hot_weights,{attention:.55,quality:.40,freshness:.05,growth:0});
   const measured=hot.scoreCandidates([card()],{snapshots:[{
     date:day(7),items:{'movie:42':{p:20}}
   }]},NOW,null)[0];
-  assert.deepEqual(measured.surs_hot_weights,{attention:.44,quality:.28,freshness:.14,growth:.14});
+  assert.deepEqual(measured.surs_hot_weights,{attention:.45,quality:.35,freshness:.05,growth:.15});
   assert.equal(measured.surs_hot_growth_measured,true);
 });
 
@@ -365,4 +370,109 @@ test('a 200-day-old highly rated movie cannot outrank qualified current releases
     surs_hot_premiere_date:day(200),surs_hot_original_date:day(200)};
   const ranked=hot.scoreCandidates([old,now],{snapshots:[]},NOW,null);
   assert.deepEqual(ranked.map(x=>x.id),[400,401]);
+});
+
+test('Kinopoisk API is matched only by exact IMDb ID, not a translated title',()=>{
+  const id='tt1234567';
+  const rows={total:2,items:[
+    {imdbId:'tt7654321',kinopoiskId:33,ratingKinopoisk:9.8,
+      ratingKinopoiskVoteCount:20000,nameRu:'Совпало название'},
+    {imdbId:id,kinopoiskId:44,ratingKinopoisk:8.1,
+      ratingKinopoiskVoteCount:4200,ratingImdb:8.2,ratingImdbVoteCount:5300}
+  ]};
+  assert.deepEqual(hot.parseKinopoisk(rows,id),{
+    kp:{value:8.1,votes:4200,via:'kinopoisk_unofficial',kinopoisk_id:44},
+    imdb:{value:8.2,votes:5300,via:'kinopoisk_unofficial'}
+  });
+  assert.deepEqual(hot.parseKinopoisk(rows,'tt9999999'),{});
+  assert.deepEqual(hot.parseKinopoisk({items:[{
+    imdbId:id,ratingKinopoisk:8.6,ratingKinopoiskVoteCount:0}]},id),{});
+});
+test('three high agreeing ratings beat two; three mediocre ones earn no bonus',()=>{
+  const base={vote_average:8.3,vote_count:6000};
+  const three={...base,surs_hot_ratings:{
+    imdb:{value:8.2,votes:15000},kp:{value:8.25,votes:50000}
+  }};
+  const two={...base,surs_hot_ratings:{imdb:{value:8.2,votes:15000}}};
+  const low={vote_average:6.1,vote_count:6000,surs_hot_ratings:{
+    imdb:{value:6.2,votes:8000},kp:{value:6.15,votes:9000}
+  }};
+  const a=hot.qualityFor(three),b=hot.qualityFor(two),
+    c=hot.qualityFor(low);
+  assert.equal(a.agreement.level,'triple_high');
+  assert.equal(a.agreement.bonus,.38);
+  assert.equal(b.agreement.level,'pair_high');
+  assert.equal(b.agreement.bonus,.16);
+  assert.ok(a.score>b.score);
+  assert.equal(c.agreement.bonus,0);
+  assert.ok(c.score<7.2);
+});
+test('disagreement never creates agreement bonus and season history cannot masquerade as season consensus',()=>{
+  const divergent={vote_average:8.8,vote_count:3000,
+    surs_hot_ratings:{imdb:{value:6.5,votes:4500},kp:{value:6.4,votes:4500}}};
+  const d=hot.qualityFor(divergent);
+  assert.equal(d.agreement.level,'disputed');
+  assert.equal(d.agreement.bonus,0);
+  const season=hot.qualityFor({...divergent,surs_hot_premiere_kind:'season',
+    surs_hot_season_rating:{value:8.4,votes:100}});
+  assert.equal(season.agreement.bonus,0);
+});
+test('one-day movement is not yet 15 percent confirmed growth',()=>{
+  const card={type:'movie',id:77,poster_path:'/p',vote_average:8.5,
+    vote_count:3000,popularity:130,surs_hot_premiere_date:day(8)};
+  const one=hot.scoreCandidates([{...card}],{snapshots:[{date:day(1),
+    items:{'movie:77':{p:50,v:2000}}}]},NOW,null)[0];
+  assert.equal(one.surs_hot_growth_measured,true);
+  assert.equal(one.surs_hot_growth_confirmed,false);
+  assert.deepEqual(one.surs_hot_weights,
+    {attention:.55,quality:.40,freshness:.05,growth:0});
+  const three=hot.scoreCandidates([{...card}],{snapshots:[{date:day(3),
+    items:{'movie:77':{p:50,v:2000}}}]},NOW,null)[0];
+  assert.equal(three.surs_hot_growth_confirmed,true);
+  assert.deepEqual(three.surs_hot_weights,
+    {attention:.45,quality:.35,freshness:.05,growth:.15});
+});
+test('full pipeline combines verified KP and IMDb scores and audits all candidates',async()=>{
+  const transport=async(url,headers={})=>{
+    const parsed=new URL(url),pathname=parsed.pathname;
+    if(url.startsWith('https://kinopoiskapiunofficial.tech/')){
+      assert.equal(headers['X-API-KEY'],'kp-fixture');
+      const imdbId=parsed.searchParams.get('imdbId');
+      return {items:[{imdbId,kinopoiskId:230,ratingKinopoisk:8.2,
+        ratingKinopoiskVoteCount:5000,ratingImdb:8.1,
+        ratingImdbVoteCount:9000}]};
+    }
+    if(url.startsWith('https://api.mdblist.com/')){
+      const id=Number(pathname.split('/').slice(-1)[0]);
+      return {ids:{tmdb:id},ratings:[{source:'imdb',value:8.15,votes:10000}]};
+    }
+    if(pathname.includes('/trending/')||pathname.includes('/discover/')){
+      const tv=pathname.includes('/tv');
+      return {results:Array.from({length:18},(_,i)=>tv?
+        {id:2000+i,name:'Series '+i,genre_ids:[18],poster_path:'/p',
+          popularity:90,vote_average:8.2,vote_count:1200}:
+        movie(1000+i))};
+    }
+    const id=Number(pathname.split('/').pop()),imdbId='tt'+String(id).padStart(7,'0');
+    if(pathname.includes('/movie/'))return {...detail(id),imdb_id:imdbId};
+    if(pathname.includes('/tv/'))return {id,name:'TV '+id,first_air_date:day(30),
+      poster_path:'/p',origin_country:['US'],genres:[{id:18}],
+      popularity:90,vote_average:8.2,vote_count:1500,
+      external_ids:{imdb_id:imdbId},seasons:[{season_number:1,air_date:day(30)}]};
+    return null;
+  };
+  const result=await hot.build({now:NOW,tmdbToken:'sample-token',
+    mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
+    transport,history:{snapshots:[]},detailLimit:80});
+  assert.equal(result.feed.algorithm,'hot-discovery-4.4');
+  assert.equal(result.audit.candidate_total,36);
+  assert.equal(result.audit.candidates.length,36);
+  assert.ok(result.feed.diagnostics.kp_calls>0);
+  assert.ok(result.feed.diagnostics.kp_matched>0);
+  assert.ok(result.feed.diagnostics.mdblist_calls>0);
+  assert.ok(result.feed.diagnostics.rating_coverage.triple>0);
+  assert.ok(result.feed.items.some(x=>x.surs_hot_rating_agreement.level==='triple_high'));
+  assert.ok(result.audit.candidates.some(x=>x.kp&&x.imdb));
+  assert.ok(!JSON.stringify(result.feed).includes('kp-fixture'));
+  assert.ok(!JSON.stringify(result.audit).includes('mdb-fixture'));
 });
