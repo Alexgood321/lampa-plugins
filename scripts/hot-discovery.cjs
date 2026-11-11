@@ -9,6 +9,7 @@ const DAY = 86400000;
 const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
 const MAX_SEASON_CALLS = 45;
 const QUALITY_FLOOR = 7.2, MIN_VOTES = 100, ORIGINAL_MAX_AGE = 730;
+const RECENT_DAYS = 60; // Priority window, NOT a hard exclusion window.
 const EXCLUDED = {movie:[16,99,10770],tv:[16,99,10763,10764,10766,10767]};
 const round = (n,dp=2) => Math.round(n * 10**dp) / 10**dp;
 const dateOnly = d => new Date(d).toISOString().slice(0,10);
@@ -59,8 +60,29 @@ function tvPremiere(details,now) {
 }
 function discoveryJobs(now) {
   const start=dateOnly(new Date(new Date(now).getTime()-550*DAY));
+  const recentStart=dateOnly(new Date(new Date(now).getTime()-RECENT_DAYS*DAY));
   const end=dateOnly(now);
   const jobs=[];
+  // Give 0-60d releases their own discovery lanes FIRST. The detail budget
+  // is limited to 260; older Trending titles must not crowd out recent works.
+  for(const type of ['movie','tv']) {
+    const dateKey=type==='movie'?'primary_release_date':'first_air_date';
+    const common='with_origin_country=US&include_adult=false&'+dateKey+'.gte='+
+      recentStart+'&'+dateKey+'.lte='+end+
+      '&without_genres='+EXCLUDED[type].join(',');
+    for(const sort of [dateKey+'.desc','popularity.desc'])
+      for(let page=1;page<=3;page++)
+        jobs.push({type,channel:'recent_'+sort,
+          url:'discover/'+type+'?'+common+'&sort_by='+sort+'&page='+page});
+  }
+  for(let page=1;page<=3;page++)jobs.push({type:'movie',channel:'recent_digital',
+    url:'discover/movie?region=US&with_origin_country=US&with_release_type=4'+
+      '&release_date.gte='+recentStart+'&release_date.lte='+end+
+      '&sort_by=release_date.desc&page='+page});
+  for(let page=1;page<=3;page++)jobs.push({type:'tv',channel:'recent_season',
+    url:'discover/tv?with_origin_country=US&include_adult=false'+
+      '&air_date.gte='+recentStart+'&air_date.lte='+end+
+      '&sort_by=popularity.desc&page='+page});
   for(const type of ['movie','tv'])for(const span of ['day','week'])for(let page=1;page<=2;page++)
     jobs.push({type,channel:'trending_'+span,url:'trending/'+type+'/'+span+'?page='+page});
   for(const type of ['movie','tv']) {
@@ -191,7 +213,9 @@ function growthFor(c,history,now) {
 function eligibilityReason(c,now) {
   if(!c.poster_path)return 'poster_missing';
   if(c.surs_hot_age<0||c.surs_hot_age>550)return 'premiere_outside_window';
-  if(c.surs_hot_original_date&&
+  // Long-running TV shows can legitimately have a new season this month.
+  // The original-release cutoff is only relevant to old film reissues.
+  if(c.type==='movie'&&c.surs_hot_original_date&&
     daysSince(c.surs_hot_original_date,now)>ORIGINAL_MAX_AGE)
     return 'original_too_old';
   if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_verified)
@@ -218,6 +242,15 @@ function eligibilityReason(c,now) {
   }
   return null;
 }
+function recencyTier(c,now) {
+  const premiereAge=daysSince(c.surs_hot_premiere_date,now);
+  // TV series: use the current verified season premiere, never season one.
+  // Films: a belated streaming release cannot reset the age of an older film.
+  const originalAge=c.type==='movie'&&c.surs_hot_original_date?
+    daysSince(c.surs_hot_original_date,now):premiereAge;
+  const age=c.type==='movie'?Math.max(premiereAge,originalAge):premiereAge;
+  return {age,tier:age<=60?0:age<=120?1:age<=365?2:3};
+}
 function scoreCandidates(candidates,history,now,previous) {
   for(const c of candidates) {
     const age=daysSince(c.surs_hot_premiere_date,now);
@@ -231,6 +264,9 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_growth_measured=growth.measured;
     c.surs_hot_growth_periods=growth.periods;
     c.surs_hot_age=age;
+    const period=recencyTier(c,now);
+    c.surs_hot_rank_age=period.age;
+    c.surs_hot_recency_tier=period.tier;
     c.surs_hot_provisional=number(c.vote_count)<MIN_VOTES||
       (c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating);
     // Freshness is an eligibility gate, not a bonus that overrides quality.
@@ -240,8 +276,14 @@ function scoreCandidates(candidates,history,now,previous) {
       {quality:.70,heat:.30,growth:0};
     const q=Math.min(1,Math.max(0,(quality.score-6.65)/3.35));
     c.surs_hot_weights=weights;
-    c.surs_hot_score=round(100*(weights.quality*q+
-      weights.heat*heat+weights.growth*growth.score));
+    const relevance=weights.quality*q+weights.heat*heat+
+      weights.growth*growth.score;
+    // Four NON-overlapping score bands keep the actual visible Hot score
+    // in exactly the same order as the freshness-first ranking.
+    // 0-60d: 75-99.5, 61-120d: 50-74.5,
+    // 121-365d: 25-49.5, older: 0-24.5.
+    // Quality/interest still determine order WITHIN each band.
+    c.surs_hot_score=round(75-25*period.tier+24.5*relevance);
   }
   const eligible=candidates.filter(c=>!eligibilityReason(c,now));
   const previousRank=new Map((previous?.items||[]).map((c,i)=>
@@ -416,10 +458,16 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
     if(reason)rejections[reason]=(rejections[reason]||0)+1;
     else stats.eligible++;
   }
-  const feed={schema:1,algorithm:'hot-discovery-4.1',mode:'primary',
+  const recencyCounts={'0-60':0,'61-120':0,'121-365':0,'366+':0};
+  for(const c of items) {
+    const band=['0-60','61-120','121-365','366+'][c.surs_hot_recency_tier];
+    recencyCounts[band]++;
+  }
+  const feed={schema:1,algorithm:'hot-discovery-4.2',mode:'primary',
     generated_at:nowDate.toISOString(),sources:{tmdb:true,mdblist:!!mdblistKey},
     items,diagnostics:{...stats,selected:items.length,
-      quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,rejections,
+      quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
+      primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,rejections,
       provisional:items.filter(c=>c.surs_hot_provisional).length,
       measured_growth:items.filter(c=>c.surs_hot_growth_measured).length,
       top10:items.slice(0,10).map(c=>({id:c.id,type:c.type,title:c.title,
@@ -456,5 +504,5 @@ async function main(){
 }
 if(require.main===module)main().catch(e=>{console.error(e.message);process.exitCode=1;});
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
-  scoreCandidates,eligibilityReason,verifySeason,nextHistory,validateFeed,
+  scoreCandidates,recencyTier,eligibilityReason,verifySeason,nextHistory,validateFeed,
   build,parseMdb,daysSince};
