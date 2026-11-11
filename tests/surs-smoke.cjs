@@ -749,7 +749,7 @@ test('Hot diagnostics recognize an already verified cache without a new network 
     const day=new Date().toISOString().slice(0,10);
     const old={schema:1,algorithm:'hot-discovery-4.3',
         generated_at:new Date().toISOString(),items:Array.from({length:12},(_,i)=>({
-            id:9500+i,type:'movie',poster_path:'/p',
+            id:9500+i,type:'movie',source:'tmdb',poster_path:'/p',
             surs_hot_premiere_date:day,surs_hot_score:80-i
         })),diagnostics:{selected:12,ranking_model:'interest-quality-freshness-v1'}};
     app.stored.set('surs_hot_json_v4',old);
