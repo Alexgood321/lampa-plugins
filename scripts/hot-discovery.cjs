@@ -213,7 +213,9 @@ function growthFor(c,history,now) {
 function eligibilityReason(c,now) {
   if(!c.poster_path)return 'poster_missing';
   if(c.surs_hot_age<0||c.surs_hot_age>550)return 'premiere_outside_window';
-  if(c.surs_hot_original_date&&
+  // Long-running TV shows can legitimately have a new season this month.
+  // The original-release cutoff is only relevant to old film reissues.
+  if(c.type==='movie'&&c.surs_hot_original_date&&
     daysSince(c.surs_hot_original_date,now)>ORIGINAL_MAX_AGE)
     return 'original_too_old';
   if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_verified)
