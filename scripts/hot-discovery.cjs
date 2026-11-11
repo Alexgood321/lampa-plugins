@@ -5,8 +5,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
+const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
 const DAY = 86400000;
 const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
+const MAX_KP_CALLS = 45;
 const MAX_SEASON_CALLS = 45;
 const QUALITY_FLOOR = 7.2, MIN_VOTES = 100, ORIGINAL_MAX_AGE = 730;
 const RECENT_DAYS = 60; // The main discovery window, not a hard age cutoff.
@@ -146,27 +148,72 @@ function parseMdb(info) {
   }
   return result;
 }
+function parseKinopoisk(data,imdbId) {
+  if(!/^tt\d{6,12}$/.test(String(imdbId||'')))return {};
+  const rows=Array.isArray(data?.items)?data.items:
+    Array.isArray(data?.films)?data.films:
+    data&&data.kinopoiskId?[data]:[];
+  const item=rows.find(x=>String(x.imdbId||'')===imdbId);
+  if(!item)return {};
+  const result={};
+  const kp=number(item.ratingKinopoisk),kv=number(item.ratingKinopoiskVoteCount);
+  if(kp>=1&&kp<=10&&kv>=1)result.kp={value:kp,votes:kv,
+    via:'kinopoisk_unofficial',kinopoisk_id:item.kinopoiskId};
+  const imdb=number(item.ratingImdb),iv=number(item.ratingImdbVoteCount);
+  if(imdb>=1&&imdb<=10&&iv>=1)
+    result.imdb={value:imdb,votes:iv,via:'kinopoisk_unofficial'};
+  return result;
+}
+function stableRating(r,minVotes=1) {
+  const value=number(r?.value),votes=number(r?.votes);
+  return value>=1&&value<=10&&votes>=minVotes?{value,votes}:null;
+}
+function qualityAgreement(ratings,isSeason=false) {
+  const keys=['tmdb','imdb','kp'].filter(k=>
+    stableRating(ratings[k],k==='imdb'?250:100));
+  if(keys.length<2||isSeason)
+    return {sources:keys.length,bonus:0,spread:null,level:'unconfirmed'};
+  const values=keys.map(k=>ratings[k].value);
+  const spread=Math.max(...values)-Math.min(...values);
+  const high=values.every(v=>v>=7.2);
+  const triple=keys.length===3&&spread<=.75&&high;
+  const pair=keys.length>=2&&spread<=.6&&high;
+  return {sources:keys.length,spread:round(spread,3),
+    bonus:triple?.38:pair?.16:0,
+    level:triple?'triple_high':pair?'pair_high':
+      spread>1.5?'disputed':'mixed'};
+}
 function qualityFor(c) {
-  const votes=number(c.vote_count),tmdb=number(c.vote_average);
-  if(tmdb<1||tmdb>10)return {score:0,confidence:0,source_count:0};
-  const adjusted=(votes*tmdb+140*6.65)/(votes+140);
-  let quality=adjusted,count=1;
-  const evidence=c.surs_hot_ratings||{};
-  if(evidence.imdb&&evidence.imdb.value>=1&&evidence.imdb.value<=10) {
-    const v=evidence.imdb.votes;
-    const iv=(v*evidence.imdb.value+300*6.65)/(v+300);
-    quality=.72*quality+.28*iv;count++;
+  const tmdb=stableRating({value:c.vote_average,votes:c.vote_count});
+  if(!tmdb)return {score:0,base_score:0,confidence:0,source_count:0,
+    agreement:qualityAgreement({}),adjusted_ratings:{}};
+  const ratings={tmdb},evidence=c.surs_hot_ratings||{};
+  for(const key of ['imdb','kp']){
+    const rating=stableRating(evidence[key]);
+    if(rating)ratings[key]=rating;
   }
-  if(evidence.metacritic&&evidence.metacritic.value>0) {
-    quality=.92*quality+.08*evidence.metacritic.value;count++;
+  const weights={tmdb:.32,imdb:.36,kp:.32},priors={tmdb:140,imdb:300,kp:180};
+  let weighted=0,weightSum=0;
+  const adjusted={};
+  for(const [key,r] of Object.entries(ratings)){
+    const p=priors[key],bayes=(r.votes*r.value+p*6.65)/(r.votes+p);
+    adjusted[key]=round(bayes,3);
+    weighted+=weights[key]*bayes;
+    weightSum+=weights[key];
   }
-  // Rotten Tomatoes/Letterboxd are shown in diagnostics, not silently double-counted.
-  if(c.surs_hot_season_rating) {
-    const sv=c.surs_hot_season_rating.votes;
-    const p=sv/(sv+100);
-    quality=(1-p*.70)*quality+(p*.70)*c.surs_hot_season_rating.value;
-  } else if(c.surs_hot_premiere_kind==='season')quality-=.22; // series-wide proxy
-  return {score:round(quality,3),confidence:round(Math.min(1,votes/(votes+140)),3),source_count:count};
+  const base=weighted/weightSum;
+  const isSeason=c.surs_hot_premiere_kind==='season';
+  const agreement=qualityAgreement(ratings,isSeason);
+  let quality=Math.min(10,base+agreement.bonus);
+  if(c.surs_hot_season_rating){
+    const p=c.surs_hot_season_rating.votes/
+      (c.surs_hot_season_rating.votes+100);
+    quality=(1-p*.7)*quality+(p*.7)*c.surs_hot_season_rating.value;
+  }else if(isSeason)quality-=.22;
+  return {score:round(quality,3),base_score:round(base,3),
+    confidence:round(Math.min(1,tmdb.votes/(tmdb.votes+140)),3),
+    source_count:Object.keys(ratings).length,agreement,
+    adjusted_ratings:adjusted};
 }
 // Normalized TMDB attention proxies. These are NOT counted as streams or
 // cross-platform demand: the data source is TMDB only.
@@ -351,6 +398,9 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_quality=quality.score;
     c.surs_hot_confidence=quality.confidence;
     c.surs_hot_coverage=quality.source_count;
+    c.surs_hot_quality_base=quality.base_score;
+    c.surs_hot_rating_agreement=quality.agreement;
+    c.surs_hot_adjusted_ratings=quality.adjusted_ratings;
     c.surs_hot_heat=attention.score;
     c.surs_hot_attention=attention.score;
     c.surs_hot_attention_pop_percentile=attention.popularity_percentile;
@@ -370,9 +420,12 @@ function scoreCandidates(candidates,history,now,previous) {
       quality.score>=7.8?'critically_strong':'qualified';
     // Demand first, reliable quality second. Premiere freshness is represented
     // by priority bands + a smooth decay inside each band.
-    const weights=growth.measured?
-      {attention:.44,quality:.28,freshness:.14,growth:.14}:
-      {attention:.57,quality:.29,freshness:.14,growth:0};
+    // A single daily observation is not yet a confirmed multi-day trend.
+    const confirmedGrowth=Object.keys(growth.periods).some(p=>p!=='1d');
+    const weights=confirmedGrowth?
+      {attention:.45,quality:.35,freshness:.05,growth:.15}:
+      {attention:.55,quality:.40,freshness:.05,growth:0};
+    c.surs_hot_growth_confirmed=confirmedGrowth;
     const q=Math.min(1,Math.max(0,(quality.score-6.4)/2.8));
     const duration=period.tier===0?60:period.tier===1?60:
       period.tier===2?245:185;
@@ -433,14 +486,18 @@ function toCard(raw,details,type,premiere) {
     surs_hot_original_date:premiere.original,
     surs_hot_digital_date:premiere.digital||null,
     surs_hot_discovery:raw._channels||[],
-    surs_hot_trend_day:raw._trendDay||null,surs_hot_trend_week:raw._trendWeek||null};
+    surs_hot_trend_day:raw._trendDay||null,surs_hot_trend_week:raw._trendWeek||null,
+    surs_hot_imdb_id:/^tt\d{6,12}$/.test(String(details.external_ids?.imdb_id||
+      details.imdb_id||''))?(details.external_ids?.imdb_id||details.imdb_id):null};
   return card;
 }
-async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history={},previous=null,
+async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',
+  listIds=[],history={},previous=null,
   transport=requestJSON,detailLimit=MAX_DETAILS}={}) {
   if(!tmdbToken)throw Error('Missing TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY');
   const nowDate=new Date(now),stats={tmdb_calls:0,tmdb_failures:0,mdblist_calls:0,
-    mdblist_failures:0,season_calls:0,discovered:0,us_verified:0,eligible:0};
+    mdblist_failures:0,kp_calls:0,kp_failures:0,kp_matched:0,
+    season_calls:0,discovered:0,us_verified:0,eligible:0};
   const tmdb=async relative=>{
     stats.tmdb_calls++;
     const keyAuth=/^[0-9a-f]{32}$/i.test(tmdbToken);
@@ -536,8 +593,26 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
         const type=c.type==='movie'?'movie':'show';
         const info=await transport(MDB+'/tmdb/'+type+'/'+c.id+'/?apikey='+
           encodeURIComponent(mdblistKey));
-        if(info&&Number(info.ids?.tmdb)===c.id)c.surs_hot_ratings=parseMdb(info);
+        if(info&&Number(info.ids?.tmdb)===c.id)
+          c.surs_hot_ratings={...(c.surs_hot_ratings||{}),...parseMdb(info)};
       }catch(e){stats.mdblist_failures++;}
+    });
+  }
+  if(kinopoiskKey){
+    const subset=candidates.filter(c=>c.surs_hot_imdb_id)
+      .sort((a,b)=>number(b.popularity)-number(a.popularity))
+      .slice(0,MAX_KP_CALLS);
+    await poolMap(subset,2,async c=>{
+      stats.kp_calls++;
+      try{
+        const info=await transport(KP_API+'?imdbId='+
+          encodeURIComponent(c.surs_hot_imdb_id),{'X-API-KEY':kinopoiskKey});
+        const parsed=parseKinopoisk(info,c.surs_hot_imdb_id);
+        if(parsed.kp)stats.kp_matched++;
+        const old=c.surs_hot_ratings||{};
+        c.surs_hot_ratings={...old,...parsed};
+        if(old.imdb)c.surs_hot_ratings.imdb=old.imdb;
+      }catch(e){stats.kp_failures++;}
     });
   }
   if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
@@ -560,12 +635,39 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const feed={schema:1,algorithm:'hot-discovery-4.3',mode:'primary',
-    generated_at:nowDate.toISOString(),sources:{tmdb:true,mdblist:!!mdblistKey},
+  const audit={schema:1,algorithm:'hot-discovery-4.4',
+    generated_at:nowDate.toISOString(),candidate_total:candidates.length,
+    eligible:stats.eligible,selected:items.length,
+    candidates:candidates.slice().sort((a,b)=>
+      number(b.surs_hot_base_score)-number(a.surs_hot_base_score))
+      .slice(0,200).map(c=>({
+        id:c.id,type:c.type,title:c.title,kind:c.surs_hot_premiere_kind,
+        premiere:c.surs_hot_premiere_date,age:c.surs_hot_rank_age,
+        tmdb:c.vote_average,tmdb_votes:c.vote_count,
+        imdb:c.surs_hot_ratings?.imdb||null,kp:c.surs_hot_ratings?.kp||null,
+        attention:c.surs_hot_attention,quality:c.surs_hot_quality,
+        agreement:c.surs_hot_rating_agreement,
+        base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
+        selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
+      }))};
+  const feed={schema:1,algorithm:'hot-discovery-4.4',mode:'primary',
+    generated_at:nowDate.toISOString(),
+     sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'interest-quality-freshness-v1',
+      ranking_model:'attention-quality-consensus-v2',
+      weights_with_growth:{attention:45,quality:35,freshness:5,growth:15},
+      weights_without_growth:{attention:55,quality:40,freshness:5,growth:0},
+      rating_coverage:{
+        tmdb:items.filter(c=>number(c.vote_count)>0).length,
+        imdb:items.filter(c=>stableRating(c.surs_hot_ratings?.imdb)).length,
+        kinopoisk:items.filter(c=>stableRating(c.surs_hot_ratings?.kp)).length,
+        triple:items.filter(c=>c.surs_hot_rating_agreement?.sources===3).length,
+        triple_agreement:items.filter(c=>c.surs_hot_rating_agreement?.level==='triple_high').length,
+        double_agreement:items.filter(c=>c.surs_hot_rating_agreement?.level==='pair_high').length,
+        growth_confirmed:items.filter(c=>c.surs_hot_growth_confirmed).length
+      },
       selected_by_kind:byKind,selected_by_track:byTrack,
       returning_top10:items.slice(0,10).filter(isReturning).length,
       returning_top20:items.slice(0,20).filter(isReturning).length,
@@ -577,15 +679,17 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
         premiere:c.surs_hot_premiere_date,kind:c.surs_hot_premiere_kind,
         score:c.surs_hot_score,quality:c.surs_hot_quality,heat:c.surs_hot_heat}))}};
   validateFeed(feed,nowDate);
-  return {feed,history:nextHistory(history,candidates,nowDate)};
+  return {feed,audit,history:nextHistory(history,candidates,nowDate)};
 }
 function readJSON(file,fallback) {try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch(e){return fallback;}}
 async function main(){
   const root=path.join(__dirname,'..'),out=path.join(root,'data','hot-discovery.json');
   const historyFile=path.join(root,'data','hot-discovery-history.json');
+  const auditFile=path.join(root,'data','hot-discovery-audit.json');
   const now=new Date(),old=readJSON(out,null);
   const result=await build({now,tmdbToken:process.env.TMDB_READ_ACCESS_TOKEN||
     process.env.TMDB_API_KEY||'',mdblistKey:process.env.MDBLIST_API_KEY||'',
+    kinopoiskKey:process.env.KINOPOISK_API_KEY||'',
     listIds:(process.env.MDBLIST_LIST_IDS||'').split(',').map(x=>x.trim()).filter(Boolean),
     previous:old,history:readJSON(historyFile,{schema:1,snapshots:[]})});
   fs.mkdirSync(path.dirname(out),{recursive:true});
@@ -602,10 +706,13 @@ async function main(){
     fs.writeFileSync(out+'.tmp',content);fs.renameSync(out+'.tmp',out);
   }
   fs.writeFileSync(historyFile+'.tmp',hist);fs.renameSync(historyFile+'.tmp',historyFile);
+  fs.writeFileSync(auditFile+'.tmp',JSON.stringify(result.audit,null,2)+'\\n');
+  fs.renameSync(auditFile+'.tmp',auditFile);
   process.stdout.write(JSON.stringify({generated_at:result.feed.generated_at,
     selected:result.feed.items.length,diagnostics:result.feed.diagnostics})+'\n');
 }
 if(require.main===module)main().catch(e=>{console.error(e.message);process.exitCode=1;});
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
-  scoreCandidates,recencyTier,attentionFor,curatedSelection,eligibilityReason,verifySeason,nextHistory,validateFeed,
-  build,parseMdb,daysSince};
+  scoreCandidates,recencyTier,attentionFor,curatedSelection,eligibilityReason,
+  verifySeason,nextHistory,validateFeed,build,parseMdb,parseKinopoisk,
+  qualityAgreement,daysSince};

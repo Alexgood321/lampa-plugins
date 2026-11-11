@@ -1,4 +1,4 @@
-# SURS Hot Discovery 4.3: Evidence-backed hot releases
+# SURS Hot Discovery 4.4: подтверждённые рейтинги и интерес
 
 Hot Discovery is the primary American films-and-TV discovery shelf in SURS Pro. Its job is a short, fresh, interesting **what to watch next** collection, not a list of the highest lifetime ratings. Existing Lampa clients accept its unchanged JSON schema 1.
 
@@ -14,7 +14,18 @@ The following are **methodological references**, not hidden API integrations or 
 - TMDB: different Popularity and Trending indices, with votes/page views/watchlist/favourite activity and shorter trending windows (https://developer.themoviedb.org/docs/popularity-and-trending).
 - Letterboxd/IMDb: Bayesian or weighted quality ratings rather than raw small-sample averages. No direct data is used without an appropriate permitted source.
 
-**Current actual source**: TMDB API. Optional MDBList enrichments and optional lists work only if a working key and source IDs are configured. No independent public-audience, pirate-service viewing, JustWatch or Kinopoisk metrics are invented. A TMDB popularity score is **not** a stream count.
+**Current required source**: TMDB API. MDBList and Kinopoisk Unofficial are optional. They are *used only when valid keys are present* in Actions secrets and the returned title is verified by exact identity. Absence of a key or an identity match cannot masquerade as a third rating. Public feed diagnostics record per-source coverage. No JustWatch/Kinopoisk audience-viewing statistics are invented. TMDB popularity is not a stream count.
+
+## Configure three ratings safely
+
+- `TMDB_READ_ACCESS_TOKEN` or `TMDB_API_KEY`: required existing GitHub Actions secret.
+- `MDBLIST_API_KEY`: optional secret. Builder reads IMDb ratings by TMDB ID and verifies the returned TMDB ID. Max 50 detailed lookups per scheduled run (400 per day if all 8 runs occur).
+- `KINOPOISK_API_KEY`: optional secret for Kinopoisk Unofficial API, read via `X-API-KEY`. The builder first gets the exact IMDb ID from TMDB's `external_ids`, then requests `GET /api/v2.2/films?imdbId=tt...`, and only accepts the returned row if its IMDb ID matches exactly. Max 45 requests per scheduled run (360 per day). Provider's currently published new-user cap is 500/day. Never search merely by localized title.
+- KP API may also expose a mirrored IMDb score. Preserve its provenance and prefer MDBList IMDb when both are available. It remains **one IMDb rating**, never two independent signals.
+- Never place secrets in the JSON, test fixtures, command line or output.
+
+Missing optional keys are not fatal. The feed explicitly reports `sources.mdblist=false`, `sources.kinopoisk=false` and zero usable ratings where appropriate. Do not describe it as "three-source verified" until diagnostics confirm all three.
+
 
 ## Discovery
 
@@ -30,21 +41,23 @@ Up to 260 detailed records, selected in round-robin lanes rather than only the t
 
 The source-quality measure is a floor and quality ranking input, **not** the main definition of what's hot.
 
-## Ranking model: 4.3
+## Ranking model: 4.4
 
 Compute the following independently:
 
 - **Attention**: normalized TMDB day/week Trending ranks and within-media-type popularity percentile. Long-running high-rated series without current trends receive little attention credit.
-- **Quality**: Bayesian-adjusted TMDB score and (when actually available) properly weighted IMDb/critic data; the confidence and source count are recorded.
+- **Quality**: Bayesian-adjusted TMDB, IMDb and KP with vote-count priors (140, 300, 180 respectively) and normalized weights (32/36/32 among available ratings). Missing sources do not become a zero rating. Critic ratings are retained in source metadata but **not** treated as a fourth mandatory vote.
+- **Consensus bonus**: only for sufficiently sampled HIGH ratings (at least 7.2/10) that agree. Three sources within 0.75 points: +0.38 quality points; two sources within 0.6: +0.16. Three agreeing low ratings (6/10) get no bonus. New seasons never inherit a consensus bonus from lifetime whole-show ratings. A large disagreement receives no bonus and is labeled `disputed` (not automatically discarded).
+
 - **Freshness**: smooth decay within *non-overlapping priority periods*: 0–60, 61–120, 121–365 and 366–550 days. Original movie premiere and first digital premiere cannot be used to relabel an old film as new.
-- **Momentum**: observed daily (1 day) and multi-day (3/7/14) popularity and voting change from GitHub history. Zero history means *no* momentum weight, not fake equal points for every item.
+- **Momentum**: observed 1/3/7/14-day TMDB popularity and voting changes. The 15% growth component is enabled only once at least a 3-day period exists. A lone 1-day sample remains diagnostic, not confirmed growth. No fabricated momentum when history is absent.
 
 | Signal | Without observed history | With observed history |
 |---|---:|---:|
-| Current audience attention | 57% | 44% |
-| Bayesian quality | 29% | 28% |
-| Freshness inside priority period | 14% | 14% |
-| Actual momentum | 0% | 14% |
+| Current audience attention | 55% | 45% |
+| Bayesian cross-source quality | 40% | 35% |
+| Freshness inside priority period | 5% | 5% |
+| Confirmed multi-day momentum | 0% | 15% |
 
 Scores are normalized within a recency period, then shaped into 0–100 Hot priority scores. The goal is discoverability, **not** a real viewing-count or a numeric TMDB/Kinopoisk rating.
 
@@ -55,6 +68,7 @@ Visible Hot scores are made monotonically descending to match the final display 
 ## Pipeline, safety, comparison
 
 - Output remains `data/hot-discovery.json` (schema 1), and daily observations are appended to `data/hot-discovery-history.json`.
+- Public `data/hot-discovery-audit.json` records **up to 200 real candidates** from the TMDB discovery pipeline, their mapped independent ratings (if available), confidence/consensus, rejection reason and whether they entered the top 40. The audit is not a fabricated benchmark and is generated using the same data as the live ranking. Enrichment coverage varies with configured provider keys and per-run call budgets.
 - A new algorithm name publishes a new top immediately even if an earlier top was published that day; subsequent runs collect history but keep the visible ranking stable for the day.
 - If authentication fails, a serious upstream outage occurs, or the valid set drops below twelve, the publishing job fails. The previous verified JSON remains available in Git.
 - Run `node --check scripts/hot-discovery.cjs`, `node --test tests/hot-discovery.test.cjs`, `node scripts/build-surs.cjs --check` and `node tests/surs-smoke.cjs` before merge. Compare the actual first 10/20 and the ratio of returning series versus standalone movies and new shows.

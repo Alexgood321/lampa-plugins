@@ -37,6 +37,7 @@ jobs:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+          KINOPOISK_API_KEY: ${{ secrets.KINOPOISK_API_KEY }}
           MDBLIST_LIST_IDS: ${{ vars.MDBLIST_LIST_IDS }}
         run: |
           set -euo pipefail
@@ -53,7 +54,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/hot-discovery.json data/hot-discovery-history.json
+          git add data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json
           if git diff --cached --quiet; then
             echo "No changes to publish" >> "$GITHUB_STEP_SUMMARY"
             exit 0
@@ -61,3 +62,5 @@ jobs:
           git commit -m 'data(hot): update verified ranking and snapshots [skip ci]'
           git push origin HEAD:main
           echo "Updated Hot Discovery; previous good feed preserved in Git history." >> "$GITHUB_STEP_SUMMARY"
+          echo "### Candidate audit" >> "$GITHUB_STEP_SUMMARY"
+          node -e "const a=require('./data/hot-discovery-audit.json');console.log('Candidates evaluated:',a.candidate_total,'Eligible:',a.eligible,'Selected:',a.selected)" >> "$GITHUB_STEP_SUMMARY"
