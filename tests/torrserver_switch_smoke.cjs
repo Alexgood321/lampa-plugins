@@ -100,9 +100,13 @@ const context={
 context.window.document=context.document;
 vm.runInNewContext(original,context);
 const plugin=context.window.__alexgood321TorrServerSwitch;
-assert.equal(plugin.version,'2.0.0');
+assert.equal(plugin.version,'2.0.1');
 assert.ok(sections.alexgood321_torrserver_switch_settings);
 assert.ok(params.alexgood321_torrserver_switch_settings.length>=20);
+assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='torrserver_url' && p.param.type==='input'));
+assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='torrserver_url_two' && p.param.type==='input'));
+assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='alex_tss_mode' && p.param.type==='select'));
+assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='alex_tss_header' && p.param.type==='trigger'));
 assert.ok(button);
 assert.match(button.find('.alex-ts-switch-label').text(),/TS 1/);
 assert.equal(keys.torrserver_use_link,'one');
