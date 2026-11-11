@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 4.0.5 (Hot Discovery 4.2 recency priority)
+* Версия: 4.0.6 (Hot Discovery 4.3 interest curation)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1748,8 +1748,9 @@ results: result.results.slice(0, 60)
 var HOT_US_ID='hot_us_new',HOT_US_TITLE='Горячие новинки США';
 var HOT_US_CATALOG_URL='surs_hot_us_new';
 var HOT_US_URL='https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json';
-var HOT_CACHE_KEY='surs_hot_json_v3',HOT_OLD_CACHE_KEY='surs_hot_json_v2',
-HOT_OLDER_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
+var HOT_CACHE_KEY='surs_hot_json_v4',HOT_OLD_CACHE_KEY='surs_hot_json_v3',
+HOT_OLDER_CACHE_KEY='surs_hot_json_v2',
+HOT_OLDEST_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
 var hotRequesting=false,hotCallbacks=[],hotLastTry=0;
 function hotValid(feed){
 if(!feed||feed.schema!==1||!Array.isArray(feed.items)||
@@ -1777,8 +1778,10 @@ return hotValid(f)?f:null;
 function hotReadLegacyCached(){
 try{
 var recent=Lampa.Storage.get(HOT_OLD_CACHE_KEY,null),
-older=Lampa.Storage.get(HOT_OLDER_CACHE_KEY,null);
-return hotValid(recent)?recent:hotValid(older)?older:null;
+older=Lampa.Storage.get(HOT_OLDER_CACHE_KEY,null),
+oldest=Lampa.Storage.get(HOT_OLDEST_CACHE_KEY,null);
+return hotValid(recent)?recent:
+hotValid(older)?older:hotValid(oldest)?oldest:null;
 }catch(e){return null;}
 }
 function hotRow(feed){
@@ -1863,8 +1866,17 @@ cached=hotReadCached()||hotReadLegacyCached(),
 d=current.diagnostics||cached&&cached.diagnostics||{},
 algorithm=current.algorithm||cached&&cached.algorithm||'неизвестен',
 rejects=d.rejections||{};
+var status=current.status||(cached?'кэш':'не загружен');
+var kinds=d.selected_by_kind||{},tracks=d.selected_by_track||{};
 var items=[
-{title:'Алгоритм: '+algorithm+' · '+(current.status||'не загружен')},
+{title:'Алгоритм: '+algorithm+' · '+status},
+{title:'Модель: '+(d.ranking_model||'нет данных')},
+{title:'Состав: фильмы '+(kinds.movie||0)+
+' · новые сериалы '+(kinds.new_tv||0)+
+' · новые сезоны '+(kinds.returning_tv||0)},
+{title:'Сезонов в топ-10: '+(d.returning_top10||0)+
+' · топ-20: '+(d.returning_top20||0)},
+{title:'Резонансных с неоднозначной оценкой: '+(tracks.breakout||0)},
 {title:'JSON: '+(current.generated_at||cached&&cached.generated_at||'пока нет')},
 {title:'Качество от '+(d.quality_floor==null?'нет данных':d.quality_floor)+
 ' · голосов от '+(d.min_votes==null?'нет данных':d.min_votes)},
@@ -3571,7 +3583,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.5';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.6';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -4082,7 +4094,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v4.0.5 (Hot Discovery 4.2 recency) успешно инициализирован.');
+console.log('SURS Pro v4.0.6 (Hot Discovery 4.3 curation) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4113,7 +4125,7 @@ return defaults;
 getDefaultSectionShelves: getDefaultSectionShelves,
 hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
 openHotDiagnostics: openHotDiagnostics,
-version: '4.0.5'
+version: '4.0.6'
 };
 
 
