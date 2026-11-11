@@ -579,6 +579,13 @@ test('KP 7.5 label is refreshed for saved shelves without resetting user setting
 });
 
 
+test('4.0.3 replaces a Smart-only saved home with navigation and Hot', () => {
+    const app=boot({saved:[{id:'smart_us_new',enabled:true,title:'Smart only'}]});
+    assert.deepEqual(Array.from(app.rows(),x=>x.id),['nav_buttons','hot_us_new']);
+    assert.equal(app.rows()[1].enabled,true);
+    assert.deepEqual(Array.from(app.stored.get('surs_fixed_shelves_v2'),x=>x.id),
+        ['nav_buttons','hot_us_new']);
+});
 test('4.0.3 retires saved Smart US permanently while preserving Hot settings and order', () => {
     const saved=[
         {id:'nav_buttons',enabled:true,title:'Nav'},
