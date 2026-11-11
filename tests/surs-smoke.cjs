@@ -256,7 +256,7 @@ test('legacy KP and TMDB shelves remain registered but disabled by default', () 
     assert.equal(app.rows()[1].enabled, true);
     assert.equal(app.rows()[2].enabled, false);
     assert.equal(app.rows()[3].enabled, false);
-    assert.equal(app.rows()[4].enabled, false);
+    assert.equal(app.rows()[4].enabled, true);
     assert.ok(mainSource.includes('Lampa.Api.sources.KP'));
     assert.ok(!mainSource.includes('cors.kp556.workers.dev'));
 });
