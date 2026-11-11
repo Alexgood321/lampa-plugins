@@ -1,13 +1,13 @@
 /**
  * TorrServer Switch Pro
- * Version: 2.0.0
+ * Version: 2.0.1
  * Author: Alexgood321
  * Native Lampa settings, two-server health monitoring, guarded AUTO failover.
  */
 (function (window, document) {
     'use strict';
 
-    var VERSION = '2.0.0';
+    var VERSION = '2.0.1';
     var ID = 'alexgood321_torrserver_switch';
     var COMP = 'alexgood321_torrserver_switch_settings';
     var SINGLETON = '__alexgood321TorrServerSwitch';
@@ -457,6 +457,18 @@
             param:{name:P+name,type:'button'},
             field:{name:title,description:description || ''},onChange:action});
     }
+    function addServerAddress(slot) {
+        var key=slot==='one'?'torrserver_url':'torrserver_url_two';
+        Lampa.SettingsApi.addParam({
+            component:COMP,
+            param:{name:key,type:'input',default:'',values:'',placeholder:'http://host:8090'},
+            field:{
+                name:slot==='one'?'Адрес основного TS 1':'Адрес дополнительного TS 2',
+                description:'Штатный адрес TorrServer в настройках Lampa.'
+            },
+            onChange:configChanged
+        });
+    }
     function addStatus(slot) {
         Lampa.SettingsApi.addParam({component:COMP,
             param:{type:'static'},field:{name:serverName(slot),description:statusLine(slot)},
@@ -472,6 +484,9 @@
         Lampa.SettingsApi.addComponent({component:COMP,name:'TorrServer Switch Pro',
             icon:'<svg viewBox="0 0 36 36" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="28" height="11" rx="3"/><rect x="4" y="20" width="28" height="11" rx="3"/><path d="M10 11h2M10 26h2M18 11h8M18 26h8"/></svg>'
         });
+        addTitle('Подключение TorrServer');
+        addServerAddress('one');
+        addServerAddress('two');
         addTitle('Основные настройки');
         addSetting('trigger','enabled','Включить плагин','Полностью выключает переключатель и проверки.',null,function(){configChanged();});
         addSetting('trigger','header','Кнопка в верхней панели','Показывать TS 1 / TS 2 в шапке Lampa.',null,refreshHeader);
