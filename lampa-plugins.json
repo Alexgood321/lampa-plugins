@@ -50,6 +50,16 @@
       ],
       "author": "Alexgood321",
       "descr": "Рейтинг Кинопоиска на постерах Lampa: асинхронная подмена, кэш, поиск совпадений, контроль запросов и режимы КП / TMDB / оба."
+    },
+    {
+      "name": "TorrServer Switch Pro",
+      "path": "torrserver_switch.js",
+      "categories": [
+        "Мои",
+        "Торренты"
+      ],
+      "author": "Alexgood321",
+      "descr": "Переключение основного и дополнительного TorrServer через кнопку TS 1 / TS 2 в верхней панели Lampa, без перезагрузки."
     }
   ]
 }
