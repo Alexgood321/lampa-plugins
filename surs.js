@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 4.0.1 (Hot Discovery shadow / original shelf preserved)
+* Версия: 4.0.2 (Hot Discovery default-on / original shelf preserved)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1303,7 +1303,7 @@ var SURS_BASE_SHELVES = [
 { id: 'smart_us_new', title: 'Лучшие новинки США', cat: 'surs', def: true, desc: 'Отбор новых фильмов и сериалов США: TMDB + подтверждённый КП, качество, популярность, свежесть' },
 { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', cat: 'surs', def: false, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 7,5+ (текущий и предыдущий год); требуется источник KP' },
 { id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: false, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
-{ id: 'hot_us_new', title: 'Горячие новинки США · тест', cat: 'surs', def: false, desc: 'Hot Discovery 4.0: серверная подборка через GitHub Actions, сравнение с 3.9.26' },
+{ id: 'hot_us_new', title: 'Горячие новинки США · тест', cat: 'surs', def: true, desc: 'Hot Discovery 4.0: серверная подборка через GitHub Actions, сравнение с 3.9.26' },
 { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
 { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
 { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -1491,6 +1491,7 @@ function getDefaultShelvesList() {
 return [
 { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
 { id: 'smart_us_new', title: 'Лучшие новинки США', enabled: true, cat: 'surs' },
+{ id: 'hot_us_new', title: 'Горячие новинки США · тест', enabled: true, cat: 'surs' },
 { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', enabled: false, cat: 'surs' },
 { id: 'us_new_8', title: 'Новинки США 8+', enabled: false, cat: 'surs' },
 { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
@@ -1683,6 +1684,18 @@ id: 'smart_us_new', title: 'Лучшие новинки США', enabled: true, 
 }
 
 
+
+if (!profile && seen.nav_buttons && !seen.hot_us_new &&
+!Lampa.Storage.get('surs_hot_default_v402', false)) {
+var smartIndex = unique.findIndex(function(x) { return x.id === 'smart_us_new'; });
+var navIndex = unique.findIndex(function(x) { return x.id === 'nav_buttons'; });
+unique.splice((smartIndex >= 0 ? smartIndex : navIndex) + 1, 0, {
+id: 'hot_us_new', title: 'Горячие новинки США · тест',
+enabled: true, cat: 'surs'
+});
+}
+
+
 return unique;
 }
 
@@ -1704,6 +1717,8 @@ if (saveError) throw saveError;
 var stored = Lampa.Storage.get(key, null);
 if (JSON.stringify(stored) !== JSON.stringify(list))
 throw new Error('Storage read-back mismatch');
+
+if (!profile) Lampa.Storage.set('surs_hot_default_v402', true);
 return true;
 } catch(err) {
 console.error('[SURS] Ошибка сохранения полок:', key, err);
@@ -4379,7 +4394,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=3.9.26';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.2';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -4901,7 +4916,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v3.9.26 (Fixed & Configurable) успешно инициализирован.');
+console.log('SURS Pro v4.0.2 (Fixed & Configurable) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4935,7 +4950,7 @@ openSmartDiagnostics: openSmartDiagnostics,
 hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
 openHotDiagnostics: openHotDiagnostics,
 refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-version: '4.0.1'
+version: '4.0.2'
 };
 
 
