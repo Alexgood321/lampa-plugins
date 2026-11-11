@@ -706,7 +706,7 @@ async function main(){
     fs.writeFileSync(out+'.tmp',content);fs.renameSync(out+'.tmp',out);
   }
   fs.writeFileSync(historyFile+'.tmp',hist);fs.renameSync(historyFile+'.tmp',historyFile);
-  fs.writeFileSync(auditFile+'.tmp',JSON.stringify(result.audit,null,2)+'\\n');
+  fs.writeFileSync(auditFile+'.tmp',JSON.stringify(result.audit,null,2)+'\n');
   fs.renameSync(auditFile+'.tmp',auditFile);
   process.stdout.write(JSON.stringify({generated_at:result.feed.generated_at,
     selected:result.feed.items.length,diagnostics:result.feed.diagnostics})+'\n');
