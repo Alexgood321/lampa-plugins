@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 4.0.2 (Hot Discovery default-on / original shelf preserved)
+ * Версия: 4.0.3 (Hot Discovery primary / Smart US retired)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1300,10 +1300,9 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
 
     var SURS_BASE_SHELVES = [
         { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', cat: 'surs', def: true, desc: 'Навигационная строка SURS' },
-        { id: 'smart_us_new', title: 'Лучшие новинки США', cat: 'surs', def: true, desc: 'Отбор новых фильмов и сериалов США: TMDB + подтверждённый КП, качество, популярность, свежесть' },
         { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', cat: 'surs', def: false, desc: 'Фильмы и сериалы США по рейтингу Кинопоиска 7,5+ (текущий и предыдущий год); требуется источник KP' },
         { id: 'us_new_8', title: 'Новинки США 8+', cat: 'surs', def: false, desc: 'Игровые новинки США: рейтинг от 8,0, подтверждённый числом голосов' },
-        { id: 'hot_us_new', title: 'Горячие новинки США · тест', cat: 'surs', def: true, desc: 'Hot Discovery 4.0: серверная подборка через GitHub Actions, сравнение с 3.9.26' },
+        { id: 'hot_us_new', title: 'Горячие новинки США', cat: 'surs', def: true, desc: 'Подборка свежих американских фильмов и сериалов по качеству, трендам и реальным премьерам' },
         { id: 'streaming_russian', title: 'Российские стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к сервисам РФ' },
         { id: 'streaming_global', title: 'Мировые стриминги (Иконки)', cat: 'surs', def: true, desc: 'Быстрый переход к мировым сервисам' },
         { id: 'genres_icons', title: 'Быстрый выбор жанров (Иконки)', cat: 'surs', def: true, desc: 'Комедии, боевики, драма и др.' },
@@ -1490,8 +1489,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     function getDefaultShelvesList() {
         return [
             { id: 'nav_buttons', title: 'Панель кнопок SURS (Главная, Закладки, Новинки)', enabled: true, cat: 'surs' },
-            { id: 'smart_us_new', title: 'Лучшие новинки США', enabled: true, cat: 'surs' },
-            { id: 'hot_us_new', title: 'Горячие новинки США · тест', enabled: true, cat: 'surs' },
+            { id: 'hot_us_new', title: 'Горячие новинки США', enabled: true, cat: 'surs' },
             { id: 'kp_new_8', title: 'Новинки США · КП 7,5+', enabled: false, cat: 'surs' },
             { id: 'us_new_8', title: 'Новинки США 8+', enabled: false, cat: 'surs' },
             { id: 'core_continue', title: 'Продолжить просмотр (Все)', enabled: true, cat: 'core' },
@@ -1646,56 +1644,42 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         if (Array.isArray(saved)) {
             var seen = {};
             var unique = [];
+            var hadSmart = !profile && saved.some(function(item) {
+                return item && item.id === 'smart_us_new';
+            });
             saved.forEach(function(s) {
                 if (s && s.id && !seen[s.id] && (!isAnonymousShelf(s) || s.enabled)) {
                     seen[s.id] = true;
-                    // Migrate the visible label without changing the stored ID,
-                    // enabled state, or the user's manually arranged order.
+                    // Retired Smart US must never be rendered after the upgrade.
+                    if (!profile && s.id === 'smart_us_new') return;
+                    // Keep existing ID, enabled state and order for other shelves.
                     unique.push(!profile && s.id === 'kp_new_8' ?
                         Object.assign({}, s, {title: 'Новинки США · КП 7,5+'}) : s);
                 }
             });
-            // Нельзя оставлять пользователя без доступа к менеджеру полок.
-            if (!unique.length) return profile ? getDefaultSectionShelves(name) : [getDefaultShelvesList()[0]];
-            // Вставляем новую полку под навигацией в ранее настроенной главной.
-            // Не переписываем сохранённый порядок: снятая вручную галочка сохраняется.
-            if (!profile && seen.nav_buttons && !seen.us_new_8) {
-                var navIndex = unique.findIndex(function(item) { return item.id === 'nav_buttons'; });
-                unique.splice(navIndex + 1, 0, {
-                    id: 'us_new_8', title: 'Новинки США 8+', enabled: true, cat: 'surs'
-                });
+            // If a saved MAIN profile contained only the retired Smart shelf,
+            // rebuild a minimal navigable home with Hot; an explicitly empty
+            // profile without Smart retains its existing navigation-only fallback.
+            if (!unique.length) {
+                if (profile) return getDefaultSectionShelves(name);
+                var fallback = hadSmart ? getDefaultShelvesList().slice(0, 2) :
+                    [getDefaultShelvesList()[0]];
+                if (hadSmart) saveShelves(fallback, 'MAIN');
+                return fallback;
             }
-            // Добавляем КП-полку в существующие сохранённые профили без
-            // принудительного сброса и без переопределения ручного отключения.
-            if (!profile && seen.nav_buttons && !seen.kp_new_8) {
-                var navPosition = unique.findIndex(function(item) { return item.id === 'nav_buttons'; });
-                var insertAt = navPosition + 1;
-                unique.splice(insertAt, 0, {
-                    id: 'kp_new_8', title: 'Новинки США · КП 7,5+', enabled: true, cat: 'surs'
-                });
-            }
-            // Add a new smart shelf to existing MAIN homes, but never change
-            // explicitly saved visibility of either legacy rating shelf.
-            if (!profile && seen.nav_buttons && !seen.smart_us_new) {
-                var smartNav = unique.findIndex(function(x) { return x.id === 'nav_buttons'; });
-                unique.splice(smartNav + 1, 0, {
-                    id: 'smart_us_new', title: 'Лучшие новинки США', enabled: true, cat: 'surs'
-                });
-            }
-            // Starting with 4.0.2 Hot Discovery is visible by default. Migrate
-            // existing MAIN profiles with SURS navigation without reordering rows.
-            // An explicit disabled row or a previously saved removal takes priority.
+            // Hot Discovery is the only primary US shelf. Add it on migration
+            // without changing the saved order; preserve explicit Hot opt-outs.
             if (!profile && seen.nav_buttons && !seen.hot_us_new &&
                 !Lampa.Storage.get('surs_hot_default_v402', false)) {
-                var smartIndex = unique.findIndex(function(x) { return x.id === 'smart_us_new'; });
                 var navIndex = unique.findIndex(function(x) { return x.id === 'nav_buttons'; });
-                unique.splice((smartIndex >= 0 ? smartIndex : navIndex) + 1, 0, {
-                    id: 'hot_us_new', title: 'Горячие новинки США · тест',
+                unique.splice(navIndex + 1, 0, {
+                    id: 'hot_us_new', title: 'Горячие новинки США',
                     enabled: true, cat: 'surs'
                 });
             }
-            // Скрытые полки остаются в редакторе. Для пустой главной
-            // безопасная навигация добавляется только в загрузчике главной.
+            // Persist removal of retired Smart US; retain every other row and
+            // explicit on/off choice, including those for Hot Discovery.
+            if (hadSmart) saveShelves(unique, 'MAIN');
             return unique;
         }
 
@@ -1760,9 +1744,8 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     }
 
 
-    // Hot Discovery 4.0 is a separate OPT-IN shelf: never replace SURS 3.9.26
-    // until enough real data has been collected and compared.
-    var HOT_US_ID='hot_us_new',HOT_US_TITLE='Горячие новинки США · тест';
+    // Hot Discovery is the sole primary US recommendation shelf from 4.0.3.
+    var HOT_US_ID='hot_us_new',HOT_US_TITLE='Горячие новинки США';
     var HOT_US_CATALOG_URL='surs_hot_us_new';
     var HOT_US_URL='https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json';
     var HOT_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
@@ -1873,7 +1856,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             {title:'Перспективных с предварительной оценкой: '+(d.provisional||0)},
             {title:'История роста доступна: '+(d.measured_growth||0)+' карточкам'},
             {title:'Статус API: '+(current.error||'нет ошибок')},
-            {title:'Тестовая полка не меняет «Лучшие новинки США»'}
+            {title:'Основная подборка американских новинок'}
         ];
         if(cached)cached.items.slice(0,10).forEach(function(c){
             items.push({title:'#'+c.surs_hot_rank+' '+(c.title||c.name)+
@@ -1881,838 +1864,6 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         });
         Lampa.Select.show({title:'SURS Hot Discovery · диагностика',
             items:items,onSelect:function(){}});
-    }
-
-    // Smart US releases v1. Two-phase candidate discovery (TMDB) and
-    // optional strict Kinopoisk enrichment, without exposing third-party keys.
-    // Trakt signals are intentionally deferred until a measured v2 rollout.
-    var SMART_US_ID = 'smart_us_new';
-    var SMART_US_TITLE = 'Лучшие новинки США';
-    var SMART_US_CATALOG_URL = 'surs_smart_us_new';
-    var SMART_US_CACHE = 'smart_us_v6';
-    var SMART_US_LIMIT = 40;
-    var smartRunning = false, smartWaiters = [];
-
-    function smartWindow() {
-        // Match the actual 366–550 day fallback window, not variable month lengths.
-        var now=new Date(),end=now.toISOString().slice(0,10);
-        var start=new Date(now.getTime()-550*86400000).toISOString().slice(0,10);
-        return {start:start,end:end};
-    }
-    function smartQueries(windowDates) {
-    var jobs=[];
-    ['movie','tv'].forEach(function(type){
-        var field=type==='movie'?'primary_release_date':'first_air_date';
-        var exclude=type==='movie'?'16,99,10770':'16,99,10763,10764,10766,10767';
-        ['popularity.desc',field+'.desc'].forEach(function(sort){
-            for(var page=1;page<=2;page++){
-                jobs.push({type:type,page:page,url:'discover/'+type+
-                    '?with_origin_country=US&include_adult=false'+
-                    '&without_genres='+exclude+
-                    '&vote_average.gte=6.3&vote_count.gte=15'+
-                    '&'+field+'.gte='+windowDates.start+
-                    '&'+field+'.lte='+windowDates.end+
-                    '&sort_by='+sort+'&page='+page});
-            }
-        });
-    });
-    // Series that started years ago may still have a genuinely NEW season.
-    // Airing an episode is only discovery, not evidence of a season premiere.
-    for(var page=1;page<=2;page++){
-        jobs.push({type:'tv',seasonCandidate:true,page:page,
-            url:'discover/tv?with_origin_country=US&include_adult=false'+
-                '&without_genres=16,99,10763,10764,10766,10767'+
-                '&vote_average.gte=6.3&vote_count.gte=15'+
-                '&air_date.gte='+windowDates.start+
-                '&air_date.lte='+windowDates.end+
-                '&sort_by=popularity.desc&page='+page});
-    }
-    return jobs;
-}
-function smartDate(card) {
-    return String((card.type==='tv'&&card.surs_smart_premiere_date)||
-        card.release_date||card.first_air_date||'').slice(0,10);
-}
-function smartPeriod(card) {
-    var age=smartAge(smartDate(card));
-    return age<=180?0:age<=365?1:age<=550?2:3;
-}
-function smartPeriodLabel(period) {
-    return period===0?'0–180 дней':period===1?'181–365 дней':
-        period===2?'366–550 дней':'вне периода';
-}
-function smartAge(date) {
-        var timestamp=Date.parse(date+'T00:00:00Z');
-        if(!isFinite(timestamp))return 9999;
-        // Count whole calendar dates, not floating hours since midnight.
-        var now=new Date(),today=Date.UTC(now.getUTCFullYear(),
-            now.getUTCMonth(),now.getUTCDate());
-        return Math.max(0,Math.floor((today-timestamp)/86400000));
-    }
-    function smartNormalize(s) {
-        var str=String(s||'').toLowerCase().replace(/ё/g,'е');
-        if (typeof str.normalize==='function') str=str.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-        return str.replace(/[^a-zа-я0-9]+/g,' ').trim().replace(/\s+/g,' ');
-    }
-    function smartTitles(card) {
-        var names=[card.original_title,card.original_name,card.title,card.name];
-        var seen={};
-        return names.map(smartNormalize).filter(function(n) {
-            if (!n || seen[n]) return false;
-            seen[n]=true; return true;
-        });
-    }
-    function smartAccept(card,type,windowDates,seasonCandidate) {
-    if(!card||!card.id||!card.poster_path||card.adult===true)return false;
-    var date=type==='movie'?card.release_date:card.first_air_date;
-    // An old show needs verification of a new season from TMDB detail.
-    if((!date||date<windowDates.start)&&!(type==='tv'&&seasonCandidate))
-        return false;
-    if(date&&date>windowDates.end)return false;
-    if(type==='tv'&&(!Array.isArray(card.origin_country)||
-        card.origin_country.indexOf('US')<0))return false;
-    if(type==='movie'&&!card.title&&!card.original_title)return false;
-    if(type==='tv'&&!card.name&&!card.original_name)return false;
-    var bad=type==='movie'?[16,99,10770]:
-        [16,99,10763,10764,10766,10767];
-    if(Array.isArray(card.genre_ids)&&card.genre_ids.some(function(g){
-        return bad.indexOf(Number(g))>=0;
-    }))return false;
-    var rating=Number(card.vote_average)||0,votes=Number(card.vote_count)||0;
-    var age=smartAge(date||windowDates.start);
-    var minVotes=age<=30?15:age<=90?35:80;
-    if(type==='tv')minVotes=Math.max(12,Math.round(minVotes*.7));
-    return rating>=6.3&&votes>=minVotes&&
-        (age<=550||(type==='tv'&&seasonCandidate));
-}
-function smartCandidate(json,type,dates,seen,cards,job) {
-    if(!json||!Array.isArray(json.results))return;
-    var seasonCandidate=!!(job&&job.seasonCandidate);
-    json.results.forEach(function(raw){
-        if(!smartAccept(raw,type,dates,seasonCandidate))return;
-        var key=type+':'+raw.id;
-        if(seen[key]){
-            if(type==='tv'&&seasonCandidate)
-                seen[key].surs_smart_season_candidate=true;
-            return;
-        }
-        var card=Object.assign({},raw,{
-            source:'tmdb',type:type,media_type:type
-        });
-        if(type==='tv'){
-            card.surs_smart_premiere_type='series';
-            if(seasonCandidate){
-                card.surs_smart_season_candidate=true;
-                // Older shows may enter only AFTER a recent season is verified.
-                if(!raw.first_air_date||raw.first_air_date<dates.start)
-                    card.surs_smart_pending_season=true;
-            }
-        }
-        seen[key]=card;cards.push(card);
-    });
-}
-function smartValidRate(v) {
-    var n=Number(v);return isFinite(n)&&n>=1&&n<=10?n:0;
-}
-function smartVotes(data,keys) {
-    if(!data)return 0;
-    for(var i=0;i<keys.length;i++){
-        var n=Number(data[keys[i]]);
-        if(isFinite(n)&&n>0)return Math.floor(n);
-    }
-    return 0;
-}
-function smartOldKpCache() {
-    try {
-        var raw=Lampa.Storage.cache?Lampa.Storage.cache('kp_rating',500,{}):Lampa.Storage.get('kp_rating',{});
-        return raw&&typeof raw==='object'?raw:{};
-    }catch(e){return {};}
-}
-function smartEnrichFromCache(cards) {
-    var legacy=smartOldKpCache(),typed={};
-    try {typed=Lampa.Storage.get('kp_rating_pro_cache_v1',{})||{};}catch(e){}
-    var count={kp:0,imdb:0},now=Date.now();
-    cards.forEach(function(c) {
-        var old=legacy[String(c.id)];
-        // Legacy rating.js cache uses TMDB numeric IDs for both media types.
-        if(old&&Number(old.timestamp)>0&&now-Number(old.timestamp)<=14*86400000&&
-            old.type===c.type&&Number(old.year)===Number(smartDate(c).slice(0,4))&&
-            smartTitles(c).indexOf(smartNormalize(old.title))>=0) {
-            if(!smartValidRate(c.kp_rating)&&smartValidRate(old.kp)){
-                c.kp_rating=smartValidRate(old.kp);c.surs_smart_kp_votes=0;count.kp++;
-            }
-            if(!smartValidRate(c.imdb_rating)&&smartValidRate(old.imdb)){
-                c.imdb_rating=smartValidRate(old.imdb);c.surs_smart_imdb_votes=0;count.imdb++;
-            }
-        }
-        // KP Rating Pro uses typed TMDB identifiers and expiration.
-        var item=typed['tmdb:'+c.type+':'+c.id];
-        if(!item||!Number(item.expires)||Number(item.expires)<=now)return;
-        if(!smartValidRate(c.kp_rating)&&smartValidRate(item.rate)){
-            c.kp_rating=smartValidRate(item.rate);c.surs_smart_kp_votes=0;count.kp++;
-        }
-        if(!smartValidRate(c.imdb_rating)&&smartValidRate(item.imdb)){
-            c.imdb_rating=smartValidRate(item.imdb);c.surs_smart_imdb_votes=0;count.imdb++;
-        }
-    });
-    return count;
-}
-function smartMergeKp(cards,kpCards) {
-    var titleMap={},imdbMap={},matched={},count={
-        kp:0,imdb:0,items:0,by_imdb:0,by_title:0,
-        year_offset:0,ambiguous:0
-    };
-    function year(card) {
-        // Match the SERIES identity by original premiere, not a new season date.
-        var identityDate=card.type==='tv'&&card.first_air_date?
-            card.first_air_date:smartDate(card);
-        var n=Number(String(identityDate).slice(0,4));
-        return n>=1900&&n<=2200?n:0;
-    }
-    cards.forEach(function(c){
-        var y=year(c);
-        smartTitles(c).forEach(function(name){
-            if(!y||name.length<3)return;
-            var key=c.type+'|'+name;
-            if(!titleMap[key])titleMap[key]=[];
-            if(titleMap[key].indexOf(c)<0)titleMap[key].push(c);
-        });
-        var id=String(c.imdb_id||'').trim().toLowerCase();
-        if(/^tt\d{5,12}$/.test(id)){
-            var imdbKey=c.type+'|'+id;
-            if(!imdbMap[imdbKey])imdbMap[imdbKey]=[];
-            imdbMap[imdbKey].push(c);
-        }
-    });
-    (kpCards||[]).forEach(function(kp){
-        if(!kp||!['movie','tv'].includes(kp.type))return;
-        var kpRate=smartValidRate(kp.kp_rating),
-            imdbRate=smartValidRate(kp.imdb_rating);
-        if(!kpRate&&!imdbRate)return;
-        var kpYear=year(kp),kpImdb=String(kp.imdb_id||'').trim().toLowerCase();
-        var chosen=null,method='',delta=0;
-        if(/^tt\d{5,12}$/.test(kpImdb)){
-            var ids=imdbMap[kp.type+'|'+kpImdb]||[];
-            var eligible=ids.filter(function(c){
-                var y=year(c);return !kpYear||!y||Math.abs(y-kpYear)<=2;
-            });
-            if(eligible.length===1){chosen=eligible[0];method='imdb';}
-            else if(eligible.length>1){count.ambiguous++;return;}
-        }
-        if(!chosen){
-            if(!kpYear)return;
-            var original=smartNormalize(kp.original_title||kp.original_name||'');
-            var names=smartTitles(kp),found=[],scoreByCard=[];
-            names.forEach(function(name){
-                if(name.length<3)return;
-                (titleMap[kp.type+'|'+name]||[]).forEach(function(c){
-                    var y=year(c),difference=Math.abs(y-kpYear);
-                    if(!y||difference>1)return;
-                    var currentId=String(c.imdb_id||'').trim().toLowerCase();
-                    if(/^tt\d{5,12}$/.test(currentId)&&
-                        /^tt\d{5,12}$/.test(kpImdb)&&currentId!==kpImdb)return;
-                    var cOriginal=smartNormalize(c.original_title||c.original_name||'');
-                    // A one-year shift is trusted only for identical original titles.
-                    // Localized names alone are insufficient for cross-year identity.
-                    if(difference===1&&!(original&&name===original&&name===cOriginal))
-                        return;
-                    var score=(difference===0?8:2)+
-                        (name===original&&name===cOriginal?5:
-                        name===original||name===cOriginal?3:1);
-                    var pos=found.indexOf(c);
-                    if(pos<0){found.push(c);scoreByCard.push(score);}
-                    else if(score>scoreByCard[pos])scoreByCard[pos]=score;
-                });
-            });
-            if(!found.length)return;
-            var order=found.map(function(c,i){return {c:c,s:scoreByCard[i]};});
-            order.sort(function(a,b){return b.s-a.s;});
-            if(order.length>1&&order[0].s===order[1].s){
-                count.ambiguous++;return;
-            }
-            chosen=order[0].c;method='title';
-        }
-        if(!chosen)return;
-        var id=chosen.type+':'+chosen.id;
-        if(!matched[id]){matched[id]=true;count.items++;}
-        if(method==='imdb')count.by_imdb++;
-        else count.by_title++;
-        if(kpYear&&year(chosen)&&year(chosen)!==kpYear){
-            count.year_offset++;delta=year(chosen)-kpYear;
-        }
-        if(kpRate&&!smartValidRate(chosen.kp_rating)){
-            chosen.kp_rating=kpRate;
-            chosen.surs_smart_kp_votes=smartVotes(kp,[
-                'vote_count','kp_vote_count','ratingKinopoiskVoteCount'
-            ]);
-            chosen.surs_smart_kp_match=method+(delta?'_year_offset':'');
-            chosen.surs_smart_kp_id=kp.kinopoisk_id||kp.id||'';
-            count.kp++;
-        }
-        if(imdbRate&&!smartValidRate(chosen.imdb_rating)){
-            chosen.imdb_rating=imdbRate;
-            chosen.surs_smart_imdb_votes=smartVotes(kp,[
-                'imdb_vote_count','imdb_votes','imdbVoteCount','ratingImdbVoteCount'
-            ]);
-            chosen.surs_smart_imdb_match=method+(delta?'_year_offset':'');
-            count.imdb++;
-        }
-    });
-    return count;
-}
-function smartBayes(rating,votes,prior) {
-    var n=Math.max(0,Number(votes)||0),r=smartValidRate(rating);
-    return r?(n*r+prior*6.8)/(n+prior):0;
-}
-function smartEvidence(rating,votes,prior,name){
-    var r=smartValidRate(rating),n=Math.max(0,Number(votes)||0);
-    if(!r)return null;
-    var confidence=n?n/(n+prior):.25;
-    // Unknown sample size must never be treated like 10,000 real votes.
-    return {source:name,raw:r,votes:n,confidence:confidence,
-        adjusted:n?smartBayes(r,n,prior):6.8+(r-6.8)*.32,
-        weight:.30+.70*confidence};
-}
-function smartRate(card,dates) {
-    var tmdbVotes=smartVotes(card,['vote_count']);
-    var sources=[smartEvidence(card.vote_average,tmdbVotes,card.type==='tv'?155:180,'TMDB')];
-    var kp=smartEvidence(card.kp_rating,card.surs_smart_kp_votes,180,'КП');
-    var imdb=smartEvidence(card.imdb_rating,card.surs_smart_imdb_votes,240,'IMDb');
-    if(kp)sources.push(kp);
-    if(imdb)sources.push(imdb);
-    var total=0,weights=0;
-    sources.forEach(function(s){if(s){total+=s.adjusted*s.weight;weights+=s.weight;}});
-    var qualityRaw=weights?total/weights:0;
-    var coverage=sources.filter(Boolean).length;
-    // Reliability belongs to the 60% quality component, not a new bonus.
-    // Missing independent ratings lower certainty but never manufacture good scores.
-    var coveragePenalty=coverage===1?.12:(coverage===2?.04:0);
-    var quality=Math.max(0,qualityRaw-coveragePenalty);
-    var popularity=Math.min(1,Math.log(1+Math.max(0,Number(card.popularity)||0))/Math.log(251));
-    var age=smartAge(smartDate(card));
-    var freshness=Math.max(0,1-age/550);
-    var agreement=.5;
-    if(sources.length>1){
-        var maxDifference=0;
-        for(var i=0;i<sources.length;i++)for(var j=i+1;j<sources.length;j++)
-            maxDifference=Math.max(maxDifference,Math.abs(sources[i].adjusted-sources[j].adjusted));
-        agreement=Math.max(0,1-maxDifference/3);
-    }
-    var qualityFloor=age<=45?7.00:(age<=180?7.15:7.25);
-    var round=function(x){return Math.round(x*100)/100;};
-    var points={quality:round(60*quality/10),popularity:round(15*popularity),
-        freshness:round(15*freshness),agreement:round(10*agreement)};
-    // Keep the original 60/15/15/10 weighting for inspection, but prevent
-    // popularity and recency from overriding a substantially better film.
-    // 1.2 points is the MAXIMUM combined influence of secondary factors.
-    // Therefore a quality advantage > 0.122/10 always wins, even if the
-    // weaker candidate is newer and much more popular.
-    var weightedScore=60*quality/10+15*popularity+15*freshness+10*agreement;
-    var secondaryRaw=15*popularity+15*freshness+10*agreement;
-    var secondaryRatio=secondaryRaw/40;
-    var score=98.8*quality/10+1.2*secondaryRatio;
-    card.surs_smart_raw_score=score;
-    card.surs_smart_score=round(score);
-    card.surs_smart_weighted_score=round(weightedScore);
-    card.surs_smart_quality=round(quality);
-    card.surs_smart_quality_floor=qualityFloor;
-    card.surs_smart_passes_quality=quality>=qualityFloor;
-    card.surs_smart_source_count=sources.length;
-    card.surs_smart_breakdown={
-        score:round(score),quality:round(quality),floor:qualityFloor,
-        passes:quality>=qualityFloor,points:points,
-        weighted_score:round(weightedScore),
-        ranking_method:'quality_first',
-        ranking_quality_points:round(98.8*quality/10),
-        ranking_secondary_points:round(1.2*secondaryRatio),
-        ranking_secondary_cap:1.2,
-        premiere_date:smartDate(card),
-        premiere_kind:card.type==='movie'?'Фильм':card.surs_smart_premiere_type==='season'?
-            'Новый сезон '+card.surs_smart_season_number:'Новый сериал',
-        period:smartPeriodLabel(smartPeriod(card)),
-        rating_coverage:coverage,coverage_percent:Math.round(coverage/3*100),
-        quality_before_coverage:round(qualityRaw),
-        coverage_penalty:round(coveragePenalty),
-        missing_sources:['TMDB','КП','IMDb'].filter(function(name){
-            return !sources.some(function(s){return s.source===name;});
-        }),
-        kp_match:card.surs_smart_kp_match||'',
-        imdb_match:card.surs_smart_imdb_match||'',
-        ratings:sources.map(function(s){return {source:s.source,rating:s.raw,votes:s.votes,
-            adjusted:round(s.adjusted),confidence:round(s.confidence)};})
-    };
-    return score;
-}
-function smartRank(cards,dates) {
-    cards.forEach(function(c){smartRate(c,dates);});
-    var qualified=cards.filter(function(c){
-        return !c.surs_smart_pending_season&&c.surs_smart_passes_quality&&
-            smartPeriod(c)<=2;
-    });
-    qualified.sort(function(a,b){
-        var periodA=smartPeriod(a),periodB=smartPeriod(b);
-        if(periodA!==periodB)return periodA-periodB;
-        // Quality-first SURS score applies INSIDE the same premiere period.
-        var score=b.surs_smart_raw_score-a.surs_smart_raw_score;
-        if(Math.abs(score)>1e-10)return score;
-        if(a.surs_smart_quality!==b.surs_smart_quality)
-            return b.surs_smart_quality-a.surs_smart_quality;
-        var votes=Number(b.vote_count||0)-Number(a.vote_count||0);
-        if(votes)return votes;
-        var ka=String(a.type)+':'+String(a.id),kb=String(b.type)+':'+String(b.id);
-        return ka<kb?-1:ka>kb?1:0;
-    });
-    var selected=qualified.slice(0,SMART_US_LIMIT);
-    selected.forEach(function(c,i){
-        c.surs_smart_rank=i+1;
-        c.surs_smart_period=smartPeriod(c);
-        c.surs_smart_period_label=smartPeriodLabel(c.surs_smart_period);
-    });
-    return selected;
-}
-    function smartMakeResult(cards) {
-        return { title:SMART_US_TITLE,url:SMART_US_CATALOG_URL,
-            source:'SURS',page:1,total_pages:Math.max(1,Math.ceil(cards.length/20)),
-            results:cards.slice(0,SMART_US_LIMIT),
-            params:{items:{view:20,mapping:'line'}} };
-    }
-
-    var SMART_DIAG_KEY='surs_smart_diagnostics_v1';
-    var SMART_BACKGROUND_MS=24000,SMART_TARGET_MAX=20;
-    var smartLastBuild=0;
-    function smartReadDiagnostic(){
-        try{return Lampa.Storage.get(SMART_DIAG_KEY,null);}catch(e){return null;}
-    }
-    function smartTopTen(cards){
-        return (cards||[]).slice(0,10).map(function(c,i){
-            return {rank:i+1,id:c.id,type:c.type,title:c.title||c.name||'Без названия',
-                score:c.surs_smart_score,premiere:smartDate(c),
-                period:smartPeriodLabel(smartPeriod(c)),
-                season:c.surs_smart_season_number||0,
-                breakdown:c.surs_smart_breakdown};
-        });
-    }
-    var SMART_TV_SEASON_DETAILS_LIMIT=20;
-    function smartFindRecentSeason(details,dates){
-        if(!details||!Array.isArray(details.seasons))return null;
-        var best=null;
-        details.seasons.forEach(function(s){
-            if(!s||Number(s.season_number)<2||!Number.isInteger(Number(s.season_number)))
-                return;
-            var day=String(s.air_date||'').slice(0,10);
-            if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||day<dates.start||day>dates.end)
-                return;
-            if(!isFinite(Date.parse(day+'T00:00:00Z')))return;
-            if(!best||day>best.date)
-                best={date:day,number:Number(s.season_number)};
-        });
-        return best;
-    }
-    function smartBuild(owner,params,done){
-        if(smartRunning){if(typeof done==='function')smartWaiters.push(done);return;}
-        smartRunning=true;smartLastBuild=Date.now();
-        if(typeof done==='function')smartWaiters.push(done);
-        var oldCache=readSursPreviewCache(SMART_US_CACHE),oldDiag=smartReadDiagnostic();
-        var dates=smartWindow(),cards=[],kpCards=[],seen={};
-        var metrics={version:'3.9.26',phase:'loading',status:'loading',started_at:Date.now(),
-            tmdb_requests:0,tmdb_done:0,tmdb_failed:0,
-            kp_requests:0,kp_done:0,kp_failed:0,kp_status:'loading',
-            kp_matches:0,imdb_matches:0,cache_kp_matches:0,cache_imdb_matches:0,
-            targeted_requests:0,candidates:0,selected:0,rejected_quality:0,
-            season_candidates:0,season_detail_requests:0,season_detail_done:0,
-            season_detail_failed:0,season_verified:0,season_unverified:0,
-            period_recent:0,period_mid:0,period_reserve:0,recent_top10:0,
-            top10:[],timeout:false};
-        window.SURS_PERFORMANCE.smart_us=metrics;
-        var previewSent=false,finished=false,tmdbDone=false,broadDone=false,kpDone=false,
-            cacheMerged=false,targetStarted=false,kpReady=null,graceTimer=null;
-        var fastTimer=setTimeout(preview,4200);
-        var hardTimer=setTimeout(function(){metrics.timeout=true;metrics.kp_status='timeout';finish();},
-            SMART_BACKGROUND_MS);
-        function cacheRatings(){
-            if(cacheMerged)return;
-            cacheMerged=true;
-            var m=smartEnrichFromCache(cards);
-            metrics.cache_kp_matches=m.kp;metrics.cache_imdb_matches=m.imdb;
-        }
-        function ranked(){
-            cacheRatings();
-            var m=smartMergeKp(cards,kpCards);
-            metrics.kp_matches+=m.kp;metrics.imdb_matches+=m.imdb;
-            var selected=smartRank(cards,dates);
-            metrics.candidates=cards.length;metrics.selected=selected.length;
-            metrics.rejected_quality=cards.filter(function(c){return !c.surs_smart_passes_quality;}).length;
-            metrics.season_unverified=cards.filter(function(c){return c.surs_smart_pending_season;}).length;
-            metrics.period_recent=selected.filter(function(c){return smartPeriod(c)===0;}).length;
-            metrics.period_mid=selected.filter(function(c){return smartPeriod(c)===1;}).length;
-            metrics.period_reserve=selected.filter(function(c){return smartPeriod(c)===2;}).length;
-            metrics.recent_top10=selected.slice(0,10).filter(function(c){return smartPeriod(c)===0;}).length;
-            metrics.coverage_two=selected.filter(function(c){return c.surs_smart_source_count>=2;}).length;
-            metrics.coverage_three=selected.filter(function(c){return c.surs_smart_source_count>=3;}).length;
-            metrics.coverage_kp=selected.filter(function(c){return smartValidRate(c.kp_rating)>0;}).length;
-            metrics.coverage_imdb=selected.filter(function(c){return smartValidRate(c.imdb_rating)>0;}).length;
-            metrics.coverage_percent=selected.length?Math.round(
-                selected.reduce(function(total,c){return total+c.surs_smart_source_count;},0)/
-                (selected.length*3)*100):0;
-            metrics.top10=smartTopTen(selected);
-            return selected;
-        }
-        function deliver(result){
-            if(previewSent)return;
-            previewSent=true;
-            smartWaiters.splice(0).forEach(function(fn){try{fn(result);}catch(e){}});
-        }
-        function preview(){
-            if(previewSent||finished)return;
-            metrics.phase='provisional';metrics.status='provisional';
-            var selected=ranked();
-            if(selected.length){
-                if(!oldCache)saveSursPreviewCache(SMART_US_CACHE,smartMakeResult(selected));
-                deliver(smartMakeResult(selected));
-            }else deliver(oldCache?smartMakeResult(oldCache.results):{results:[]});
-        }
-        function finish(){
-            if(finished)return;
-            finished=true;clearTimeout(fastTimer);clearTimeout(hardTimer);
-            if(graceTimer!==null)clearTimeout(graceTimer);
-            var selected=ranked(),result=smartMakeResult(selected);
-            var complete=tmdbDone&&kpDone&&!metrics.tmdb_failed&&!metrics.kp_failed&&
-                metrics.kp_status==='ready'&&!metrics.timeout;
-            metrics.phase=complete?'complete':'partial';
-            metrics.status=selected.length?metrics.phase:'empty';
-            metrics.checked_at=Date.now();
-            if(selected.length&&(complete||!oldCache||!oldDiag||oldDiag.phase!=='complete'))
-                saveSursPreviewCache(SMART_US_CACHE,result);
-            try{
-                if(complete||!oldDiag||oldDiag.phase!=='complete'||!oldDiag.top10||!oldDiag.top10.length)
-                    Lampa.Storage.set(SMART_DIAG_KEY,Object.assign({},metrics));
-                else Lampa.Storage.set(SMART_DIAG_KEY,Object.assign({},oldDiag,{
-                    last_attempt_at:Date.now(),last_attempt_status:metrics.kp_status
-                }));
-            }catch(e){}
-            if(!previewSent)deliver(selected.length?result:
-                oldCache?smartMakeResult(oldCache.results):{results:[]});
-            smartRunning=false;
-        }
-        function progress(){
-            if(finished)return;
-            if(tmdbDone&&kpDone)return finish();
-            if(tmdbDone&&!previewSent&&graceTimer===null)
-                graceTimer=setTimeout(preview,650);
-        }
-        function searchMissing(){
-            if(targetStarted||finished||!tmdbDone||!broadDone)return;
-            targetStarted=true;
-            if(!kpReady){kpDone=true;progress();return;}
-            cacheRatings();var priorMatches=smartMergeKp(cards,kpCards);
-            metrics.kp_matches+=priorMatches.kp;metrics.imdb_matches+=priorMatches.imdb;
-            var missing=smartRank(cards.slice(),dates).filter(function(c){
-                return !smartValidRate(c.kp_rating)||!smartValidRate(c.imdb_rating);
-            }).slice(0,SMART_TARGET_MAX);
-            if(!missing.length){kpDone=true;metrics.kp_status='ready';progress();return;}
-            var index=0,active=0,left=missing.length;
-            function pump(){
-                while(index<missing.length&&active<3&&!finished){
-                    (function(c){
-                        active++;metrics.kp_requests++;metrics.targeted_requests++;
-                        var replied=false,timer=setTimeout(function(){receive(null);},7500);
-                        function receive(data){
-                            if(replied)return;
-                            replied=true;clearTimeout(timer);metrics.kp_done++;
-                            if(data&&Array.isArray(data.results))kpCards=kpCards.concat(data.results);
-                            else metrics.kp_failed++;
-                            left--;active--;
-                            if(left===0){kpDone=true;metrics.kp_status='ready';progress();}
-                            else pump();
-                        }
-                        var title=c.original_title||c.original_name||c.title||c.name;
-                        try{
-                            kpReady.source.list({
-                                url:'api/v2.1/films/search-by-keyword',
-                                query:encodeURIComponent(String(title||'')),page:1
-                            },receive,function(){receive(null);});
-                        }catch(e){receive(null);}
-                    })(missing[index++]);
-                }
-            }
-            pump();
-        }
-        function kpSource(ready){
-            if(finished)return;
-            if(!ready){
-                metrics.kp_status='unavailable';broadDone=true;kpDone=true;
-                progress();return;
-            }
-            kpReady=ready;
-            var y=new Date().getFullYear(),queue=[],active=0,pending=0;
-            [y,y-1].forEach(function(year){
-                KP8_TYPES.forEach(function(t){
-                    queue.push({year:year,type:t,page:1});
-                    pending++;
-                });
-            });
-            metrics.kp_broad_pages=0;
-            function pump(){
-                if(finished)return;
-                while(queue.length&&active<3&&!finished){
-                    (function(job){
-                        active++;metrics.kp_requests++;metrics.kp_broad_pages++;
-                        var replied=false;
-                        var timer=setTimeout(function(){receive(null);},8500);
-                        function receive(data){
-                            if(replied)return;
-                            replied=true;clearTimeout(timer);
-                            active--;metrics.kp_done++;
-                            if(data&&Array.isArray(data.results)){
-                                kpCards=kpCards.concat(data.results);
-                                // Fetch at most two pages for each type/year.
-                                // Only request page 2 when the source actually has one.
-                                if(job.page===1&&(Number(data.total_pages)>1||
-                                    (data.total_pages==null&&data.results.length>=20))){
-                                    pending++;
-                                    queue.push({year:job.year,type:job.type,page:2});
-                                }
-                            }else metrics.kp_failed++;
-                            pending--;
-                            if(pending===0){
-                                broadDone=true;metrics.kp_status='ready';
-                                searchMissing();progress();
-                            }else pump();
-                        }
-                        var url='api/v2.2/films?order=YEAR&countries='+KP8_US_COUNTRY_ID+
-                            '&ratingFrom=0&ratingTo=10&yearFrom='+job.year+
-                            '&yearTo='+job.year+'&type='+job.type.sourceType;
-                        try{
-                            ready.source.list({url:'filter',filter_url:url,page:job.page},
-                                receive,function(){receive(null);});
-                        }catch(e){receive(null);}
-                    })(queue.shift());
-                }
-            }
-            pump();
-        }
-        var jobs=smartQueries(dates);
-        function batch(list,doneBatch){
-            if(!list.length)return doneBatch();
-            var pending=list.length;
-            list.forEach(function(job){
-                metrics.tmdb_requests++;
-                var replied=false;
-                function receive(json){
-                    if(replied)return;
-                    replied=true;
-                    if(!finished){
-                        metrics.tmdb_done++;
-                        if(json&&Array.isArray(json.results))smartCandidate(json,job.type,dates,seen,cards,job);
-                        else metrics.tmdb_failed++;
-                    }
-                    if(--pending===0&&!finished)doneBatch();
-                }
-                try{owner.get(job.url,params,receive,function(){receive(null);});}
-                catch(e){receive(null);}
-            });
-        }
-        function seasonDetailsDone(){
-            tmdbDone=true;searchMissing();progress();
-        }
-        function verifySeasonPremieres(){
-            var candidates=cards.filter(function(c){
-                // Recent series have a confirmed first-series premiere already.
-                return c.type==='tv'&&c.surs_smart_season_candidate&&
-                    (c.surs_smart_pending_season||
-                     smartAge(c.first_air_date)>180);
-            });
-            metrics.season_candidates=candidates.length;
-            candidates.sort(function(a,b){
-                if(!!a.surs_smart_pending_season!==!!b.surs_smart_pending_season)
-                    return a.surs_smart_pending_season?-1:1;
-                return Number(b.vote_count||0)-Number(a.vote_count||0);
-            });
-            var queue=candidates.slice(0,SMART_TV_SEASON_DETAILS_LIMIT);
-            if(!queue.length)return seasonDetailsDone();
-            var index=0,active=0,left=queue.length;
-            function pump(){
-                if(finished)return;
-                while(index<queue.length&&active<3&&!finished){
-                    (function(c){
-                        active++;metrics.tmdb_requests++;metrics.season_detail_requests++;
-                        var replied=false,timer=setTimeout(function(){receive(null);},7500);
-                        function receive(details){
-                            if(replied)return;
-                            replied=true;clearTimeout(timer);
-                            if(finished)return;
-                            active--;left--;
-                            metrics.tmdb_done++;metrics.season_detail_done++;
-                            if(!details||!Array.isArray(details.seasons)){
-                                metrics.season_detail_failed++;
-                                metrics.tmdb_failed++;
-                            }else if(!details.id||String(details.id)===String(c.id)){
-                                var latest=smartFindRecentSeason(details,dates);
-                                if(latest){
-                                    c.surs_smart_premiere_date=latest.date;
-                                    c.surs_smart_premiere_type='season';
-                                    c.surs_smart_season_number=latest.number;
-                                    c.surs_smart_pending_season=false;
-                                    metrics.season_verified++;
-                                }
-                            }else{
-                                metrics.season_detail_failed++;
-                                metrics.tmdb_failed++;
-                            }
-                            if(left===0)seasonDetailsDone();
-                            else pump();
-                        }
-                        try{owner.get('tv/'+c.id,params,receive,function(){receive(null);});}
-                        catch(e){receive(null);}
-                    })(queue[index++]);
-                }
-            }
-            pump();
-        }
-        batch(jobs.filter(function(j){return j.page===1;}),function(){
-            var ready=cards.filter(function(c){
-                smartRate(c,dates);
-                return !c.surs_smart_pending_season&&c.surs_smart_passes_quality;
-            });
-            // A full pool of older titles must NOT stop discovery when fresh
-            // qualifying premieres are still scarce.
-            var recent=ready.filter(function(c){return smartPeriod(c)===0;}).length;
-            var enough=ready.length>=60&&recent>=15;
-            if(enough)verifySeasonPremieres();
-            else batch(jobs.filter(function(j){return j.page===2;}),verifySeasonPremieres);
-        });
-        kp8FindSource(kpSource);
-    }
-    function smartPreview(owner,params,callback){
-        var cached=readSursPreviewCache(SMART_US_CACHE);
-        if(cached){
-            callback(smartMakeResult(cached.results));
-            if(!smartRunning)window.SURS_PERFORMANCE.smart_us=Object.assign({},
-                smartReadDiagnostic()||{},{status:'cached',cache_hit:true,
-                    cache_age_ms:cached.age,selected:cached.results.length,
-                    top10:smartTopTen(cached.results)});
-            var last=smartReadDiagnostic(),incomplete=!last||last.phase!=='complete';
-            if(cached.age>=(incomplete?15*60000:4*3600000)&&
-                Date.now()-smartLastBuild>5*60000)
-                smartBuild(owner,params,function(){});
-            return;
-        }
-        smartBuild(owner,params,callback);
-    }
-    function smartDetailItems(c){
-        var d=c.breakdown||{},p=d.points||{};
-        var quality=Number(d.quality)||0, raw=Number(d.quality_before_coverage)||0;
-        var missing=d.missing_sources||[];
-        var matches=[];
-        if(d.kp_match)matches.push('КП: '+(d.kp_match==='imdb'?'по IMDb ID':
-            d.kp_match.indexOf('year_offset')>=0?'по названию, соседний год':'по названию и году'));
-        if(d.imdb_match)matches.push('IMDb: '+(d.imdb_match==='imdb'?'по IMDb ID':
-            d.imdb_match.indexOf('year_offset')>=0?'по названию, соседний год':'по названию и году'));
-        var items=[
-            {title:'Премьера: '+(d.premiere_date||c.premiere||'неизвестна')+
-                ' · '+(d.premiere_kind||'фильм/сериал')+
-                ' · период '+(d.period||c.period||'неизвестен')},
-            {title:'Источников: '+(d.rating_coverage||1)+'/3 · покрытие '+(d.coverage_percent||33)+'%'},
-            {title:'Не получено: '+(missing.length?missing.join(', '):'все источники представлены')},
-            {title:'Качество '+(p.quality||0)+'/60 · Популярность '+(p.popularity||0)+'/15'},
-            {title:'Свежесть '+(p.freshness||0)+'/15 · Согласованность '+(p.agreement||0)+'/10'},
-            {title:'SURS '+c.score+' · качество '+quality+'/10 · порог '+(d.floor||0)},
-            {title:'Приоритет качества: '+(d.ranking_quality_points||0)+
-                ' · дополнительные факторы: '+(d.ranking_secondary_points||0)+' из 1,2'},
-            {title:'Контрольная формула 60/15/15/10: '+(d.weighted_score||0)},
-            {title:'Коррекция за неполные данные: −'+(d.coverage_penalty||0)+
-                ' · до коррекции '+raw+'/10'}
-        ];
-        if(matches.length)items.push({title:'Сопоставление: '+matches.join(' · ')});
-        return items.concat((d.ratings||[]).map(function(r){
-            return {title:r.source+' '+r.rating+' · голосов '+(r.votes||'неизвестно')+
-                ' · скорр. '+r.adjusted+' · доверие '+Math.round(r.confidence*100)+'%'};
-        }));
-    }
-    function smartStatusText(s){
-        var values={loading:'обновление',provisional:'предварительная выдача',
-            complete:'запросы завершены',partial:'завершено с ограничениями',
-            cached:'из кэша',ready:'источник ответил',unavailable:'недоступен',
-            timeout:'превышено время ожидания'};
-        return values[s]||s||'нет данных';
-    }
-    function openSmartDiagnostics(){
-        if(!Lampa.Select||!Lampa.Select.show)return;
-        var live=window.SURS_PERFORMANCE.smart_us||{};
-        var data=live.top10&&live.top10.length?live:(smartReadDiagnostic()||live);
-        var state=live.phase==='loading'?'loading':(data.phase||'cached');
-        var items=[
-            {title:'Версия SURS '+(data.version||'3.9.26')+' · '+smartStatusText(state)},
-            {title:'Статус отражает завершение запросов, а не полноту рейтингов'},
-            {title:'Порядок: сначала 0–180, затем 181–365, затем 366–550 дней'},
-            {title:'Внутри каждого периода: качество прежде всего; популярность при равенстве'},
-            {title:'SURS: качество 98,8 балла + вторичные факторы до 1,2 балла'},
-            {title:'TMDB '+(data.tmdb_done||0)+'/'+(data.tmdb_requests||0)+
-                ' · ошибок '+(data.tmdb_failed||0)},
-            {title:'КП '+(data.kp_done||0)+'/'+(data.kp_requests||0)+
-                ' · '+smartStatusText(data.kp_status)+' · ошибок '+(data.kp_failed||0)},
-            {title:'Кандидатов '+(data.candidates||0)+' · отобрано '+(data.selected||0)+
-                ' · исключено '+(data.rejected_quality||0)},
-            {title:'Релизы 0–180 дней: '+(data.period_recent||0)+
-                ' · 181–365: '+(data.period_mid||0)+
-                ' · 366–550: '+(data.period_reserve||0)},
-            {title:'Свежих в топ-10: '+(data.recent_top10||0)+
-                ' · подтверждено новых сезонов '+(data.season_verified||0)},
-            {title:'Проверено сезонов: '+(data.season_detail_done||0)+'/'+
-                (data.season_detail_requests||0)+' · без подтверждения '+
-                (data.season_unverified||0)+' · ошибок '+(data.season_detail_failed||0)},
-            {title:'Покрытие рейтингов: '+(data.coverage_percent||0)+
-                '% · 2+ источника '+(data.coverage_two||0)+'/'+(data.selected||0)+
-                ' · все три '+(data.coverage_three||0)},
-            {title:'У отобранных: КП '+(data.coverage_kp||0)+' · IMDb '+(data.coverage_imdb||0)},
-            {title:'Новых оценок: КП '+(data.kp_matches||0)+' · IMDb '+(data.imdb_matches||0)+
-                ' · адресных проверок '+(data.targeted_requests||0)},
-            {title:'Последний расчёт '+(data.checked_at?
-                new Date(data.checked_at).toLocaleString('ru-RU'):'ещё не завершён')},
-            {title:'Пересчитать подборку в фоне',action:'refresh'}
-        ];
-        (data.top10||[]).forEach(function(c){
-            var d=c.breakdown||{};
-            var found=(d.ratings||[]).map(function(r){return r.source;}).join('+')||'нет данных';
-            items.push({title:'#'+c.rank+' · '+c.title+' · '+(c.premiere||'?')+
-                ' · '+(c.period||'?')+' · SURS '+c.score+
-                ' · '+found+' ('+(d.rating_coverage||1)+'/3)',
-                action:'card',card:c});
-        });
-        Lampa.Select.show({title:'SURS · Лучшие новинки США',items:items,
-            onSelect:function(item){
-                if(item.action==='refresh'&&Lampa.Api&&Lampa.Api.sources&&Lampa.Api.sources.SURS){
-                    smartBuild(Lampa.Api.sources.SURS,{},function(){});
-                    if(Lampa.Noty)Lampa.Noty.show('Пересчёт запущен. Новый порядок при следующем открытии.');
-                }else if(item.action==='card'&&item.card)
-                    Lampa.Select.show({title:'#'+item.card.rank+' · '+item.card.title,
-                        items:smartDetailItems(item.card),onSelect:function(){},
-                        onBack:openSmartDiagnostics});
-            }});
-    }
-
-    function smartCatalog(page,owner,params,ok,fail) {
-        // Pin one ordered snapshot for the full native "More" session.
-        // Background refresh must not shuffle page 2 relative to page 1.
-        params=params||{};
-        var session=params._sursSmartSession;
-        var cached=session&&Array.isArray(session.results)?
-            {results:session.results}:readSursPreviewCache(SMART_US_CACHE);
-        function publish(row) {
-            var list=row&&Array.isArray(row.results)?row.results:[];
-            if(!session&&list.length) {
-                session={results:list.slice(0,SMART_US_LIMIT)};
-                params._sursSmartSession=session;
-            }
-            if(session&&Array.isArray(session.results))list=session.results;
-            var start=(page-1)*20,sub=list.slice(start,start+20);
-            if(!sub.length)return typeof fail==='function'&&fail();
-            ok({title:SMART_US_TITLE,url:SMART_US_CATALOG_URL,
-                source:'SURS',page:page,total_pages:Math.ceil(list.length/20),
-                results:sub});
-        }
-        if(cached)return publish(smartMakeResult(cached.results));
-        smartBuild(owner,params,publish);
     }
 
     var US8_CATALOG_URL = 'surs_us_new_8';
@@ -2991,7 +2142,7 @@ function smartRank(cards,dates) {
     function kp8PreloadEnabledSource() {
         try {
             if (getSavedShelves('MAIN').some(function(item) {
-                return (item.id === 'kp_new_8' || item.id === 'smart_us_new') && item.enabled;
+                return item.id === 'kp_new_8' && item.enabled;
             })) kp8LoadDependency(function() {});
         } catch(e) {}
     }
@@ -3388,7 +2539,6 @@ function smartRank(cards,dates) {
 
     function shelfTimeout(id) {
         if (id === 'us_new_8') return 8500;
-        if (id === 'smart_us_new') return 5500;
         if (id === 'hot_us_new') return 4500;
     if (id === 'kp_new_8') return 8000;
         if (/^(hdrezka_|ext_hdrezka_)/i.test(id)) return 11000;
@@ -3786,7 +2936,6 @@ function smartRank(cards,dates) {
 
         // РЯД: Новинки мирового кино
         if (shelfId === 'kp_new_8') return kp8Preview;
-        if (shelfId === 'smart_us_new') return function(callback) { smartPreview(owner, params, callback); };
         if (shelfId === 'hot_us_new') return function(callback) { hotPreview(owner, params, callback); };
 
     if (shelfId === 'new_movies') {
@@ -4394,7 +3543,7 @@ function smartRank(cards,dates) {
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.2';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.3';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4449,10 +3598,6 @@ function smartRank(cards,dates) {
             // Use the standard Lampa category_full screen and its native pagination.
             // Other categories keep the original TMDB implementation unchanged.
             this.list = function(listParams, onComplete, onError) {
-                if (listParams && listParams.url === SMART_US_CATALOG_URL) {
-                    smartCatalog(listParams.page || 1, this, listParams, onComplete, onError);
-                    return;
-                }
                 if (listParams && listParams.url === HOT_US_CATALOG_URL) {
                     hotCatalog(listParams.page || 1, this, listParams, onComplete, onError);
                     return;
@@ -4761,13 +3906,6 @@ function smartRank(cards,dates) {
 
             Lampa.SettingsApi.addParam({
                 component: 'surs',
-                param: {name:'surs_smart_diagnostics',type:'button'},
-                field: {name:'Диагностика «Лучшие новинки США»',
-                    description:'Баллы SURS, рейтинги КП/IMDb/TMDB, статус загрузки'},
-                onChange:openSmartDiagnostics
-            });
-            Lampa.SettingsApi.addParam({
-                component: 'surs',
                 param: {name:'surs_hot_diagnostics',type:'button'},
                 field: {name:'Диагностика «Горячие новинки США»',
                     description:'Публикация GitHub Actions, источники, кандидаты, актуальность'},
@@ -4916,7 +4054,7 @@ function smartRank(cards,dates) {
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v4.0.2 (Fixed & Configurable) успешно инициализирован.');
+            console.log('SURS Pro v4.0.3 (Hot Discovery primary) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4945,12 +4083,9 @@ function smartRank(cards,dates) {
             return defaults;
         },
         getDefaultSectionShelves: getDefaultSectionShelves,
-        smartDiagnostics: smartReadDiagnostic,
-        openSmartDiagnostics: openSmartDiagnostics,
         hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
         openHotDiagnostics: openHotDiagnostics,
-        refreshSmartShelf: function(){smartBuild(Lampa.Api.sources.SURS,{},function(){});},
-        version: '4.0.2'
+        version: '4.0.3'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
