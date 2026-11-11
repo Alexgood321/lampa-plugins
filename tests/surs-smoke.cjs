@@ -693,9 +693,9 @@ test('Hot Discovery 4.1 diagnostics use real JSON algorithm and rejection thresh
     app.window.LampaShelfManager.openHotDiagnostics();
     assert.ok(menu);
     const labels=Array.from(menu.items,x=>x.title).join('\\n');
-    assert.match(labels,/hot-discovery-4\\.1/);
-    assert.match(labels,/Качество от 7\\.2 · голосов от 100/);
-    assert.match(labels,/Отсеяно: качество 22 · голоса 4/);
+    assert.ok(labels.includes('hot-discovery-4.1'));
+    assert.ok(labels.includes('Качество от 7.2 · голосов от 100'));
+    assert.ok(labels.includes('Отсеяно: качество 22 · голоса 4'));
 });
 test('Hot Discovery 4.1 loads legacy cached JSON only when new request fails', () => {
     const day=new Date().toISOString().slice(0,10);
