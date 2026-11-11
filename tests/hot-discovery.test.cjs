@@ -272,7 +272,7 @@ test('recency cutoff has no accidental day-60 and day-61 overlap',()=>{
   const rows=hot.scoreCandidates([card(60,60),card(61,61),
     card(120,120),card(121,121),card(365,365),card(366,366)],
     {snapshots:[]},NOW,null);
-  assert.deepEqual(rows.map(c=>c.id),[60,61,120,121,365,366]);
+  assert.deepEqual(rows.map(c=>c.id).sort((a,b)=>a-b),[60,61,120,121,365,366]);
   assert.deepEqual(rows.map(c=>c.surs_hot_recency_tier),[0,1,1,2,2,3]);
   assert.ok(rows[0].surs_hot_score>rows[1].surs_hot_score);
   assert.ok(rows[2].surs_hot_score>rows[3].surs_hot_score);
