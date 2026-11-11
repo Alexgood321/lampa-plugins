@@ -689,7 +689,7 @@ test('Hot Discovery 4.1 diagnostics use real JSON algorithm and rejection thresh
             rejections:{quality_below_floor:22,insufficient_votes:4}}};
     app.Lampa.Reguest.prototype.silent=function(url,ok){ok(feed);};
     app.getMain();
-    assert.equal(app.stored.get('surs_hot_json_v3').algorithm,'hot-discovery-4.1');
+    assert.equal(app.stored.get('surs_hot_json_v3').algorithm,'hot-discovery-4.2');
     let menu=null;
     app.Lampa.Select={show:x=>{menu=x;}};
     app.window.LampaShelfManager.openHotDiagnostics();
