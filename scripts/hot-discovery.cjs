@@ -7,6 +7,8 @@ const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const DAY = 86400000;
 const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
+const MAX_SEASON_CALLS = 45;
+const QUALITY_FLOOR = 7.2, MIN_VOTES = 100, ORIGINAL_MAX_AGE = 730;
 const EXCLUDED = {movie:[16,99,10770],tv:[16,99,10763,10764,10766,10767]};
 const round = (n,dp=2) => Math.round(n * 10**dp) / 10**dp;
 const dateOnly = d => new Date(d).toISOString().slice(0,10);
@@ -31,13 +33,19 @@ function moviePremiere(details,now) {
   const original=isoDate(details.release_date);
   const entries=(details.release_dates&&details.release_dates.results||[])
     .filter(r=>r.iso_3166_1==='US').flatMap(r=>r.release_dates||[]);
-  const digital=entries.filter(r=>Number(r.type)===4).map(r=>isoDate(r.release_date))
-    .filter(d=>d&&daysSince(d,now)>=0).sort().pop();
-  const theatrical=entries.filter(r=>[2,3].includes(Number(r.type)))
-    .map(r=>isoDate(r.release_date)).filter(d=>d&&daysSince(d,now)>=0).sort()[0];
-  // Releasing digitally makes a film newly watchable, but never claim the date if absent.
-  const actual=(digital && (!original||digital>=original)) ? digital : (theatrical||original);
-  return {date:actual,kind:digital&&actual===digital?'digital':'theatrical',original,digital,theatrical};
+  // TMDB can list several digital/limited re-releases. Only the FIRST US
+  // release of each type is a premiere; a later listing is not a new film.
+  const first=types=>entries.filter(r=>types.includes(Number(r.type)))
+    .map(r=>isoDate(r.release_date)).filter(Boolean).sort()[0]||null;
+  const earliestDigital=first([4]),earliestTheatrical=first([2,3]);
+  const digital=earliestDigital&&daysSince(earliestDigital,now)>=0?earliestDigital:null;
+  const theatrical=earliestTheatrical&&daysSince(earliestTheatrical,now)>=0?
+    earliestTheatrical:null;
+  const releasedOriginal=original&&daysSince(original,now)>=0?original:null;
+  const actual=digital&&(!original||digital>=original)?digital:
+    (theatrical||releasedOriginal);
+  return {date:actual,kind:actual===digital?'digital':'theatrical',
+    original,digital,theatrical};
 }
 function tvPremiere(details,now) {
   const original=isoDate(details.first_air_date);
@@ -134,13 +142,36 @@ function qualityFor(c) {
   return {score:round(quality,3),confidence:round(Math.min(1,votes/(votes+140)),3),source_count:count};
 }
 function trendScore(c,peers) {
-  const d=c.surs_hot_trend_day, w=c.surs_hot_trend_week;
+  const d=c.surs_hot_trend_day,w=c.surs_hot_trend_week;
   const trendRank=n=>n?1/(1+Math.log10(1+n)*.45):0;
   const trend=d?trendRank(d):w?trendRank(w)*.85:0;
-  const ordered=peers.filter(x=>x.type===c.type).map(x=>number(x.popularity)).sort((a,b)=>b-a);
+  const ordered=peers.filter(x=>x.type===c.type).map(x=>number(x.popularity))
+    .sort((a,b)=>b-a);
   const rank=ordered.findIndex(x=>x<=number(c.popularity));
   const pop=ordered.length>1?1-rank/(ordered.length-1):.5;
   return round(Math.min(1,.8*trend+.2*pop),3);
+}
+// Season launch must be backed by at least one actually aired regular episode.
+// The whole-series rating is not accepted as a new-season rating by itself.
+function verifySeason(c,details,now) {
+  if(!details||Number(details.season_number)!==c.surs_hot_season||
+      !Array.isArray(details.episodes))return false;
+  const released=details.episodes.filter(e=>Number(e.episode_number)>=1&&
+    isoDate(e.air_date)&&daysSince(e.air_date,now)>=0);
+  if(!released.length)return false;
+  const premiere=released.map(e=>isoDate(e.air_date)).sort()[0];
+  if(daysSince(premiere,now)>550)return false;
+  c.surs_hot_premiere_date=premiere;
+  c.surs_hot_season_verified=true;
+  c.surs_hot_episodes_released=released.length;
+  const rated=released.filter(e=>number(e.vote_count)>=2&&
+    number(e.vote_average)>=1&&number(e.vote_average)<=10);
+  const votes=rated.reduce((n,e)=>n+number(e.vote_count),0);
+  if(votes>=30)c.surs_hot_season_rating={
+    value:round(rated.reduce((sum,e)=>sum+
+      number(e.vote_average)*number(e.vote_count),0)/votes,3),
+    votes,episodes_rated:rated.length,episodes_released:released.length};
+  return true;
 }
 function growthFor(c,history,now) {
   const snapshots=(history&&history.snapshots||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
@@ -157,11 +188,41 @@ function growthFor(c,history,now) {
   return {score:values.length?round(values.reduce((a,b)=>a+b,0)/values.length,3):.5,
     measured:values.length>0,periods};
 }
+function eligibilityReason(c,now) {
+  if(!c.poster_path)return 'poster_missing';
+  if(c.surs_hot_age<0||c.surs_hot_age>550)return 'premiere_outside_window';
+  if(c.surs_hot_original_date&&
+    daysSince(c.surs_hot_original_date,now)>ORIGINAL_MAX_AGE)
+    return 'original_too_old';
+  if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_verified)
+    return 'season_not_verified';
+  if(c.surs_hot_quality<QUALITY_FLOOR)return 'quality_below_floor';
+  const votes=number(c.vote_count);
+  if(votes<MIN_VOTES){
+    // Narrow exception for a very recent, trending premiere with a credible
+    // independent IMDb rating; no TMDB-only 10-vote inflated scores.
+    const imdb=c.surs_hot_ratings&&c.surs_hot_ratings.imdb;
+    const strongExternal=imdb&&number(imdb.votes)>=1000&&
+      number(imdb.value)>=7.7;
+    const trending=(c.surs_hot_trend_day&&c.surs_hot_trend_day<=20)||
+      (c.surs_hot_trend_week&&c.surs_hot_trend_week<=20);
+    if(!(votes>=50&&c.surs_hot_age<=45&&c.surs_hot_quality>=7.6&&
+      strongExternal&&trending))return 'insufficient_votes';
+  }
+  if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating){
+    const trending=(c.surs_hot_trend_day&&c.surs_hot_trend_day<=25)||
+      (c.surs_hot_trend_week&&c.surs_hot_trend_week<=25);
+    if(!(c.surs_hot_age<=90&&votes>=500&&
+      c.surs_hot_quality>=7.7&&trending))
+      return 'season_rating_unconfirmed';
+  }
+  return null;
+}
 function scoreCandidates(candidates,history,now,previous) {
   for(const c of candidates) {
     const age=daysSince(c.surs_hot_premiere_date,now);
-    const quality=qualityFor(c),heat=trendScore(c,candidates),growth=growthFor(c,history,now);
-    const freshness=round(Math.exp(-Math.max(0,age)/110),3);
+    const quality=qualityFor(c),heat=trendScore(c,candidates),
+      growth=growthFor(c,history,now);
     c.surs_hot_quality=quality.score;
     c.surs_hot_confidence=quality.confidence;
     c.surs_hot_coverage=quality.source_count;
@@ -169,23 +230,23 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_growth=growth.score;
     c.surs_hot_growth_measured=growth.measured;
     c.surs_hot_growth_periods=growth.periods;
-    c.surs_hot_freshness=freshness;
     c.surs_hot_age=age;
-    c.surs_hot_provisional=number(c.vote_count)<80||
+    c.surs_hot_provisional=number(c.vote_count)<MIN_VOTES||
       (c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating);
-    const q=Math.min(1,Math.max(0,(quality.score-5.5)/4.5));
-    c.surs_hot_score=round(100*(.55*q+.25*heat+.10*growth.score+.10*freshness));
+    // Freshness is an eligibility gate, not a bonus that overrides quality.
+    // Without measured history, redistribute growth weight instead of
+    // adding the same arbitrary 5 points to every film.
+    const weights=growth.measured?{quality:.60,heat:.25,growth:.15}:
+      {quality:.70,heat:.30,growth:0};
+    const q=Math.min(1,Math.max(0,(quality.score-6.65)/3.35));
+    c.surs_hot_weights=weights;
+    c.surs_hot_score=round(100*(weights.quality*q+
+      weights.heat*heat+weights.growth*growth.score));
   }
-  const eligible=candidates.filter(c=>c.poster_path&&c.surs_hot_age>=0&&
-    c.surs_hot_age<=550&&
-    // A decades-old restored film with a new digital listing is not a new film.
-    (!c.surs_hot_original_date||daysSince(c.surs_hot_original_date,now)<=730)&&
-    c.surs_hot_quality>=6.65&&
-    number(c.vote_count)>=8&&
-    !(number(c.vote_count)>=250&&number(c.vote_average)<6.3));
-  const previousRank=new Map((previous?.items||[]).map((c,i)=>[identity(c),i]));
+  const eligible=candidates.filter(c=>!eligibilityReason(c,now));
+  const previousRank=new Map((previous?.items||[]).map((c,i)=>
+    [identity(c),i]));
   eligible.sort((a,b)=>{
-    // The visible score MUST match actual order: no hidden post-sort swaps.
     const delta=b.surs_hot_score-a.surs_hot_score;
     if(delta)return delta;
     const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
@@ -324,19 +385,14 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
   });
   const candidates=detailRows.filter(Boolean);
   stats.us_verified=candidates.length;
-  const seasonCandidates=candidates.filter(c=>c.type==='tv'&&c.surs_hot_premiere_kind==='season')
-    .sort((a,b)=>number(b.popularity)-number(a.popularity)).slice(0,30);
+  const seasonCandidates=candidates.filter(c=>c.type==='tv'&&
+    c.surs_hot_premiere_kind==='season')
+    .sort((a,b)=>number(b.popularity)-number(a.popularity))
+    .slice(0,MAX_SEASON_CALLS);
   await poolMap(seasonCandidates,4,async c=>{
     stats.season_calls++;
     const d=await tmdb('tv/'+c.id+'/season/'+c.surs_hot_season);
-    if(!Array.isArray(d?.episodes))return;
-    const episodes=d.episodes.filter(e=>isoDate(e.air_date)&&daysSince(e.air_date,nowDate)>=0&&
-      number(e.vote_count)>=2&&number(e.vote_average)>=1);
-    const v=episodes.reduce((n,e)=>n+number(e.vote_count),0);
-    if(v>=30)c.surs_hot_season_rating={value:round(episodes.reduce((sum,e)=>
-      sum+number(e.vote_average)*number(e.vote_count),0)/v,3),votes:v,
-      episodes_rated:episodes.length,episodes_released:d.episodes.filter(e=>
-        isoDate(e.air_date)&&daysSince(e.air_date,nowDate)>=0).length};
+    verifySeason(c,d,nowDate);
   });
   if(mdblistKey){
     const subset=candidates.slice().sort((a,b)=>
@@ -354,10 +410,17 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
   if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
     throw Error('TMDB partial outage: refusing to replace last verified feed');
   const items=scoreCandidates(candidates,history,nowDate,previous);
-  stats.eligible=candidates.filter(c=>c.surs_hot_quality>=6.65&&c.surs_hot_age<=550).length;
-  const feed={schema:1,algorithm:'hot-discovery-4.0',mode:'shadow',
+  const rejections={};
+  for(const c of candidates){
+    const reason=eligibilityReason(c,nowDate);
+    if(reason)rejections[reason]=(rejections[reason]||0)+1;
+    else stats.eligible++;
+  }
+  const feed={schema:1,algorithm:'hot-discovery-4.1',mode:'primary',
     generated_at:nowDate.toISOString(),sources:{tmdb:true,mdblist:!!mdblistKey},
-    items,diagnostics:{...stats,selected:items.length,provisional:items.filter(c=>c.surs_hot_provisional).length,
+    items,diagnostics:{...stats,selected:items.length,
+      quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,rejections,
+      provisional:items.filter(c=>c.surs_hot_provisional).length,
       measured_growth:items.filter(c=>c.surs_hot_growth_measured).length,
       top10:items.slice(0,10).map(c=>({id:c.id,type:c.type,title:c.title,
         premiere:c.surs_hot_premiere_date,kind:c.surs_hot_premiere_kind,
@@ -380,7 +443,10 @@ async function main(){
   const hist=JSON.stringify(result.history)+'\n';
   // Source snapshots are collected every 3h; display ranking changes once per UTC day.
   // This avoids the shelf jumping around multiple times during the same day.
-  const sameDay=old&&old.schema===1&&dateOnly(old.generated_at)===dateOnly(now);
+  // Publish a newly versioned algorithm immediately, even on the same day.
+  const sameDay=old&&old.schema===1&&
+    old.algorithm===result.feed.algorithm&&
+    dateOnly(old.generated_at)===dateOnly(now);
   if(!sameDay){
     fs.writeFileSync(out+'.tmp',content);fs.renameSync(out+'.tmp',out);
   }
@@ -390,4 +456,5 @@ async function main(){
 }
 if(require.main===module)main().catch(e=>{console.error(e.message);process.exitCode=1;});
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
-  scoreCandidates,nextHistory,validateFeed,build,parseMdb,daysSince};
+  scoreCandidates,eligibilityReason,verifySeason,nextHistory,validateFeed,
+  build,parseMdb,daysSince};
