@@ -117,7 +117,8 @@ assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='alex_tss_header' && p.param.type==='trigger'));
 assert.ok(button);
 const style=context.document.head.style.textContent;
-assert.match(style,/alex-ts-switch-face\{display:flex!important;position:absolute!important;inset:0/,'absolute full-size faces required');
+assert.match(style,/alex-ts-switch-face\{display:flex!important;position:absolute!important;top:0;right:0;bottom:0;left:0;inset:0/,'absolute full-size faces required including older WebView fallback');
+assert.match(style,/max-width:480px/,'compact fallback for wide pill layout on small screens');
 assert.match(style,/alex-ts-switch-ping\{opacity:0;transform:translate3d\(0,105%,0\)/,'offscreen ping frame');
 assert.match(style,/data-phase="ping"] .alex-ts-switch-server/,'server hidden during ping');
 assert.match(style,/max-width:640px/,'small viewport title protection');
