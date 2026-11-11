@@ -4,7 +4,7 @@ const vm = require('vm');
 const assert = require('node:assert/strict');
 
 const original = fs.readFileSync(require('node:path').join(__dirname,'..','torrserver_switch.js'),'utf8');
-assert.match(original, /Version: 2\.0\.0/);
+assert.match(original, /Version: 2\.0\.1/);
 const keys={torrserver_use_link:'one',torrserver_url:'http://primary:8090',
     torrserver_url_two:'http://secondary:8090'};
 const callbacks={};
