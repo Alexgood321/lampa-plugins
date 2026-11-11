@@ -443,7 +443,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
         ratingImdbVoteCount:9000}]};
     }
     if(url.startsWith('https://api.mdblist.com/')){
-      const id=Number(pathname.split('/').slice(-1)[0]);
+      const id=Number(pathname.split('/').filter(Boolean).at(-1));
       return {ids:{tmdb:id},ratings:[{source:'imdb',value:8.15,votes:10000}]};
     }
     if(pathname.includes('/trending/')||pathname.includes('/discover/')){
