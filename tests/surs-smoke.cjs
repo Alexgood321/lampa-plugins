@@ -579,6 +579,25 @@ test('KP 7.5 label is refreshed for saved shelves without resetting user setting
 });
 
 
+test('4.0.3 retires saved Smart US permanently while preserving Hot settings and order', () => {
+    const saved=[
+        {id:'nav_buttons',enabled:true,title:'Nav'},
+        {id:'smart_us_new',enabled:true,title:'Legacy Smart'},
+        {id:'hot_us_new',enabled:false,title:'Hot manually disabled'},
+        {id:'core_continue',enabled:true,title:'Continue'}
+    ];
+    const app=boot({saved});
+    const manager=app.window.LampaShelfManager;
+    const current=manager.getSavedShelves();
+    assert.deepEqual(Array.from(current,x=>x.id),['nav_buttons','hot_us_new','core_continue']);
+    assert.equal(current[1].enabled,false);
+    assert.equal(app.stored.get('surs_fixed_shelves_v2').length,3);
+    assert.equal(app.stored.get('surs_hot_default_v402'),true);
+    assert.deepEqual(Array.from(manager.getSavedShelves(),x=>x.id),
+        ['nav_buttons','hot_us_new','core_continue']);
+    assert.ok(!manager.getAllShelves().some(x=>x.id==='smart_us_new'));
+    assert.ok(!app.settings.some(x=>x.param&&x.param.name==='surs_smart_diagnostics'));
+});
 test('Hot Discovery 4.0 is the only primary US shelf', () => {
     const app=boot();
     const shelves=app.window.LampaShelfManager.getAllShelves();
