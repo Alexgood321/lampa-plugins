@@ -93,7 +93,9 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',transport,
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
-  assert.equal(result.feed.mode,'shadow');
+  assert.equal(result.feed.mode,'primary');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.1');
+  assert.equal(result.feed.diagnostics.quality_floor,7.2);
   assert.ok(result.feed.items.some(x=>x.type==='movie'));
   assert.ok(result.feed.items.some(x=>x.type==='tv'));
   assert.ok(result.feed.items.every(x=>x.source==='tmdb'&&x.surs_hot_rank));
@@ -139,4 +141,73 @@ test('growth measures independent 3, 7 and 14 day periods without inventing miss
     date:day(30),items:{'movie:111':{p:3}}
   }]},NOW);
   assert.equal(stale.measured,false);
+});
+
+test('first US digital date wins over a later digital re-release',()=>{
+  const m=detail(976,220);
+  m.release_dates.results=[{iso_3166_1:'US',release_dates:[
+    {type:3,release_date:day(220)+'T00:00:00Z'},
+    {type:4,release_date:day(160)+'T00:00:00Z'},
+    {type:4,release_date:day(3)+'T00:00:00Z'}]}];
+  assert.equal(hot.moviePremiere(m,NOW).date,day(160));
+  assert.equal(hot.moviePremiere(m,NOW).kind,'digital');
+});
+test('quality and vote evidence gate excludes inflated TMDB scores',()=>{
+  const make=(id,rating,votes)=>({id,type:'movie',poster_path:'/p',
+    vote_average:rating,vote_count:votes,popularity:100,
+    surs_hot_premiere_date:day(12)});
+  const selected=hot.scoreCandidates([
+    make(1,9.9,12),make(2,6.9,5000),
+    make(3,8.4,120),make(4,8.6,1000)
+  ],{snapshots:[]},NOW,null);
+  assert.deepEqual(new Set(selected.map(x=>x.id)),new Set([3,4]));
+});
+test('early IMDb-backed premiere may pass a narrow evidence exception',()=>{
+  const card={id:5,type:'movie',poster_path:'/p',vote_average:9,
+    vote_count:70,popularity:100,surs_hot_premiere_date:day(10),
+    surs_hot_trend_day:9};
+  assert.equal(hot.scoreCandidates([{...card}],{snapshots:[]},NOW,null).length,0);
+  const backed={...card,surs_hot_ratings:{imdb:{value:8.8,votes:5000}}};
+  const selected=hot.scoreCandidates([backed],{snapshots:[]},NOW,null);
+  assert.equal(selected.length,1);
+  assert.equal(selected[0].surs_hot_provisional,true);
+});
+test('new season is verified by actually aired regular episodes, not summary',()=>{
+  const c={type:'tv',id:22,surs_hot_season:2,
+    surs_hot_premiere_kind:'season',surs_hot_premiere_date:day(2)};
+  assert.equal(hot.verifySeason(c,{season_number:2,episodes:[
+    {episode_number:1,air_date:day(-7),vote_count:0},
+    {episode_number:2,air_date:day(-3),vote_count:0}
+  ]},NOW),false);
+  assert.equal(hot.verifySeason(c,{season_number:2,episodes:[
+    {episode_number:1,air_date:day(45),vote_count:30,vote_average:8.7},
+    {episode_number:2,air_date:day(5),vote_count:15,vote_average:8.1},
+    {episode_number:3,air_date:day(-5),vote_count:900,vote_average:10}
+  ]},NOW),true);
+  assert.equal(c.surs_hot_premiere_date,day(45));
+  assert.equal(c.surs_hot_season_rating.votes,45);
+  assert.equal(c.surs_hot_episodes_released,2);
+});
+test('old returning series cannot enter without verified new season',()=>{
+  const card={type:'tv',id:777,poster_path:'/p',popularity:200,
+    surs_hot_premiere_kind:'season',surs_hot_premiere_date:day(10),
+    vote_average:9,vote_count:5000,surs_hot_trend_day:3,
+    surs_hot_original_date:day(3000)};
+  assert.equal(hot.scoreCandidates([card],{snapshots:[]},NOW,null).length,0);
+  assert.equal(hot.eligibilityReason(card,NOW),'original_too_old');
+  const recent={...card,surs_hot_original_date:day(200),
+    surs_hot_season_verified:false};
+  hot.scoreCandidates([recent],{snapshots:[]},NOW,null);
+  assert.equal(hot.eligibilityReason(recent,NOW),'season_not_verified');
+});
+test('weights omit unmeasured growth instead of adding neutral scores',()=>{
+  const card=()=>({type:'movie',id:42,poster_path:'/p',popularity:90,
+    vote_average:8.4,vote_count:900,surs_hot_premiere_date:day(60)});
+  const noHistory=hot.scoreCandidates([card()],{snapshots:[]},NOW,null)[0];
+  assert.deepEqual(noHistory.surs_hot_weights,{quality:.70,heat:.30,growth:0});
+  const measured=hot.scoreCandidates([card()],{snapshots:[{
+    date:day(7),items:{'movie:42':{p:20}}
+  }]},NOW,null)[0];
+  assert.deepEqual(measured.surs_hot_weights,{quality:.60,heat:.25,growth:.15});
+  assert.equal(measured.surs_hot_growth_measured,true);
 });
