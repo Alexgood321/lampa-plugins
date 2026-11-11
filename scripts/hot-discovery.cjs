@@ -303,6 +303,10 @@ function diversityPenalty(candidate,chosen) {
 }
 function curatedSelection(candidates,previous) {
   const remaining=candidates.slice(),picked=[];
+  // When there are plenty of independent films and new series, do not fill
+  // the bottom of the shelf with extra returning seasons just to reach 40.
+  // When almost everything eligible is a returning season, relax the cap.
+  const alternativeSupply=candidates.filter(c=>!isReturning(c)).length;
   const previousRank=new Map((previous?.items||[])
     .map((c,i)=>[identity(c),i]));
   let returning=0,breakouts=0,lastScore=100;
@@ -311,7 +315,12 @@ function curatedSelection(candidates,previous) {
       position<=20?TOP20_RETURNING_LIMIT:TOP40_RETURNING_LIMIT;
     const buzzLimit=position<=10?2:position<=20?5:10;
     let pool=remaining.filter(c=>!(isReturning(c)&&returning>=returnLimit));
-    if(!pool.length)pool=remaining;
+    if(!pool.length) {
+      if(alternativeSupply>=22&&position>20&&
+          returning>=TOP40_RETURNING_LIMIT&&picked.length>=MIN_ITEMS)
+        break;
+      pool=remaining;
+    }
     const notBreakout=pool.filter(c=>!(
       c.surs_hot_track==='breakout'&&breakouts>=buzzLimit));
     if(notBreakout.length)pool=notBreakout;
