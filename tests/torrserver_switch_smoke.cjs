@@ -4,7 +4,7 @@ const vm = require('vm');
 const assert = require('node:assert/strict');
 
 const original = fs.readFileSync(require('node:path').join(__dirname,'..','torrserver_switch.js'),'utf8');
-assert.match(original, /Version: 2\.0\.1/);
+assert.match(original, /Version: 2\.1\.0/);
 const keys={torrserver_use_link:'one',torrserver_url:'http://primary:8090',
     torrserver_url_two:'http://secondary:8090'};
 const callbacks={};
@@ -27,10 +27,11 @@ class JQ {
     on(event,fn) {this.events[event]=fn;return this;}
     text(value) {if(arguments.length){this.inner=value;return this;}return this.inner;}
     attr(name,value) {if(arguments.length===2){this.attrs[name]=value;return this;}return this.attrs[name];}
-    addClass(x) {this.classes.push(x);return this;}
-    removeClass() {return this;}
-    toggleClass() {return this;}
-    toggle() {return this;}
+    addClass(x) {this.classes.push(...x.split(/\s+/));return this;}
+    removeClass(x) {this.classes=this.classes.filter(c=>!x.split(/\s+/).includes(c));return this;}
+    hasClass(x) {return this.classes.includes(x);}
+    toggleClass(x,enabled) {if(enabled)this.addClass(x);else this.removeClass(x);return this;}
+    toggle(value) {this.visible=!!value;return this;}
     remove() {this.removed=true;return this;}
 }
 class FakeXHR {
@@ -78,6 +79,13 @@ const Lampa={
 };
 let nextTimer=0;
 const timers=new Map();
+const delays=new Map();
+function runTimer(delay) {
+    const record=[...delays.entries()].find(([,n])=>n===delay);
+    assert.ok(record,'Expected scheduled timer '+delay+'ms');
+    const id=record[0], callback=timers.get(id);
+    timers.delete(id);delays.delete(id);callback();
+}
 const context={
     window:{
         Lampa,$:()=>new JQ(),
@@ -93,14 +101,14 @@ const context={
     },
     setInterval:(fn)=>{timers.set(++nextTimer,fn);return nextTimer;},
     clearInterval:n=>timers.delete(n),
-    setTimeout:(fn)=>{timers.set(++nextTimer,fn);return nextTimer;},
-    clearTimeout:n=>timers.delete(n),
+    setTimeout:(fn,delay)=>{const id=++nextTimer;timers.set(id,fn);delays.set(id,delay);return id;},
+    clearTimeout:n=>{timers.delete(n);delays.delete(n);},
     console,Date:MockDate,unescape,encodeURIComponent
 };
 context.window.document=context.document;
 vm.runInNewContext(original,context);
 const plugin=context.window.__alexgood321TorrServerSwitch;
-assert.equal(plugin.version,'2.0.1');
+assert.equal(plugin.version,'2.1.0');
 assert.ok(sections.alexgood321_torrserver_switch_settings);
 assert.ok(params.alexgood321_torrserver_switch_settings.length>=20);
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='torrserver_url' && p.param.type==='input'));
@@ -108,10 +116,62 @@ assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='alex_tss_mode' && p.param.type==='select'));
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='alex_tss_header' && p.param.type==='trigger'));
 assert.ok(button);
-assert.match(button.find('.alex-ts-switch-label').text(),/TS 1/);
+const settings=params.alexgood321_torrserver_switch_settings;
+for(const name of ['layout','display','animate','ts_duration','ping_duration',
+    'pause_focus','compact_ping','auto_badge','show_status']) {
+    assert.ok(settings.some(p=>p.param.name==='alex_tss_'+name),name+' exposed in settings');
+}
+assert.equal(button.attr('data-layout'),'round','matches native Lampa circular geometry');
+assert.equal(button.attr('data-phase'),'server','starts with server label');
+assert.equal(button.find('.alex-ts-switch-number').text(),'1');
+assert.equal(button.attr('data-animate'),'on','smooth transition enabled by default');
+runTimer(3000);
+assert.equal(button.attr('data-phase'),'ping','ping appears after TS 3s');
+runTimer(2000);
+assert.equal(button.attr('data-phase'),'server','server returns after ping 2s');
+Lampa.Storage.set('alex_tss_layout','pill');
+assert.equal(button.attr('data-layout'),'pill','older shape can be restored');
+Lampa.Storage.set('alex_tss_layout','round');
+assert.equal(button.attr('data-layout'),'round','round layout restored');
+Lampa.Storage.set('alex_tss_display','ping');
+assert.equal(button.attr('data-phase'),'ping','ping-only mode');
+Lampa.Storage.set('alex_tss_display','server');
+assert.equal(button.attr('data-phase'),'server','server-only mode');
+Lampa.Storage.set('alex_tss_animate',false);
+assert.equal(button.attr('data-animate'),'off','animation can be disabled');
+Lampa.Storage.set('alex_tss_display','alternate');
+assert.equal(button.attr('data-phase'),'server','alternate restarts with TS');
+Lampa.Storage.set('alex_tss_ts_duration','4');
+runTimer(4000);
+assert.equal(button.attr('data-phase'),'ping','custom duration applied');
+Lampa.Storage.set('alex_tss_ping_duration','1');
+runTimer(4000);
+assert.equal(button.attr('data-phase'),'ping','presentation config resets to TS then rotates');
+runTimer(1000);
+assert.equal(button.attr('data-phase'),'server','custom ping duration applied');
+Lampa.Storage.set('alex_tss_pause_focus',true);
+button.addClass('focus');
+runTimer(4000);
+assert.equal(button.attr('data-phase'),'server','focus freezes content');
+button.removeClass('focus');
+runTimer(350);
+assert.equal(button.attr('data-phase'),'ping','animation resumes when focus leaves');
+Lampa.Storage.set('alex_tss_pause_focus',false);
+Lampa.Storage.set('alex_tss_display','server');
 assert.equal(keys.torrserver_use_link,'one');
 assert.equal(keys.torrserver_url,'http://primary:8090','native primary address is preserved');
 assert.equal(keys.torrserver_url_two,'http://secondary:8090','native backup address is preserved');
+plugin.status.two.state='online';
+plugin.status.two.rtt=1250;
+Lampa.Storage.set('torrserver_use_link','two');
+assert.equal(button.find('.alex-ts-switch-number').text(),'2','native server selection updates');
+assert.equal(button.find('.alex-ts-switch-ping-value').text(),'1.25','large RTT compacted');
+assert.equal(button.find('.alex-ts-switch-ping-unit').text(),'s');
+Lampa.Storage.set('alex_tss_compact_ping',false);
+assert.equal(button.find('.alex-ts-switch-ping-value').text(),'1250','compact RTT can be disabled');
+assert.equal(button.find('.alex-ts-switch-ping-unit').text(),'ms');
+Lampa.Storage.set('alex_tss_compact_ping',true);
+Lampa.Storage.set('torrserver_use_link','one');
 
 plugin.toggle();
 assert.equal(keys.torrserver_use_link,'two','manual button selects backup');
@@ -144,6 +204,14 @@ plugin.check();
 assert.equal(plugin.status.one.state,'unknown','CORS is not claimed to prove outage');
 assert.equal(plugin.status.one.failures,0,'CORS is not a hard failure');
 assert.ok(calls.some(x=>x.endsWith('/echo')),'probes use official health endpoint');
+const statusBefore=plugin.status.one;
+Lampa.Storage.set('alex_tss_auto_badge',false);
+assert.equal(plugin.status.one,statusBefore,'appearance change must not reset probe status');
+Lampa.Storage.set('alex_tss_auto_badge',true);
+Lampa.Storage.set('alex_tss_display','ping');
+assert.equal(button.attr('data-phase'),'ping');
+Lampa.Storage.set('alex_tss_display','alternate');
+assert.equal(button.attr('data-phase'),'server');
 plugin.destroy();
 assert.equal(sections.alexgood321_torrserver_switch_settings,undefined);
-console.log('TorrServer Switch Pro 2.0: smoke checks passed');
+console.log('TorrServer Switch Pro 2.1.0: smoke and presentation checks passed');
