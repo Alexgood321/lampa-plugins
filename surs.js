@@ -1658,7 +1658,15 @@ Object.assign({}, s, {title: 'Новинки США · КП 7,5+'}) : s);
 }
 });
 
-if (!unique.length) return profile ? getDefaultSectionShelves(name) : [getDefaultShelvesList()[0]];
+
+
+if (!unique.length) {
+if (profile) return getDefaultSectionShelves(name);
+var fallback = hadSmart ? getDefaultShelvesList().slice(0, 2) :
+[getDefaultShelvesList()[0]];
+if (hadSmart) saveShelves(fallback, 'MAIN');
+return fallback;
+}
 
 
 if (!profile && seen.nav_buttons && !seen.hot_us_new &&
@@ -1672,8 +1680,6 @@ enabled: true, cat: 'surs'
 
 
 if (hadSmart) saveShelves(unique, 'MAIN');
-
-if (!unique.length) return profile ? getDefaultSectionShelves(name) : [getDefaultShelvesList()[0]];
 return unique;
 }
 
