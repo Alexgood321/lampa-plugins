@@ -191,17 +191,20 @@ test('new season is verified by actually aired regular episodes, not summary',()
   assert.equal(c.surs_hot_season_rating.votes,45);
   assert.equal(c.surs_hot_episodes_released,2);
 });
-test('old returning series cannot enter without verified new season',()=>{
+test('long-running series only enters on a verified recent season',()=>{
   const card={type:'tv',id:777,poster_path:'/p',popularity:200,
     surs_hot_premiere_kind:'season',surs_hot_premiere_date:day(10),
     vote_average:9,vote_count:5000,surs_hot_trend_day:3,
     surs_hot_original_date:day(3000)};
   assert.equal(hot.scoreCandidates([card],{snapshots:[]},NOW,null).length,0);
-  assert.equal(hot.eligibilityReason(card,NOW),'original_too_old');
+  assert.equal(hot.eligibilityReason(card,NOW),'season_not_verified');
   const recent={...card,surs_hot_original_date:day(200),
     surs_hot_season_verified:false};
   hot.scoreCandidates([recent],{snapshots:[]},NOW,null);
   assert.equal(hot.eligibilityReason(recent,NOW),'season_not_verified');
+  const verified={...card,surs_hot_season_verified:true};
+  assert.equal(hot.scoreCandidates([verified],{snapshots:[]},NOW,null).length,1);
+  assert.equal(verified.surs_hot_recency_tier,0);
 });
 test('weights omit unmeasured growth instead of adding neutral scores',()=>{
   const card=()=>({type:'movie',id:42,poster_path:'/p',popularity:90,
