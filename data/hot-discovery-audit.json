@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "algorithm": "hot-discovery-4.4",
-  "generated_at": "2026-11-11T11:57:26.649Z",
-  "candidate_total": 175,
-  "eligible": 56,
+  "generated_at": "2026-11-11T17:13:39.910Z",
+  "candidate_total": 173,
+  "eligible": 54,
   "selected": 40,
   "candidates": [
     {
@@ -13,19 +13,19 @@
       "kind": "series",
       "premiere": "2026-10-13",
       "age": 29,
-      "tmdb": 8.5,
-      "tmdb_votes": 316,
+      "tmdb": 8.482,
+      "tmdb_votes": 341,
       "imdb": null,
       "kp": null,
-      "attention": 0.781,
-      "quality": 7.932,
+      "attention": 0.747,
+      "quality": 7.949,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 91.519,
+      "base_score": 91.12,
       "rejection": null,
       "selected_rank": 1
     },
@@ -37,18 +37,18 @@
       "premiere": "2026-09-18",
       "age": 54,
       "tmdb": 8.645,
-      "tmdb_votes": 1208,
+      "tmdb_votes": 1211,
       "imdb": null,
       "kp": null,
-      "attention": 0.66,
-      "quality": 8.528,
+      "attention": 0.612,
+      "quality": 8.527,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 91.464,
+      "base_score": 90.814,
       "rejection": null,
       "selected_rank": 2
     },
@@ -59,44 +59,21 @@
       "kind": "season",
       "premiere": "2026-11-11",
       "age": 0,
-      "tmdb": 7.217,
-      "tmdb_votes": 4023,
+      "tmdb": 7.2,
+      "tmdb_votes": 4024,
       "imdb": null,
       "kp": null,
-      "attention": 0.767,
-      "quality": 6.978,
+      "attention": 0.801,
+      "quality": 6.962,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 88.583,
+      "base_score": 88.985,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
-    },
-    {
-      "id": 1423191,
-      "type": "movie",
-      "title": "Обитель зла",
-      "kind": "digital",
-      "premiere": "2026-11-03",
-      "age": 56,
-      "tmdb": 7.502,
-      "tmdb_votes": 2010,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.712,
-      "quality": 7.447,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 88.34,
-      "rejection": null,
-      "selected_rank": 3
     },
     {
       "id": 259909,
@@ -105,90 +82,44 @@
       "kind": "season",
       "premiere": "2026-11-01",
       "age": 10,
-      "tmdb": 8.559,
+      "tmdb": 8.6,
       "tmdb_votes": 750,
       "imdb": null,
       "kp": null,
-      "attention": 0.439,
-      "quality": 8.173,
+      "attention": 0.473,
+      "quality": 8.207,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 88.142,
+      "base_score": 88.719,
       "rejection": null,
-      "selected_rank": 4
+      "selected_rank": 3
     },
     {
-      "id": 1263337,
+      "id": 1423191,
       "type": "movie",
-      "title": "Сердце зверя",
-      "kind": "digital",
-      "premiere": "2026-11-10",
-      "age": 53,
-      "tmdb": 7.407,
-      "tmdb_votes": 601,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.661,
-      "quality": 7.264,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 87.074,
-      "rejection": null,
-      "selected_rank": 5
-    },
-    {
-      "id": 1792170,
-      "type": "movie",
-      "title": "Образцовый гражданин",
+      "title": "Обитель зла",
       "kind": "digital",
       "premiere": "2026-11-03",
-      "age": 8,
-      "tmdb": 6.3,
-      "tmdb_votes": 27,
+      "age": 56,
+      "tmdb": 7.501,
+      "tmdb_votes": 2017,
       "imdb": null,
       "kp": null,
-      "attention": 0.739,
-      "quality": 6.593,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 86.695,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1400837,
-      "type": "movie",
-      "title": "Чужая мама",
-      "kind": "digital",
-      "premiere": "2026-11-10",
-      "age": 35,
-      "tmdb": 5.8,
-      "tmdb_votes": 228,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.788,
-      "quality": 6.123,
+      "attention": 0.712,
+      "quality": 7.446,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 86.129,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
+      "base_score": 88.337,
+      "rejection": null,
+      "selected_rank": 4
     },
     {
       "id": 153312,
@@ -201,7 +132,7 @@
       "tmdb_votes": 2933,
       "imdb": null,
       "kp": null,
-      "attention": 0.223,
+      "attention": 0.361,
       "quality": 8.31,
       "agreement": {
         "sources": 1,
@@ -209,9 +140,78 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 85.384,
+      "base_score": 87.244,
+      "rejection": null,
+      "selected_rank": 5
+    },
+    {
+      "id": 1263337,
+      "type": "movie",
+      "title": "Сердце зверя",
+      "kind": "digital",
+      "premiere": "2026-11-10",
+      "age": 53,
+      "tmdb": 7.4,
+      "tmdb_votes": 609,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.639,
+      "quality": 7.26,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 86.763,
       "rejection": null,
       "selected_rank": 6
+    },
+    {
+      "id": 1400837,
+      "type": "movie",
+      "title": "Чужая мама",
+      "kind": "digital",
+      "premiere": "2026-11-10",
+      "age": 35,
+      "tmdb": 5.8,
+      "tmdb_votes": 228,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.775,
+      "quality": 6.123,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 85.954,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1792170,
+      "type": "movie",
+      "title": "Образцовый гражданин",
+      "kind": "digital",
+      "premiere": "2026-11-03",
+      "age": 8,
+      "tmdb": 6.3,
+      "tmdb_votes": 27,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.676,
+      "quality": 6.593,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 85.846,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 58841,
@@ -224,7 +224,7 @@
       "tmdb_votes": 2651,
       "imdb": null,
       "kp": null,
-      "attention": 0.211,
+      "attention": 0.21,
       "quality": 8.307,
       "agreement": {
         "sources": 1,
@@ -232,9 +232,32 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 85.028,
+      "base_score": 85.015,
       "rejection": null,
       "selected_rank": 11
+    },
+    {
+      "id": 1567605,
+      "type": "movie",
+      "title": "Скрудж",
+      "kind": "theatrical",
+      "premiere": "2026-11-11",
+      "age": 0,
+      "tmdb": 8.333,
+      "tmdb_votes": 6,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.566,
+      "quality": 6.719,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 84.968,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 891621,
@@ -243,21 +266,44 @@
       "kind": "theatrical",
       "premiere": "2026-11-06",
       "age": 12,
-      "tmdb": 8.109,
-      "tmdb_votes": 137,
+      "tmdb": 8.108,
+      "tmdb_votes": 139,
       "imdb": null,
       "kp": null,
-      "attention": 0.411,
-      "quality": 7.372,
+      "attention": 0.397,
+      "quality": 7.376,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.92,
+      "base_score": 84.746,
       "rejection": null,
       "selected_rank": 7
+    },
+    {
+      "id": 291507,
+      "type": "tv",
+      "title": "Тело",
+      "kind": "series",
+      "premiere": "2026-11-11",
+      "age": 0,
+      "tmdb": 7,
+      "tmdb_votes": 3,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.547,
+      "quality": 6.657,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 84.495,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 44006,
@@ -281,29 +327,6 @@
       "base_score": 84.384,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
-    },
-    {
-      "id": 1400940,
-      "type": "movie",
-      "title": "Клэйфейс",
-      "kind": "theatrical",
-      "premiere": "2026-10-23",
-      "age": 23,
-      "tmdb": 7.426,
-      "tmdb_votes": 425,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.423,
-      "quality": 7.234,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 84.374,
-      "rejection": null,
-      "selected_rank": 8
     },
     {
       "id": 1416,
@@ -336,10 +359,10 @@
       "premiere": "2026-10-21",
       "age": 21,
       "tmdb": 7.996,
-      "tmdb_votes": 1341,
+      "tmdb_votes": 1342,
       "imdb": null,
       "kp": null,
-      "attention": 0.199,
+      "attention": 0.198,
       "quality": 8.051,
       "agreement": {
         "sources": 1,
@@ -347,78 +370,32 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.256,
+      "base_score": 84.243,
       "rejection": null,
       "selected_rank": 12
     },
     {
-      "id": 2734,
-      "type": "tv",
-      "title": "Закон и порядок. Специальный корпус",
-      "kind": "season",
-      "premiere": "2026-10-08",
-      "age": 34,
-      "tmdb": 7.962,
-      "tmdb_votes": 4408,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.276,
-      "quality": 7.702,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 83.807,
-      "rejection": "season_rating_unconfirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 1567605,
+      "id": 1400940,
       "type": "movie",
-      "title": "Скрудж",
+      "title": "Клэйфейс",
       "kind": "theatrical",
-      "premiere": "2026-11-11",
-      "age": 0,
-      "tmdb": 8.333,
-      "tmdb_votes": 6,
+      "premiere": "2026-10-23",
+      "age": 23,
+      "tmdb": 7.426,
+      "tmdb_votes": 427,
       "imdb": null,
       "kp": null,
-      "attention": 0.479,
-      "quality": 6.719,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 83.796,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 253372,
-      "type": "tv",
-      "title": "Институт",
-      "kind": "season",
-      "premiere": "2026-11-08",
-      "age": 3,
-      "tmdb": 7.478,
-      "tmdb_votes": 223,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.417,
-      "quality": 6.939,
+      "attention": 0.394,
+      "quality": 7.234,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.669,
-      "rejection": "buzz_not_confirmed",
-      "selected_rank": null
+      "base_score": 83.984,
+      "rejection": null,
+      "selected_rank": 9
     },
     {
       "id": 75219,
@@ -427,19 +404,19 @@
       "kind": "season",
       "premiere": "2026-10-15",
       "age": 27,
-      "tmdb": 8.222,
-      "tmdb_votes": 2886,
+      "tmdb": 8.221,
+      "tmdb_votes": 2887,
       "imdb": null,
       "kp": null,
       "attention": 0.196,
-      "quality": 7.929,
+      "quality": 7.928,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.666,
+      "base_score": 83.663,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
     },
@@ -450,65 +427,65 @@
       "kind": "series",
       "premiere": "2026-10-15",
       "age": 27,
-      "tmdb": 8.608,
-      "tmdb_votes": 343,
+      "tmdb": 8.6,
+      "tmdb_votes": 344,
       "imdb": null,
       "kp": null,
-      "attention": 0.164,
-      "quality": 8.04,
+      "attention": 0.163,
+      "quality": 8.036,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.624,
+      "base_score": 83.596,
       "rejection": null,
-      "selected_rank": 9
+      "selected_rank": 8
     },
     {
-      "id": 291507,
+      "id": 2734,
       "type": "tv",
-      "title": "Тело",
-      "kind": "series",
-      "premiere": "2026-11-11",
-      "age": 0,
-      "tmdb": 0,
-      "tmdb_votes": 0,
+      "title": "Закон и порядок. Специальный корпус",
+      "kind": "season",
+      "premiere": "2026-10-08",
+      "age": 34,
+      "tmdb": 8,
+      "tmdb_votes": 4408,
       "imdb": null,
       "kp": null,
-      "attention": 0.539,
-      "quality": 0,
+      "attention": 0.25,
+      "quality": 7.738,
       "agreement": {
-        "sources": 0,
+        "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.488,
-      "rejection": "quality_below_floor",
+      "base_score": 83.583,
+      "rejection": "season_rating_unconfirmed",
       "selected_rank": null
     },
     {
-      "id": 1483525,
-      "type": "movie",
-      "title": "Что, если любовь",
-      "kind": "digital",
-      "premiere": "2026-11-06",
-      "age": 49,
-      "tmdb": 7.6,
-      "tmdb_votes": 54,
+      "id": 338562,
+      "type": "tv",
+      "title": "Закон Алисии",
+      "kind": "series",
+      "premiere": "2026-11-11",
+      "age": 0,
+      "tmdb": 7,
+      "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.476,
-      "quality": 6.914,
+      "attention": 0.47,
+      "quality": 6.652,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.438,
+      "base_score": 83.44,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -519,8 +496,8 @@
       "kind": "season",
       "premiere": "2026-09-24",
       "age": 48,
-      "tmdb": 8.078,
-      "tmdb_votes": 6296,
+      "tmdb": 8.079,
+      "tmdb_votes": 6297,
       "imdb": null,
       "kp": null,
       "attention": 0.225,
@@ -546,7 +523,7 @@
       "tmdb_votes": 581,
       "imdb": null,
       "kp": null,
-      "attention": 0.167,
+      "attention": 0.166,
       "quality": 7.98,
       "agreement": {
         "sources": 1,
@@ -554,9 +531,32 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.291,
+      "base_score": 83.277,
       "rejection": null,
       "selected_rank": 10
+    },
+    {
+      "id": 1483525,
+      "type": "movie",
+      "title": "Что, если любовь",
+      "kind": "digital",
+      "premiere": "2026-11-06",
+      "age": 49,
+      "tmdb": 7.605,
+      "tmdb_votes": 57,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.458,
+      "quality": 6.926,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 83.237,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 62650,
@@ -582,25 +582,25 @@
       "selected_rank": null
     },
     {
-      "id": 1375441,
-      "type": "movie",
-      "title": "Прайм-тайм",
-      "kind": "digital",
-      "premiere": "2026-11-03",
-      "age": 49,
-      "tmdb": 6.777,
-      "tmdb_votes": 411,
+      "id": 253372,
+      "type": "tv",
+      "title": "Институт",
+      "kind": "season",
+      "premiere": "2026-11-08",
+      "age": 3,
+      "tmdb": 7.478,
+      "tmdb_votes": 223,
       "imdb": null,
       "kp": null,
-      "attention": 0.491,
-      "quality": 6.745,
+      "attention": 0.371,
+      "quality": 6.939,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.048,
+      "base_score": 83.049,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -611,89 +611,158 @@
       "kind": "season",
       "premiere": "2026-10-04",
       "age": 38,
-      "tmdb": 7.971,
-      "tmdb_votes": 429,
+      "tmdb": 7.976,
+      "tmdb_votes": 430,
       "imdb": null,
       "kp": null,
       "attention": 0.181,
-      "quality": 7.803,
+      "quality": 7.806,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.799,
+      "base_score": 82.809,
       "rejection": null,
       "selected_rank": 21
     },
     {
-      "id": 292741,
-      "type": "tv",
-      "title": "Ноктюрн",
-      "kind": "series",
-      "premiere": "2026-10-29",
-      "age": 13,
-      "tmdb": 7.769,
-      "tmdb_votes": 39,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.367,
-      "quality": 6.894,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 82.634,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 248830,
-      "type": "tv",
-      "title": "Король гольфа",
-      "kind": "season",
+      "id": 1375441,
+      "type": "movie",
+      "title": "Прайм-тайм",
+      "kind": "digital",
       "premiere": "2026-11-03",
-      "age": 8,
-      "tmdb": 7.295,
-      "tmdb_votes": 144,
+      "age": 49,
+      "tmdb": 6.8,
+      "tmdb_votes": 411,
       "imdb": null,
       "kp": null,
-      "attention": 0.369,
-      "quality": 6.757,
+      "attention": 0.468,
+      "quality": 6.762,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.283,
+      "base_score": 82.798,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
-      "id": 1570488,
+      "id": 1559980,
       "type": "movie",
-      "title": "Идеальное Рождество для собаки",
+      "title": "The Gospel of Christmas",
       "kind": "digital",
-      "premiere": "2026-11-04",
-      "age": 7,
-      "tmdb": 7.4,
-      "tmdb_votes": 35,
+      "premiere": "2026-11-11",
+      "age": 0,
+      "tmdb": 5,
+      "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.35,
-      "quality": 6.8,
+      "attention": 0.416,
+      "quality": 6.638,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.198,
+      "base_score": 82.664,
       "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 295778,
+      "type": "tv",
+      "title": "Клиника",
+      "kind": "season",
+      "premiere": "2026-09-30",
+      "age": 42,
+      "tmdb": 7.667,
+      "tmdb_votes": 126,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.296,
+      "quality": 7.247,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.321,
+      "rejection": null,
+      "selected_rank": 22
+    },
+    {
+      "id": 1437511,
+      "type": "movie",
+      "title": "Как ограбить банк",
+      "kind": "theatrical",
+      "premiere": "2026-11-10",
+      "age": 1,
+      "tmdb": 9,
+      "tmdb_votes": 2,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.377,
+      "quality": 6.683,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.275,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 81723,
+      "type": "tv",
+      "title": "Позолоченный век",
+      "kind": "season",
+      "premiere": "2026-11-01",
+      "age": 10,
+      "tmdb": 7.711,
+      "tmdb_votes": 296,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.269,
+      "quality": 7.15,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.271,
+      "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 1283515,
+      "type": "movie",
+      "title": "Тайный дневник Верити",
+      "kind": "digital",
+      "premiere": "2026-10-27",
+      "age": 42,
+      "tmdb": 7.003,
+      "tmdb_votes": 663,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.368,
+      "quality": 6.941,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.22,
+      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -720,29 +789,6 @@
       "selected_rank": null
     },
     {
-      "id": 1283515,
-      "type": "movie",
-      "title": "Тайный дневник Верити",
-      "kind": "digital",
-      "premiere": "2026-10-27",
-      "age": 42,
-      "tmdb": 7.003,
-      "tmdb_votes": 662,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.354,
-      "quality": 6.941,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 82.031,
-      "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
       "id": 4614,
       "type": "tv",
       "title": "Морская полиция: Спецотдел",
@@ -766,27 +812,50 @@
       "selected_rank": null
     },
     {
-      "id": 295778,
-      "type": "tv",
-      "title": "Клиника",
-      "kind": "season",
-      "premiere": "2026-09-30",
-      "age": 42,
-      "tmdb": 7.667,
-      "tmdb_votes": 126,
+      "id": 1570488,
+      "type": "movie",
+      "title": "Идеальное Рождество для собаки",
+      "kind": "digital",
+      "premiere": "2026-11-04",
+      "age": 7,
+      "tmdb": 7.347,
+      "tmdb_votes": 36,
       "imdb": null,
       "kp": null,
-      "attention": 0.266,
-      "quality": 7.247,
+      "attention": 0.33,
+      "quality": 6.793,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 81.904,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 248830,
+      "type": "tv",
+      "title": "Король гольфа",
+      "kind": "season",
+      "premiere": "2026-11-03",
+      "age": 8,
+      "tmdb": 7.3,
+      "tmdb_votes": 144,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.315,
+      "quality": 6.76,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 81.916,
-      "rejection": null,
-      "selected_rank": 22
+      "base_score": 81.566,
+      "rejection": "buzz_not_confirmed",
+      "selected_rank": null
     },
     {
       "id": 1148365,
@@ -799,7 +868,7 @@
       "tmdb_votes": 619,
       "imdb": null,
       "kp": null,
-      "attention": 0.173,
+      "attention": 0.171,
       "quality": 7.425,
       "agreement": {
         "sources": 1,
@@ -807,32 +876,9 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 81.388,
+      "base_score": 81.361,
       "rejection": null,
       "selected_rank": 14
-    },
-    {
-      "id": 1437511,
-      "type": "movie",
-      "title": "Как ограбить банк",
-      "kind": "theatrical",
-      "premiere": "2026-11-10",
-      "age": 1,
-      "tmdb": 9,
-      "tmdb_votes": 2,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.297,
-      "quality": 6.683,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 81.197,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
     },
     {
       "id": 1286656,
@@ -841,43 +887,43 @@
       "kind": "theatrical",
       "premiere": "2026-11-06",
       "age": 5,
-      "tmdb": 8.8,
-      "tmdb_votes": 15,
+      "tmdb": 8.719,
+      "tmdb_votes": 16,
       "imdb": null,
       "kp": null,
-      "attention": 0.248,
-      "quality": 6.858,
+      "attention": 0.257,
+      "quality": 6.862,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 81.068,
+      "base_score": 81.203,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
-      "id": 258989,
+      "id": 549,
       "type": "tv",
-      "title": "Великий",
-      "kind": "series",
-      "premiere": "2026-11-04",
-      "age": 7,
-      "tmdb": 5,
-      "tmdb_votes": 16,
+      "title": "Закон и порядок",
+      "kind": "season",
+      "premiere": "2026-10-08",
+      "age": 34,
+      "tmdb": 7.3,
+      "tmdb_votes": 740,
       "imdb": null,
       "kp": null,
-      "attention": 0.322,
-      "quality": 6.481,
+      "attention": 0.235,
+      "quality": 6.977,
       "agreement": {
-        "sources": 0,
+        "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.705,
-      "rejection": "quality_below_floor",
+      "base_score": 80.717,
+      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -891,7 +937,7 @@
       "tmdb_votes": 241,
       "imdb": null,
       "kp": null,
-      "attention": 0.132,
+      "attention": 0.131,
       "quality": 7.492,
       "agreement": {
         "sources": 1,
@@ -899,55 +945,9 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.682,
+      "base_score": 80.669,
       "rejection": null,
       "selected_rank": 15
-    },
-    {
-      "id": 549,
-      "type": "tv",
-      "title": "Закон и порядок",
-      "kind": "season",
-      "premiere": "2026-10-08",
-      "age": 34,
-      "tmdb": 7.276,
-      "tmdb_votes": 740,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.235,
-      "quality": 6.956,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 80.643,
-      "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 338562,
-      "type": "tv",
-      "title": "Закон Алисии",
-      "kind": "series",
-      "premiere": "2026-11-11",
-      "age": 0,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.325,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 80.604,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
     },
     {
       "id": 289560,
@@ -960,7 +960,7 @@
       "tmdb_votes": 138,
       "imdb": null,
       "kp": null,
-      "attention": 0.147,
+      "attention": 0.146,
       "quality": 7.299,
       "agreement": {
         "sources": 1,
@@ -968,30 +968,53 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.597,
+      "base_score": 80.583,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
     },
     {
-      "id": 275139,
+      "id": 258989,
       "type": "tv",
-      "title": "Подмена",
+      "title": "Великий",
       "kind": "series",
-      "premiere": "2026-10-20",
-      "age": 22,
-      "tmdb": 7.5,
-      "tmdb_votes": 22,
+      "premiere": "2026-11-04",
+      "age": 7,
+      "tmdb": 5,
+      "tmdb_votes": 16,
       "imdb": null,
       "kp": null,
-      "attention": 0.249,
-      "quality": 6.765,
+      "attention": 0.304,
+      "quality": 6.481,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.409,
+      "base_score": 80.462,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 292741,
+      "type": "tv",
+      "title": "Ноктюрн",
+      "kind": "series",
+      "premiere": "2026-10-29",
+      "age": 13,
+      "tmdb": 7.769,
+      "tmdb_votes": 39,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.194,
+      "quality": 6.894,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 80.303,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1006,7 +1029,7 @@
       "tmdb_votes": 127,
       "imdb": null,
       "kp": null,
-      "attention": 0.118,
+      "attention": 0.116,
       "quality": 7.415,
       "agreement": {
         "sources": 1,
@@ -1014,7 +1037,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.265,
+      "base_score": 80.238,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
     },
@@ -1025,19 +1048,19 @@
       "kind": "digital",
       "premiere": "2026-10-31",
       "age": 11,
-      "tmdb": 6.8,
-      "tmdb_votes": 104,
+      "tmdb": 6.757,
+      "tmdb_votes": 107,
       "imdb": null,
       "kp": null,
-      "attention": 0.227,
-      "quality": 6.714,
+      "attention": 0.232,
+      "quality": 6.696,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.158,
+      "base_score": 80.163,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1048,44 +1071,21 @@
       "kind": "series",
       "premiere": "2026-10-01",
       "age": 41,
-      "tmdb": 7.831,
+      "tmdb": 7.8,
       "tmdb_votes": 151,
       "imdb": null,
       "kp": null,
-      "attention": 0.12,
-      "quality": 7.263,
+      "attention": 0.119,
+      "quality": 7.247,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.025,
+      "base_score": 79.956,
       "rejection": null,
       "selected_rank": 16
-    },
-    {
-      "id": 258742,
-      "type": "tv",
-      "title": "Всё честно",
-      "kind": "season",
-      "premiere": "2026-11-04",
-      "age": 7,
-      "tmdb": 4.959,
-      "tmdb_votes": 85,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.28,
-      "quality": 5.791,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 79.855,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
     },
     {
       "id": 1562642,
@@ -1094,19 +1094,19 @@
       "kind": "theatrical",
       "premiere": "2026-11-11",
       "age": 5,
-      "tmdb": 8.8,
-      "tmdb_votes": 6,
+      "tmdb": 9,
+      "tmdb_votes": 7,
       "imdb": null,
       "kp": null,
-      "attention": 0.183,
-      "quality": 6.738,
+      "attention": 0.182,
+      "quality": 6.762,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.772,
+      "base_score": 79.842,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1121,7 +1121,7 @@
       "tmdb_votes": 103,
       "imdb": null,
       "kp": null,
-      "attention": 0.135,
+      "attention": 0.134,
       "quality": 6.994,
       "agreement": {
         "sources": 1,
@@ -1129,7 +1129,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.572,
+      "base_score": 79.558,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1144,7 +1144,7 @@
       "tmdb_votes": 6,
       "imdb": null,
       "kp": null,
-      "attention": 0.196,
+      "attention": 0.208,
       "quality": 6.699,
       "agreement": {
         "sources": 0,
@@ -1152,7 +1152,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.218,
+      "base_score": 79.38,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 275139,
+      "type": "tv",
+      "title": "Подмена",
+      "kind": "series",
+      "premiere": "2026-10-20",
+      "age": 22,
+      "tmdb": 7.5,
+      "tmdb_votes": 22,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.17,
+      "quality": 6.765,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 79.344,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1167,7 +1190,7 @@
       "tmdb_votes": 44,
       "imdb": null,
       "kp": null,
-      "attention": 0.13,
+      "attention": 0.129,
       "quality": 6.867,
       "agreement": {
         "sources": 0,
@@ -1175,7 +1198,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.183,
+      "base_score": 79.169,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1190,7 +1213,7 @@
       "tmdb_votes": 5,
       "imdb": null,
       "kp": null,
-      "attention": 0.137,
+      "attention": 0.136,
       "quality": 6.69,
       "agreement": {
         "sources": 0,
@@ -1198,76 +1221,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.964,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1559980,
-      "type": "movie",
-      "title": "The Gospel of Christmas",
-      "kind": "digital",
-      "premiere": "2026-11-11",
-      "age": 0,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.198,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 78.893,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1244523,
-      "type": "movie",
-      "title": "Монстр Амазонки",
-      "kind": "digital",
-      "premiere": "2026-11-03",
-      "age": 41,
-      "tmdb": 6.2,
-      "tmdb_votes": 49,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.225,
-      "quality": 6.533,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 78.885,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 256711,
-      "type": "tv",
-      "title": "Благодетель",
-      "kind": "season",
-      "premiere": "2026-10-16",
-      "age": 26,
-      "tmdb": 7.7,
-      "tmdb_votes": 60,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.14,
-      "quality": 6.745,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 78.788,
+      "base_score": 78.95,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1282,7 +1236,7 @@
       "tmdb_votes": 3,
       "imdb": null,
       "kp": null,
-      "attention": 0.19,
+      "attention": 0.198,
       "quality": 6.685,
       "agreement": {
         "sources": 0,
@@ -1290,54 +1244,54 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.782,
+      "base_score": 78.89,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
-      "id": 1236045,
-      "type": "movie",
-      "title": "Животные",
-      "kind": "digital",
-      "premiere": "2026-10-09",
-      "age": 33,
-      "tmdb": 6.897,
-      "tmdb_votes": 729,
+      "id": 256711,
+      "type": "tv",
+      "title": "Благодетель",
+      "kind": "season",
+      "premiere": "2026-10-16",
+      "age": 26,
+      "tmdb": 7.7,
+      "tmdb_votes": 60,
       "imdb": null,
       "kp": null,
-      "attention": 0.113,
-      "quality": 6.857,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 78.673,
-      "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 1484085,
-      "type": "movie",
-      "title": "Atonement",
-      "kind": "theatrical",
-      "premiere": "2026-10-02",
-      "age": 40,
-      "tmdb": 8,
-      "tmdb_votes": 2,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.166,
-      "quality": 6.669,
+      "attention": 0.139,
+      "quality": 6.745,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.587,
+      "base_score": 78.775,
       "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1244523,
+      "type": "movie",
+      "title": "Монстр Амазонки",
+      "kind": "digital",
+      "premiere": "2026-11-03",
+      "age": 41,
+      "tmdb": 6.2,
+      "tmdb_votes": 49,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.21,
+      "quality": 6.533,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 78.683,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -1351,7 +1305,7 @@
       "tmdb_votes": 252,
       "imdb": null,
       "kp": null,
-      "attention": 0.125,
+      "attention": 0.124,
       "quality": 6.914,
       "agreement": {
         "sources": 1,
@@ -1359,7 +1313,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.585,
+      "base_score": 78.572,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1374,7 +1328,7 @@
       "tmdb_votes": 226,
       "imdb": null,
       "kp": null,
-      "attention": 0.195,
+      "attention": 0.206,
       "quality": 6.434,
       "agreement": {
         "sources": 1,
@@ -1382,8 +1336,54 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.38,
+      "base_score": 78.528,
       "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 258742,
+      "type": "tv",
+      "title": "Всё честно",
+      "kind": "season",
+      "premiere": "2026-11-04",
+      "age": 7,
+      "tmdb": 4.959,
+      "tmdb_votes": 85,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.176,
+      "quality": 5.791,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 78.454,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1484085,
+      "type": "movie",
+      "title": "Atonement",
+      "kind": "theatrical",
+      "premiere": "2026-10-02",
+      "age": 40,
+      "tmdb": 8,
+      "tmdb_votes": 2,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.143,
+      "quality": 6.669,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 78.277,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1397,7 +1397,7 @@
       "tmdb_votes": 50,
       "imdb": null,
       "kp": null,
-      "attention": 0.093,
+      "attention": 0.094,
       "quality": 6.847,
       "agreement": {
         "sources": 0,
@@ -1405,7 +1405,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.206,
+      "base_score": 78.219,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1420,7 +1420,7 @@
       "tmdb_votes": 44,
       "imdb": null,
       "kp": null,
-      "attention": 0.115,
+      "attention": 0.114,
       "quality": 6.696,
       "agreement": {
         "sources": 0,
@@ -1428,7 +1428,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.178,
+      "base_score": 78.164,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1443,7 +1443,7 @@
       "tmdb_votes": 56,
       "imdb": null,
       "kp": null,
-      "attention": 0.144,
+      "attention": 0.143,
       "quality": 6.664,
       "agreement": {
         "sources": 0,
@@ -1451,7 +1451,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.13,
+      "base_score": 78.116,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1466,7 +1466,7 @@
       "tmdb_votes": 62,
       "imdb": null,
       "kp": null,
-      "attention": 0.123,
+      "attention": 0.121,
       "quality": 6.629,
       "agreement": {
         "sources": 0,
@@ -1474,53 +1474,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.01,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 321221,
-      "type": "tv",
-      "title": "Прожиточный минимум",
-      "kind": "series",
-      "premiere": "2026-10-26",
-      "age": 16,
-      "tmdb": 7.2,
-      "tmdb_votes": 9,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.081,
-      "quality": 6.683,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 77.98,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 313630,
-      "type": "tv",
-      "title": "Навеки ваши",
-      "kind": "series",
-      "premiere": "2026-10-08",
-      "age": 34,
-      "tmdb": 7.938,
-      "tmdb_votes": 16,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.074,
-      "quality": 6.782,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 77.865,
+      "base_score": 77.983,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1531,43 +1485,20 @@
       "kind": "digital",
       "premiere": "2026-11-10",
       "age": 48,
-      "tmdb": 6.1,
-      "tmdb_votes": 55,
+      "tmdb": 6.098,
+      "tmdb_votes": 56,
       "imdb": null,
       "kp": null,
-      "attention": 0.165,
-      "quality": 6.495,
+      "attention": 0.164,
+      "quality": 6.492,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.801,
+      "base_score": 77.777,
       "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 250203,
-      "type": "tv",
-      "title": "Братья",
-      "kind": "series",
-      "premiere": "2026-09-22",
-      "age": 50,
-      "tmdb": 6.7,
-      "tmdb_votes": 30,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.117,
-      "quality": 6.659,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 77.687,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1581,7 +1512,7 @@
       "tmdb_votes": 5,
       "imdb": null,
       "kp": null,
-      "attention": 0.092,
+      "attention": 0.096,
       "quality": 6.655,
       "agreement": {
         "sources": 0,
@@ -1589,30 +1520,76 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.683,
+      "base_score": 77.737,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
-      "id": 330302,
+      "id": 321958,
       "type": "tv",
-      "title": "Соборы",
+      "title": "Линия огня",
       "kind": "series",
-      "premiere": "2026-09-16",
-      "age": 56,
-      "tmdb": 8.563,
+      "premiere": "2026-09-21",
+      "age": 51,
+      "tmdb": 7.625,
       "tmdb_votes": 16,
       "imdb": null,
       "kp": null,
-      "attention": 0.056,
-      "quality": 6.846,
+      "attention": 0.087,
+      "quality": 6.75,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.397,
+      "base_score": 77.581,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 302074,
+      "type": "tv",
+      "title": "Ар-Джей Декер",
+      "kind": "season",
+      "premiere": "2026-09-15",
+      "age": 57,
+      "tmdb": 7.4,
+      "tmdb_votes": 65,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.106,
+      "quality": 6.668,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 77.428,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 250203,
+      "type": "tv",
+      "title": "Братья",
+      "kind": "series",
+      "premiere": "2026-09-22",
+      "age": 50,
+      "tmdb": 6.7,
+      "tmdb_votes": 30,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.097,
+      "quality": 6.659,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 77.418,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1627,7 +1604,7 @@
       "tmdb_votes": 2,
       "imdb": null,
       "kp": null,
-      "attention": 0.063,
+      "attention": 0.068,
       "quality": 6.669,
       "agreement": {
         "sources": 0,
@@ -1635,7 +1612,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.342,
+      "base_score": 77.409,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 330302,
+      "type": "tv",
+      "title": "Соборы",
+      "kind": "series",
+      "premiere": "2026-09-16",
+      "age": 56,
+      "tmdb": 8.563,
+      "tmdb_votes": 16,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.054,
+      "quality": 6.846,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 77.37,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1673,7 +1673,7 @@
       "tmdb_votes": 19,
       "imdb": null,
       "kp": null,
-      "attention": 0.083,
+      "attention": 0.082,
       "quality": 6.667,
       "agreement": {
         "sources": 0,
@@ -1681,7 +1681,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.216,
+      "base_score": 77.203,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1696,7 +1696,7 @@
       "tmdb_votes": 33,
       "imdb": null,
       "kp": null,
-      "attention": 0.12,
+      "attention": 0.121,
       "quality": 6.488,
       "agreement": {
         "sources": 0,
@@ -1704,30 +1704,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.17,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 303630,
-      "type": "tv",
-      "title": "Купертино",
-      "kind": "series",
-      "premiere": "2026-10-08",
-      "age": 34,
-      "tmdb": 5.542,
-      "tmdb_votes": 24,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.098,
-      "quality": 6.488,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 77.159,
+      "base_score": 77.183,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1742,7 +1719,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.067,
+      "attention": 0.071,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -1750,30 +1727,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.128,
+      "base_score": 77.182,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
-      "id": 337395,
+      "id": 303630,
       "type": "tv",
-      "title": "Baddies USA: Chapter 3",
+      "title": "Купертино",
       "kind": "series",
-      "premiere": "2026-11-08",
-      "age": 3,
-      "tmdb": 0,
-      "tmdb_votes": 0,
+      "premiere": "2026-10-08",
+      "age": 34,
+      "tmdb": 5.542,
+      "tmdb_votes": 24,
       "imdb": null,
       "kp": null,
-      "attention": 0.069,
-      "quality": 0,
+      "attention": 0.099,
+      "quality": 6.488,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.094,
+      "base_score": 77.173,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1788,7 +1765,7 @@
       "tmdb_votes": 25,
       "imdb": null,
       "kp": null,
-      "attention": 0.091,
+      "attention": 0.092,
       "quality": 6.57,
       "agreement": {
         "sources": 0,
@@ -1796,7 +1773,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.087,
+      "base_score": 77.1,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1811,7 +1788,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.06,
+      "attention": 0.064,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -1819,7 +1796,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.034,
+      "base_score": 77.087,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 337395,
+      "type": "tv",
+      "title": "Baddies USA: Chapter 3",
+      "kind": "series",
+      "premiere": "2026-11-08",
+      "age": 3,
+      "tmdb": 0,
+      "tmdb_votes": 0,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.067,
+      "quality": 0,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 77.067,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1834,7 +1834,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.042,
+      "attention": 0.046,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -1842,7 +1842,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.791,
+      "base_score": 76.845,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1880,7 +1880,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.051,
+      "attention": 0.05,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -1888,7 +1888,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.769,
+      "base_score": 76.756,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1926,7 +1926,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.044,
+      "attention": 0.045,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -1934,30 +1934,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.675,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 340518,
-      "type": "tv",
-      "title": "Homegirls Before Husbands",
-      "kind": "series",
-      "premiere": "2026-10-30",
-      "age": 12,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.049,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 76.64,
+      "base_score": 76.688,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1972,7 +1949,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.039,
+      "attention": 0.04,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -1980,7 +1957,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.587,
+      "base_score": 76.601,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1813392,
+      "type": "movie",
+      "title": "A COLD SEASON",
+      "kind": "digital",
+      "premiere": "2026-11-10",
+      "age": 1,
+      "tmdb": 0,
+      "tmdb_votes": 0,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.029,
+      "quality": 0,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 76.595,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2008,29 +2008,6 @@
       "selected_rank": null
     },
     {
-      "id": 1813392,
-      "type": "movie",
-      "title": "A COLD SEASON",
-      "kind": "digital",
-      "premiere": "2026-11-10",
-      "age": 1,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.025,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 76.541,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
       "id": 340646,
       "type": "tv",
       "title": "365 Days to Be Mine",
@@ -2041,7 +2018,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.034,
+      "attention": 0.035,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -2049,7 +2026,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.479,
+      "base_score": 76.492,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1513851,
+      "type": "movie",
+      "title": "CRCL9",
+      "kind": "theatrical",
+      "premiere": "2026-11-11",
+      "age": 0,
+      "tmdb": 0,
+      "tmdb_votes": 0,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.018,
+      "quality": 0,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 76.468,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2077,9 +2077,32 @@
       "selected_rank": null
     },
     {
-      "id": 1513851,
+      "id": 340671,
+      "type": "tv",
+      "title": "Offside Love",
+      "kind": "series",
+      "premiere": "2026-11-01",
+      "age": 10,
+      "tmdb": 0,
+      "tmdb_votes": 0,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.03,
+      "quality": 0,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 76.425,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1679986,
       "type": "movie",
-      "title": "CRCL9",
+      "title": "ee",
       "kind": "theatrical",
       "premiere": "2026-11-11",
       "age": 0,
@@ -2096,29 +2119,6 @@
         "level": "unconfirmed"
       },
       "base_score": 76.414,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 340671,
-      "type": "tv",
-      "title": "Offside Love",
-      "kind": "series",
-      "premiere": "2026-11-01",
-      "age": 10,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.029,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 76.412,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2146,9 +2146,9 @@
       "selected_rank": null
     },
     {
-      "id": 1679986,
+      "id": 1441294,
       "type": "movie",
-      "title": "ee",
+      "title": "Buffalo 10",
       "kind": "theatrical",
       "premiere": "2026-11-11",
       "age": 0,
@@ -2156,7 +2156,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.011,
+      "attention": 0.007,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -2164,7 +2164,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.373,
+      "base_score": 76.319,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2406,10 +2406,10 @@
       "premiere": "2026-07-17",
       "age": 119,
       "tmdb": 8,
-      "tmdb_votes": 4615,
+      "tmdb_votes": 4628,
       "imdb": null,
       "kp": null,
-      "attention": 0.753,
+      "attention": 0.815,
       "quality": 7.96,
       "agreement": {
         "sources": 1,
@@ -2417,7 +2417,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 65.627,
+      "base_score": 66.463,
       "rejection": null,
       "selected_rank": 17
     },
@@ -2432,7 +2432,7 @@
       "tmdb_votes": 6700,
       "imdb": null,
       "kp": null,
-      "attention": 0.477,
+      "attention": 0.472,
       "quality": 8.438,
       "agreement": {
         "sources": 1,
@@ -2440,7 +2440,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 63.867,
+      "base_score": 63.799,
       "rejection": null,
       "selected_rank": 18
     },
@@ -2452,10 +2452,10 @@
       "premiere": "2026-08-16",
       "age": 87,
       "tmdb": 8.196,
-      "tmdb_votes": 868,
+      "tmdb_votes": 869,
       "imdb": null,
       "kp": null,
-      "attention": 0.416,
+      "attention": 0.425,
       "quality": 7.981,
       "agreement": {
         "sources": 1,
@@ -2463,7 +2463,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 61.813,
+      "base_score": 61.934,
       "rejection": null,
       "selected_rank": 19
     },
@@ -2478,7 +2478,7 @@
       "tmdb_votes": 1747,
       "imdb": null,
       "kp": null,
-      "attention": 0.189,
+      "attention": 0.188,
       "quality": 8.353,
       "agreement": {
         "sources": 1,
@@ -2486,32 +2486,9 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 59.77,
+      "base_score": 59.757,
       "rejection": null,
       "selected_rank": 23
-    },
-    {
-      "id": 1377237,
-      "type": "movie",
-      "title": "Курьер",
-      "kind": "digital",
-      "premiere": "2026-10-13",
-      "age": 65,
-      "tmdb": 8.242,
-      "tmdb_votes": 826,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.202,
-      "quality": 8.011,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 59.483,
-      "rejection": null,
-      "selected_rank": 20
     },
     {
       "id": 97546,
@@ -2537,6 +2514,29 @@
       "selected_rank": 25
     },
     {
+      "id": 1377237,
+      "type": "movie",
+      "title": "Курьер",
+      "kind": "digital",
+      "premiere": "2026-10-13",
+      "age": 65,
+      "tmdb": 8.242,
+      "tmdb_votes": 826,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.146,
+      "quality": 8.011,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 58.729,
+      "rejection": null,
+      "selected_rank": 20
+    },
+    {
       "id": 1101412,
       "type": "movie",
       "title": "Вышка 2",
@@ -2560,52 +2560,6 @@
       "selected_rank": 24
     },
     {
-      "id": 2710,
-      "type": "tv",
-      "title": "В Филадельфии всегда солнечно",
-      "kind": "season",
-      "premiere": "2026-08-17",
-      "age": 86,
-      "tmdb": 8.246,
-      "tmdb_votes": 1462,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.172,
-      "quality": 7.901,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 58.265,
-      "rejection": null,
-      "selected_rank": 27
-    },
-    {
-      "id": 196322,
-      "type": "tv",
-      "title": "Темная материя",
-      "kind": "season",
-      "premiere": "2026-08-27",
-      "age": 76,
-      "tmdb": 7.819,
-      "tmdb_votes": 877,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.17,
-      "quality": 7.758,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 57.942,
-      "rejection": null,
-      "selected_rank": 28
-    },
-    {
       "id": 108978,
       "type": "tv",
       "title": "Ричер",
@@ -2626,7 +2580,7 @@
       },
       "base_score": 57.773,
       "rejection": null,
-      "selected_rank": null
+      "selected_rank": 27
     },
     {
       "id": 1291595,
@@ -2639,7 +2593,7 @@
       "tmdb_votes": 1042,
       "imdb": null,
       "kp": null,
-      "attention": 0.19,
+      "attention": 0.189,
       "quality": 7.564,
       "agreement": {
         "sources": 1,
@@ -2647,9 +2601,32 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 57.369,
+      "base_score": 57.356,
       "rejection": null,
       "selected_rank": 26
+    },
+    {
+      "id": 1384216,
+      "type": "movie",
+      "title": "Собачьи звёзды",
+      "kind": "digital",
+      "premiere": "2026-10-27",
+      "age": 77,
+      "tmdb": 7.189,
+      "tmdb_votes": 960,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.274,
+      "quality": 7.12,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 57.09,
+      "rejection": "buzz_not_confirmed",
+      "selected_rank": null
     },
     {
       "id": 1288445,
@@ -2658,21 +2635,21 @@
       "kind": "digital",
       "premiere": "2026-09-08",
       "age": 84,
-      "tmdb": 7.607,
-      "tmdb_votes": 1056,
+      "tmdb": 7.614,
+      "tmdb_votes": 1057,
       "imdb": null,
       "kp": null,
-      "attention": 0.18,
-      "quality": 7.495,
+      "attention": 0.179,
+      "quality": 7.501,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 56.993,
+      "base_score": 57.001,
       "rejection": null,
-      "selected_rank": 29
+      "selected_rank": 28
     },
     {
       "id": 260249,
@@ -2685,7 +2662,7 @@
       "tmdb_votes": 93,
       "imdb": null,
       "kp": null,
-      "attention": 0.064,
+      "attention": 0.062,
       "quality": 7.588,
       "agreement": {
         "sources": 0,
@@ -2693,31 +2670,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 56.225,
+      "base_score": 56.198,
       "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1384216,
-      "type": "movie",
-      "title": "Собачьи звёзды",
-      "kind": "digital",
-      "premiere": "2026-10-27",
-      "age": 77,
-      "tmdb": 7.188,
-      "tmdb_votes": 959,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.189,
-      "quality": 7.119,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 55.941,
-      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -2731,7 +2685,7 @@
       "tmdb_votes": 251,
       "imdb": null,
       "kp": null,
-      "attention": 0.086,
+      "attention": 0.084,
       "quality": 7.709,
       "agreement": {
         "sources": 1,
@@ -2739,9 +2693,9 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 55.924,
+      "base_score": 55.897,
       "rejection": null,
-      "selected_rank": 30
+      "selected_rank": 29
     },
     {
       "id": 1302904,
@@ -2754,7 +2708,7 @@
       "tmdb_votes": 390,
       "imdb": null,
       "kp": null,
-      "attention": 0.127,
+      "attention": 0.125,
       "quality": 7.055,
       "agreement": {
         "sources": 1,
@@ -2762,7 +2716,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 55.168,
+      "base_score": 55.141,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -2773,19 +2727,19 @@
       "kind": "digital",
       "premiere": "2026-10-13",
       "age": 76,
-      "tmdb": 6.8,
-      "tmdb_votes": 267,
+      "tmdb": 6.843,
+      "tmdb_votes": 268,
       "imdb": null,
       "kp": null,
-      "attention": 0.203,
-      "quality": 6.748,
+      "attention": 0.214,
+      "quality": 6.777,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 54.852,
+      "base_score": 55.101,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -2813,48 +2767,25 @@
       "selected_rank": null
     },
     {
-      "id": 304842,
-      "type": "tv",
-      "title": "Дроп: Снегопад. Сага",
-      "kind": "series",
-      "premiere": "2026-09-08",
-      "age": 64,
-      "tmdb": 7.739,
-      "tmdb_votes": 46,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.103,
-      "quality": 6.919,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 54.348,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
       "id": 1228834,
       "type": "movie",
       "title": "Операция «Возмездие»",
       "kind": "digital",
       "premiere": "2026-10-13",
       "age": 62,
-      "tmdb": 5.9,
-      "tmdb_votes": 95,
+      "tmdb": 5.828,
+      "tmdb_votes": 96,
       "imdb": null,
       "kp": null,
-      "attention": 0.208,
-      "quality": 6.347,
+      "attention": 0.207,
+      "quality": 6.316,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 53.987,
+      "base_score": 53.973,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2869,7 +2800,7 @@
       "tmdb_votes": 101,
       "imdb": null,
       "kp": null,
-      "attention": 0.134,
+      "attention": 0.14,
       "quality": 6.637,
       "agreement": {
         "sources": 1,
@@ -2877,7 +2808,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 53.656,
+      "base_score": 53.737,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -2892,7 +2823,7 @@
       "tmdb_votes": 4,
       "imdb": null,
       "kp": null,
-      "attention": 0.155,
+      "attention": 0.154,
       "quality": 6.535,
       "agreement": {
         "sources": 0,
@@ -2900,7 +2831,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 52.929,
+      "base_score": 52.915,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2915,7 +2846,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.007,
+      "attention": 0.011,
       "quality": 0,
       "agreement": {
         "sources": 0,
@@ -2923,7 +2854,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 50.993,
+      "base_score": 51.047,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2934,21 +2865,21 @@
       "kind": "digital",
       "premiere": "2026-06-30",
       "age": 182,
-      "tmdb": 8.2,
-      "tmdb_votes": 6577,
+      "tmdb": 8.166,
+      "tmdb_votes": 6582,
       "imdb": null,
       "kp": null,
-      "attention": 0.37,
-      "quality": 8.168,
+      "attention": 0.406,
+      "quality": 8.134,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 37.089,
+      "base_score": 37.455,
       "rejection": null,
-      "selected_rank": 31
+      "selected_rank": 30
     },
     {
       "id": 687163,
@@ -2957,19 +2888,19 @@
       "kind": "digital",
       "premiere": "2026-05-12",
       "age": 241,
-      "tmdb": 8.627,
-      "tmdb_votes": 8804,
+      "tmdb": 8.628,
+      "tmdb_votes": 8809,
       "imdb": null,
       "kp": null,
       "attention": 0.25,
-      "quality": 8.596,
+      "quality": 8.597,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 36.675,
+      "base_score": 36.678,
       "rejection": null,
       "selected_rank": 32
     },
@@ -2994,7 +2925,7 @@
       },
       "base_score": 36.517,
       "rejection": null,
-      "selected_rank": null
+      "selected_rank": 31
     },
     {
       "id": 299167,
@@ -3007,7 +2938,7 @@
       "tmdb_votes": 654,
       "imdb": null,
       "kp": null,
-      "attention": 0.142,
+      "attention": 0.141,
       "quality": 8.689,
       "agreement": {
         "sources": 1,
@@ -3015,7 +2946,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 35.85,
+      "base_score": 35.836,
       "rejection": null,
       "selected_rank": 33
     },
@@ -3049,19 +2980,19 @@
       "kind": "series",
       "premiere": "2026-05-13",
       "age": 182,
-      "tmdb": 8.848,
+      "tmdb": 8.8,
       "tmdb_votes": 907,
       "imdb": null,
       "kp": null,
-      "attention": 0.152,
-      "quality": 8.554,
+      "attention": 0.151,
+      "quality": 8.513,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 35.502,
+      "base_score": 35.345,
       "rejection": null,
       "selected_rank": 34
     },
@@ -3072,42 +3003,65 @@
       "kind": "digital",
       "premiere": "2026-06-09",
       "age": 203,
-      "tmdb": 8.6,
-      "tmdb_votes": 4709,
+      "tmdb": 8.583,
+      "tmdb_votes": 4711,
       "imdb": null,
       "kp": null,
-      "attention": 0.106,
-      "quality": 8.544,
+      "attention": 0.111,
+      "quality": 8.527,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 34.742,
+      "base_score": 34.75,
       "rejection": null,
       "selected_rank": 35
     },
     {
-      "id": 224372,
+      "id": 66732,
       "type": "tv",
-      "title": "Рыцарь Семи Королевств",
-      "kind": "series",
-      "premiere": "2026-01-18",
-      "age": 297,
-      "tmdb": 8.419,
-      "tmdb_votes": 1277,
+      "title": "Очень странные дела",
+      "kind": "season",
+      "premiere": "2025-11-26",
+      "age": 350,
+      "tmdb": 8.5,
+      "tmdb_votes": 22119,
       "imdb": null,
       "kp": null,
-      "attention": 0.108,
-      "quality": 8.244,
+      "attention": 0.278,
+      "quality": 7.87,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 33.249,
+      "base_score": 33.966,
+      "rejection": null,
+      "selected_rank": null
+    },
+    {
+      "id": 614945,
+      "type": "movie",
+      "title": "Сообщения для Изабель",
+      "kind": "theatrical",
+      "premiere": "2026-06-20",
+      "age": 144,
+      "tmdb": 8.292,
+      "tmdb_votes": 1048,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.086,
+      "quality": 8.098,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 33.207,
       "rejection": null,
       "selected_rank": 36
     },
@@ -3122,7 +3076,7 @@
       "tmdb_votes": 933,
       "imdb": null,
       "kp": null,
-      "attention": 0.1,
+      "attention": 0.101,
       "quality": 8.075,
       "agreement": {
         "sources": 1,
@@ -3130,55 +3084,32 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 33.185,
-      "rejection": null,
-      "selected_rank": 39
-    },
-    {
-      "id": 614945,
-      "type": "movie",
-      "title": "Сообщения для Изабель",
-      "kind": "theatrical",
-      "premiere": "2026-06-20",
-      "age": 144,
-      "tmdb": 8.292,
-      "tmdb_votes": 1048,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.081,
-      "quality": 8.098,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 33.139,
+      "base_score": 33.198,
       "rejection": null,
       "selected_rank": 37
     },
     {
-      "id": 66732,
+      "id": 224372,
       "type": "tv",
-      "title": "Очень странные дела",
-      "kind": "season",
-      "premiere": "2025-11-26",
-      "age": 350,
-      "tmdb": 8.543,
-      "tmdb_votes": 22119,
+      "title": "Рыцарь Семи Королевств",
+      "kind": "series",
+      "premiere": "2026-01-18",
+      "age": 297,
+      "tmdb": 8.419,
+      "tmdb_votes": 1277,
       "imdb": null,
       "kp": null,
-      "attention": 0.206,
-      "quality": 7.885,
+      "attention": 0.104,
+      "quality": 8.244,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 33.048,
+      "base_score": 33.195,
       "rejection": null,
-      "selected_rank": null
+      "selected_rank": 39
     },
     {
       "id": 1330021,
@@ -3191,7 +3122,7 @@
       "tmdb_votes": 1020,
       "imdb": null,
       "kp": null,
-      "attention": 0.077,
+      "attention": 0.082,
       "quality": 8.132,
       "agreement": {
         "sources": 1,
@@ -3199,7 +3130,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.985,
+      "base_score": 33.052,
       "rejection": null,
       "selected_rank": 38
     },
@@ -3214,7 +3145,7 @@
       "tmdb_votes": 2904,
       "imdb": null,
       "kp": null,
-      "attention": 0.184,
+      "attention": 0.183,
       "quality": 7.564,
       "agreement": {
         "sources": 1,
@@ -3222,7 +3153,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.718,
+      "base_score": 32.705,
       "rejection": null,
       "selected_rank": null
     },
@@ -3237,7 +3168,7 @@
       "tmdb_votes": 568,
       "imdb": null,
       "kp": null,
-      "attention": 0.11,
+      "attention": 0.109,
       "quality": 7.858,
       "agreement": {
         "sources": 1,
@@ -3245,7 +3176,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.68,
+      "base_score": 32.667,
       "rejection": null,
       "selected_rank": 40
     },
@@ -3260,7 +3191,7 @@
       "tmdb_votes": 648,
       "imdb": null,
       "kp": null,
-      "attention": 0.085,
+      "attention": 0.089,
       "quality": 8.064,
       "agreement": {
         "sources": 1,
@@ -3268,30 +3199,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.474,
+      "base_score": 32.528,
       "rejection": null,
       "selected_rank": null
     },
     {
-      "id": 1165369,
-      "type": "movie",
-      "title": "Де Голль. Часть 2. Свобода",
-      "kind": "theatrical",
-      "premiere": "2026-06-26",
-      "age": 138,
-      "tmdb": 7.9,
-      "tmdb_votes": 241,
+      "id": 94997,
+      "type": "tv",
+      "title": "Дом Дракона",
+      "kind": "season",
+      "premiere": "2026-06-21",
+      "age": 143,
+      "tmdb": 8.4,
+      "tmdb_votes": 7308,
       "imdb": null,
       "kp": null,
-      "attention": 0.197,
-      "quality": 7.441,
+      "attention": 0.178,
+      "quality": 7.498,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.433,
+      "base_score": 32.352,
       "rejection": null,
       "selected_rank": null
     },
@@ -3306,7 +3237,7 @@
       "tmdb_votes": 601,
       "imdb": null,
       "kp": null,
-      "attention": 0.127,
+      "attention": 0.126,
       "quality": 7.752,
       "agreement": {
         "sources": 1,
@@ -3314,7 +3245,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.283,
+      "base_score": 32.27,
       "rejection": null,
       "selected_rank": null
     },
@@ -3329,7 +3260,7 @@
       "tmdb_votes": 1045,
       "imdb": null,
       "kp": null,
-      "attention": 0.151,
+      "attention": 0.15,
       "quality": 7.351,
       "agreement": {
         "sources": 1,
@@ -3337,7 +3268,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 31.558,
+      "base_score": 31.545,
       "rejection": null,
       "selected_rank": null
     },
@@ -3352,7 +3283,7 @@
       "tmdb_votes": 91,
       "imdb": null,
       "kp": null,
-      "attention": 0.179,
+      "attention": 0.176,
       "quality": 7.463,
       "agreement": {
         "sources": 0,
@@ -3360,7 +3291,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 31.418,
+      "base_score": 31.377,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3375,7 +3306,7 @@
       "tmdb_votes": 13660,
       "imdb": null,
       "kp": null,
-      "attention": 0.194,
+      "attention": 0.193,
       "quality": 7.226,
       "agreement": {
         "sources": 1,
@@ -3383,30 +3314,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 31.245,
+      "base_score": 31.232,
       "rejection": null,
       "selected_rank": null
     },
     {
-      "id": 1275779,
-      "type": "movie",
-      "title": "День разоблачения",
-      "kind": "digital",
-      "premiere": "2026-07-21",
-      "age": 154,
-      "tmdb": 7.415,
-      "tmdb_votes": 3998,
+      "id": 287527,
+      "type": "tv",
+      "title": "Заветы",
+      "kind": "series",
+      "premiere": "2026-04-08",
+      "age": 217,
+      "tmdb": 8.227,
+      "tmdb_votes": 245,
       "imdb": null,
       "kp": null,
-      "attention": 0.123,
-      "quality": 7.389,
+      "attention": 0.079,
+      "quality": 7.654,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 31.174,
+      "base_score": 31.194,
       "rejection": null,
       "selected_rank": null
     },
@@ -3421,7 +3352,7 @@
       "tmdb_votes": 4423,
       "imdb": null,
       "kp": null,
-      "attention": 0.216,
+      "attention": 0.215,
       "quality": 6.985,
       "agreement": {
         "sources": 1,
@@ -3429,7 +3360,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 30.753,
+      "base_score": 30.74,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3444,7 +3375,7 @@
       "tmdb_votes": 121,
       "imdb": null,
       "kp": null,
-      "attention": 0.076,
+      "attention": 0.072,
       "quality": 7.452,
       "agreement": {
         "sources": 1,
@@ -3452,7 +3383,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 30.591,
+      "base_score": 30.537,
       "rejection": null,
       "selected_rank": null
     },
@@ -3467,7 +3398,7 @@
       "tmdb_votes": 461,
       "imdb": null,
       "kp": null,
-      "attention": 0.074,
+      "attention": 0.079,
       "quality": 7.495,
       "agreement": {
         "sources": 1,
@@ -3475,7 +3406,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 30.43,
+      "base_score": 30.497,
       "rejection": null,
       "selected_rank": null
     },
@@ -3490,7 +3421,7 @@
       "tmdb_votes": 88,
       "imdb": null,
       "kp": null,
-      "attention": 0.066,
+      "attention": 0.064,
       "quality": 7.347,
       "agreement": {
         "sources": 0,
@@ -3498,7 +3429,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 30.049,
+      "base_score": 30.022,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3510,10 +3441,10 @@
       "premiere": "2026-07-14",
       "age": 168,
       "tmdb": 6.993,
-      "tmdb_votes": 4072,
+      "tmdb_votes": 4074,
       "imdb": null,
       "kp": null,
-      "attention": 0.145,
+      "attention": 0.142,
       "quality": 6.982,
       "agreement": {
         "sources": 1,
@@ -3521,31 +3452,31 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.976,
+      "base_score": 29.935,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
-      "id": 240459,
+      "id": 131142,
       "type": "tv",
-      "title": "Спартак: Дом Ашура",
+      "title": "История любви",
       "kind": "series",
-      "premiere": "2025-12-05",
-      "age": 341,
-      "tmdb": 7.338,
-      "tmdb_votes": 352,
+      "premiere": "2026-02-12",
+      "age": 272,
+      "tmdb": 8.2,
+      "tmdb_votes": 70,
       "imdb": null,
       "kp": null,
-      "attention": 0.105,
-      "quality": 7.142,
+      "attention": 0.074,
+      "quality": 7.167,
       "agreement": {
-        "sources": 1,
+        "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.132,
-      "rejection": "buzz_not_confirmed",
+      "base_score": 29.147,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -3559,7 +3490,7 @@
       "tmdb_votes": 3,
       "imdb": null,
       "kp": null,
-      "attention": 0.128,
+      "attention": 0.144,
       "quality": 6.678,
       "agreement": {
         "sources": 0,
@@ -3567,30 +3498,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 28.903,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 316830,
-      "type": "tv",
-      "title": "В поисках Персефоны",
-      "kind": "series",
-      "premiere": "2026-03-01",
-      "age": 255,
-      "tmdb": 8.9,
-      "tmdb_votes": 20,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.078,
-      "quality": 6.931,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 28.46,
+      "base_score": 29.118,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3605,7 +3513,7 @@
       "tmdb_votes": 45,
       "imdb": null,
       "kp": null,
-      "attention": 0.049,
+      "attention": 0.054,
       "quality": 7.151,
       "agreement": {
         "sources": 0,
@@ -3613,7 +3521,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 28.439,
+      "base_score": 28.506,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3628,7 +3536,7 @@
       "tmdb_votes": 40,
       "imdb": null,
       "kp": null,
-      "attention": 0.028,
+      "attention": 0.032,
       "quality": 7.008,
       "agreement": {
         "sources": 0,
@@ -3636,7 +3544,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 28.425,
+      "base_score": 28.479,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 316830,
+      "type": "tv",
+      "title": "В поисках Персефоны",
+      "kind": "series",
+      "premiere": "2026-03-01",
+      "age": 255,
+      "tmdb": 8.9,
+      "tmdb_votes": 20,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.077,
+      "quality": 6.931,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 28.446,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3651,7 +3582,7 @@
       "tmdb_votes": 47,
       "imdb": null,
       "kp": null,
-      "attention": 0.039,
+      "attention": 0.043,
       "quality": 7.065,
       "agreement": {
         "sources": 0,
@@ -3659,7 +3590,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 28.213,
+      "base_score": 28.267,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3674,7 +3605,7 @@
       "tmdb_votes": 17,
       "imdb": null,
       "kp": null,
-      "attention": 0.018,
+      "attention": 0.021,
       "quality": 6.948,
       "agreement": {
         "sources": 0,
@@ -3682,31 +3613,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 28.131,
+      "base_score": 28.171,
       "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 70558,
-      "type": "tv",
-      "title": "NPR Tiny Desk Concerts",
-      "kind": "season",
-      "premiere": "2026-01-05",
-      "age": 310,
-      "tmdb": 7.273,
-      "tmdb_votes": 11,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.176,
-      "quality": 6.475,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 27.909,
-      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -3720,7 +3628,7 @@
       "tmdb_votes": 17,
       "imdb": null,
       "kp": null,
-      "attention": 0.201,
+      "attention": 0.2,
       "quality": 6.32,
       "agreement": {
         "sources": 0,
@@ -3728,7 +3636,53 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 27.898,
+      "base_score": 27.885,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 70558,
+      "type": "tv",
+      "title": "NPR Tiny Desk Concerts",
+      "kind": "season",
+      "premiere": "2026-01-05",
+      "age": 310,
+      "tmdb": 7.273,
+      "tmdb_votes": 11,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.173,
+      "quality": 6.475,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 27.869,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1698863,
+      "type": "movie",
+      "title": "The Odyssey",
+      "kind": "digital",
+      "premiere": "2026-07-03",
+      "age": 131,
+      "tmdb": 4,
+      "tmdb_votes": 781,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.113,
+      "quality": 4.403,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 27.693,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3743,7 +3697,7 @@
       "tmdb_votes": 12,
       "imdb": null,
       "kp": null,
-      "attention": 0.032,
+      "attention": 0.036,
       "quality": 6.836,
       "agreement": {
         "sources": 0,
@@ -3751,7 +3705,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 27.577,
+      "base_score": 27.631,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3766,7 +3720,7 @@
       "tmdb_votes": 2,
       "imdb": null,
       "kp": null,
-      "attention": 0.021,
+      "attention": 0.025,
       "quality": 6.655,
       "agreement": {
         "sources": 0,
@@ -3774,7 +3728,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 27.275,
+      "base_score": 27.329,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3789,7 +3743,7 @@
       "tmdb_votes": 10,
       "imdb": null,
       "kp": null,
-      "attention": 0.035,
+      "attention": 0.039,
       "quality": 6.76,
       "agreement": {
         "sources": 0,
@@ -3797,7 +3751,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 26.762,
+      "base_score": 26.816,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3812,7 +3766,7 @@
       "tmdb_votes": 1794,
       "imdb": null,
       "kp": null,
-      "attention": 0.174,
+      "attention": 0.171,
       "quality": 8.144,
       "agreement": {
         "sources": 1,
@@ -3820,30 +3774,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 9.568,
-      "rejection": null,
-      "selected_rank": null
-    },
-    {
-      "id": 219760,
-      "type": "tv",
-      "title": "Список смертников: Тёмный волк",
-      "kind": "series",
-      "premiere": "2025-08-27",
-      "age": 441,
-      "tmdb": 7.694,
-      "tmdb_votes": 310,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.137,
-      "quality": 7.369,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 5.959,
+      "base_score": 9.527,
       "rejection": null,
       "selected_rank": null
     },
@@ -3871,6 +3802,29 @@
       "selected_rank": null
     },
     {
+      "id": 219760,
+      "type": "tv",
+      "title": "Список смертников: Тёмный волк",
+      "kind": "series",
+      "premiere": "2025-08-27",
+      "age": 441,
+      "tmdb": 7.694,
+      "tmdb_votes": 310,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.136,
+      "quality": 7.369,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 5.946,
+      "rejection": null,
+      "selected_rank": null
+    },
+    {
       "id": 502,
       "type": "tv",
       "title": "Улица Сезам",
@@ -3881,7 +3835,7 @@
       "tmdb_votes": 301,
       "imdb": null,
       "kp": null,
-      "attention": 0.201,
+      "attention": 0.2,
       "quality": 6.737,
       "agreement": {
         "sources": 1,
@@ -3889,7 +3843,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 5.106,
+      "base_score": 5.093,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3904,7 +3858,7 @@
       "tmdb_votes": 244,
       "imdb": null,
       "kp": null,
-      "attention": 0.162,
+      "attention": 0.158,
       "quality": 6.839,
       "agreement": {
         "sources": 1,
@@ -3912,7 +3866,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 4.587,
+      "base_score": 4.533,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3927,7 +3881,7 @@
       "tmdb_votes": 104,
       "imdb": null,
       "kp": null,
-      "attention": 0.061,
+      "attention": 0.059,
       "quality": 7.396,
       "agreement": {
         "sources": 1,
@@ -3935,7 +3889,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 4.374,
+      "base_score": 4.347,
       "rejection": null,
       "selected_rank": null
     },
@@ -3950,7 +3904,7 @@
       "tmdb_votes": 1200,
       "imdb": null,
       "kp": null,
-      "attention": 0.197,
+      "attention": 0.196,
       "quality": 4.305,
       "agreement": {
         "sources": 1,
@@ -3958,7 +3912,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 3.184,
+      "base_score": 3.171,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3973,7 +3927,7 @@
       "tmdb_votes": 10,
       "imdb": null,
       "kp": null,
-      "attention": 0.059,
+      "attention": 0.057,
       "quality": 6.767,
       "agreement": {
         "sources": 0,
@@ -3981,7 +3935,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 2.483,
+      "base_score": 2.456,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
