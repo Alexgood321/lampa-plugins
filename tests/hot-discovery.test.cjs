@@ -94,11 +94,14 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.2');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.3');
   assert.equal(result.feed.diagnostics.primary_window_days,60);
   assert.deepEqual(Object.keys(result.feed.diagnostics.selected_by_recency),
     ['0-60','61-120','121-365','366+']);
   assert.equal(result.feed.diagnostics.quality_floor,7.2);
+  assert.equal(result.feed.diagnostics.ranking_model,'interest-quality-freshness-v1');
+  assert.ok(result.feed.diagnostics.selected_by_kind.movie>0);
+  assert.ok(result.feed.diagnostics.selected_by_kind.new_tv>0);
   assert.ok(result.feed.items.some(x=>x.type==='movie'));
   assert.ok(result.feed.items.some(x=>x.type==='tv'));
   assert.ok(result.feed.items.every(x=>x.source==='tmdb'&&x.surs_hot_rank));
@@ -210,11 +213,11 @@ test('weights omit unmeasured growth instead of adding neutral scores',()=>{
   const card=()=>({type:'movie',id:42,poster_path:'/p',popularity:90,
     vote_average:8.4,vote_count:900,surs_hot_premiere_date:day(60)});
   const noHistory=hot.scoreCandidates([card()],{snapshots:[]},NOW,null)[0];
-  assert.deepEqual(noHistory.surs_hot_weights,{quality:.70,heat:.30,growth:0});
+  assert.deepEqual(noHistory.surs_hot_weights,{attention:.57,quality:.29,freshness:.14,growth:0});
   const measured=hot.scoreCandidates([card()],{snapshots:[{
     date:day(7),items:{'movie:42':{p:20}}
   }]},NOW,null)[0];
-  assert.deepEqual(measured.surs_hot_weights,{quality:.60,heat:.25,growth:.15});
+  assert.deepEqual(measured.surs_hot_weights,{attention:.44,quality:.28,freshness:.14,growth:.14});
   assert.equal(measured.surs_hot_growth_measured,true);
 });
 
@@ -277,4 +280,89 @@ test('recency cutoff has no accidental day-60 and day-61 overlap',()=>{
   assert.ok(rows[0].surs_hot_score>rows[1].surs_hot_score);
   assert.ok(rows[2].surs_hot_score>rows[3].surs_hot_score);
   assert.ok(rows[4].surs_hot_score>rows[5].surs_hot_score);
+});
+
+test('high current buzz can rescue mixed reviews, not a poorly rated or unverified title',()=>{
+  const make=(id,rating,trends)=>({id,type:'movie',
+    poster_path:'/p',vote_average:rating,vote_count:1500,
+    popularity:trends?500:40,surs_hot_premiere_date:day(12),
+    surs_hot_original_date:day(12),
+    surs_hot_trend_day:trends?2:null,
+    surs_hot_trend_week:trends?3:null});
+  const candidates=[make(1,6.9,true),make(2,5.2,true),
+    make(3,6.9,false),make(4,8.2,false)];
+  const rows=hot.scoreCandidates(candidates,{snapshots:[]},NOW,null);
+  assert.ok(rows.some(x=>x.id===1));
+  assert.equal(rows.find(x=>x.id===1).surs_hot_track,'breakout');
+  assert.ok(!rows.some(x=>x.id===2||x.id===3));
+  assert.ok(rows.some(x=>x.id===4));
+});
+test('24h snapshot measures audience momentum without fabricating playback counts',()=>{
+  const c={id:80,type:'movie',popularity:160,vote_count:1500};
+  const history={snapshots:[{date:day(1),
+    items:{'movie:80':{p:50,v:900}}}]};
+  const g=hot.growthFor(c,history,NOW);
+  assert.equal(g.measured,true);
+  assert.ok(g.periods['1d']>.5);
+  assert.equal(Object.keys(g.periods).length,1);
+  assert.equal(hot.growthFor(c,{snapshots:[]},NOW).measured,false);
+});
+test('current attention outranks legacy popularity in the same premiere band',()=>{
+  const base={type:'tv',poster_path:'/p',vote_average:8.3,
+    vote_count:2000,surs_hot_premiere_kind:'series',
+    surs_hot_premiere_date:day(15),surs_hot_original_date:day(15)};
+  const buzz={...base,id:81,popularity:200,surs_hot_trend_day:2,
+    surs_hot_trend_week:3};
+  const old={...base,id:82,popularity:240};
+  const rows=hot.scoreCandidates([old,buzz],{snapshots:[]},NOW,null);
+  assert.deepEqual(rows.map(x=>x.id),[81,82]);
+  assert.ok(rows[0].surs_hot_attention>rows[1].surs_hot_attention);
+  assert.equal(rows[1].surs_hot_attention_sources,0);
+});
+test('top-10 and top-20 have returning-season caps when alternatives exist',()=>{
+  const raw=[];
+  for(let i=0;i<22;i++)raw.push({
+    id:3000+i,type:'tv',poster_path:'/p',vote_average:9.2,
+    vote_count:9000,popularity:600-i*3,
+    surs_hot_premiere_kind:'season',surs_hot_season_verified:true,
+    surs_hot_season_rating:{value:8.8,votes:110},
+    surs_hot_premiere_date:day(10),surs_hot_original_date:day(1800),
+    surs_hot_trend_day:i+1,surs_hot_trend_week:i+1});
+  for(let i=0;i<26;i++)raw.push({
+    id:5000+i,type:'movie',poster_path:'/p',vote_average:8.3,
+    vote_count:1300,popularity:110-i,
+    surs_hot_premiere_kind:'theatrical',
+    surs_hot_premiere_date:day(15),surs_hot_original_date:day(15),
+    surs_hot_trend_day:i+1,surs_hot_trend_week:i+1});
+  const rows=hot.scoreCandidates(raw,{snapshots:[]},NOW,null);
+  const n=x=>x.filter(c=>c.type==='tv'&&
+    c.surs_hot_premiere_kind==='season').length;
+  assert.equal(rows.length,40);
+  assert.ok(n(rows.slice(0,10))<=3);
+  assert.ok(n(rows.slice(0,20))<=6);
+  assert.ok(n(rows)<=12);
+  for(let i=1;i<rows.length;i++)assert.ok(
+    rows[i-1].surs_hot_score>=rows[i].surs_hot_score);
+});
+test('returning series are not discarded when there are too few alternatives',()=>{
+  const tv=Array.from({length:15},(_,i)=>({
+    id:9000+i,type:'tv',poster_path:'/p',vote_average:8.8,
+    vote_count:2000,popularity:200-i,
+    surs_hot_premiere_kind:'season',surs_hot_season_verified:true,
+    surs_hot_season_rating:{value:8.5,votes:120},
+    surs_hot_premiere_date:day(12),surs_hot_original_date:day(900)
+  }));
+  const ranked=hot.scoreCandidates(tv,{snapshots:[]},NOW,null);
+  assert.equal(ranked.length,15);
+  assert.equal(ranked.filter(x=>x.surs_hot_premiere_kind==='season').length,15);
+});
+test('a 200-day-old highly rated movie cannot outrank qualified current releases',()=>{
+  const now={type:'movie',id:400,poster_path:'/p',
+    vote_average:7.8,vote_count:900,popularity:90,
+    surs_hot_premiere_date:day(20),surs_hot_original_date:day(20)};
+  const old={...now,id:401,vote_average:9.3,
+    vote_count:18000,popularity:800,
+    surs_hot_premiere_date:day(200),surs_hot_original_date:day(200)};
+  const ranked=hot.scoreCandidates([old,now],{snapshots:[]},NOW,null);
+  assert.deepEqual(ranked.map(x=>x.id),[400,401]);
 });
