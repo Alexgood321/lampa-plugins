@@ -6,9 +6,11 @@ const path = require('node:path');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const DAY = 86400000;
-const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
+// Never pad the Hot shelf with older or weak films just to reach a target count.
+const MIN_ITEMS = 0, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
+const PREMIERE_WINDOW_DAYS = 60, DIGITAL_ORIGINAL_MAX_DAYS = 120;
 const MAX_SEASON_CALLS = 45;
-const QUALITY_FLOOR = 7.2, MIN_VOTES = 100, ORIGINAL_MAX_AGE = 730;
+const QUALITY_FLOOR = 7.2, MIN_VOTES = 100;
 const EXCLUDED = {movie:[16,99,10770],tv:[16,99,10763,10764,10766,10767]};
 const round = (n,dp=2) => Math.round(n * 10**dp) / 10**dp;
 const dateOnly = d => new Date(d).toISOString().slice(0,10);
@@ -51,14 +53,14 @@ function tvPremiere(details,now) {
   const original=isoDate(details.first_air_date);
   const recent=(details.seasons||[]).filter(s=>Number.isInteger(s.season_number)&&s.season_number>=2)
     .map(s=>({date:isoDate(s.air_date),number:s.season_number}))
-    .filter(s=>s.date&&daysSince(s.date,now)>=0&&daysSince(s.date,now)<=550)
+    .filter(s=>s.date&&daysSince(s.date,now)>=0&&daysSince(s.date,now)<=PREMIERE_WINDOW_DAYS)
     .sort((a,b)=>b.date.localeCompare(a.date));
   if(recent[0]&&(!original||recent[0].date>original))
     return {date:recent[0].date,kind:'season',number:recent[0].number,original};
   return {date:original,kind:'series',original};
 }
 function discoveryJobs(now) {
-  const start=dateOnly(new Date(new Date(now).getTime()-550*DAY));
+  const start=dateOnly(new Date(new Date(now).getTime()-PREMIERE_WINDOW_DAYS*DAY));
   const end=dateOnly(now);
   const jobs=[];
   for(const type of ['movie','tv'])for(const span of ['day','week'])for(let page=1;page<=2;page++)
@@ -160,7 +162,7 @@ function verifySeason(c,details,now) {
     isoDate(e.air_date)&&daysSince(e.air_date,now)>=0);
   if(!released.length)return false;
   const premiere=released.map(e=>isoDate(e.air_date)).sort()[0];
-  if(daysSince(premiere,now)>550)return false;
+  if(daysSince(premiere,now)>PREMIERE_WINDOW_DAYS)return false;
   c.surs_hot_premiere_date=premiere;
   c.surs_hot_season_verified=true;
   c.surs_hot_episodes_released=released.length;
@@ -190,10 +192,14 @@ function growthFor(c,history,now) {
 }
 function eligibilityReason(c,now) {
   if(!c.poster_path)return 'poster_missing';
-  if(c.surs_hot_age<0||c.surs_hot_age>550)return 'premiere_outside_window';
-  if(c.surs_hot_original_date&&
-    daysSince(c.surs_hot_original_date,now)>ORIGINAL_MAX_AGE)
-    return 'original_too_old';
+  if(c.surs_hot_age<0||c.surs_hot_age>PREMIERE_WINDOW_DAYS)
+    return 'premiere_outside_window';
+  if(c.type==='movie'&&c.surs_hot_original_date){
+    const originalAge=daysSince(c.surs_hot_original_date,now);
+    const cap=c.surs_hot_premiere_kind==='digital'?
+      DIGITAL_ORIGINAL_MAX_DAYS:PREMIERE_WINDOW_DAYS;
+    if(originalAge<0||originalAge>cap)return 'original_too_old';
+  }
   if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_verified)
     return 'season_not_verified';
   if(c.surs_hot_quality<QUALITY_FLOOR)return 'quality_below_floor';
@@ -265,15 +271,16 @@ function nextHistory(history,candidates,now) {
   return {schema:1,snapshots:[...old,{date:day,items}].sort((a,b)=>a.date.localeCompare(b.date))};
 }
 function validateFeed(feed,now) {
-  if(!feed||feed.schema!==1||!Array.isArray(feed.items)||feed.items.length<MIN_ITEMS||
-    feed.items.length>MAX_ITEMS||!Number.isFinite(Date.parse(feed.generated_at)))
+  if(!feed||feed.schema!==1||!Array.isArray(feed.items)||
+    feed.items.length<MIN_ITEMS||feed.items.length>MAX_ITEMS||
+    !Number.isFinite(Date.parse(feed.generated_at)))
     throw Error('Invalid Hot Discovery feed');
   const seen=new Set();
   for(const c of feed.items) {
     if(!['movie','tv'].includes(c.type)||!Number.isSafeInteger(c.id)||c.id<=0||
       typeof c.poster_path!=='string'||!c.poster_path.startsWith('/')||
       !isoDate(c.surs_hot_premiere_date)||daysSince(c.surs_hot_premiere_date,now)<0||
-      daysSince(c.surs_hot_premiere_date,now)>550||
+      daysSince(c.surs_hot_premiere_date,now)>PREMIERE_WINDOW_DAYS||
       !Number.isFinite(c.surs_hot_score)||seen.has(identity(c)))
       throw Error('Invalid item '+identity(c));
     seen.add(identity(c));
@@ -307,7 +314,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
   transport=requestJSON,detailLimit=MAX_DETAILS}={}) {
   if(!tmdbToken)throw Error('Missing TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY');
   const nowDate=new Date(now),stats={tmdb_calls:0,tmdb_failures:0,mdblist_calls:0,
-    mdblist_failures:0,season_calls:0,discovered:0,us_verified:0,eligible:0};
+    mdblist_failures:0,season_calls:0,discovered:0,us_verified:0,
+    eligible:0,excluded_old_premiere:0,excluded_old_movie:0};
   const tmdb=async relative=>{
     stats.tmdb_calls++;
     const keyAuth=/^[0-9a-f]{32}$/i.test(tmdbToken);
@@ -361,6 +369,9 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
     }
   }
   stats.discovered=found.size;
+  // A blank discovery response is more likely an upstream error than a real
+  // empty month. Never replace a verified feed with that result.
+  if(!stats.discovered)throw Error('Invalid Hot Discovery feed: no candidates discovered');
   // Round-robin discovery lanes to prevent Trending or Popularity monopolizing details.
   const keys=[],visited=new Set(),queues=[...buckets.values()].map(x=>[...new Set(x)]);
   let remaining=true;
@@ -380,7 +391,20 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
     if(!data||!data.id||!eligibleUS(data,type)||!data.poster_path||blocked(data,type))return null;
     const p=type==='movie'?moviePremiere(data,nowDate):tvPremiere(data,nowDate);
     const age=daysSince(p.date,nowDate);
-    if(age<0||age>550)return null;
+    if(age<0||age>PREMIERE_WINDOW_DAYS){
+      stats.excluded_old_premiere++;return null;
+    }
+    // First digital availability is relevant only to a film whose original
+    // theatrical release is not older than four months. A stale library
+    // rerelease is never a fresh US premiere.
+    if(type==='movie'&&p.original){
+      const originalAge=daysSince(p.original,nowDate);
+      const cap=p.kind==='digital'?DIGITAL_ORIGINAL_MAX_DAYS:
+        PREMIERE_WINDOW_DAYS;
+      if(originalAge<0||originalAge>cap){
+        stats.excluded_old_movie++;return null;
+      }
+    }
     return toCard(raw,data,type,p);
   });
   const candidates=detailRows.filter(Boolean);
@@ -416,10 +440,12 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',listIds=[],history=
     if(reason)rejections[reason]=(rejections[reason]||0)+1;
     else stats.eligible++;
   }
-  const feed={schema:1,algorithm:'hot-discovery-4.1',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.2',mode:'primary',
     generated_at:nowDate.toISOString(),sources:{tmdb:true,mdblist:!!mdblistKey},
     items,diagnostics:{...stats,selected:items.length,
-      quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,rejections,
+      quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
+      premiere_window_days:PREMIERE_WINDOW_DAYS,
+      digital_original_max_days:DIGITAL_ORIGINAL_MAX_DAYS,rejections,
       provisional:items.filter(c=>c.surs_hot_provisional).length,
       measured_growth:items.filter(c=>c.surs_hot_growth_measured).length,
       top10:items.slice(0,10).map(c=>({id:c.id,type:c.type,title:c.title,
