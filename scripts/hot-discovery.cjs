@@ -8,7 +8,8 @@ const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
 const DAY = 86400000;
 const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
-const MAX_KP_CALLS = 45;
+// Total HTTP calls per run; each new rated title may cost search + details.
+const MAX_KP_CALLS = 45, KP_RATING_TTL_DAYS = 3, KP_MISS_TTL_DAYS = 1;
 const MAX_SEASON_CALLS = 45;
 const QUALITY_FLOOR = 7.2, MIN_VOTES = 100, ORIGINAL_MAX_AGE = 730;
 const RECENT_DAYS = 60; // The main discovery window, not a hard age cutoff.
@@ -148,17 +149,23 @@ function parseMdb(info) {
   }
   return result;
 }
-function parseKinopoisk(data,imdbId) {
-  if(!/^tt\d{6,12}$/.test(String(imdbId||'')))return {};
+function matchedKpSearchRow(data,imdbId) {
+  if(!/^tt\d{6,12}$/.test(String(imdbId||'')))return null;
   const rows=Array.isArray(data?.items)?data.items:
     Array.isArray(data?.films)?data.films:
     data&&data.kinopoiskId?[data]:[];
-  const item=rows.find(x=>String(x.imdbId||'')===imdbId);
+  const row=rows.find(x=>String(x.imdbId||'')===imdbId);
+  return row&&Number.isSafeInteger(Number(row.kinopoiskId))&&
+    Number(row.kinopoiskId)>0?row:null;
+}
+function parseKinopoisk(data,imdbId) {
+  const item=matchedKpSearchRow(data,imdbId);
   if(!item)return {};
   const result={};
   const kp=number(item.ratingKinopoisk),kv=number(item.ratingKinopoiskVoteCount);
-  if(kp>=1&&kp<=10&&kv>=1)result.kp={value:kp,votes:kv,
-    via:'kinopoisk_unofficial',kinopoisk_id:item.kinopoiskId};
+  if(kp>=1&&kp<=10&&kv>=1)
+    result.kp={value:kp,votes:kv,via:'kinopoisk_unofficial',
+      kinopoisk_id:item.kinopoiskId};
   const imdb=number(item.ratingImdb),iv=number(item.ratingImdbVoteCount);
   if(imdb>=1&&imdb<=10&&iv>=1)
     result.imdb={value:imdb,votes:iv,via:'kinopoisk_unofficial'};
@@ -491,12 +498,14 @@ function toCard(raw,details,type,premiere) {
       details.imdb_id||''))?(details.external_ids?.imdb_id||details.imdb_id):null};
   return card;
 }
-async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',
+async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpCache={},
   listIds=[],history={},previous=null,
   transport=requestJSON,detailLimit=MAX_DETAILS}={}) {
   if(!tmdbToken)throw Error('Missing TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY');
   const nowDate=new Date(now),stats={tmdb_calls:0,tmdb_failures:0,mdblist_calls:0,
     mdblist_failures:0,kp_calls:0,kp_failures:0,kp_matched:0,
+    kp_search_calls:0,kp_detail_calls:0,kp_cache_hits:0,
+    kp_search_empty:0,kp_detail_unrated:0,kp_no_imdb:0,
     season_calls:0,discovered:0,us_verified:0,eligible:0};
   const tmdb=async relative=>{
     stats.tmdb_calls++;
@@ -598,22 +607,63 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',
       }catch(e){stats.mdblist_failures++;}
     });
   }
+  const kpEntries={...(kpCache?.entries||{})},nowDay=dateOnly(nowDate);
+  const validKpEntry=(row,imdbId)=>{
+    if(!row||row.imdbId!==imdbId||!isoDate(row.checked_at))return false;
+    const age=daysSince(row.checked_at,nowDate);
+    if(age<0||age>(row.kp?KP_RATING_TTL_DAYS:KP_MISS_TTL_DAYS))return false;
+    return !row.kp||!!stableRating(row.kp);
+  };
   if(kinopoiskKey){
-    const subset=candidates.filter(c=>c.surs_hot_imdb_id)
-      .sort((a,b)=>number(b.popularity)-number(a.popularity))
-      .slice(0,MAX_KP_CALLS);
-    await poolMap(subset,2,async c=>{
-      stats.kp_calls++;
+    // Reserve the daily quota for works that are plausible top-40 picks.
+    const preview=scoreCandidates(candidates,history,nowDate,previous);
+    const indexed=new Map(candidates.map(c=>[identity(c),c]));
+    const order=[...preview.map(c=>indexed.get(identity(c))),
+      ...candidates.slice().sort((a,b)=>
+        number(b.popularity)-number(a.popularity))],seen=new Set();
+    for(const c of order){
+      if(!c||seen.has(identity(c)))continue;
+      seen.add(identity(c));
+      const imdbId=c.surs_hot_imdb_id;
+      if(!imdbId){stats.kp_no_imdb++;continue;}
+      const cached=kpEntries[imdbId];
+      if(validKpEntry(cached,imdbId)){
+        stats.kp_cache_hits++;
+        if(cached.kp)stats.kp_matched++;
+        const prior=c.surs_hot_ratings||{};
+        c.surs_hot_ratings={...prior,...(cached.kp?{kp:cached.kp,
+          ...(!prior.imdb&&cached.imdb?{imdb:cached.imdb}:{})}:{})};
+        continue;
+      }
+      if(stats.kp_calls+2>MAX_KP_CALLS)continue;
       try{
-        const info=await transport(KP_API+'?imdbId='+
-          encodeURIComponent(c.surs_hot_imdb_id),{'X-API-KEY':kinopoiskKey});
-        const parsed=parseKinopoisk(info,c.surs_hot_imdb_id);
-        if(parsed.kp)stats.kp_matched++;
-        const old=c.surs_hot_ratings||{};
-        c.surs_hot_ratings={...old,...parsed};
-        if(old.imdb)c.surs_hot_ratings.imdb=old.imdb;
+        stats.kp_calls++;stats.kp_search_calls++;
+        const found=await transport(KP_API+'?imdbId='+encodeURIComponent(imdbId),
+          {'X-API-KEY':kinopoiskKey});
+        const row=matchedKpSearchRow(found,imdbId);
+        if(!row){
+          stats.kp_search_empty++;
+          kpEntries[imdbId]={imdbId,checked_at:nowDay,kp:null};
+          continue;
+        }
+        let parsed=parseKinopoisk(row,imdbId);
+        // The search endpoint doesn't expose the vote counts. Fetch details
+        // only for an exact IMDb-ID match, and verify the detail response too.
+        if(!parsed.kp){
+          stats.kp_calls++;stats.kp_detail_calls++;
+          const details=await transport(KP_API+'/'+row.kinopoiskId,
+            {'X-API-KEY':kinopoiskKey});
+          parsed=parseKinopoisk(details,imdbId);
+        }
+        if(!parsed.kp)stats.kp_detail_unrated++;
+        else stats.kp_matched++;
+        kpEntries[imdbId]={imdbId,checked_at:nowDay,
+          kp:parsed.kp||null,imdb:parsed.imdb||null};
+        const prior=c.surs_hot_ratings||{};
+        c.surs_hot_ratings={...prior,...parsed};
+        if(prior.imdb)c.surs_hot_ratings.imdb=prior.imdb;
       }catch(e){stats.kp_failures++;}
-    });
+    }
   }
   if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
     throw Error('TMDB partial outage: refusing to replace last verified feed');
@@ -679,17 +729,20 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',
         premiere:c.surs_hot_premiere_date,kind:c.surs_hot_premiere_kind,
         score:c.surs_hot_score,quality:c.surs_hot_quality,heat:c.surs_hot_heat}))}};
   validateFeed(feed,nowDate);
-  return {feed,audit,history:nextHistory(history,candidates,nowDate)};
+  return {feed,audit,history:nextHistory(history,candidates,nowDate),
+    kpCache:{schema:1,entries:kpEntries}};
 }
 function readJSON(file,fallback) {try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch(e){return fallback;}}
 async function main(){
   const root=path.join(__dirname,'..'),out=path.join(root,'data','hot-discovery.json');
   const historyFile=path.join(root,'data','hot-discovery-history.json');
   const auditFile=path.join(root,'data','hot-discovery-audit.json');
+  const kpCacheFile=path.join(root,'data','hot-discovery-kp-cache.json');
   const now=new Date(),old=readJSON(out,null);
   const result=await build({now,tmdbToken:process.env.TMDB_READ_ACCESS_TOKEN||
     process.env.TMDB_API_KEY||'',mdblistKey:process.env.MDBLIST_API_KEY||'',
     kinopoiskKey:process.env.KINOPOISK_API_KEY||'',
+    kpCache:readJSON(kpCacheFile,{schema:1,entries:{}}),
     listIds:(process.env.MDBLIST_LIST_IDS||'').split(',').map(x=>x.trim()).filter(Boolean),
     previous:old,history:readJSON(historyFile,{schema:1,snapshots:[]})});
   fs.mkdirSync(path.dirname(out),{recursive:true});
@@ -701,13 +754,19 @@ async function main(){
   // Publish a newly versioned algorithm immediately, even on the same day.
   const sameDay=old&&old.schema===1&&
     old.algorithm===result.feed.algorithm&&
-    dateOnly(old.generated_at)===dateOnly(now);
+    dateOnly(old.generated_at)===dateOnly(now)&&
+    ['kinopoisk','mdblist'].every(k=>
+      !!old.sources?.[k]===!!result.feed.sources?.[k])&&
+    number(result.feed.diagnostics?.rating_coverage?.kinopoisk)<
+      number(old.diagnostics?.rating_coverage?.kinopoisk)+5;
   if(!sameDay){
     fs.writeFileSync(out+'.tmp',content);fs.renameSync(out+'.tmp',out);
   }
   fs.writeFileSync(historyFile+'.tmp',hist);fs.renameSync(historyFile+'.tmp',historyFile);
   fs.writeFileSync(auditFile+'.tmp',JSON.stringify(result.audit,null,2)+'\n');
   fs.renameSync(auditFile+'.tmp',auditFile);
+  fs.writeFileSync(kpCacheFile+'.tmp',JSON.stringify(result.kpCache,null,2)+'\n');
+  fs.renameSync(kpCacheFile+'.tmp',kpCacheFile);
   process.stdout.write(JSON.stringify({generated_at:result.feed.generated_at,
     selected:result.feed.items.length,diagnostics:result.feed.diagnostics})+'\n');
 }
@@ -715,4 +774,4 @@ if(require.main===module)main().catch(e=>{console.error(e.message);process.exitC
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
   scoreCandidates,recencyTier,attentionFor,curatedSelection,eligibilityReason,
   verifySeason,nextHistory,validateFeed,build,parseMdb,parseKinopoisk,
-  qualityAgreement,daysSince};
+  qualityAgreement,matchedKpSearchRow,daysSince};

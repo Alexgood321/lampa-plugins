@@ -54,27 +54,51 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json
-          if git diff --cached --quiet; then
+          files=(data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json)
+          temp="$(mktemp -d)"
+          trap 'rm -rf "$temp"' EXIT
+          changed=()
+          for file in "${files[@]}"; do
+            [[ -f "$file" ]] || continue
+            if ! git ls-files --error-unmatch "$file" >/dev/null 2>&1 || ! git diff --quiet -- "$file"; then
+              cp "$file" "$temp/$(basename "$file")"
+              changed+=("$file")
+            fi
+          done
+          if [[ ${#changed[@]} -eq 0 ]]; then
             echo "No changes to publish" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          git commit -m 'data(hot): update verified ranking and snapshots [skip ci]'
-          # A GitHub API edit can land while this 3h collector is running.
-          # Retry non-fast-forward pushes without force-pushing over user changes.
+          # Never resolve conflicts by force-pushing or rebasing generated JSON.
+          # Re-apply only new generated files on the latest main in each attempt.
           pushed=0
           for attempt in 1 2 3; do
+            git fetch --depth=25 origin main
+            git reset --hard origin/main
+            current_date="$(node -e "try{console.log(require('./data/hot-discovery-audit.json').generated_at)}catch(e){console.log('')}")"
+            new_date="$(node -p "require('$temp/hot-discovery-audit.json').generated_at")"
+            if [[ -n "$current_date" && "$current_date" > "$new_date" ]]; then
+              echo "A newer Hot Discovery audit was published; keeping remote data." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            for file in "${changed[@]}"; do
+              cp "$temp/$(basename "$file")" "$file"
+            done
+            node -e "const fs=require('fs');for(const p of process.argv.slice(1))JSON.parse(fs.readFileSync(p,'utf8'))" "${changed[@]}"
+            git add -- "${changed[@]}"
+            if git diff --cached --quiet; then
+              pushed=1
+              break
+            fi
+            git commit -m 'data(hot): update verified ranking, snapshots and KP cache [skip ci]'
             if git push origin HEAD:main; then
               pushed=1
               break
             fi
-            git fetch --depth=20 origin main
-            git rebase origin/main || { git rebase --abort || true; exit 1; }
           done
           if [[ "$pushed" != 1 ]]; then
             echo "::error::Unable to publish audited feed without overwriting upstream work."
             exit 1
           fi
           echo "Updated Hot Discovery; previous good feed preserved in Git history." >> "$GITHUB_STEP_SUMMARY"
-          echo "### Candidate audit" >> "$GITHUB_STEP_SUMMARY"
           node -e "const a=require('./data/hot-discovery-audit.json');console.log('Candidates evaluated:',a.candidate_total,'Eligible:',a.eligible,'Selected:',a.selected)" >> "$GITHUB_STEP_SUMMARY"

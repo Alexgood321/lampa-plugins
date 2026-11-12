@@ -388,6 +388,21 @@ test('Kinopoisk API is matched only by exact IMDb ID, not a translated title',()
   assert.deepEqual(hot.parseKinopoisk({items:[{
     imdbId:id,ratingKinopoisk:8.6,ratingKinopoiskVoteCount:0}]},id),{});
 });
+test('Kinopoisk search omits votes; details are verified with exact IMDb ID',()=>{
+  const id='tt1234567',result={items:[{imdbId:id,kinopoiskId:301,
+    ratingKinopoisk:8.2,ratingImdb:8.1}]};
+  assert.equal(hot.matchedKpSearchRow(result,id).kinopoiskId,301);
+  assert.deepEqual(hot.parseKinopoisk(result,id),{});
+  assert.deepEqual(hot.parseKinopoisk({
+    imdbId:id,kinopoiskId:301,ratingKinopoisk:8.2,
+    ratingKinopoiskVoteCount:1400,ratingImdb:8.1,
+    ratingImdbVoteCount:1900},id),{
+      kp:{value:8.2,votes:1400,via:'kinopoisk_unofficial',kinopoisk_id:301},
+      imdb:{value:8.1,votes:1900,via:'kinopoisk_unofficial'}});
+  assert.deepEqual(hot.parseKinopoisk({
+    imdbId:'tt7654321',kinopoiskId:301,
+    ratingKinopoisk:9,ratingKinopoiskVoteCount:10000},id),{});
+});
 test('three high agreeing ratings beat two; three mediocre ones earn no bonus',()=>{
   const base={vote_average:8.3,vote_count:6000};
   const three={...base,surs_hot_ratings:{
@@ -433,14 +448,18 @@ test('one-day movement is not yet 15 percent confirmed growth',()=>{
     {attention:.45,quality:.35,freshness:.05,growth:.15});
 });
 test('full pipeline combines verified KP and IMDb scores and audits all candidates',async()=>{
+  let lastKpImdbId='';
   const transport=async(url,headers={})=>{
     const parsed=new URL(url),pathname=parsed.pathname;
     if(url.startsWith('https://kinopoiskapiunofficial.tech/')){
       assert.equal(headers['X-API-KEY'],'kp-fixture');
-      const imdbId=parsed.searchParams.get('imdbId');
-      return {items:[{imdbId,kinopoiskId:230,ratingKinopoisk:8.2,
-        ratingKinopoiskVoteCount:5000,ratingImdb:8.1,
-        ratingImdbVoteCount:9000}]};
+      if(pathname.endsWith('/230'))return {
+        imdbId:lastKpImdbId,kinopoiskId:230,
+        ratingKinopoisk:8.2,ratingKinopoiskVoteCount:5000,
+        ratingImdb:8.1,ratingImdbVoteCount:9000};
+      lastKpImdbId=parsed.searchParams.get('imdbId');
+      return {items:[{imdbId:lastKpImdbId,kinopoiskId:230,
+        ratingKinopoisk:8.2,ratingImdb:8.1}]};
     }
     if(url.startsWith('https://api.mdblist.com/')){
       const id=Number(pathname.split('/').filter(Boolean).at(-1));
@@ -469,6 +488,18 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
   assert.ok(result.feed.diagnostics.kp_matched>0);
+  assert.ok(result.feed.diagnostics.kp_detail_calls>0);
+  assert.ok(result.feed.diagnostics.kp_search_calls>0);
+  assert.ok(result.feed.diagnostics.kp_calls<=45);
+  assert.ok(Object.keys(result.kpCache.entries).length>0);
+  const cached=await hot.build({now:NOW,tmdbToken:'sample-token',
+    mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
+    kpCache:result.kpCache,transport,history:{snapshots:[]},detailLimit:80});
+  assert.ok(cached.feed.diagnostics.kp_cache_hits>0);
+  assert.ok(cached.feed.diagnostics.rating_coverage.kinopoisk>=
+    result.feed.diagnostics.rating_coverage.kinopoisk);
+  assert.ok(cached.feed.diagnostics.kp_calls<=45);
+  assert.ok(!JSON.stringify(cached.kpCache).includes('kp-fixture'));
   assert.ok(result.feed.diagnostics.mdblist_calls>0);
   assert.ok(result.feed.diagnostics.rating_coverage.triple>0);
   assert.ok(result.feed.items.some(x=>x.surs_hot_rating_agreement.level==='triple_high'));
