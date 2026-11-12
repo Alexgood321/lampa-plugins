@@ -2,7 +2,7 @@
   "schema": 1,
   "algorithm": "hot-discovery-4.4",
   "mode": "primary",
-  "generated_at": "2026-11-12T15:06:38.128Z",
+  "generated_at": "2026-11-12T15:08:11.953Z",
   "sources": {
     "tmdb": true,
     "mdblist": false,
