@@ -799,7 +799,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         c.surs_hot_kinopoisk_popularity_rank=rank;
         stats.kp_preview_ranked_from_cache=(stats.kp_preview_ranked_from_cache||0)+1;
       }
-      stats.kp_preview_ratings_from_cache=(stats.kp_preview_ratings_from_cache||0)+1;
+      if(cached.kp||cached.imdb)
+        stats.kp_preview_ratings_from_cache=(stats.kp_preview_ratings_from_cache||0)+1;
     }
     // Reserve the daily quota for works that are plausible top-40 picks.
     const preview=scoreCandidates(candidates,history,nowDate,previous,'demand');
