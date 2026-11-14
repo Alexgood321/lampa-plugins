@@ -49,7 +49,7 @@ jobs:
       - run: node --check scripts/kp-demand-history.cjs
       - run: node --check scripts/hot-ranking-4-7.cjs
       - run: node --check scripts/hot-source-budget.cjs
-      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs
+      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs tests/hot-kp-pacing.test.cjs
       - run: node scripts/build-surs.cjs --check
       - run: node --check surs-editor.js
       - run: node --check surs.js
@@ -62,7 +62,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.9 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 4.10 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'feat/hot-discovery-')
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -83,7 +83,7 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.9')throw Error('New 4.6 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-4.10')throw Error('New 4.6 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
@@ -112,6 +112,19 @@ jobs:
               after.diagnostics.tmdb_cached_popularity_unobserved,
             missing_current_tmdb_votes:
               after.diagnostics.tmdb_cached_vote_count_unobserved}));
+          const pace=after.diagnostics;
+          if(pace.kp_pacing_slot==null||pace.kp_pacing_ceiling==null||
+            pace.kp_pacing_run_allowance==null||
+            pace.kp_calls>pace.kp_pacing_run_allowance||
+            pace.kp_daily_used>pace.kp_pacing_ceiling)
+            throw Error('KP paced UTC quota gate violated');
+          console.log('KP_PACING:',JSON.stringify({
+            slot:pace.kp_pacing_slot,ceiling:pace.kp_pacing_ceiling,
+            allowance:pace.kp_pacing_run_allowance,used:pace.kp_daily_used,
+            calls:pace.kp_calls,cache_preview:pace.kp_preview_ranked_from_cache,
+            direct_id_matches:pace.kp_known_id_refresh_matches,
+            deferred:pace.kp_rating_budget_deferred
+          }));
           const evidence=after.diagnostics.external_demand;
           console.log('BEFORE:',before.algorithm,before.items.length,'items');
           console.log('AFTER:',after.algorithm,after.items.length,'items');
@@ -140,7 +153,7 @@ jobs:
           if(after.items.some(x=>x.surs_hot_attention_sources>2))
             throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.9 real dry-run (no publishing)\n'+
+            '### Hot 4.10 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+
@@ -185,7 +198,8 @@ jobs:
           const a=first.diagnostics,b=again.diagnostics;
           if(!b.tmdb_detail_cache_hits||b.tmdb_calls>=a.tmdb_calls)
             throw Error('TMDB cache did not reduce repeated API calls');
-          if(b.kp_daily_used>210||b.kp_calls>45)
+          if(b.kp_daily_used>210||b.kp_calls>45||
+            b.kp_daily_used>b.kp_pacing_ceiling)
             throw Error('Kinopoisk API budget exceeded');
           console.log('REPEAT_CACHE:',JSON.stringify({
             before_tmdb_calls:a.tmdb_calls,repeat_tmdb_calls:b.tmdb_calls,

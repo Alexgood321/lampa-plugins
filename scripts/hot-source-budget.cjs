@@ -26,6 +26,30 @@ function dailyBudget(prior,now,{daily=KP_DAILY_BUDGET,run=45}={}){
     get runUsed(){return runUsed;},get carried(){return start;}};
 }
 
+// GitHub Actions runs at minute 17 every three UTC hours. A cumulative
+// UTC-slot allowance prevents retries/manual runs from spending an entire
+// day's quota in the morning while permitting unspent earlier slots later.
+function pacedRunAllowance(prior,now,{daily=KP_DAILY_BUDGET,run=45,slots=8}={}){
+  const date=new Date(now),day=ymd(date);
+  const safe=Number.isSafeInteger(prior?.used)&&prior.used>=0;
+  const spent=prior?.date===day&&safe?prior.used:0;
+  const minute=date.getUTCHours()*60+date.getUTCMinutes();
+  const slot=Math.min(slots-1,Math.floor(minute/(1440/slots)));
+  const cumulativeCap=Math.floor(daily*(slot+1)/slots);
+  return {date:day,slot,slots,cumulative_cap:cumulativeCap,spent,
+    allowed:Math.max(0,Math.min(run,cumulativeCap-spent)),
+    remaining_day:Math.max(0,daily-spent)};
+}
+// Search misses are not negative ratings. Older non-trending IDs need
+// fewer repeated probes; recent or trending titles can be retried sooner.
+function negativeCacheKeepDays(card){
+  const recent=Number(card?.surs_hot_rank_age);
+  const trend=Number(card?.surs_hot_trend_day)>0||
+    Number(card?.surs_hot_trend_week)>0;
+  if(trend||Number.isFinite(recent)&&recent<=30)return 0;
+  if(Number.isFinite(recent)&&recent>120)return 3;
+  return 1;
+}
 function memo(raw){
   return {schema:1,entries:{...((raw&&raw.entries&&
     typeof raw.entries==='object'&&!Array.isArray(raw.entries))?raw.entries:{})}};
@@ -116,4 +140,5 @@ function prune(cache,now){
 }
 module.exports={KP_DAILY_BUDGET,TMDB_DETAIL_TTL_HOURS,
   TMDB_SEASON_TTL_HOURS,TMDB_CACHE_RETENTION_HOURS,dailyBudget,memo,
-  cached,save,normalizeDetail,normalizeSeason,overlayFreshSignals,prune};
+  cached,save,normalizeDetail,normalizeSeason,overlayFreshSignals,prune,
+  pacedRunAllowance,negativeCacheKeepDays};
