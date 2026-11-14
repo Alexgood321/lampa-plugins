@@ -94,9 +94,9 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.11');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.12');
   assert.equal(result.feed.diagnostics.ranking_model,
-    'source-aware-demand-first-v4.11-integrity');
+    'source-aware-demand-first-v4.12-evidence');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,60);
@@ -485,7 +485,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',
     mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
     transport,history:{snapshots:[]},detailLimit:80});
-  assert.equal(result.feed.algorithm,'hot-discovery-4.11');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.12');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
@@ -573,7 +573,7 @@ test('new popularity source is optional, cached and never counted as film views'
   };
   const first=await hot.build({now:NOW_DATE,tmdbToken:'test',
     kinopoiskKey:'kp-test',transport,history:{snapshots:[]},detailLimit:24});
-  assert.equal(first.feed.algorithm,'hot-discovery-4.11');
+  assert.equal(first.feed.algorithm,'hot-discovery-4.12');
   assert.equal(first.kpCache.popular_history.length,1);
   assert.equal(first.kpCache.rating_history.length,1);
   assert.equal(first.feed.sources.kinopoisk_popularity,true);

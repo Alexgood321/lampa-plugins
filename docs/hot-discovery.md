@@ -1,3 +1,30 @@
+# Hot Discovery 4.12: current-interest evidence for one-rating titles
+
+## Problem
+
+4.11 selected 40 out of 40 eligible titles and 8 cards had only a TMDB rating. Six of these eight had **no position in TMDB Trending day/week, no Kinopoisk Top-60 rank, and no measured positive momentum**. For a shelf specifically named *Hot Discovery*, a high cumulative TMDB average alone is not a confirmation of actual current interest. The algorithm did not force a quota in code, but its existing eligibility rules admitted all 40. Artificially filling the entire shelf is not the objective.
+
+## Admission, without score manipulation
+
+The **existing 50/30/15/5 rank formula is unchanged**. Only candidates with **one sufficiently backed rating source** need a current-interest reason:
+- A valid current TMDB Trending (24h/7d; up to position 40), or verified KP Popular Top-60 rank. Both are activity proxies, not real views.
+- Or a *recent emerging* release within 30 days, at least 500 TMDB votes and popularity above the 65th percentile among same-type candidates. This prevents excluding freshly launched titles that have yet to enter Trending.
+- Or measured **positive** multi-day TMDB momentum (not flat/unknown), growth signal >=0.12, at least 500 TMDB votes, >=65th percentile, age <=120 days.
+
+A single-rating film with none of those signals is withheld as `single_source_interest_unconfirmed`. The missing rating is still treated as **unknown**, not poor. Two- and three-rating titles are not subject to this additional evidence requirement; they retain the existing quality, age and season criteria. This is a conservative editorial choice for a HOT shelf, not proof of lower audience satisfaction with niche titles.
+
+`surs_hot_interest_evidence` records the decision for each selected card. `diagnostics.interest_evidence` provides counts for selected one-rating titles, top-20 current-interest evidence, signal origins and withheld one-rating titles. The rejection also appears in the audit so the loss of candidates is observable.
+
+## Validation
+
+Expanded regression coverage ensures single-rating Trending and emerging titles remain eligible; no popularity score is artificially reduced and multi-rated titles are unaffected. The PR live API dry-run checks that top-10 overlap remains >=8 and all selected one-rating cards have a current demand observation. Comparison is a selection audit, **not** ground-truth viewer engagement. Original source-integrity gate and quota remain in effect.
+
+## Rollback
+
+Revert the squash merge commit to restore 4.11. Previously generated feed/cache data is preserved in Git history.
+
+---
+
 # Hot Discovery 4.11: truthful zero values and upstream completeness
 
 ## Correctness repairs
