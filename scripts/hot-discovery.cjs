@@ -123,8 +123,11 @@ function discoveryJobs(now) {
       '&sort_by=popularity.desc&page='+page});
   return jobs;
 }
-async function requestJSON(url,headers={},post=null) {
+async function requestJSON(url,headers={},post=null,onAttempt=null) {
   for(let attempt=0;attempt<3;attempt++) {
+    // Invoke the quota callback BEFORE opening each HTTP attempt. A rejected
+    // budget is never caught and retried as an upstream failure.
+    if(typeof onAttempt==='function')onAttempt();
     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
     try {
       const res=await fetch(url,{signal:ctrl.signal,headers:{
@@ -714,9 +717,17 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     {daily:sourceBudget.KP_DAILY_BUDGET,run:MAX_KP_CALLS});
   stats.kp_daily_carried=kpBudget.carried;
   const kpRequest=async url=>{
-    if(!kpBudget.charge())throw Error('KP request budget exhausted');
-    stats.kp_calls++;
-    return transport(url,{'X-API-KEY':kinopoiskKey});
+    const onAttempt=()=>{
+      if(!kpBudget.charge())throw Error('KP request budget exhausted');
+      stats.kp_calls++;
+    };
+    const headers={'X-API-KEY':kinopoiskKey};
+    // Default transport retries 429/5xx up to three times, so every actual
+    // outbound HTTP attempt must be charged. Mock transports represent one
+    // physical call and keep deterministic test accounting.
+    if(transport===requestJSON)return requestJSON(url,headers,null,onAttempt);
+    onAttempt();
+    return transport(url,headers);
   };
   // The published top needs up to 3 calls/day. Daily vote-count sampling
   // needs its own reserved budget to avoid starvation by rating searches.
