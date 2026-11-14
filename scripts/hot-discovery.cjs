@@ -736,9 +736,14 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     });
   }
   const kpEntries={...(kpCache?.entries||{})},nowDay=dateOnly(nowDate);
-  const kpBudget=sourceBudget.dailyBudget(kpCache?.daily_budget,nowDate,
+  const pacing=sourceBudget.pacedRunAllowance(kpCache?.daily_budget,nowDate,
     {daily:sourceBudget.KP_DAILY_BUDGET,run:MAX_KP_CALLS});
+  const kpBudget=sourceBudget.dailyBudget(kpCache?.daily_budget,nowDate,
+    {daily:sourceBudget.KP_DAILY_BUDGET,run:pacing.allowed});
   stats.kp_daily_carried=kpBudget.carried;
+  stats.kp_pacing_slot=pacing.slot;
+  stats.kp_pacing_ceiling=pacing.cumulative_cap;
+  stats.kp_pacing_run_allowance=pacing.allowed;
   const kpRequest=async url=>{
     const onAttempt=()=>{
       if(!kpBudget.charge())throw Error('KP request budget exhausted');
@@ -763,13 +768,39 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   const voteReserve= todaysVotes>=KP_VOTE_REFRESH_DAILY?0:
     Math.min(8,KP_VOTE_REFRESH_DAILY-todaysVotes);
   const reserve=topReserve+voteReserve;
-  const validKpEntry=(row,imdbId)=>{
+  const validKpEntry=(row,imdbId,card=null)=>{
     if(!row||row.imdbId!==imdbId||!isoDate(row.checked_at))return false;
     const age=daysSince(row.checked_at,nowDate);
-    if(age<0||age>(row.kp?KP_RATING_TTL_DAYS:KP_MISS_TTL_DAYS))return false;
+    const missTtl=card?sourceBudget.negativeCacheKeepDays(card):KP_MISS_TTL_DAYS;
+    if(age<0||age>(row.kp?KP_RATING_TTL_DAYS:missTtl))return false;
     return !row.kp||!!stableRating(row.kp);
   };
   if(kinopoiskKey){
+    // Read all previously verified KP/IMDb evidence BEFORE ranking the preview.
+    // Before 4.10 the preview ignored its own cache and wrongly prioritized
+    // additional lookups according to TMDB alone.
+    const currentPopular=kpCache?.popular;
+    const popAge=currentPopular?.fetched_at?
+      (nowDate.getTime()-Date.parse(currentPopular.fetched_at))/3600000:Infinity;
+    const usablePopular=currentPopular?.source==='TOP_POPULAR_ALL'&&
+      Array.isArray(currentPopular.entries)&&popAge>=0&&
+      popAge<=KP_POPULAR_CACHE_HOURS;
+    const cachedRank=usablePopular?new Map(currentPopular.entries
+      .map(x=>[Number(x.id),Number(x.rank)])):new Map();
+    for(const c of candidates){
+      const id=c.surs_hot_imdb_id,cached=id&&kpEntries[id];
+      if(!validKpEntry(cached,id,c))continue;
+      const prior=c.surs_hot_ratings||{};
+      c.surs_hot_ratings={...prior,
+        ...(cached.kp?{kp:cached.kp}:{}),
+        ...(!prior.imdb&&cached.imdb?{imdb:cached.imdb}:{})};
+      const rank=cachedRank.get(Number(cached.kp?.kinopoisk_id));
+      if(Number.isInteger(rank)&&rank>=1&&rank<=KP_POPULAR_PAGES*20){
+        c.surs_hot_kinopoisk_popularity_rank=rank;
+        stats.kp_preview_ranked_from_cache=(stats.kp_preview_ranked_from_cache||0)+1;
+      }
+      stats.kp_preview_ratings_from_cache=(stats.kp_preview_ratings_from_cache||0)+1;
+    }
     // Reserve the daily quota for works that are plausible top-40 picks.
     const preview=scoreCandidates(candidates,history,nowDate,previous,'demand');
     const indexed=new Map(candidates.map(c=>[identity(c),c]));
@@ -782,13 +813,40 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
       const imdbId=c.surs_hot_imdb_id;
       if(!imdbId){stats.kp_no_imdb++;continue;}
       const cached=kpEntries[imdbId];
-      if(validKpEntry(cached,imdbId)){
+      if(validKpEntry(cached,imdbId,c)){
         stats.kp_cache_hits++;
         if(cached.kp)stats.kp_matched++;
         const prior=c.surs_hot_ratings||{};
         c.surs_hot_ratings={...prior,...(cached.kp?{kp:cached.kp,
           ...(!prior.imdb&&cached.imdb?{imdb:cached.imdb}:{})}:{})};
         continue;
+      }
+      // If an exact IMDb/KP match was already verified previously, refresh
+      // its rating with ONE verified detail call rather than repeating search
+      // + detail. Never accept details for a different IMDb/KP pair.
+      const knownKpId=Number(cached?.imdbId===imdbId&&
+        cached?.kp?.kinopoisk_id);
+      if(Number.isSafeInteger(knownKpId)&&knownKpId>0&&
+        kpBudget.can(1,reserve)){
+        try{
+          stats.kp_known_id_refresh_calls=(stats.kp_known_id_refresh_calls||0)+1;
+          const detail=await kpRequest(KP_API+'/'+knownKpId);
+          const parsed=Number(detail?.kinopoiskId)===knownKpId?
+            parseKinopoisk(detail,imdbId):{};
+          if(parsed.kp){
+            stats.kp_known_id_refresh_matches=(stats.kp_known_id_refresh_matches||0)+1;
+            stats.kp_matched++;
+            kpEntries[imdbId]={imdbId,checked_at:nowDay,
+              kp:parsed.kp,imdb:parsed.imdb||null};
+            const prior=c.surs_hot_ratings||{};
+            c.surs_hot_ratings={...prior,kp:parsed.kp,
+              ...(!prior.imdb&&parsed.imdb?{imdb:parsed.imdb}:{})};
+            continue;
+          }
+          stats.kp_known_id_mismatch=(stats.kp_known_id_mismatch||0)+1;
+        }catch(e){
+          stats.kp_known_id_refresh_failures=(stats.kp_known_id_refresh_failures||0)+1;
+        }
       }
       if(!kpBudget.can(2,reserve)){
         stats.kp_rating_budget_deferred=(stats.kp_rating_budget_deferred||0)+1;
@@ -923,6 +981,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   }
   stats.kp_votes_recorded=dayVotes.size;
   stats.kp_daily_used=kpBudget.used;
+  stats.kp_pacing_unused=Math.max(0,pacing.allowed-kpBudget.runUsed);
   stats.kp_daily_remaining=Math.max(0,sourceBudget.KP_DAILY_BUDGET-kpBudget.used);
   stats.kp_run_remaining=kpBudget.remaining();
   const updatedVoteHistory=kpDemand.snapshots(
@@ -970,7 +1029,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     }
     if(!foundKp){
       const entry=kpEntries[imdbId];
-      if(!entry||!validKpEntry(entry,imdbId))
+      if(!entry||!validKpEntry(entry,imdbId,c))
         missingRatings.kp_not_checked_or_stale++;
       else if(!entry.kp)missingRatings.kp_unrated_or_not_found++;
       else missingRatings.unverified_kinopoisk_id++;
@@ -1004,7 +1063,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.9',
+  const audit={schema:1,algorithm:'hot-discovery-4.10',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -1031,14 +1090,14 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.9',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.10',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-demand-first-v4.9-verifiable',
+      ranking_model:'source-aware-demand-first-v4.10-paced',
       rating_evidence:ratingConfidence,
       active_model:'demand',
       comparison,model_comparison:modelComparison,
