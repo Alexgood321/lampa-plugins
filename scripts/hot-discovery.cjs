@@ -4,6 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const kpDemand = require('./kp-demand-history.cjs');
+const hot47 = require('./hot-ranking-4-7.cjs');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
@@ -57,8 +58,9 @@ function moviePremiere(details,now) {
   const releasedOriginal=original&&daysSince(original,now)>=0?original:null;
   const actual=digital&&(!original||digital>=original)?digital:
     (theatrical||releasedOriginal);
+  const firstUS=[digital,theatrical].filter(Boolean).sort()[0]||null;
   return {date:actual,kind:actual===digital?'digital':'theatrical',
-    original,digital,theatrical};
+    original,digital,theatrical,firstUS};
 }
 function tvPremiere(details,now) {
   const original=isoDate(details.first_air_date);
@@ -254,8 +256,12 @@ function attentionFor(c,peers) {
   const activeDay=!!c.surs_hot_trend_day,activeWeek=!!c.surs_hot_trend_week;
   // A historically popular but currently untrending series should not top
   // the feed purely because its cumulative rating is excellent.
+  // Day/week trends are correlated observations from ONE provider (TMDB).
+  // They form one source signal; both days are not independent confirmations.
+  const leading=Math.max(day,week),supporting=Math.min(day,week);
+  const tmdbTrend=.85*leading+.15*supporting;
   const interest=activeDay||activeWeek?
-    .52*day+.30*week+.18*pop:.25*pop;
+    .82*tmdbTrend+.18*pop:.25*pop;
   const outside=externalPopularity(c);
   return {score:round(Math.min(1,interest+outside.bonus),3),
     tmdb_score:round(Math.min(1,interest),3),
@@ -308,9 +314,10 @@ function growthFor(c,history,now) {
     periods[horizon+'d']=round(score,3);
   }
   const values=Object.values(periods);
-  return {score:values.length?
-      round(values.reduce((a,b)=>a+b,0)/values.length,3):.5,
-    measured:values.length>0,periods};
+  const score=values.length?
+    round(values.reduce((a,b)=>a+b,0)/values.length,3):.5;
+  const state=hot47.growthState(score,periods);
+  return {score,measured:values.length>0,periods,...state};
 }
 function eligibilityReason(c,now) {
   if(!c.poster_path)return 'poster_missing';
@@ -349,16 +356,20 @@ function eligibilityReason(c,now) {
       c.surs_hot_quality>=7.7&&trending))
       return 'season_rating_unconfirmed';
   }
+  // Old releases require live, independently observable activity.
+  // A 181-day threshold never directly subtracts any ranking score.
+  const activity=hot47.oldActivity(c,{
+    status:c.surs_hot_growth_status,signal:c.surs_hot_growth_signal},
+    Number(c.surs_hot_rank_age));
+  if(!activity.ok)return activity.reason;
   return null;
 }
 function recencyTier(c,now) {
-  const premiereAge=daysSince(c.surs_hot_premiere_date,now);
-  // TV series: use the current verified season premiere, never season one.
-  // Films: a belated streaming release cannot reset the age of an older film.
-  const originalAge=c.type==='movie'&&c.surs_hot_original_date?
-    daysSince(c.surs_hot_original_date,now):premiereAge;
-  const age=c.type==='movie'?Math.max(premiereAge,originalAge):premiereAge;
-  return {age,tier:age<=60?0:age<=120?1:age<=365?2:3};
+  // Retain tiers for diagnostics only; no tier is permitted to add or
+  // subtract points in the rank formula.
+  const ranked=hot47.rankAge(c,now),age=ranked.age;
+  return {age,date:ranked.date,confirmed_us:ranked.confirmed_us,
+    tier:age<=60?0:age<=120?1:age<=365?2:3};
 }
 function isReturning(c) {
   return c.type==='tv'&&c.surs_hot_premiere_kind==='season';
@@ -517,6 +528,9 @@ function toCard(raw,details,type,premiere) {
     surs_hot_season:premiere.number||null,
     surs_hot_original_date:premiere.original,
     surs_hot_digital_date:premiere.digital||null,
+    surs_hot_first_us_release_date:premiere.firstUS||null,
+    surs_hot_digital_status:type==='movie'?
+      (premiere.digital?'verified_us_digital_date':'digital_date_unconfirmed'):null,
     surs_hot_discovery:raw._channels||[],
     surs_hot_trend_day:raw._trendDay||null,surs_hot_trend_week:raw._trendWeek||null,
     surs_hot_imdb_id:/^tt\d{6,12}$/.test(String(details.external_ids?.imdb_id||
