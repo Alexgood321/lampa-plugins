@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "algorithm": "hot-discovery-4.5",
-  "generated_at": "2026-11-14T10:35:42.045Z",
-  "candidate_total": 163,
+  "algorithm": "hot-discovery-4.6",
+  "generated_at": "2026-11-14T11:48:43.603Z",
+  "candidate_total": 164,
   "eligible": 44,
   "selected": 39,
   "candidates": [
@@ -13,8 +13,8 @@
       "kind": "season",
       "premiere": "2026-09-18",
       "age": 57,
-      "tmdb": 8.651,
-      "tmdb_votes": 1235,
+      "tmdb": 8.7,
+      "tmdb_votes": 1237,
       "imdb": {
         "value": 8.3,
         "votes": 141589,
@@ -29,15 +29,18 @@
       "attention": 0.73,
       "external_popularity_rank": 7,
       "external_bonus": 0.0791,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
-      "quality": 8.473,
+      "quality": 8.481,
       "agreement": {
         "sources": 3,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 91.659,
+      "base_score": 91.706,
       "rejection": null,
       "selected_rank": 1
     },
@@ -64,6 +67,9 @@
       "attention": 0.621,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.417,
       "agreement": {
@@ -92,9 +98,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5158783
       },
-      "attention": 0.811,
+      "attention": 0.777,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.465,
       "agreement": {
@@ -103,7 +112,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 90.119,
+      "base_score": 89.744,
       "rejection": null,
       "selected_rank": 3
     },
@@ -127,9 +136,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7077372
       },
-      "attention": 0.709,
+      "attention": 0.694,
       "external_popularity_rank": 5,
       "external_bonus": 0.0903,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
       "quality": 7.771,
       "agreement": {
@@ -138,7 +150,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 89.357,
+      "base_score": 89.192,
       "rejection": null,
       "selected_rank": 4
     },
@@ -165,6 +177,9 @@
       "attention": 0.715,
       "external_popularity_rank": 4,
       "external_bonus": 0.0974,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
       "quality": 7.738,
       "agreement": {
@@ -200,6 +215,9 @@
       "attention": 0.542,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.096,
       "agreement": {
@@ -232,9 +250,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1112513
       },
-      "attention": 0.757,
+      "attention": 0.791,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.418,
       "agreement": {
@@ -243,7 +264,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 87.233,
+      "base_score": 87.608,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -261,6 +282,9 @@
       "attention": 0.636,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.732,
       "agreement": {
@@ -287,6 +311,9 @@
       "attention": 0.782,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.491,
       "agreement": {
@@ -319,9 +346,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7149768
       },
-      "attention": 0.362,
+      "attention": 0.355,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.022,
       "agreement": {
@@ -330,7 +360,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 86.983,
+      "base_score": 86.906,
       "rejection": null,
       "selected_rank": 7
     },
@@ -345,9 +375,12 @@
       "tmdb_votes": 44,
       "imdb": null,
       "kp": null,
-      "attention": 0.547,
+      "attention": 0.548,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.948,
       "agreement": {
@@ -356,7 +389,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 86.39,
+      "base_score": 86.401,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -367,8 +400,8 @@
       "kind": "digital",
       "premiere": "2026-11-10",
       "age": 38,
-      "tmdb": 6.241,
-      "tmdb_votes": 369,
+      "tmdb": 6.3,
+      "tmdb_votes": 377,
       "imdb": null,
       "kp": {
         "value": 5.6,
@@ -376,55 +409,23 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7983281
       },
-      "attention": 0.69,
+      "attention": 0.709,
       "external_popularity_rank": 47,
       "external_bonus": 0.0093,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
-      "quality": 6.02,
+      "quality": 6.041,
       "agreement": {
         "sources": 2,
-        "spread": 0.641,
+        "spread": 0.7,
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 85.581,
+      "base_score": 85.798,
       "rejection": "quality_below_floor",
       "selected_rank": null
-    },
-    {
-      "id": 1413,
-      "type": "tv",
-      "title": "Американская история ужасов",
-      "kind": "season",
-      "premiere": "2026-09-24",
-      "age": 51,
-      "tmdb": 8.079,
-      "tmdb_votes": 6300,
-      "imdb": {
-        "value": 7.9,
-        "votes": 368988,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 7.9,
-        "votes": 295389,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 589167
-      },
-      "attention": 0.329,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.792,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 85.341,
-      "rejection": null,
-      "selected_rank": 11
     },
     {
       "id": 58841,
@@ -449,6 +450,9 @@
       "attention": 0.208,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.097,
       "agreement": {
@@ -459,7 +463,7 @@
       },
       "base_score": 84.825,
       "rejection": null,
-      "selected_rank": 12
+      "selected_rank": 11
     },
     {
       "id": 1400940,
@@ -468,8 +472,8 @@
       "kind": "theatrical",
       "premiere": "2026-10-23",
       "age": 26,
-      "tmdb": 7.403,
-      "tmdb_votes": 436,
+      "tmdb": 7.397,
+      "tmdb_votes": 437,
       "imdb": {
         "value": 7.5,
         "votes": 49191,
@@ -481,18 +485,21 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6712328
       },
-      "attention": 0.254,
+      "attention": 0.244,
       "external_popularity_rank": 19,
       "external_bonus": 0.0434,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
-      "quality": 7.751,
+      "quality": 7.75,
       "agreement": {
         "sources": 3,
-        "spread": 0.1,
+        "spread": 0.103,
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 84.587,
+      "base_score": 84.488,
       "rejection": null,
       "selected_rank": 8
     },
@@ -519,6 +526,9 @@
       "attention": 0.232,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.757,
       "agreement": {
@@ -554,6 +564,9 @@
       "attention": 0.185,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.97,
       "agreement": {
@@ -564,7 +577,7 @@
       },
       "base_score": 84.428,
       "rejection": null,
-      "selected_rank": 13
+      "selected_rank": 12
     },
     {
       "id": 292741,
@@ -573,22 +586,25 @@
       "kind": "series",
       "premiere": "2026-10-29",
       "age": 16,
-      "tmdb": 7.598,
-      "tmdb_votes": 46,
+      "tmdb": 7.521,
+      "tmdb_votes": 48,
       "imdb": null,
       "kp": null,
       "attention": 0.453,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.884,
+      "quality": 6.872,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.396,
+      "base_score": 84.404,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -615,6 +631,9 @@
       "attention": 0.216,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.877,
       "agreement": {
@@ -641,6 +660,9 @@
       "attention": 0.497,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.795,
       "agreement": {
@@ -652,6 +674,44 @@
       "base_score": 84.264,
       "rejection": "insufficient_votes",
       "selected_rank": null
+    },
+    {
+      "id": 1413,
+      "type": "tv",
+      "title": "Американская история ужасов",
+      "kind": "season",
+      "premiere": "2026-09-24",
+      "age": 51,
+      "tmdb": 8.079,
+      "tmdb_votes": 6300,
+      "imdb": {
+        "value": 7.9,
+        "votes": 368988,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7.9,
+        "votes": 295389,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 589167
+      },
+      "attention": 0.228,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.792,
+      "agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 84.228,
+      "rejection": null,
+      "selected_rank": 13
     },
     {
       "id": 2734,
@@ -676,6 +736,9 @@
       "attention": 0.25,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.686,
       "agreement": {
@@ -699,9 +762,12 @@
       "tmdb_votes": 7,
       "imdb": null,
       "kp": null,
-      "attention": 0.515,
+      "attention": 0.517,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.724,
       "agreement": {
@@ -710,7 +776,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.135,
+      "base_score": 84.162,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -737,6 +803,9 @@
       "attention": 0.201,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.81,
       "agreement": {
@@ -772,6 +841,9 @@
       "attention": 0.108,
       "external_popularity_rank": 46,
       "external_bonus": 0.0063,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.134,
       "agreement": {
@@ -795,9 +867,12 @@
       "tmdb_votes": 13,
       "imdb": null,
       "kp": null,
-      "attention": 0.357,
+      "attention": 0.354,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.673,
       "agreement": {
@@ -806,7 +881,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.638,
+      "base_score": 83.605,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -833,6 +908,9 @@
       "attention": 0.229,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.557,
       "agreement": {
@@ -846,39 +924,33 @@
       "selected_rank": null
     },
     {
-      "id": 288673,
-      "type": "tv",
-      "title": "Кэрри",
-      "kind": "series",
-      "premiere": "2026-10-07",
-      "age": 38,
-      "tmdb": 8.239,
-      "tmdb_votes": 595,
-      "imdb": {
-        "value": 7.8,
-        "votes": 65407,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 7.4,
-        "votes": 23227,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 1343910
-      },
-      "attention": 0.161,
+      "id": 1543469,
+      "type": "movie",
+      "title": "Хартленд",
+      "kind": "digital",
+      "premiere": "2026-11-13",
+      "age": 1,
+      "tmdb": 6.708,
+      "tmdb_votes": 12,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.464,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 7.712,
+      "quality": 6.655,
       "agreement": {
-        "sources": 3,
-        "spread": 0.839,
+        "sources": 0,
         "bonus": 0,
-        "level": "mixed"
+        "spread": null,
+        "level": "unconfirmed"
       },
-      "base_score": 83.19,
-      "rejection": null,
-      "selected_rank": 10
+      "base_score": 83.349,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 213562,
@@ -903,6 +975,9 @@
       "attention": 0.146,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.67,
       "agreement": {
@@ -912,6 +987,44 @@
         "level": "mixed"
       },
       "base_score": 83.114,
+      "rejection": null,
+      "selected_rank": 10
+    },
+    {
+      "id": 288673,
+      "type": "tv",
+      "title": "Кэрри",
+      "kind": "series",
+      "premiere": "2026-10-07",
+      "age": 38,
+      "tmdb": 8.239,
+      "tmdb_votes": 595,
+      "imdb": {
+        "value": 7.8,
+        "votes": 65407,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7.4,
+        "votes": 23227,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 1343910
+      },
+      "attention": 0.154,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.712,
+      "agreement": {
+        "sources": 3,
+        "spread": 0.839,
+        "bonus": 0,
+        "level": "mixed"
+      },
+      "base_score": 83.113,
       "rejection": null,
       "selected_rank": 14
     },
@@ -938,6 +1051,9 @@
       "attention": 0.18,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.532,
       "agreement": {
@@ -951,29 +1067,41 @@
       "selected_rank": null
     },
     {
-      "id": 1562642,
+      "id": 1153576,
       "type": "movie",
-      "title": "Ghost Soldier",
+      "title": "Уличный боец",
       "kind": "theatrical",
-      "premiere": "2026-11-11",
-      "age": 8,
-      "tmdb": 8.727,
-      "tmdb_votes": 11,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.294,
+      "premiere": "2026-10-16",
+      "age": 32,
+      "tmdb": 6.319,
+      "tmdb_votes": 237,
+      "imdb": {
+        "value": 6.2,
+        "votes": 22192,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.2,
+        "votes": 4204,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5613466
+      },
+      "attention": 0.457,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.801,
+      "quality": 6.285,
       "agreement": {
-        "sources": 0,
+        "sources": 3,
+        "spread": 0.119,
         "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
+        "level": "mixed"
       },
-      "base_score": 82.751,
-      "rejection": "insufficient_votes",
+      "base_score": 82.782,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -996,9 +1124,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 11095481
       },
-      "attention": 0.168,
+      "attention": 0.17,
       "external_popularity_rank": 6,
       "external_bonus": 0.0527,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.466,
       "agreement": {
@@ -1007,7 +1138,7 @@
         "bonus": 0.16,
         "level": "pair_high"
       },
-      "base_score": 82.744,
+      "base_score": 82.767,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1034,6 +1165,9 @@
       "attention": 0.19,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.455,
       "agreement": {
@@ -1057,9 +1191,12 @@
       "tmdb_votes": 13,
       "imdb": null,
       "kp": null,
-      "attention": 0.247,
+      "attention": 0.249,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.719,
       "agreement": {
@@ -1068,68 +1205,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.598,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1153576,
-      "type": "movie",
-      "title": "Уличный боец",
-      "kind": "theatrical",
-      "premiere": "2026-10-16",
-      "age": 32,
-      "tmdb": 6.319,
-      "tmdb_votes": 237,
-      "imdb": {
-        "value": 6.2,
-        "votes": 22192,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.2,
-        "votes": 4204,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 5613466
-      },
-      "attention": 0.436,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.285,
-      "agreement": {
-        "sources": 3,
-        "spread": 0.119,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "base_score": 82.55,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1286656,
-      "type": "movie",
-      "title": "Рокки — это я",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 8,
-      "tmdb": 8.833,
-      "tmdb_votes": 21,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.219,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.935,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 82.202,
+      "base_score": 82.62,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1156,6 +1232,9 @@
       "attention": 0.224,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.156,
       "agreement": {
@@ -1169,6 +1248,64 @@
       "selected_rank": null
     },
     {
+      "id": 1286656,
+      "type": "movie",
+      "title": "Рокки — это я",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 8,
+      "tmdb": 8.833,
+      "tmdb_votes": 21,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.214,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.935,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.147,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1562642,
+      "type": "movie",
+      "title": "Ghost Soldier",
+      "kind": "theatrical",
+      "premiere": "2026-11-11",
+      "age": 8,
+      "tmdb": 8.727,
+      "tmdb_votes": 11,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.239,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.801,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.144,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 1483525,
       "type": "movie",
       "title": "Что, если любовь",
@@ -1179,9 +1316,12 @@
       "tmdb_votes": 72,
       "imdb": null,
       "kp": null,
-      "attention": 0.307,
+      "attention": 0.313,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.906,
       "agreement": {
@@ -1190,33 +1330,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.049,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1543469,
-      "type": "movie",
-      "title": "Хартленд",
-      "kind": "digital",
-      "premiere": "2026-11-13",
-      "age": 1,
-      "tmdb": 6.708,
-      "tmdb_votes": 12,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.36,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.655,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 81.948,
+      "base_score": 82.115,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1239,6 +1353,9 @@
       "attention": 0.117,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.577,
       "agreement": {
@@ -1259,7 +1376,7 @@
       "premiere": "2026-11-03",
       "age": 52,
       "tmdb": 6.8,
-      "tmdb_votes": 424,
+      "tmdb_votes": 425,
       "imdb": {
         "value": 6.9,
         "votes": 38181,
@@ -1271,9 +1388,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7400696
       },
-      "attention": 0.355,
+      "attention": 0.352,
       "external_popularity_rank": 42,
       "external_bonus": 0.0136,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
       "quality": 6.667,
       "agreement": {
@@ -1282,8 +1402,37 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 81.732,
+      "base_score": 81.718,
       "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 1570488,
+      "type": "movie",
+      "title": "Идеальное Рождество для собаки",
+      "kind": "digital",
+      "premiere": "2026-11-04",
+      "age": 10,
+      "tmdb": 7.176,
+      "tmdb_votes": 54,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.199,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.796,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 81.386,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1309,6 +1458,9 @@
       "attention": 0.122,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.395,
       "agreement": {
@@ -1335,6 +1487,9 @@
       "attention": 0.13,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.262,
       "agreement": {
@@ -1346,32 +1501,6 @@
       "base_score": 81.29,
       "rejection": null,
       "selected_rank": 22
-    },
-    {
-      "id": 1570488,
-      "type": "movie",
-      "title": "Идеальное Рождество для собаки",
-      "kind": "digital",
-      "premiere": "2026-11-04",
-      "age": 10,
-      "tmdb": 7.176,
-      "tmdb_votes": 54,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.189,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.796,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 81.276,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
     },
     {
       "id": 1813355,
@@ -1387,6 +1516,9 @@
       "attention": 0.227,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.682,
       "agreement": {
@@ -1422,6 +1554,9 @@
       "attention": 0.164,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.109,
       "agreement": {
@@ -1457,6 +1592,9 @@
       "attention": 0.151,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.867,
       "agreement": {
@@ -1480,9 +1618,12 @@
       "tmdb_votes": 30,
       "imdb": null,
       "kp": null,
-      "attention": 0.236,
+      "attention": 0.238,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.565,
       "agreement": {
@@ -1491,7 +1632,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.817,
+      "base_score": 80.839,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1511,9 +1652,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1304327
       },
-      "attention": 0.183,
+      "attention": 0.181,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.667,
       "agreement": {
@@ -1522,7 +1666,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.768,
+      "base_score": 80.746,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1537,9 +1681,12 @@
       "tmdb_votes": 16,
       "imdb": null,
       "kp": null,
-      "attention": 0.131,
+      "attention": 0.133,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.872,
       "agreement": {
@@ -1548,7 +1695,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.517,
+      "base_score": 80.539,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1572,9 +1719,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6789621
       },
-      "attention": 0.277,
+      "attention": 0.269,
       "external_popularity_rank": 14,
       "external_bonus": 0.0546,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
       "quality": 6.474,
       "agreement": {
@@ -1583,7 +1733,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 80.501,
+      "base_score": 80.413,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1610,6 +1760,9 @@
       "attention": 0.125,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.893,
       "agreement": {
@@ -1619,6 +1772,35 @@
         "level": "unconfirmed"
       },
       "base_score": 80.395,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1697911,
+      "type": "movie",
+      "title": "Drummer Boy",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 9,
+      "tmdb": 7.8,
+      "tmdb_votes": 5,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.129,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.69,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 80.163,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1636,6 +1818,9 @@
       "attention": 0.223,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.508,
       "agreement": {
@@ -1646,32 +1831,6 @@
       },
       "base_score": 80.145,
       "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1697911,
-      "type": "movie",
-      "title": "Drummer Boy",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 9,
-      "tmdb": 7.8,
-      "tmdb_votes": 5,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.127,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.69,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 80.141,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1693,6 +1852,9 @@
       "attention": 0.138,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.841,
       "agreement": {
@@ -1716,9 +1878,12 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.065,
+      "attention": 0.064,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.638,
       "agreement": {
@@ -1727,7 +1892,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.98,
+      "base_score": 79.969,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1738,8 +1903,8 @@
       "kind": "digital",
       "premiere": "2026-10-08",
       "age": 40,
-      "tmdb": 7.536,
-      "tmdb_votes": 629,
+      "tmdb": 7.533,
+      "tmdb_votes": 630,
       "imdb": null,
       "kp": {
         "value": 5.9,
@@ -1747,18 +1912,21 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6601550
       },
-      "attention": 0.154,
+      "attention": 0.155,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.677,
+      "quality": 6.675,
       "agreement": {
         "sources": 2,
-        "spread": 1.636,
+        "spread": 1.633,
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 79.854,
+      "base_score": 79.896,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1776,6 +1944,9 @@
       "attention": 0.107,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.911,
       "agreement": {
@@ -1786,32 +1957,6 @@
       },
       "base_score": 79.623,
       "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 258989,
-      "type": "tv",
-      "title": "Величайший",
-      "kind": "series",
-      "premiere": "2026-11-04",
-      "age": 10,
-      "tmdb": 5.1,
-      "tmdb_votes": 18,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.147,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.473,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 79.57,
-      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -1828,6 +1973,9 @@
       "attention": 0.086,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.85,
       "agreement": {
@@ -1838,6 +1986,35 @@
       },
       "base_score": 79.509,
       "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 258989,
+      "type": "tv",
+      "title": "Величайший",
+      "kind": "series",
+      "premiere": "2026-11-04",
+      "age": 10,
+      "tmdb": 5.1,
+      "tmdb_votes": 18,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.13,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.473,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 79.383,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -1854,6 +2031,9 @@
       "attention": 0.094,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.67,
       "agreement": {
@@ -1880,6 +2060,9 @@
       "attention": 0.065,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -1915,6 +2098,9 @@
       "attention": 0.135,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.249,
       "agreement": {
@@ -1950,6 +2136,9 @@
       "attention": 0.115,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 4.814,
       "agreement": {
@@ -1973,9 +2162,12 @@
       "tmdb_votes": 64,
       "imdb": null,
       "kp": null,
-      "attention": 0.1,
+      "attention": 0.102,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.635,
       "agreement": {
@@ -1984,7 +2176,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.941,
+      "base_score": 78.963,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2002,6 +2194,9 @@
       "attention": 0.078,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.758,
       "agreement": {
@@ -2028,6 +2223,9 @@
       "attention": 0.096,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.476,
       "agreement": {
@@ -2054,6 +2252,9 @@
       "attention": 0.089,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.59,
       "agreement": {
@@ -2080,6 +2281,9 @@
       "attention": 0.005,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.638,
       "agreement": {
@@ -2106,6 +2310,9 @@
       "attention": 0.044,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.846,
       "agreement": {
@@ -2129,9 +2336,12 @@
       "tmdb_votes": 58,
       "imdb": null,
       "kp": null,
-      "attention": 0.123,
+      "attention": 0.125,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.487,
       "agreement": {
@@ -2140,7 +2350,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.603,
+      "base_score": 78.625,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2155,9 +2365,12 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.046,
+      "attention": 0.045,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2166,7 +2379,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.569,
+      "base_score": 78.558,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2184,6 +2397,9 @@
       "attention": 0.06,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2207,9 +2423,12 @@
       "tmdb_votes": 36,
       "imdb": null,
       "kp": null,
-      "attention": 0.104,
+      "attention": 0.106,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.449,
       "agreement": {
@@ -2218,7 +2437,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.395,
+      "base_score": 78.417,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2245,6 +2464,9 @@
       "attention": 0.112,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.769,
       "agreement": {
@@ -2271,6 +2493,9 @@
       "attention": 0.029,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2297,6 +2522,9 @@
       "attention": 0.021,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2323,6 +2551,9 @@
       "attention": 0.031,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2349,6 +2580,9 @@
       "attention": 0.042,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2384,6 +2618,9 @@
       "attention": 0.083,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.487,
       "agreement": {
@@ -2410,6 +2647,9 @@
       "attention": 0.01,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2433,9 +2673,12 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.012,
+      "attention": 0.011,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2444,7 +2687,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.06,
+      "base_score": 78.049,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2462,6 +2705,9 @@
       "attention": 0.023,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2488,6 +2734,9 @@
       "attention": 0.018,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2514,6 +2763,9 @@
       "attention": 0.016,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2540,6 +2792,9 @@
       "attention": 0.013,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2566,6 +2821,9 @@
       "attention": 0.008,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2576,6 +2834,35 @@
       },
       "base_score": 77.911,
       "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1185344,
+      "type": "movie",
+      "title": "Зверь",
+      "kind": "theatrical",
+      "premiere": "2026-10-09",
+      "age": 37,
+      "tmdb": 5.6,
+      "tmdb_votes": 6,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.127,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.607,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 77.905,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -2592,6 +2879,9 @@
       "attention": 0,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2618,6 +2908,9 @@
       "attention": 0.003,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2644,6 +2937,9 @@
       "attention": 0.049,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.652,
       "agreement": {
@@ -2667,9 +2963,12 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.058,
+      "attention": 0.057,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.61,
       "agreement": {
@@ -2678,7 +2977,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.701,
+      "base_score": 77.687,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2696,6 +2995,9 @@
       "attention": 0.039,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.634,
       "agreement": {
@@ -2719,9 +3021,12 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.031,
+      "attention": 0.03,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.61,
       "agreement": {
@@ -2730,7 +3035,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.296,
+      "base_score": 77.283,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2748,6 +3053,9 @@
       "attention": 0.047,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2774,6 +3082,9 @@
       "attention": 0.036,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2800,6 +3111,9 @@
       "attention": 0.034,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2826,6 +3140,9 @@
       "attention": 0.026,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2852,6 +3169,9 @@
       "attention": 0.023,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2878,6 +3198,9 @@
       "attention": 0.019,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2904,6 +3227,9 @@
       "attention": 0.015,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2930,6 +3256,9 @@
       "attention": 0.008,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2956,6 +3285,9 @@
       "attention": 0.004,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -2982,6 +3314,9 @@
       "attention": 0,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -3014,9 +3349,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5494049
       },
-      "attention": 0.575,
+      "attention": 0.568,
       "external_popularity_rank": 11,
       "external_bonus": 0.0633,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
       "quality": 8.449,
       "agreement": {
@@ -3025,7 +3363,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 65.061,
+      "base_score": 64.984,
       "rejection": null,
       "selected_rank": 16
     },
@@ -3052,6 +3390,9 @@
       "attention": 0.195,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.096,
       "agreement": {
@@ -3063,37 +3404,6 @@
       "base_score": 59.681,
       "rejection": null,
       "selected_rank": 23
-    },
-    {
-      "id": 95350,
-      "type": "tv",
-      "title": "Фонари",
-      "kind": "series",
-      "premiere": "2026-08-16",
-      "age": 90,
-      "tmdb": 8.187,
-      "tmdb_votes": 875,
-      "imdb": null,
-      "kp": {
-        "value": 7.6,
-        "votes": 20357,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 5253825
-      },
-      "attention": 0.178,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.943,
-      "agreement": {
-        "sources": 2,
-        "spread": 0.587,
-        "bonus": 0.16,
-        "level": "pair_high"
-      },
-      "base_score": 59.439,
-      "rejection": null,
-      "selected_rank": 17
     },
     {
       "id": 113962,
@@ -3118,6 +3428,9 @@
       "attention": 0.174,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.131,
       "agreement": {
@@ -3129,6 +3442,40 @@
       "base_score": 59.362,
       "rejection": null,
       "selected_rank": 24
+    },
+    {
+      "id": 95350,
+      "type": "tv",
+      "title": "Фонари",
+      "kind": "series",
+      "premiere": "2026-08-16",
+      "age": 90,
+      "tmdb": 8.187,
+      "tmdb_votes": 875,
+      "imdb": null,
+      "kp": {
+        "value": 7.6,
+        "votes": 20357,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5253825
+      },
+      "attention": 0.161,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.943,
+      "agreement": {
+        "sources": 2,
+        "spread": 0.587,
+        "bonus": 0.16,
+        "level": "pair_high"
+      },
+      "base_score": 59.252,
+      "rejection": null,
+      "selected_rank": 17
     },
     {
       "id": 108978,
@@ -3153,6 +3500,9 @@
       "attention": 0.221,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.467,
       "agreement": {
@@ -3179,6 +3529,9 @@
       "attention": 0.057,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.607,
       "agreement": {
@@ -3211,9 +3564,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7178187
       },
-      "attention": 0.177,
+      "attention": 0.136,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.026,
       "agreement": {
@@ -3222,7 +3578,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 56.929,
+      "base_score": 56.477,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3246,9 +3602,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5610132
       },
-      "attention": 0.302,
+      "attention": 0.288,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.339,
       "agreement": {
@@ -3257,7 +3616,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 56.261,
+      "base_score": 56.106,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3281,9 +3640,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8549783
       },
-      "attention": 0.2,
+      "attention": 0.201,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.726,
       "agreement": {
@@ -3292,7 +3654,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 55.992,
+      "base_score": 56.003,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3310,6 +3672,9 @@
       "attention": 0.214,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.557,
       "agreement": {
@@ -3345,6 +3710,9 @@
       "attention": 0.081,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.226,
       "agreement": {
@@ -3377,9 +3745,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6548088
       },
-      "attention": 0.15,
+      "attention": 0.152,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.669,
       "agreement": {
@@ -3388,7 +3759,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 55.393,
+      "base_score": 55.415,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3403,9 +3774,12 @@
       "tmdb_votes": 96,
       "imdb": null,
       "kp": null,
-      "attention": 0.204,
+      "attention": 0.205,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.304,
       "agreement": {
@@ -3414,7 +3788,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 55.202,
+      "base_score": 55.213,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3438,9 +3812,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7104903
       },
-      "attention": 0.169,
+      "attention": 0.17,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.606,
       "agreement": {
@@ -3449,7 +3826,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 55.163,
+      "base_score": 55.174,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3473,9 +3850,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5582050
       },
-      "attention": 0.173,
+      "attention": 0.174,
       "external_popularity_rank": 60,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.418,
       "agreement": {
@@ -3484,7 +3864,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 54.698,
+      "base_score": 54.709,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3499,9 +3879,12 @@
       "tmdb_votes": 5,
       "imdb": null,
       "kp": null,
-      "attention": 0.162,
+      "attention": 0.163,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.531,
       "agreement": {
@@ -3510,7 +3893,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 54.412,
+      "base_score": 54.423,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3534,9 +3917,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5287148
       },
-      "attention": 0.266,
+      "attention": 0.257,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.413,
       "agreement": {
@@ -3545,7 +3931,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 54.161,
+      "base_score": 54.039,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3572,6 +3958,9 @@
       "attention": 0.971,
       "external_popularity_rank": 3,
       "external_bonus": 0.106,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
       "quality": 8.549,
       "agreement": {
@@ -3607,6 +3996,9 @@
       "attention": 0.248,
       "external_popularity_rank": 41,
       "external_bonus": 0.0091,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.769,
       "agreement": {
@@ -3642,6 +4034,9 @@
       "attention": 0.219,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.683,
       "agreement": {
@@ -3674,9 +4069,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 10355286
       },
-      "attention": 0.403,
+      "attention": 0.386,
       "external_popularity_rank": 22,
       "external_bonus": 0.038,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": true,
       "quality": 7.726,
       "agreement": {
@@ -3685,7 +4083,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 36.473,
+      "base_score": 36.286,
       "rejection": null,
       "selected_rank": 26
     },
@@ -3712,6 +4110,9 @@
       "attention": 0.247,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.178,
       "agreement": {
@@ -3747,6 +4148,9 @@
       "attention": 0.104,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.705,
       "agreement": {
@@ -3782,6 +4186,9 @@
       "attention": 0.133,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.347,
       "agreement": {
@@ -3817,6 +4224,9 @@
       "attention": 0.141,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.133,
       "agreement": {
@@ -3852,6 +4262,9 @@
       "attention": 0.12,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.175,
       "agreement": {
@@ -3884,9 +4297,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12245586
       },
-      "attention": 0.073,
+      "attention": 0.072,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.303,
       "agreement": {
@@ -3895,7 +4311,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 34.428,
+      "base_score": 34.417,
       "rejection": null,
       "selected_rank": 31
     },
@@ -3906,7 +4322,7 @@
       "kind": "series",
       "premiere": "2026-04-08",
       "age": 220,
-      "tmdb": 8.226,
+      "tmdb": 8.2,
       "tmdb_votes": 246,
       "imdb": {
         "value": 8.2,
@@ -3922,15 +4338,18 @@
       "attention": 0.076,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 8.325,
+      "quality": 8.32,
       "agreement": {
         "sources": 3,
-        "spread": 0.226,
+        "spread": 0.2,
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 34.38,
+      "base_score": 34.365,
       "rejection": null,
       "selected_rank": 34
     },
@@ -3954,9 +4373,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5437614
       },
-      "attention": 0.088,
+      "attention": 0.091,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 8.064,
       "agreement": {
@@ -3965,7 +4387,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 33.864,
+      "base_score": 33.897,
       "rejection": null,
       "selected_rank": 32
     },
@@ -3992,6 +4414,9 @@
       "attention": 0.198,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.868,
       "agreement": {
@@ -4011,7 +4436,7 @@
       "kind": "season",
       "premiere": "2026-01-08",
       "age": 310,
-      "tmdb": 8.722,
+      "tmdb": 8.7,
       "tmdb_votes": 1055,
       "imdb": {
         "value": 8.9,
@@ -4027,15 +4452,18 @@
       "attention": 0.177,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 8.061,
+      "quality": 8.059,
       "agreement": {
         "sources": 3,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 33.474,
+      "base_score": 33.467,
       "rejection": null,
       "selected_rank": null
     },
@@ -4062,6 +4490,9 @@
       "attention": 0.167,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.438,
       "agreement": {
@@ -4097,6 +4528,9 @@
       "attention": 0.091,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.685,
       "agreement": {
@@ -4129,9 +4563,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12465988
       },
-      "attention": 0.077,
+      "attention": 0.076,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.68,
       "agreement": {
@@ -4140,7 +4577,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 32.718,
+      "base_score": 32.707,
       "rejection": null,
       "selected_rank": 35
     },
@@ -4158,6 +4595,9 @@
       "attention": 0.169,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.463,
       "agreement": {
@@ -4168,41 +4608,6 @@
       },
       "base_score": 32.296,
       "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 124364,
-      "type": "tv",
-      "title": "Извне",
-      "kind": "season",
-      "premiere": "2026-04-19",
-      "age": 209,
-      "tmdb": 8.491,
-      "tmdb_votes": 4433,
-      "imdb": {
-        "value": 7.7,
-        "votes": 214606,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 7.6,
-        "votes": 348883,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 4476885
-      },
-      "attention": 0.303,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.776,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 32.26,
-      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -4228,6 +4633,9 @@
       "attention": 0.182,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.214,
       "agreement": {
@@ -4263,6 +4671,9 @@
       "attention": 0.07,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.507,
       "agreement": {
@@ -4298,6 +4709,9 @@
       "attention": 0.073,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.437,
       "agreement": {
@@ -4308,6 +4722,44 @@
       },
       "base_score": 31.412,
       "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 124364,
+      "type": "tv",
+      "title": "Извне",
+      "kind": "season",
+      "premiere": "2026-04-19",
+      "age": 209,
+      "tmdb": 8.492,
+      "tmdb_votes": 4436,
+      "imdb": {
+        "value": 7.7,
+        "votes": 214606,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7.6,
+        "votes": 348883,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 4476885
+      },
+      "attention": 0.211,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.776,
+      "agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 31.294,
+      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -4329,6 +4781,9 @@
       "attention": 0.063,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.234,
       "agreement": {
@@ -4361,9 +4816,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5301021
       },
-      "attention": 0.142,
+      "attention": 0.152,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.557,
       "agreement": {
@@ -4372,7 +4830,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 30.262,
+      "base_score": 30.373,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4390,6 +4848,9 @@
       "attention": 0.038,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.948,
       "agreement": {
@@ -4413,9 +4874,12 @@
       "tmdb_votes": 45,
       "imdb": null,
       "kp": null,
-      "attention": 0.062,
+      "attention": 0.061,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.151,
       "agreement": {
@@ -4424,7 +4888,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.835,
+      "base_score": 29.824,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4439,9 +4903,12 @@
       "tmdb_votes": 47,
       "imdb": null,
       "kp": null,
-      "attention": 0.054,
+      "attention": 0.053,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.065,
       "agreement": {
@@ -4450,7 +4917,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.778,
+      "base_score": 29.767,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4477,6 +4944,9 @@
       "attention": 0.068,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.773,
       "agreement": {
@@ -4509,9 +4979,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6601431
       },
-      "attention": 0.069,
+      "attention": 0.068,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.88,
       "agreement": {
@@ -4520,7 +4993,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 29.481,
+      "base_score": 29.47,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4538,6 +5011,9 @@
       "attention": 0.172,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.475,
       "agreement": {
@@ -4564,6 +5040,9 @@
       "attention": 0.042,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.836,
       "agreement": {
@@ -4587,9 +5066,12 @@
       "tmdb_votes": 17,
       "imdb": null,
       "kp": null,
-      "attention": 0.192,
+      "attention": 0.193,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.32,
       "agreement": {
@@ -4598,7 +5080,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.122,
+      "base_score": 29.133,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4616,6 +5098,9 @@
       "attention": 0.027,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.655,
       "agreement": {
@@ -4639,9 +5124,12 @@
       "tmdb_votes": 10,
       "imdb": null,
       "kp": null,
-      "attention": 0.05,
+      "attention": 0.049,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.76,
       "agreement": {
@@ -4650,7 +5138,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 28.503,
+      "base_score": 28.492,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4674,9 +5162,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7373640
       },
-      "attention": 0.158,
+      "attention": 0.159,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 5.617,
       "agreement": {
@@ -4685,7 +5176,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 27.409,
+      "base_score": 27.423,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4700,9 +5191,12 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.035,
+      "attention": 0.034,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 0,
       "agreement": {
@@ -4711,7 +5205,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 25.477,
+      "base_score": 25.463,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4738,6 +5232,9 @@
       "attention": 0.159,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.828,
       "agreement": {
@@ -4773,6 +5270,9 @@
       "attention": 0.242,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.101,
       "agreement": {
@@ -4808,6 +5308,9 @@
       "attention": 0.203,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.836,
       "agreement": {
@@ -4843,6 +5346,9 @@
       "attention": 0.099,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.293,
       "agreement": {
@@ -4878,6 +5384,9 @@
       "attention": 0.128,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.117,
       "agreement": {
@@ -4913,6 +5422,9 @@
       "attention": 0.055,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 7.442,
       "agreement": {
@@ -4945,9 +5457,12 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1448630
       },
-      "attention": 0.188,
+      "attention": 0.189,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 3.508,
       "agreement": {
@@ -4956,7 +5471,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 4.494,
+      "base_score": 4.505,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4974,6 +5489,9 @@
       "attention": 0.052,
       "external_popularity_rank": null,
       "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
       "cross_source_interest": false,
       "quality": 6.767,
       "agreement": {
