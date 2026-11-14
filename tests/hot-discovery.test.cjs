@@ -96,15 +96,16 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
   assert.equal(result.feed.mode,'primary');
   assert.equal(result.feed.algorithm,'hot-discovery-4.7');
   assert.equal(result.feed.diagnostics.ranking_model,
-    'source-aware-smooth-v4.7');
+    'source-aware-demand-first-v4.7');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,60);
+  assert.equal(result.feed.diagnostics.active_model,'demand');
   assert.deepEqual(Object.keys(result.feed.diagnostics.selected_by_recency),
     ['0-60','61-120','121-365','366+']);
   assert.equal(result.feed.diagnostics.quality_floor,7.2);
-  assert.equal(result.feed.diagnostics.weights_with_growth.quality,35);
-  assert.equal(result.feed.diagnostics.weights_without_growth.attention,55);
+  assert.equal(result.feed.diagnostics.weights_with_growth.quality,30);
+  assert.equal(result.feed.diagnostics.weights_without_growth.attention,60);
   assert.equal(result.feed.diagnostics.rating_coverage.kinopoisk,0);
   assert.ok(result.feed.diagnostics.selected_by_kind.movie>0);
   assert.ok(result.feed.diagnostics.selected_by_kind.new_tv>0);
