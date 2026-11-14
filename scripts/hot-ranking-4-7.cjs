@@ -72,9 +72,12 @@ function oldActivity(card,measured,rankingAge){
   const kp=Number(card.surs_hot_kinopoisk_popularity_rank)||999;
   const tmdbActive=d<=40||w<=40;
   const kpActive=kp<=30;
+  // A top-60 KP title with strong 3-source quality still has a genuine
+  // independent demand signal even when it is not currently TMDB Trending.
+  const strongKpLongTail=kp<=60&&Number(card.surs_hot_quality)>=8.2;
   const rising=measured?.status==='rising'&&measured.signal>=.08;
   if(rankingAge<=365){
-    const ok=tmdbActive||kpActive||
+    const ok=tmdbActive||kpActive||strongKpLongTail||
       (rising&&(Number(card.surs_hot_attention)||0)>=.28);
     return {ok,reason:ok?'old_active':'old_no_current_interest'};
   }
