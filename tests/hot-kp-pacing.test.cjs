@@ -122,7 +122,7 @@ test('expired exact IMDb/KP pair refreshes via ONE verified detail call',async()
   assert.equal(result.feed.diagnostics.kp_search_calls,0);
   assert.equal(result.kpCache.entries[f.firstId].kp.value,8.7);
   assert.equal(result.kpCache.entries[f.firstId].imdb.value,8.6);
-  assert.ok(result.feed.diagnostics.kp_preview_ratings_from_cache>=0);
+  assert.equal(result.feed.diagnostics.kp_preview_ratings_from_cache||0,0);
 });
 
 test('mismatched known KP detail is rejected; fallback search verifies new ID',async()=>{
