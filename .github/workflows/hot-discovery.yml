@@ -7,6 +7,7 @@ on:
       - scripts/hot-discovery.cjs
       - scripts/kp-demand-history.cjs
       - scripts/hot-ranking-4-7.cjs
+      - scripts/hot-source-budget.cjs
       - .github/workflows/hot-discovery.yml
   schedule:
     - cron: '17 */3 * * *'
@@ -37,7 +38,8 @@ jobs:
           node --check scripts/hot-discovery.cjs
           node --check scripts/kp-demand-history.cjs
           node --check scripts/hot-ranking-4-7.cjs
-          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs
+          node --check scripts/hot-source-budget.cjs
+          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs
       - name: Fetch and rank
         id: compute
         env:
@@ -61,7 +63,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          files=(data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json)
+          files=(data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json data/hot-discovery-tmdb-cache.json)
           temp="$(mktemp -d)"
           trap 'rm -rf "$temp"' EXIT
           changed=()
