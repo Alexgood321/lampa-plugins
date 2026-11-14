@@ -7,6 +7,7 @@ const kpDemand = require('./kp-demand-history.cjs');
 const hot47 = require('./hot-ranking-4-7.cjs');
 const sourceBudget = require('./hot-source-budget.cjs');
 const integrity = require('./hot-feed-integrity.cjs');
+const evidenceGate = require('./hot-evidence-gate.cjs');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
@@ -379,7 +380,7 @@ function eligibilityReason(c,now) {
     status:c.surs_hot_growth_status,signal:c.surs_hot_growth_signal},
     Number(c.surs_hot_rank_age));
   if(!activity.ok)return activity.reason;
-  return null;
+  return evidenceGate.eligibilityReason(c);
 }
 function recencyTier(c,now) {
   // Retain tiers for diagnostics only; no tier is permitted to add or
@@ -502,6 +503,7 @@ function scoreCandidates(candidates,history,now,previous,model='baseline') {
     c.surs_hot_weights=hot47.effectiveWeights(
       hot47.WEIGHTS[model]||hot47.WEIGHTS.baseline,growth.confirmed);
     c.surs_hot_base_score=c.surs_hot_model_scores[model]??c.surs_hot_model_scores.baseline;
+    c.surs_hot_interest_evidence=evidenceGate.evidence(c);
   }
   return curatedSelection(candidates.filter(c=>!eligibilityReason(c,now)),previous,model);
 }
@@ -1012,6 +1014,9 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   const items=scoreCandidates(candidates,history,nowDate,previous,'demand');
   const comparison=kpDemand.compareTop(previous,items);
   const eligibleForVariants=candidates.filter(c=>!eligibilityReason(c,nowDate));
+  const interestEvidence=evidenceGate.diagnostic(items,candidates.filter(c=>
+    c.surs_hot_quality>=BREAKOUT_QUALITY_FLOOR&&
+    c.surs_hot_age>=0&&c.surs_hot_age<=550));
   const modelComparison=hot47.compareModels(eligibleForVariants,{
     baseline:curatedSelection(eligibleForVariants,previous,'baseline'),
     demand:items,
@@ -1073,7 +1078,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.11',
+  const audit={schema:1,algorithm:'hot-discovery-4.12',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -1089,6 +1094,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         rank_age:c.surs_hot_rank_age,
         discovery_pass:c.surs_hot_discovery_pass,
         model_scores:c.surs_hot_model_scores,
+        interest_evidence:c.surs_hot_interest_evidence,
         external_popularity_rank:c.surs_hot_kinopoisk_popularity_rank||null,
         external_bonus:c.surs_hot_external_demand_bonus||0,
         rank_deltas:c.surs_hot_kinopoisk_rank_deltas||{},
@@ -1100,14 +1106,15 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.11',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.12',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-demand-first-v4.11-integrity',
+      ranking_model:'source-aware-demand-first-v4.12-evidence',
+      interest_evidence:interestEvidence,
       rating_evidence:ratingConfidence,
       active_model:'demand',
       comparison,model_comparison:modelComparison,
