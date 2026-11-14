@@ -6,6 +6,7 @@ const path = require('node:path');
 const kpDemand = require('./kp-demand-history.cjs');
 const hot47 = require('./hot-ranking-4-7.cjs');
 const sourceBudget = require('./hot-source-budget.cjs');
+const integrity = require('./hot-feed-integrity.cjs');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
@@ -37,6 +38,12 @@ const daysSince = (day,now) => day ? Math.floor((Date.parse(dateOnly(now)+'T00:0
   Date.parse(day+'T00:00:00Z')) / DAY) : 9999;
 const identity = c => c.type+':'+c.id;
 const number = v => Number.isFinite(Number(v)) ? Number(v) : 0;
+const observedNumber=(primary,fallback,{min=0,max=Infinity,integer=false}={})=>{
+  const valid=v=>v!==null&&v!==undefined&&v!==''&&
+    Number.isFinite(Number(v))&&Number(v)>=min&&Number(v)<=max&&
+    (!integer||Number.isSafeInteger(Number(v)));
+  return valid(primary)?Number(primary):valid(fallback)?Number(fallback):0;
+};
 function eligibleUS(details,type) {
   if(type==='tv') return Array.isArray(details.origin_country)&&details.origin_country.includes('US');
   return Array.isArray(details.production_countries)&&details.production_countries.some(c=>c.iso_3166_1==='US');
@@ -535,9 +542,9 @@ function toCard(raw,details,type,premiere) {
     overview:String(details.overview||'').slice(0,1200),
     genre_ids:(details.genres||[]).map(g=>g.id),
     origin_country:type==='tv'?details.origin_country:undefined,
-    popularity:number(details.popularity||raw.popularity),
-    vote_average:number(details.vote_average||raw.vote_average),
-    vote_count:number(details.vote_count||raw.vote_count),
+    popularity:observedNumber(details.popularity,raw.popularity),
+    vote_average:observedNumber(details.vote_average,raw.vote_average,{max:10}),
+    vote_count:observedNumber(details.vote_count,raw.vote_count,{integer:true}),
     surs_hot_premiere_date:premiere.date,surs_hot_premiere_kind:premiere.kind,
     surs_hot_season:premiere.number||null,
     surs_hot_original_date:premiere.original,
@@ -553,7 +560,8 @@ function toCard(raw,details,type,premiere) {
 }
 async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpCache={},
   tmdbCache={},listIds=[],history={},previous=null,
-  transport=requestJSON,detailLimit=MAX_DETAILS}={}) {
+  transport=requestJSON,detailLimit=MAX_DETAILS,
+  strictSourceHealth=false}={}) {
   if(!tmdbToken)throw Error('Missing TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY');
   const nowDate=new Date(now),tmdbMemo=sourceBudget.memo(tmdbCache),
     stats={tmdb_calls:0,tmdb_failures:0,tmdb_detail_cache_hits:0,
@@ -578,6 +586,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   };
   const jobs=discoveryJobs(nowDate);
   const pages=await poolMap(jobs,5,async job=>({job,result:await tmdb(job.url)}));
+  const providerHealth=integrity.evaluateTmdbPages(pages);
   const found=new Map(),buckets=new Map();
   for(const {job,result} of pages) {
     if(!Array.isArray(result?.results))continue;
@@ -1064,7 +1073,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.10',
+  const audit={schema:1,algorithm:'hot-discovery-4.11',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -1091,14 +1100,14 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.10',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.11',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-demand-first-v4.10-paced',
+      ranking_model:'source-aware-demand-first-v4.11-integrity',
       rating_evidence:ratingConfidence,
       active_model:'demand',
       comparison,model_comparison:modelComparison,
@@ -1154,6 +1163,10 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         premiere:c.surs_hot_premiere_date,kind:c.surs_hot_premiere_kind,
         score:c.surs_hot_score,quality:c.surs_hot_quality,heat:c.surs_hot_heat}))}};
   validateFeed(feed,nowDate);
+  const publication=integrity.publicationGate(previous,feed,
+    providerHealth,{strict:strictSourceHealth});
+  feed.diagnostics.feed_integrity=publication;
+  integrity.assertPublicationGate(publication);
   return {feed,audit,history:nextHistory(history,candidates,nowDate),
     kpCache:{schema:1,entries:kpEntries,
       ...(validPop(kpPopular)?{popular:kpPopular}:{}),
@@ -1175,7 +1188,8 @@ async function main(){
     kpCache:readJSON(kpCacheFile,{schema:1,entries:{}}),
     tmdbCache:readJSON(tmdbCacheFile,{schema:1,entries:{}}),
     listIds:(process.env.MDBLIST_LIST_IDS||'').split(',').map(x=>x.trim()).filter(Boolean),
-    previous:old,history:readJSON(historyFile,{schema:1,snapshots:[]})});
+    previous:old,history:readJSON(historyFile,{schema:1,snapshots:[]}),
+    strictSourceHealth:true});
   fs.mkdirSync(path.dirname(out),{recursive:true});
   // Only publish after validation; CI/workflow preserves the previous good feed on failure.
   const content=JSON.stringify(result.feed,null,2)+'\n';
@@ -1208,5 +1222,5 @@ async function main(){
 if(require.main===module)main().catch(e=>{console.error(e.message);process.exitCode=1;});
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
   scoreCandidates,recencyTier,attentionFor,curatedSelection,eligibilityReason,
-  verifySeason,nextHistory,validateFeed,build,parseMdb,parseKinopoisk,
+  verifySeason,nextHistory,validateFeed,build,toCard,parseMdb,parseKinopoisk,
   qualityAgreement,matchedKpSearchRow,externalPopularity,daysSince,requestJSON};
