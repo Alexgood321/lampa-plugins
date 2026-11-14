@@ -961,7 +961,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     if(!foundKp)missingRatings.missing_kp++;
     if(!foundImdb&&!foundKp)missingRatings.missing_both++;
     const imdbId=c.surs_hot_imdb_id;
-    if(!/^tt\\d{6,12}$/.test(String(imdbId||''))){
+    if(!/^tt\d{6,12}$/.test(String(imdbId||''))){
       missingRatings.no_valid_imdb_id++;
       continue;
     }
