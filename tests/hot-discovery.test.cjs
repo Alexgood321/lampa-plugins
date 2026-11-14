@@ -94,9 +94,9 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.6');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.7');
   assert.equal(result.feed.diagnostics.ranking_model,
-    'attention-quality-consensus-v4-ru-momentum');
+    'source-aware-smooth-v4.7');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,60);
@@ -121,14 +121,17 @@ test('No credentials or insufficient data never create synthetic published feed'
     transport:async()=>({results:[]})}),/Invalid Hot Discovery feed/);
 });
 
-test('hot ranking strictly follows the visible score without a hidden diversity shuffle',()=>{
+test('Hot Score is an unchanged quantitative metric despite editorial order',()=>{
   const basic={type:'movie',poster_path:'/p',vote_average:8.6,vote_count:4000,
     surs_hot_premiere_date:day(45)};
   const rows=Array.from({length:20},(_,i)=>({...basic,id:700+i,popularity:10+i*5}));
   const output=hot.scoreCandidates(rows,{snapshots:[]},NOW,null);
   assert.equal(output.length,20);
-  for(let i=1;i<output.length;i++)
-    assert.ok(output[i-1].surs_hot_score>=output[i].surs_hot_score);
+  for(let i=0;i<output.length;i++){
+    assert.equal(output[i].surs_hot_rank,i+1);
+    assert.equal(output[i].surs_hot_score,
+      Math.round(output[i].surs_hot_base_score*100)/100);
+  }
 });
 test('a new digital listing does not reclassify decades-old movies as a new release',()=>{
   const m=detail(975,800);
@@ -236,58 +239,54 @@ test('discovery prioritizes recent 60-day film and series lanes without discardi
   assert.ok(jobs.some(x=>x.channel==='trending_week'&&x.type==='movie'));
   assert.ok(jobs.some(x=>x.channel==='digital'));
 });
-test('fresh 60-day films and verified seasons sort above higher-rated old movies',()=>{
+test('smooth freshness lets stronger demand beat merely newer releases',()=>{
   const make=(id,age,rating=8.3)=>({id,type:'movie',poster_path:'/p',
     vote_average:rating,vote_count:2000,popularity:120,
     surs_hot_premiere_date:day(age),surs_hot_original_date:day(age)});
-  const season={id:900,type:'tv',poster_path:'/p',
-    vote_average:8.1,vote_count:900,popularity:100,
-    surs_hot_premiere_date:day(40),surs_hot_original_date:day(900),
-    surs_hot_premiere_kind:'season',surs_hot_season_verified:true,
-    surs_hot_season_rating:{value:8.3,votes:150}};
-  const cards=[make(1,183,9.8),make(2,45,8.1),make(3,90,9.7),
-    make(4,420,9.9),make(5,10,8.5),season];
-  const ranked=hot.scoreCandidates(cards,{snapshots:[]},NOW,null);
-  const ids=ranked.map(x=>x.id);
-  assert.equal(ranked.length,6);
-  assert.deepEqual(ids.slice(0,3).sort((a,b)=>a-b),[2,5,900]);
-  assert.equal(ids[3],3);
-  assert.equal(ids[4],1);
-  assert.equal(ids[5],4);
-  assert.deepEqual(ranked.map(x=>x.surs_hot_recency_tier),
-    [0,0,0,1,2,3]);
-  for(let i=1;i<ranked.length;i++)
-    assert.ok(ranked[i-1].surs_hot_score>ranked[i].surs_hot_score);
+  const recent=make(5,10,7.8);
+  const older={...make(3,90,8.4),popularity:400,
+    surs_hot_trend_day:2,surs_hot_trend_week:3};
+  const rows=hot.scoreCandidates([recent,older],{snapshots:[]},NOW,null);
+  assert.deepEqual(rows.map(x=>x.id),[3,5]);
+  assert.ok(Math.abs(hot.scoreCandidates([
+    make(60,60),make(61,61)],{snapshots:[]},NOW,null)[0].surs_hot_freshness-
+    hot.scoreCandidates([make(60,60),make(61,61)],
+      {snapshots:[]},NOW,null)[1].surs_hot_freshness)<.01);
 });
-test('late streaming listing cannot make a 200-day old film a hot current premiere',()=>{
+test('late digital US listing does not reset an older original premiere',()=>{
   const late={id:431,type:'movie',poster_path:'/p',
     vote_average:9,vote_count:5000,popularity:200,
     surs_hot_premiere_date:day(5),surs_hot_original_date:day(210),
-    surs_hot_premiere_kind:'digital'};
+    surs_hot_first_us_release_date:day(5),
+    surs_hot_premiere_kind:'digital',surs_hot_trend_day:3};
   const fresh={id:432,type:'movie',poster_path:'/p',
     vote_average:8.3,vote_count:500,popularity:35,
     surs_hot_premiere_date:day(12),surs_hot_original_date:day(20),
     surs_hot_premiere_kind:'theatrical'};
   const ordered=hot.scoreCandidates([late,fresh],{snapshots:[]},NOW,null);
-  assert.deepEqual(ordered.map(x=>x.id),[432,431]);
-  assert.equal(ordered[1].surs_hot_age,5);
-  assert.equal(ordered[1].surs_hot_rank_age,210);
-  assert.equal(ordered[1].surs_hot_recency_tier,2);
+  assert.equal(ordered.length,2);
+  const old=ordered.find(x=>x.id===431);
+  assert.equal(old.surs_hot_age,5);
+  assert.equal(old.surs_hot_rank_age,210);
+  assert.equal(old.surs_hot_recency_tier,2);
 });
-test('recency cutoff has no accidental day-60 and day-61 overlap',()=>{
+test('day 60/61,120/121,365/366 do not create sudden score gaps',()=>{
   const card=(id,age)=>({id,type:'movie',poster_path:'/p',
     vote_average:8.2,vote_count:700,popularity:100,
+    surs_hot_trend_day:3,surs_hot_trend_week:4,
+    surs_hot_kinopoisk_popularity_rank:5,
     surs_hot_premiere_date:day(age),surs_hot_original_date:day(age)});
   const rows=hot.scoreCandidates([card(60,60),card(61,61),
     card(120,120),card(121,121),card(365,365),card(366,366)],
     {snapshots:[]},NOW,null);
-  assert.deepEqual(rows.map(c=>c.id).sort((a,b)=>a-b),[60,61,120,121,365,366]);
-  assert.deepEqual(rows.map(c=>c.surs_hot_recency_tier),[0,1,1,2,2,3]);
-  assert.ok(rows[0].surs_hot_score>rows[1].surs_hot_score);
-  assert.ok(rows[2].surs_hot_score>rows[3].surs_hot_score);
-  assert.ok(rows[4].surs_hot_score>rows[5].surs_hot_score);
+  assert.equal(rows.length,6);
+  const byId=new Map(rows.map(x=>[x.id,x]));
+  for(const [a,b] of [[60,61],[120,121],[365,366]]){
+    assert.ok(Math.abs(byId.get(a).surs_hot_score-
+      byId.get(b).surs_hot_score)<1.5);
+    assert.ok(byId.get(a).surs_hot_rank_age+1===byId.get(b).surs_hot_rank_age);
+  }
 });
-
 test('high current buzz can rescue mixed reviews, not a poorly rated or unverified title',()=>{
   const make=(id,rating,trends)=>({id,type:'movie',
     poster_path:'/p',vote_average:rating,vote_count:1500,
@@ -325,7 +324,7 @@ test('current attention outranks legacy popularity in the same premiere band',()
   assert.ok(rows[0].surs_hot_attention>rows[1].surs_hot_attention);
   assert.equal(rows[1].surs_hot_attention_sources,0);
 });
-test('top-10 and top-20 have returning-season caps when alternatives exist',()=>{
+test('season variety is soft and does not fabricate a monotonic score',()=>{
   const raw=[];
   for(let i=0;i<22;i++)raw.push({
     id:3000+i,type:'tv',poster_path:'/p',vote_average:9.2,
@@ -341,14 +340,12 @@ test('top-10 and top-20 have returning-season caps when alternatives exist',()=>
     surs_hot_premiere_date:day(15),surs_hot_original_date:day(15),
     surs_hot_trend_day:i+1,surs_hot_trend_week:i+1});
   const rows=hot.scoreCandidates(raw,{snapshots:[]},NOW,null);
-  const n=x=>x.filter(c=>c.type==='tv'&&
-    c.surs_hot_premiere_kind==='season').length;
-  assert.equal(rows.length,38); // 26 movies + 12 returning seasons; no forced padding
-  assert.ok(n(rows.slice(0,10))<=3);
-  assert.ok(n(rows.slice(0,20))<=6);
-  assert.ok(n(rows)<=12);
-  for(let i=1;i<rows.length;i++)assert.ok(
-    rows[i-1].surs_hot_score>=rows[i].surs_hot_score);
+  assert.equal(rows.length,40);
+  assert.equal(new Set(rows.map(x=>x.type+':'+x.id)).size,40);
+  assert.ok(rows.filter(x=>x.type==='movie').length>0);
+  assert.ok(rows.filter(x=>x.type==='tv').length>0);
+  assert.ok(rows.every(x=>x.surs_hot_score===
+    Math.round(x.surs_hot_base_score*100)/100));
 });
 test('returning series are not discarded when there are too few alternatives',()=>{
   const tv=Array.from({length:15},(_,i)=>({
@@ -362,17 +359,20 @@ test('returning series are not discarded when there are too few alternatives',()
   assert.equal(ranked.length,15);
   assert.equal(ranked.filter(x=>x.surs_hot_premiere_kind==='season').length,15);
 });
-test('a 200-day-old highly rated movie cannot outrank qualified current releases',()=>{
+test('a stale 200-day movie needs current interest rather than ratings alone',()=>{
   const now={type:'movie',id:400,poster_path:'/p',
     vote_average:7.8,vote_count:900,popularity:90,
     surs_hot_premiere_date:day(20),surs_hot_original_date:day(20)};
   const old={...now,id:401,vote_average:9.3,
     vote_count:18000,popularity:800,
     surs_hot_premiere_date:day(200),surs_hot_original_date:day(200)};
-  const ranked=hot.scoreCandidates([old,now],{snapshots:[]},NOW,null);
-  assert.deepEqual(ranked.map(x=>x.id),[400,401]);
+  const stale=hot.scoreCandidates([old,now],{snapshots:[]},NOW,null);
+  assert.deepEqual(stale.map(x=>x.id),[400]);
+  const trending={...old,surs_hot_trend_day:1,surs_hot_trend_week:3};
+  const recovered=hot.scoreCandidates([trending,{...now}],
+    {snapshots:[]},NOW,null);
+  assert.deepEqual(recovered.map(x=>x.id),[401,400]);
 });
-
 test('Kinopoisk API is matched only by exact IMDb ID, not a translated title',()=>{
   const id='tt1234567';
   const rows={total:2,items:[
@@ -484,7 +484,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',
     mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
     transport,history:{snapshots:[]},detailLimit:80});
-  assert.equal(result.feed.algorithm,'hot-discovery-4.6');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.7');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
@@ -572,7 +572,7 @@ test('new popularity source is optional, cached and never counted as film views'
   };
   const first=await hot.build({now:NOW_DATE,tmdbToken:'test',
     kinopoiskKey:'kp-test',transport,history:{snapshots:[]},detailLimit:24});
-  assert.equal(first.feed.algorithm,'hot-discovery-4.6');
+  assert.equal(first.feed.algorithm,'hot-discovery-4.7');
   assert.equal(first.kpCache.popular_history.length,1);
   assert.equal(first.kpCache.rating_history.length,1);
   assert.equal(first.feed.sources.kinopoisk_popularity,true);
