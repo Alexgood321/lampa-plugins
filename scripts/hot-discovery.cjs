@@ -57,7 +57,8 @@ function moviePremiere(details,now) {
   const theatrical=earliestTheatrical&&daysSince(earliestTheatrical,now)>=0?
     earliestTheatrical:null;
   const releasedOriginal=original&&daysSince(original,now)>=0?original:null;
-  const actual=digital&&(!original||digital>=original)?digital:
+  const actual=digital&&(!original||digital>=original||
+    (theatrical&&digital<theatrical))?digital:
     (theatrical||releasedOriginal);
   const firstUS=[digital,theatrical].filter(Boolean).sort()[0]||null;
   return {date:actual,kind:actual===digital?'digital':'theatrical',
