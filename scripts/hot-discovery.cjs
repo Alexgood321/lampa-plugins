@@ -259,7 +259,7 @@ function attentionFor(c,peers) {
   const outside=externalPopularity(c);
   return {score:round(Math.min(1,interest+outside.bonus),3),
     tmdb_score:round(Math.min(1,interest),3),
-    external_bonus:outside.bonus,
+    external_bonus:outside.bonus,momentum_bonus:outside.momentum_bonus||0,
     external_rank:outside.rank,cross_confirmed:outside.cross_confirmed,
     day,week,popularity_percentile:round(pop,3),
     trend_confirmed:activeDay&&activeWeek,
