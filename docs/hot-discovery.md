@@ -1,4 +1,22 @@
-# SURS Hot Discovery 4.5: рейтинги качества и подтверждённая популярность
+# SURS Hot Discovery 4.6: подтверждённая динамика интереса
+
+## New in 4.6: Kinopoisk rank and rating-count momentum
+
+Hot Discovery 4.6 builds on the verified Kinopoisk Unofficial `TOP_POPULAR_ALL` signal introduced in 4.5. It records one dated popularity ranking per UTC day and independently fetched rating-vote totals for a small subset of exact-ID-matched titles. No page clicks, views, streams, ranking changes or vote growth are invented.
+
+- Historical samples are kept for the current day and the previous 14 calendar days, enabling exact **1/3/7/14-day** comparisons only when both dates were actually observed. An absent film or missing day is unknown, never assigned rank 61 or zero. The prior single-day `popular` cache is migrated without backfilling fictitious dates.
+- `rating_history` contains **only fresh detail responses** for verified Kinopoisk IDs and IMDb IDs. Up to 12 current TOP candidates are refreshed daily, within the existing global 45-request-per-run KP ceiling. Cached three-day rating values are not treated as new daily observations. Missing vote observations never receive growth credit.
+- Rank and vote improvements can slightly increase the independent-KP component **inside the existing attention signal**. An increase is bounded by the original attention bonus cap (**0.16 for a concurrently trending TMDB title; 0.10 without a TMDB trend**). Declines are reported but add no bonus and no penalty; missing history changes nothing.
+- The original weighted model remains **45% current attention / 35% quality / 15% measured TMDB momentum / 5% freshness**, or 55/40/0/5 without confirmed TMDB growth. Russian-market KP history is not double-counted in the 15% component.
+- Public JSON remains `schema: 1`, compatible with SURS Pro 4.0.8 without a client update. New per-card fields: `surs_hot_kinopoisk_rank_deltas`, `surs_hot_kinopoisk_vote_growth`, `surs_hot_kinopoisk_momentum_bonus`, plus observation timestamps. `diagnostics.external_demand` reports observed sample coverage and dates.
+- Before publishing, `diagnostics.comparison` records actual previous/new top-40 overlap, additions, removals, largest rank movement and the two top-10 identity lists. This comparison is computed from the real new ranking, not a fabricated benchmark.
+- Existing safe publishing is unchanged: a failed upstream request or a generated feed with under 12 valid titles leaves the prior committed JSON in place. New algorithm identifiers publish once immediately; subsequent same-day runs collect evidence without reshuffling rows.
+- Version 4.6 does **not** claim KP site ranks measure real view counts and does **not** add HDRezka, Filmix, Trakt or JustWatch.
+
+Validation: `node --check scripts/hot-discovery.cjs`, `node --check scripts/kp-demand-history.cjs`, `node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs`.
+
+---
+
 
 Hot Discovery is the primary American films-and-TV discovery shelf in SURS Pro. Its job is a short, fresh, interesting **what to watch next** collection, not a list of the highest lifetime ratings. Existing Lampa clients accept its unchanged JSON schema 1.
 
