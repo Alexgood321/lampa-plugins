@@ -27,7 +27,7 @@ test('a TMDB-only non-trending title with flat demand is not automatically a hot
   assert.equal(r.current_interest_observed,false);
   assert.deepEqual(r.interest_evidence,[]);
   assert.equal(evidence.eligibilityReason(weak),'single_source_interest_unconfirmed');
-  assert.equal(hot.eligibilityReason(weak,NOW),'single_source_interest_unconfirmed');
+  assert.equal(hot.eligibilityReason(weak,NOW,true),'single_source_interest_unconfirmed');
 });
 
 test('one-rating titles retain admission when current TMDB Trending verifies interest',()=>{
@@ -35,7 +35,7 @@ test('one-rating titles retain admission when current TMDB Trending verifies int
     const candidate=card(2,cfg);
     assert.equal(evidence.eligibilityReason(candidate),null);
     assert.equal(evidence.evidence(candidate).tmdb_trending,true);
-    assert.equal(hot.eligibilityReason(candidate,NOW),null);
+    assert.equal(hot.eligibilityReason(candidate,NOW,true),null);
   }
 });
 
@@ -46,7 +46,7 @@ test('cross-source ratings are not penalized for missing Trending or KP popular 
     assert.equal(e.one_source_eligible,true);
     assert.equal(e.current_interest_observed,false);
     assert.equal(evidence.eligibilityReason(verified),null);
-    assert.equal(hot.eligibilityReason(verified,NOW),null);
+    assert.equal(hot.eligibilityReason(verified,NOW,true),null);
   }
 });
 
@@ -91,7 +91,7 @@ test('filtered single-source long tail is traceable and not forced into 40-card 
   const supported=Array.from({length:3},(_,i)=>card(300+i,{
     source_count:1,week:i+5,percentile:.4}));
   const rows=hot.scoreCandidates([...strong,...unsupported,...supported],
-    {snapshots:[]},NOW,null,'demand');
+    {snapshots:[]},NOW,null,'demand',true);
   assert.equal(rows.length,23);
   const stats=evidence.diagnostic(rows,unsupported);
   assert.equal(stats.single_source_selected,3);
