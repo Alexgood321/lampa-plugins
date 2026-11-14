@@ -135,3 +135,26 @@ test('sufficient and insufficient digital date evidence remain distinct',()=>{
   assert.equal(out.length,2);
   assert.notEqual(p.surs_hot_digital_status,q.surs_hot_digital_status);
 });
+
+test('TMDB daily and weekly trend count as one external provider',()=>{
+  const card={...base(1501,30),surs_hot_trend_day:2,
+    surs_hot_trend_week:3};
+  const tmdb=hot.attentionFor(card,[card]);
+  assert.equal(tmdb.source_count,1);
+  const both=hot.attentionFor({...card,
+    surs_hot_kinopoisk_popularity_rank:4},[card]);
+  assert.equal(both.source_count,2);
+  assert.ok(both.score>tmdb.score);
+});
+
+test('measured declining growth cannot masquerade as positive momentum',()=>{
+  const card={...base(1601,20),popularity:35};
+  const history={snapshots:[{
+    date:day(3),items:{'movie:1601':{p:150}}
+  }]};
+  const row=hot.scoreCandidates([card],history,NOW,null)[0];
+  assert.equal(row.surs_hot_growth_confirmed,true);
+  assert.equal(row.surs_hot_growth_status,'falling');
+  assert.equal(row.surs_hot_growth_signal,0);
+  assert.equal(row.surs_hot_weights.growth,.15);
+});
