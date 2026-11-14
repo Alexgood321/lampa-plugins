@@ -377,59 +377,54 @@ function isReturning(c) {
 function kindOf(c) {
   return isReturning(c)?'returning_tv':c.type==='movie'?'movie':'new_tv';
 }
-function diversityPenalty(candidate,chosen) {
+function diversityPenalty(candidate,chosen,position=chosen.length+1) {
   const recent=chosen.slice(-5),kind=kindOf(candidate);
   const sameKind=recent.filter(x=>kindOf(x)===kind).length;
-  // Only a small within-band penalty. Date and actual buzz remain dominant.
   const genres=Array.isArray(candidate.genre_ids)?candidate.genre_ids:[];
   const first=genres[0];
   const repeats=first==null?0:recent.filter(x=>
     Array.isArray(x.genre_ids)&&x.genre_ids[0]===first).length;
-  return Math.max(0,sameKind-2)*.45+Math.max(0,repeats-2)*.30;
+  // Editorial diversity is a SOFT bounded selection penalty, never a
+  // 25-point age cliff, hard quota or reduction to the public Hot Score.
+  let penalty=Math.max(0,sameKind-2)*.6+Math.max(0,repeats-2)*.3;
+  if(isReturning(candidate)){
+    const n=chosen.filter(isReturning).length;
+    const guide=position<=10?3:position<=20?6:12;
+    if(n>=guide)penalty+=Math.min(4,2+(n-guide)*.6);
+  }
+  if(candidate.surs_hot_track==='breakout'){
+    const n=chosen.filter(x=>x.surs_hot_track==='breakout').length;
+    const guide=position<=10?2:position<=20?5:10;
+    if(n>=guide)penalty+=Math.min(3,1.4+(n-guide)*.5);
+  }
+  return round(Math.min(6,penalty),3);
 }
-function curatedSelection(candidates,previous) {
+function curatedSelection(candidates,previous,model='baseline') {
   const remaining=candidates.slice(),picked=[];
-  // When there are plenty of independent films and new series, do not fill
-  // the bottom of the shelf with extra returning seasons just to reach 40.
-  // When almost everything eligible is a returning season, relax the cap.
-  const alternativeSupply=candidates.filter(c=>!isReturning(c)).length;
   const previousRank=new Map((previous?.items||[])
     .map((c,i)=>[identity(c),i]));
-  let returning=0,breakouts=0,lastScore=100;
-  for(let position=1;position<=MAX_ITEMS&&remaining.length;position++) {
-    const returnLimit=position<=10?TOP10_RETURNING_LIMIT:
-      position<=20?TOP20_RETURNING_LIMIT:TOP40_RETURNING_LIMIT;
-    const buzzLimit=position<=10?2:position<=20?5:10;
-    let pool=remaining.filter(c=>!(isReturning(c)&&returning>=returnLimit));
-    if(!pool.length) {
-      if(alternativeSupply>=22&&position>20&&
-          returning>=TOP40_RETURNING_LIMIT&&picked.length>=MIN_ITEMS)
-        break;
-      pool=remaining;
-    }
-    const notBreakout=pool.filter(c=>!(
-      c.surs_hot_track==='breakout'&&breakouts>=buzzLimit));
-    if(notBreakout.length)pool=notBreakout;
-    pool.sort((a,b)=>{
-      const sa=a.surs_hot_base_score-diversityPenalty(a,picked);
-      const sb=b.surs_hot_base_score-diversityPenalty(b,picked);
+  for(let position=1;position<=MAX_ITEMS&&remaining.length;position++){
+    remaining.sort((a,b)=>{
+      const sa=number(a.surs_hot_model_scores?.[model]??a.surs_hot_base_score)-
+        diversityPenalty(a,picked,position);
+      const sb=number(b.surs_hot_model_scores?.[model]??b.surs_hot_base_score)-
+        diversityPenalty(b,picked,position);
       if(Math.abs(sb-sa)>.000001)return sb-sa;
       const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
       if(pa!==undefined&&pb!==undefined&&pa!==pb)return pa-pb;
       return identity(a).localeCompare(identity(b));
     });
-    const winner=pool[0],idx=remaining.indexOf(winner);
-    remaining.splice(idx,1);
-    const effective=winner.surs_hot_base_score-diversityPenalty(winner,picked);
-    lastScore=Math.max(0,round(Math.min(effective,lastScore-.02),2));
-    picked.push({...winner,surs_hot_score:lastScore,
+    const winner=remaining.shift();
+    const editorialPenalty=diversityPenalty(winner,picked,position);
+    const modelScore=number(winner.surs_hot_model_scores?.[model]??winner.surs_hot_base_score);
+    picked.push({...winner,surs_hot_score:round(modelScore,2),
+      surs_hot_demand_score:round(modelScore,2),
+      surs_hot_editorial_penalty:editorialPenalty,
       surs_hot_rank:position});
-    if(isReturning(winner))returning++;
-    if(winner.surs_hot_track==='breakout')breakouts++;
   }
   return picked;
 }
-function scoreCandidates(candidates,history,now,previous) {
+function scoreCandidates(candidates,history,now,previous,model='baseline') {
   for(const c of candidates) {
     const age=daysSince(c.surs_hot_premiere_date,now);
     const quality=qualityFor(c),attention=attentionFor(c,candidates),
@@ -453,36 +448,33 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_growth=growth.score;
     c.surs_hot_growth_measured=growth.measured;
     c.surs_hot_growth_periods=growth.periods;
+    c.surs_hot_growth_status=growth.status;
+    c.surs_hot_growth_signal=growth.signal;
+    c.surs_hot_growth_confirmed=growth.confirmed;
     c.surs_hot_age=age;
     const period=recencyTier(c,now);
     c.surs_hot_rank_age=period.age;
+    c.surs_hot_rank_date=period.date;
+    c.surs_hot_age_source_verified=period.confirmed_us;
     c.surs_hot_recency_tier=period.tier;
     c.surs_hot_provisional=number(c.vote_count)<MIN_VOTES||
       (c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating);
     c.surs_hot_track=quality.score<QUALITY_FLOOR?'breakout':
       quality.score>=7.8?'critically_strong':'qualified';
-    // Demand first, reliable quality second. Premiere freshness is represented
-    // by priority bands + a smooth decay inside each band.
-    // A single daily observation is not yet a confirmed multi-day trend.
-    const confirmedGrowth=Object.keys(growth.periods).some(p=>p!=='1d');
-    const weights=confirmedGrowth?
-      {attention:.45,quality:.35,freshness:.05,growth:.15}:
-      {attention:.55,quality:.40,freshness:.05,growth:0};
-    c.surs_hot_growth_confirmed=confirmedGrowth;
-    const q=Math.min(1,Math.max(0,(quality.score-6.4)/2.8));
-    const duration=period.tier===0?60:period.tier===1?60:
-      period.tier===2?245:185;
-    const start=period.tier===0?0:period.tier===1?60:
-      period.tier===2?120:365;
-    const freshness=Math.max(0,Math.min(1,1-(period.age-start)/duration));
-    c.surs_hot_freshness=round(freshness,3);
-    c.surs_hot_weights=weights;
-    const relevance=weights.attention*attention.score+weights.quality*q+
-      weights.freshness*freshness+weights.growth*growth.score;
-    c.surs_hot_base_score=round(75-25*period.tier+24.5*relevance,3);
+    const freshness=hot47.smoothFreshness(period.age);
+    c.surs_hot_freshness=freshness;
+    c.surs_hot_model_scores={};
+    const metrics={attention:attention.score,quality:quality.score,
+      growth:growth.signal,freshness};
+    for(const [name,weights] of Object.entries(hot47.WEIGHTS)){
+      const effective=hot47.effectiveWeights(weights,growth.confirmed);
+      c.surs_hot_model_scores[name]=hot47.modelScore(metrics,effective,true);
+    }
+    c.surs_hot_weights=hot47.effectiveWeights(
+      hot47.WEIGHTS[model]||hot47.WEIGHTS.baseline,growth.confirmed);
+    c.surs_hot_base_score=c.surs_hot_model_scores[model]??c.surs_hot_model_scores.baseline;
   }
-  const eligible=candidates.filter(c=>!eligibilityReason(c,now));
-  return curatedSelection(eligible,previous);
+  return curatedSelection(candidates.filter(c=>!eligibilityReason(c,now)),previous,model);
 }
 function nextHistory(history,candidates,now) {
   const day=dateOnly(now);
