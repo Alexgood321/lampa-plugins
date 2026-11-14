@@ -1,3 +1,22 @@
+# Hot Discovery 4.11: truthful zero values and upstream completeness
+
+## Correctness repairs
+- Previously `toCard()` used expressions like `details.popularity || raw.popularity`. Legitimately observed values of **0** were silently replaced by nonzero discovery values. 4.11 accepts finite numeric values including zero from the current verified detail response, and uses discovery values only when details are absent or invalid. The same applies to `vote_count` and `vote_average`.
+- The 4.9/4.10 cache fix correctly allowed falling values in the merged detail result, but the final card constructor could undo the change for zero. The 4.11 test reproduces this exact bug.
+
+## Fail-closed TMDB integrity
+- Each actual production invocation verifies nonempty page 1 results for **all four** TMDB Trending lanes: movie/day, movie/week, tv/day and tv/week (at least five items for each). A minimum number of Discover/Recent lanes must also return usable results. This checks raw provider response health, not whether the U.S. shortlist happens to contain those results.
+- If any critical lane is absent, malformed or empty, the builder **throws before writing any JSON**. GitHub Actions consequently retains the last successfully published polка, history, ratings cache and quota ledger. The next scheduled invocation can retry. Production CLI sets `strictSourceHealth=true`; the library permits non-strict mode for fixtures lacking one medium.
+- Diagnostic `diagnostics.feed_integrity` includes per-lane status and relative change of the top 10, top 20, total retained items and shared rank movement. Major churn **alone** is a warning and is never enough to hide a genuine emerging premiere.
+- A previously verified strong TMDB Trending top 10 that suddenly loses all Trending representations is also blocked from replacing the existing feed.
+
+## Boundaries
+- No new external providers or changes to demand/quality/growth/freshness weights, KP daily quota, age calculation, editorial choices or SURS client schema.
+- TMDB Popularity is not actual playback, and rank stability is not a measure of viewer satisfaction. 4.11 improves the truthfulness and availability of the published recommendation feed, not its measured click-through rate.
+- Rollback: revert the squash merge commit; already-published JSON snapshots remain in Git history.
+
+---
+
 # Hot Discovery 4.10: paced KP evidence acquisition
 
 The 4.9 data generator executes every three hours and could make 45 KP API calls per run, exhausting its 210-request daily safety budget long before the end of the UTC day. The new cumulative eight-slot allocation reserves the day's requests for later runs: first UTC 00:00–02:59 slot allows up to 26 requests, next up to a cumulative 52, and so on to 210 by 21:00. Unused earlier allocations roll forward, and manual reruns in the same slot cannot spend the next slot's allowance. Every HTTP attempt and retry remains counted.
