@@ -49,7 +49,7 @@ jobs:
       - run: node --check scripts/kp-demand-history.cjs
       - run: node --check scripts/hot-ranking-4-7.cjs
       - run: node --check scripts/hot-source-budget.cjs
-      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs
+      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs
       - run: node scripts/build-surs.cjs --check
       - run: node --check surs-editor.js
       - run: node --check surs.js
@@ -62,7 +62,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.8 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 4.9 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'feat/hot-discovery-')
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -83,7 +83,7 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.8')throw Error('New 4.6 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-4.9')throw Error('New 4.6 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
@@ -96,6 +96,22 @@ jobs:
             details:sum,verified:after.diagnostics.second_pass_verified,
             selected:after.diagnostics.second_pass_selected}));
           console.log('MODEL_COMPARISON:',JSON.stringify(models));
+          const evidenceChecks=after.diagnostics.rating_evidence;
+          if(!evidenceChecks||evidenceChecks.selected!==after.items.length||
+            evidenceChecks.high+evidenceChecks.medium+
+              evidenceChecks.limited!==after.items.length)
+            throw Error('Rating evidence coverage diagnostics invalid');
+          const sourceMismatch=after.items.some(x=>
+            !x.surs_hot_rating_evidence||
+            x.surs_hot_rating_evidence.source_count<1||
+            x.surs_hot_rating_evidence.source_count>3);
+          if(sourceMismatch)throw Error('Missing per-card provenance');
+          console.log('RATING_EVIDENCE:',JSON.stringify(evidenceChecks));
+          console.log('DYNAMIC_PROVENANCE:',JSON.stringify({
+            missing_current_tmdb_popularity:
+              after.diagnostics.tmdb_cached_popularity_unobserved,
+            missing_current_tmdb_votes:
+              after.diagnostics.tmdb_cached_vote_count_unobserved}));
           const evidence=after.diagnostics.external_demand;
           console.log('BEFORE:',before.algorithm,before.items.length,'items');
           console.log('AFTER:',after.algorithm,after.items.length,'items');
@@ -124,7 +140,7 @@ jobs:
           if(after.items.some(x=>x.surs_hot_attention_sources>2))
             throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.8 real dry-run (no publishing)\n'+
+            '### Hot 4.9 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+
@@ -137,9 +153,9 @@ jobs:
           # scoring engine from main. This isolates ranking changes, but not
           # the discovery/eligibility effects of the two engines.
           git fetch --depth=2 origin main
-          git show origin/main:scripts/hot-discovery.cjs > scripts/hot-discovery-v46-shadow.cjs
+          git show origin/main:scripts/hot-discovery.cjs > scripts/hot-discovery-v48-shadow.cjs
           node - <<'NODE'
-          const old=require('./scripts/hot-discovery-v46-shadow.cjs');
+          const old=require('./scripts/hot-discovery-v48-shadow.cjs');
           const fs=require('node:fs');
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
           const previous=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
@@ -152,7 +168,7 @@ jobs:
           const oldTop=oldRows.slice(0,10).map(id);
           const newTop=after.items.slice(0,10).map(id);
           const overlap=newTop.filter(x=>oldTop.includes(x)).length;
-          console.log('SAME_CANDIDATES_46_VS_47:',JSON.stringify({
+          console.log('SAME_CANDIDATES_48_VS_49:',JSON.stringify({
             sample_size:input.length,old_selected:oldRows.length,
             old_top10:oldTop,new_top10:newTop,top10_overlap:overlap,
             caveat:'Same 4.7-selected cards; does not measure old-only candidates or real viewer clicks'
