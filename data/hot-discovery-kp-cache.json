@@ -321,7 +321,7 @@
     },
     "tt40197357": {
       "imdbId": "tt40197357",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null
     },
     "tt13111078": {
@@ -626,7 +626,7 @@
     },
     "tt50389959": {
       "imdbId": "tt50389959",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null
     },
     "tt7631058": {
@@ -732,7 +732,7 @@
     },
     "tt10377864": {
       "imdbId": "tt10377864",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null
     },
     "tt2261391": {
@@ -782,7 +782,7 @@
     },
     "tt4087032": {
       "imdbId": "tt4087032",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null,
       "imdb": {
         "value": 8.7,
@@ -807,12 +807,12 @@
     },
     "tt9601292": {
       "imdbId": "tt9601292",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null
     },
     "tt38515310": {
       "imdbId": "tt38515310",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null
     },
     "tt0063951": {
@@ -862,7 +862,7 @@
     },
     "tt38686316": {
       "imdbId": "tt38686316",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null,
       "imdb": null
     },
@@ -898,7 +898,7 @@
     },
     "tt10691888": {
       "imdbId": "tt10691888",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null,
       "imdb": {
         "value": 8.3,
@@ -908,7 +908,7 @@
     },
     "tt38043316": {
       "imdbId": "tt38043316",
-      "checked_at": "2026-11-12",
+      "checked_at": "2026-11-14",
       "kp": null,
       "imdb": {
         "value": 4.5,
@@ -1634,6 +1634,41 @@
     "tt8264358": {
       "imdbId": "tt8264358",
       "checked_at": "2026-11-13",
+      "kp": null
+    },
+    "tt0472954": {
+      "imdbId": "tt0472954",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 8,
+        "votes": 24446,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 401515
+      },
+      "imdb": {
+        "value": 8.8,
+        "votes": 287468,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt34379051": {
+      "imdbId": "tt34379051",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 6.2,
+        "votes": 2661,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6955070
+      },
+      "imdb": {
+        "value": 6.5,
+        "votes": 8732,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt37360247": {
+      "imdbId": "tt37360247",
+      "checked_at": "2026-11-14",
       "kp": null
     }
   }
