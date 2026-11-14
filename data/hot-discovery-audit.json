@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "algorithm": "hot-discovery-4.9",
-  "generated_at": "2026-11-14T18:12:46.507Z",
-  "candidate_total": 220,
-  "eligible": 37,
-  "selected": 37,
+  "algorithm": "hot-discovery-4.10",
+  "generated_at": "2026-11-14T18:28:15.784Z",
+  "candidate_total": 221,
+  "eligible": 36,
+  "selected": 36,
   "candidates": [
     {
       "id": 1368337,
@@ -73,15 +73,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5512084
       },
-      "attention": 0.73,
+      "attention": 0.684,
       "growth_status": "rising",
       "growth_signal": 0.2475,
       "rank_age": 57,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 65.988,
-        "demand": 65.916,
-        "fresh": 65.641
+        "baseline": 63.918,
+        "demand": 63.616,
+        "fresh": 63.571
       },
       "external_popularity_rank": 7,
       "external_bonus": 0.0791,
@@ -96,7 +96,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 65.916,
+      "base_score": 63.616,
       "rejection": null,
       "selected_rank": 2
     },
@@ -116,15 +116,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5158783
       },
-      "attention": 0.778,
+      "attention": 0.843,
       "growth_status": "rising",
       "growth_signal": 0.3564,
       "rank_age": 32,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 57.679,
-        "demand": 59.667,
-        "fresh": 59.787
+        "baseline": 60.604,
+        "demand": 62.917,
+        "fresh": 62.712
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -139,7 +139,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 59.667,
+      "base_score": 62.917,
       "rejection": null,
       "selected_rank": 3
     },
@@ -238,100 +238,6 @@
       "selected_rank": 5
     },
     {
-      "id": 259909,
-      "type": "tv",
-      "title": "Декстер: Воскрешение",
-      "kind": "season",
-      "premiere": "2026-11-01",
-      "age": 13,
-      "tmdb": 8.549,
-      "tmdb_votes": 754,
-      "imdb": {
-        "value": 9,
-        "votes": 165385,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 8.5,
-        "votes": 38948,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 6058297
-      },
-      "attention": 0.627,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 13,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 57.999,
-        "demand": 57.532,
-        "fresh": 58.968
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 8.417,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 57.532,
-      "rejection": null,
-      "selected_rank": 6
-    },
-    {
-      "id": 84773,
-      "type": "tv",
-      "title": "Властелин колец: Кольца Власти",
-      "kind": "season",
-      "premiere": "2026-11-11",
-      "age": 3,
-      "tmdb": 7.2,
-      "tmdb_votes": 4062,
-      "imdb": {
-        "value": 6.8,
-        "votes": 447974,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.3,
-        "votes": 135998,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 1112513
-      },
-      "attention": 0.856,
-      "growth_status": "rising",
-      "growth_signal": 0.6468,
-      "rank_age": 3,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 53.119,
-        "demand": 57.4,
-        "fresh": 58.017
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.354,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 57.4,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
       "id": 969681,
       "type": "movie",
       "title": "Человек-паук: Новый день",
@@ -379,25 +285,34 @@
       "selected_rank": 7
     },
     {
-      "id": 291507,
+      "id": 259909,
       "type": "tv",
-      "title": "Тело",
-      "kind": "series",
-      "premiere": "2026-11-11",
-      "age": 3,
-      "tmdb": 7.188,
-      "tmdb_votes": 32,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.676,
-      "growth_status": "rising",
-      "growth_signal": 0.8349,
-      "rank_age": 3,
+      "title": "Декстер: Воскрешение",
+      "kind": "season",
+      "premiere": "2026-11-01",
+      "age": 13,
+      "tmdb": 8.549,
+      "tmdb_votes": 754,
+      "imdb": {
+        "value": 9,
+        "votes": 165385,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 8.5,
+        "votes": 38948,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6058297
+      },
+      "attention": 0.608,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 13,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 52.216,
-        "demand": 54.971,
-        "fresh": 56.488
+        "baseline": 57.144,
+        "demand": 56.582,
+        "fresh": 58.113
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -405,16 +320,16 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.75,
+      "quality": 8.417,
       "agreement": {
-        "sources": 0,
+        "sources": 3,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 54.971,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
+      "base_score": 56.582,
+      "rejection": null,
+      "selected_rank": 6
     },
     {
       "id": 254630,
@@ -455,6 +370,91 @@
       "selected_rank": null
     },
     {
+      "id": 84773,
+      "type": "tv",
+      "title": "Властелин колец: Кольца Власти",
+      "kind": "season",
+      "premiere": "2026-11-11",
+      "age": 3,
+      "tmdb": 7.2,
+      "tmdb_votes": 4062,
+      "imdb": {
+        "value": 6.8,
+        "votes": 447974,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.3,
+        "votes": 135998,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 1112513
+      },
+      "attention": 0.792,
+      "growth_status": "rising",
+      "growth_signal": 0.6468,
+      "rank_age": 3,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 50.24,
+        "demand": 54.2,
+        "fresh": 55.137
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.354,
+      "agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 54.2,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 291507,
+      "type": "tv",
+      "title": "Тело",
+      "kind": "series",
+      "premiere": "2026-11-11",
+      "age": 3,
+      "tmdb": 7.188,
+      "tmdb_votes": 32,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.651,
+      "growth_status": "rising",
+      "growth_signal": 0.8349,
+      "rank_age": 3,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 51.091,
+        "demand": 53.721,
+        "fresh": 55.364
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.75,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 53.721,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 153312,
       "type": "tv",
       "title": "Король Талсы",
@@ -474,15 +474,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 4760854
       },
-      "attention": 0.478,
+      "attention": 0.563,
       "growth_status": "rising",
       "growth_signal": 0.1683,
       "rank_age": 29,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 49.415,
-        "demand": 48.764,
-        "fresh": 50.468
+        "baseline": 53.24,
+        "demand": 53.014,
+        "fresh": 54.293
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -497,7 +497,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 48.764,
+      "base_score": 53.014,
       "rejection": null,
       "selected_rank": 8
     },
@@ -512,15 +512,15 @@
       "tmdb_votes": 9,
       "imdb": null,
       "kp": null,
-      "attention": 0.676,
+      "attention": 0.679,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 36,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 44.038,
-        "demand": 47.048,
-        "fresh": 47.575
+        "baseline": 44.203,
+        "demand": 47.228,
+        "fresh": 47.734
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -535,7 +535,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 47.048,
+      "base_score": 47.228,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -640,15 +640,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7149768
       },
-      "attention": 0.375,
+      "attention": 0.348,
       "growth_status": "rising",
       "growth_signal": 0.1551,
       "rank_age": 8,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 44.233,
-        "demand": 43.208,
-        "fresh": 46.064
+        "baseline": 43.018,
+        "demand": 41.858,
+        "fresh": 44.849
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -663,7 +663,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 43.208,
+      "base_score": 41.858,
       "rejection": null,
       "selected_rank": 9
     },
@@ -678,15 +678,15 @@
       "tmdb_votes": 22,
       "imdb": null,
       "kp": null,
-      "attention": 0.54,
+      "attention": 0.542,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 1,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 39.494,
-        "demand": 41.591,
-        "fresh": 44.532
+        "baseline": 39.604,
+        "demand": 41.711,
+        "fresh": 44.638
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -701,7 +701,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 41.591,
+      "base_score": 41.711,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -725,15 +725,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 10355286
       },
-      "attention": 0.464,
+      "attention": 0.465,
       "growth_status": "rising",
       "growth_signal": 0.1386,
       "rank_age": 183,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 40.949,
-        "demand": 40.902,
-        "fresh": 39.997
+        "baseline": 40.995,
+        "demand": 40.952,
+        "fresh": 40.042
       },
       "external_popularity_rank": 22,
       "external_bonus": 0.038,
@@ -748,47 +748,9 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 40.902,
+      "base_score": 40.952,
       "rejection": null,
       "selected_rank": 10
-    },
-    {
-      "id": 249565,
-      "type": "tv",
-      "title": "Хорошая дочь",
-      "kind": "series",
-      "premiere": "2026-11-12",
-      "age": 2,
-      "tmdb": 8,
-      "tmdb_votes": 13,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.522,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 2,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 38.856,
-        "demand": 40.814,
-        "fresh": 43.84
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.765,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 40.814,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
     },
     {
       "id": 687163,
@@ -838,82 +800,6 @@
       "selected_rank": 11
     },
     {
-      "id": 1437511,
-      "type": "movie",
-      "title": "Как ограбить банк",
-      "kind": "theatrical",
-      "premiere": "2026-11-13",
-      "age": 1,
-      "tmdb": 6.342,
-      "tmdb_votes": 19,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.388,
-      "growth_status": "rising",
-      "growth_signal": 0.7326,
-      "rank_age": 1,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 36.077,
-        "demand": 37.637,
-        "fresh": 40.662
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.613,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 37.637,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 292741,
-      "type": "tv",
-      "title": "Ноктюрн",
-      "kind": "series",
-      "premiere": "2026-10-29",
-      "age": 16,
-      "tmdb": 7.521,
-      "tmdb_votes": 48,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.517,
-      "growth_status": "rising",
-      "growth_signal": 0.1056,
-      "rank_age": 16,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 35.227,
-        "demand": 36.969,
-        "fresh": 38.861
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.872,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 36.969,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
       "id": 1400940,
       "type": "movie",
       "title": "Клэйфейс",
@@ -933,15 +819,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6712328
       },
-      "attention": 0.354,
+      "attention": 0.38,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 22,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 37.076,
-        "demand": 36.439,
-        "fresh": 38.965
+        "baseline": 38.246,
+        "demand": 37.739,
+        "fresh": 40.135
       },
       "external_popularity_rank": 19,
       "external_bonus": 0.0434,
@@ -956,9 +842,85 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 36.439,
+      "base_score": 37.739,
       "rejection": null,
       "selected_rank": 12
+    },
+    {
+      "id": 249565,
+      "type": "tv",
+      "title": "Хорошая дочь",
+      "kind": "series",
+      "premiere": "2026-11-12",
+      "age": 2,
+      "tmdb": 8,
+      "tmdb_votes": 13,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.47,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 2,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 35.996,
+        "demand": 37.694,
+        "fresh": 41.087
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.765,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 37.694,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1437511,
+      "type": "movie",
+      "title": "Как ограбить банк",
+      "kind": "theatrical",
+      "premiere": "2026-11-13",
+      "age": 1,
+      "tmdb": 6.342,
+      "tmdb_votes": 19,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.389,
+      "growth_status": "rising",
+      "growth_signal": 0.7326,
+      "rank_age": 1,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 36.122,
+        "demand": 37.687,
+        "fresh": 40.707
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.613,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 37.687,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 79744,
@@ -1018,15 +980,15 @@
       "tmdb_votes": 11,
       "imdb": null,
       "kp": null,
-      "attention": 0.469,
+      "attention": 0.471,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 8,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 33.841,
-        "demand": 35.771,
-        "fresh": 38.887
+        "baseline": 33.951,
+        "demand": 35.891,
+        "fresh": 38.993
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -1041,7 +1003,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 35.771,
+      "base_score": 35.891,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1183,91 +1145,6 @@
       "selected_rank": 15
     },
     {
-      "id": 250307,
-      "type": "tv",
-      "title": "Больница Питт",
-      "kind": "season",
-      "premiere": "2026-01-08",
-      "age": 310,
-      "tmdb": 8.722,
-      "tmdb_votes": 1057,
-      "imdb": {
-        "value": 8.9,
-        "votes": 179300,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 8.7,
-        "votes": 64129,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 6589776
-      },
-      "attention": 0.195,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 310,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 35.043,
-        "demand": 33.052,
-        "fresh": 32.648
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 8.061,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 33.052,
-      "rejection": "old_no_current_interest",
-      "selected_rank": null
-    },
-    {
-      "id": 56570,
-      "type": "tv",
-      "title": "Чужестранка",
-      "kind": "season",
-      "premiere": "2026-03-06",
-      "age": 253,
-      "tmdb": 8.196,
-      "tmdb_votes": 3023,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.191,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 253,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 35.036,
-        "demand": 33.033,
-        "fresh": 33.041
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 8.056,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 33.033,
-      "rejection": "old_no_current_interest",
-      "selected_rank": null
-    },
-    {
       "id": 4057,
       "type": "tv",
       "title": "Мыслить как преступник",
@@ -1315,6 +1192,91 @@
       "selected_rank": 16
     },
     {
+      "id": 250307,
+      "type": "tv",
+      "title": "Больница Питт",
+      "kind": "season",
+      "premiere": "2026-01-08",
+      "age": 310,
+      "tmdb": 8.722,
+      "tmdb_votes": 1057,
+      "imdb": {
+        "value": 8.9,
+        "votes": 179300,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 8.7,
+        "votes": 64129,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6589776
+      },
+      "attention": 0.194,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 310,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 34.988,
+        "demand": 32.992,
+        "fresh": 32.595
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 8.061,
+      "agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 32.992,
+      "rejection": "old_no_current_interest",
+      "selected_rank": null
+    },
+    {
+      "id": 56570,
+      "type": "tv",
+      "title": "Чужестранка",
+      "kind": "season",
+      "premiere": "2026-03-06",
+      "age": 253,
+      "tmdb": 8.196,
+      "tmdb_votes": 3023,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.19,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 253,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 34.981,
+        "demand": 32.973,
+        "fresh": 32.988
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 8.056,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 32.973,
+      "rejection": "old_no_current_interest",
+      "selected_rank": null
+    },
+    {
       "id": 58841,
       "type": "tv",
       "title": "Полиция Чикаго",
@@ -1334,15 +1296,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 763776
       },
-      "attention": 0.219,
+      "attention": 0.218,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 38,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 34.915,
-        "demand": 32.98,
-        "fresh": 35.732
+        "baseline": 34.87,
+        "demand": 32.93,
+        "fresh": 35.687
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -1357,9 +1319,47 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.98,
+      "base_score": 32.93,
       "rejection": null,
       "selected_rank": 17
+    },
+    {
+      "id": 292741,
+      "type": "tv",
+      "title": "Ноктюрн",
+      "kind": "series",
+      "premiere": "2026-10-29",
+      "age": 16,
+      "tmdb": 7.521,
+      "tmdb_votes": 48,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.434,
+      "growth_status": "rising",
+      "growth_signal": 0.1056,
+      "rank_age": 16,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 31.492,
+        "demand": 32.819,
+        "fresh": 35.126
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.872,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 32.819,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 1416,
@@ -1428,15 +1428,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5281617
       },
-      "attention": 0.136,
+      "attention": 0.135,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 300,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 35.564,
-        "demand": 32.128,
-        "fresh": 32.079
+        "baseline": 35.519,
+        "demand": 32.078,
+        "fresh": 32.034
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -1451,7 +1451,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 32.128,
+      "base_score": 32.078,
       "rejection": "old_no_current_interest",
       "selected_rank": null
     },
@@ -1522,15 +1522,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 4396199
       },
-      "attention": 0.201,
+      "attention": 0.2,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 24,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 32.933,
-        "demand": 31.13,
-        "fresh": 34.363
+        "baseline": 32.888,
+        "demand": 31.08,
+        "fresh": 34.318
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -1545,56 +1545,9 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 31.13,
+      "base_score": 31.08,
       "rejection": null,
       "selected_rank": 20
-    },
-    {
-      "id": 97546,
-      "type": "tv",
-      "title": "Тед Лассо",
-      "kind": "season",
-      "premiere": "2026-08-04",
-      "age": 102,
-      "tmdb": 8.365,
-      "tmdb_votes": 2851,
-      "imdb": {
-        "value": 8.7,
-        "votes": 479352,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 8.5,
-        "votes": 152321,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 1309707
-      },
-      "attention": 0.209,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 102,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 32.992,
-        "demand": 31.021,
-        "fresh": 32.45
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 8.089,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 31.021,
-      "rejection": null,
-      "selected_rank": 21
     },
     {
       "id": 81723,
@@ -1642,6 +1595,53 @@
       "base_score": 30.985,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
+    },
+    {
+      "id": 97546,
+      "type": "tv",
+      "title": "Тед Лассо",
+      "kind": "season",
+      "premiere": "2026-08-04",
+      "age": 102,
+      "tmdb": 8.365,
+      "tmdb_votes": 2851,
+      "imdb": {
+        "value": 8.7,
+        "votes": 479352,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 8.5,
+        "votes": 152321,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 1309707
+      },
+      "attention": 0.208,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 102,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 32.947,
+        "demand": 30.971,
+        "fresh": 32.405
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 8.089,
+      "agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 30.971,
+      "rejection": null,
+      "selected_rank": 21
     },
     {
       "id": 44006,
@@ -1710,15 +1710,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1412084
       },
-      "attention": 0.193,
+      "attention": 0.192,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 104,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 32.763,
-        "demand": 30.637,
-        "fresh": 32.112
+        "baseline": 32.718,
+        "demand": 30.587,
+        "fresh": 32.067
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -1733,7 +1733,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 30.637,
+      "base_score": 30.587,
       "rejection": null,
       "selected_rank": 22
     },
@@ -1748,15 +1748,15 @@
       "tmdb_votes": 72,
       "imdb": null,
       "kp": null,
-      "attention": 0.415,
+      "attention": 0.417,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 22,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 29.296,
-        "demand": 30.467,
-        "fresh": 32.688
+        "baseline": 29.386,
+        "demand": 30.567,
+        "fresh": 32.778
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -1771,7 +1771,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 30.467,
+      "base_score": 30.567,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1842,15 +1842,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1101328
       },
-      "attention": 0.213,
+      "attention": 0.212,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 30,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 31.275,
-        "demand": 29.823,
-        "fresh": 32.823
+        "baseline": 31.23,
+        "demand": 29.773,
+        "fresh": 32.778
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -1865,8 +1865,46 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.823,
+      "base_score": 29.773,
       "rejection": "season_rating_unconfirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 1559980,
+      "type": "movie",
+      "title": "Евангелие от Рождества Христова",
+      "kind": "digital",
+      "premiere": "2026-11-11",
+      "age": 3,
+      "tmdb": 7.462,
+      "tmdb_votes": 13,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.209,
+      "growth_status": "rising",
+      "growth_signal": 0.7062,
+      "rank_age": 3,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 28.883,
+        "demand": 29.358,
+        "fresh": 33.211
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.719,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 29.358,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1889,15 +1927,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7865896
       },
-      "attention": 0.14,
+      "attention": 0.139,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 44,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 31.667,
-        "demand": 29.27,
-        "fresh": 32.262
+        "baseline": 31.621,
+        "demand": 29.22,
+        "fresh": 32.217
       },
       "external_popularity_rank": 46,
       "external_bonus": 0.0063,
@@ -1912,7 +1950,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 29.27,
+      "base_score": 29.22,
       "rejection": null,
       "selected_rank": 18
     },
@@ -2011,6 +2049,44 @@
       "selected_rank": 19
     },
     {
+      "id": 1562642,
+      "type": "movie",
+      "title": "Ghost Soldier",
+      "kind": "theatrical",
+      "premiere": "2026-11-11",
+      "age": 3,
+      "tmdb": 8.833,
+      "tmdb_votes": 12,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.307,
+      "growth_status": "rising",
+      "growth_signal": 0.2673,
+      "rank_age": 3,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 27.997,
+        "demand": 28.778,
+        "fresh": 32.141
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.822,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 28.778,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 1153576,
       "type": "movie",
       "title": "Уличный боец",
@@ -2058,53 +2134,6 @@
       "selected_rank": null
     },
     {
-      "id": 66732,
-      "type": "tv",
-      "title": "Очень странные дела",
-      "kind": "season",
-      "premiere": "2025-11-26",
-      "age": 353,
-      "tmdb": 8.542,
-      "tmdb_votes": 22136,
-      "imdb": {
-        "value": 8.6,
-        "votes": 1700000,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 8.3,
-        "votes": 871589,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 915196
-      },
-      "attention": 0.211,
-      "growth_status": "rising",
-      "growth_signal": 0.1122,
-      "rank_age": 353,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 29.966,
-        "demand": 28.4,
-        "fresh": 27.783
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.868,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 28.4,
-      "rejection": "old_no_current_interest",
-      "selected_rank": null
-    },
-    {
       "id": 1375441,
       "type": "movie",
       "title": "Прайм-тайм",
@@ -2124,15 +2153,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7400696
       },
-      "attention": 0.438,
+      "attention": 0.44,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 50,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 26.589,
-        "demand": 28.302,
-        "fresh": 29.654
+        "baseline": 26.679,
+        "demand": 28.402,
+        "fresh": 29.744
       },
       "external_popularity_rank": 42,
       "external_bonus": 0.0136,
@@ -2147,8 +2176,55 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 28.302,
+      "base_score": 28.402,
       "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 66732,
+      "type": "tv",
+      "title": "Очень странные дела",
+      "kind": "season",
+      "premiere": "2025-11-26",
+      "age": 353,
+      "tmdb": 8.542,
+      "tmdb_votes": 22136,
+      "imdb": {
+        "value": 8.6,
+        "votes": 1700000,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 8.3,
+        "votes": 871589,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 915196
+      },
+      "attention": 0.21,
+      "growth_status": "rising",
+      "growth_signal": 0.1122,
+      "rank_age": 353,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 29.921,
+        "demand": 28.35,
+        "fresh": 27.738
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.868,
+      "agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 28.35,
+      "rejection": "old_no_current_interest",
       "selected_rank": null
     },
     {
@@ -2218,15 +2294,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6555657
       },
-      "attention": 0.148,
+      "attention": 0.147,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 200,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 30.107,
-        "demand": 27.677,
-        "fresh": 28.196
+        "baseline": 30.062,
+        "demand": 27.627,
+        "fresh": 28.151
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2241,7 +2317,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 27.677,
+      "base_score": 27.627,
       "rejection": "old_no_current_interest",
       "selected_rank": null
     },
@@ -2256,15 +2332,15 @@
       "tmdb_votes": 31,
       "imdb": null,
       "kp": null,
-      "attention": 0.417,
+      "attention": 0.419,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 11,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 25.412,
-        "demand": 27.21,
-        "fresh": 29.759
+        "baseline": 25.502,
+        "demand": 27.309,
+        "fresh": 29.849
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2279,9 +2355,94 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 27.21,
+      "base_score": 27.309,
       "rejection": "insufficient_votes",
       "selected_rank": null
+    },
+    {
+      "id": 1286656,
+      "type": "movie",
+      "title": "Рокки — это я",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 8,
+      "tmdb": 8.75,
+      "tmdb_votes": 22,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.29,
+      "growth_status": "rising",
+      "growth_signal": 0.1452,
+      "rank_age": 8,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 26.647,
+        "demand": 27.142,
+        "fresh": 30.423
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.935,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 27.142,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1248832,
+      "type": "movie",
+      "title": "Диггер",
+      "kind": "theatrical",
+      "premiere": "2026-10-02",
+      "age": 43,
+      "tmdb": 7.485,
+      "tmdb_votes": 520,
+      "imdb": {
+        "value": 7.3,
+        "votes": 14238,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7.4,
+        "votes": 2241,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5463546
+      },
+      "attention": 0.113,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 43,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 28.389,
+        "demand": 26.647,
+        "fresh": 31.014
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.692,
+      "agreement": {
+        "sources": 3,
+        "spread": 0.185,
+        "bonus": 0.38,
+        "level": "triple_high"
+      },
+      "base_score": 26.647,
+      "rejection": null,
+      "selected_rank": 23
     },
     {
       "id": 287238,
@@ -2290,7 +2451,7 @@
       "kind": "series",
       "premiere": "2026-07-27",
       "age": 110,
-      "tmdb": 7.468,
+      "tmdb": 7.5,
       "tmdb_votes": 174,
       "imdb": {
         "value": 7.8,
@@ -2303,15 +2464,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12946659
       },
-      "attention": 0.108,
+      "attention": 0.107,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 110,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 28.582,
-        "demand": 26.584,
-        "fresh": 29.139
+        "baseline": 28.612,
+        "demand": 26.599,
+        "fresh": 29.162
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2319,14 +2480,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 7.821,
+      "quality": 7.827,
       "agreement": {
         "sources": 3,
         "spread": 0.4,
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 26.584,
+      "base_score": 26.599,
       "rejection": null,
       "selected_rank": 25
     },
@@ -2375,53 +2536,6 @@
       },
       "base_score": 26.555,
       "rejection": null,
-      "selected_rank": 23
-    },
-    {
-      "id": 1248832,
-      "type": "movie",
-      "title": "Диггер",
-      "kind": "theatrical",
-      "premiere": "2026-10-02",
-      "age": 43,
-      "tmdb": 7.485,
-      "tmdb_votes": 520,
-      "imdb": {
-        "value": 7.3,
-        "votes": 14238,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 7.4,
-        "votes": 2241,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 5463546
-      },
-      "attention": 0.11,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 43,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 28.224,
-        "demand": 26.467,
-        "fresh": 30.855
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.692,
-      "agreement": {
-        "sources": 3,
-        "spread": 0.185,
-        "bonus": 0.38,
-        "level": "triple_high"
-      },
-      "base_score": 26.467,
-      "rejection": null,
       "selected_rank": 24
     },
     {
@@ -2444,15 +2558,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 11095481
       },
-      "attention": 0.207,
+      "attention": 0.209,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 22,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 26.936,
-        "demand": 26.067,
-        "fresh": 29.328
+        "baseline": 27.026,
+        "demand": 26.167,
+        "fresh": 29.418
       },
       "external_popularity_rank": 6,
       "external_bonus": 0.0527,
@@ -2467,7 +2581,7 @@
         "bonus": 0.16,
         "level": "pair_high"
       },
-      "base_score": 26.067,
+      "base_score": 26.167,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2519,53 +2633,6 @@
       "selected_rank": null
     },
     {
-      "id": 62650,
-      "type": "tv",
-      "title": "Медики Чикаго",
-      "kind": "season",
-      "premiere": "2026-10-07",
-      "age": 38,
-      "tmdb": 8.255,
-      "tmdb_votes": 1292,
-      "imdb": {
-        "value": 7.6,
-        "votes": 34000,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 7.6,
-        "votes": 12822,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 913425
-      },
-      "attention": 0.197,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 38,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 26.862,
-        "demand": 25.826,
-        "fresh": 28.689
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.532,
-      "agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 25.826,
-      "rejection": "season_rating_unconfirmed",
-      "selected_rank": null
-    },
-    {
       "id": 936075,
       "type": "movie",
       "title": "Майкл",
@@ -2585,15 +2652,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5437614
       },
-      "attention": 0.113,
+      "attention": 0.116,
       "growth_status": "rising",
       "growth_signal": 0.0693,
       "rank_age": 204,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 28.074,
-        "demand": 25.678,
-        "fresh": 26.338
+        "baseline": 28.209,
+        "demand": 25.828,
+        "fresh": 26.473
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2608,8 +2675,139 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 25.678,
+      "base_score": 25.828,
       "rejection": "old_no_current_interest",
+      "selected_rank": null
+    },
+    {
+      "id": 62650,
+      "type": "tv",
+      "title": "Медики Чикаго",
+      "kind": "season",
+      "premiere": "2026-10-07",
+      "age": 38,
+      "tmdb": 8.255,
+      "tmdb_votes": 1292,
+      "imdb": {
+        "value": 7.6,
+        "votes": 34000,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7.6,
+        "votes": 12822,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 913425
+      },
+      "attention": 0.196,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 38,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 26.817,
+        "demand": 25.776,
+        "fresh": 28.644
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.532,
+      "agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 25.776,
+      "rejection": "season_rating_unconfirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 91555,
+      "type": "tv",
+      "title": "All Elite Wrestling: Dynamite",
+      "kind": "season",
+      "premiere": "2026-01-07",
+      "age": 311,
+      "tmdb": 7.9,
+      "tmdb_votes": 91,
+      "imdb": {
+        "value": 8.3,
+        "votes": 2000,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": null,
+      "attention": 0.187,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 311,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 27.463,
+        "demand": 25.76,
+        "fresh": 25.411
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.877,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 25.76,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 65701,
+      "type": "tv",
+      "title": "С добрым мифическим утром",
+      "kind": "season",
+      "premiere": "2026-09-07",
+      "age": 68,
+      "tmdb": 6.959,
+      "tmdb_votes": 98,
+      "imdb": {
+        "value": 8.7,
+        "votes": 2500,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": null,
+      "attention": 0.222,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 68,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 26.355,
+        "demand": 25.574,
+        "fresh": 27.592
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.459,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 25.574,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -2679,15 +2877,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1138889
       },
-      "attention": 0.205,
+      "attention": 0.204,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 40,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 26.207,
-        "demand": 25.348,
-        "fresh": 28.118
+        "baseline": 26.162,
+        "demand": 25.298,
+        "fresh": 28.073
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2702,85 +2900,9 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 25.348,
+      "base_score": 25.298,
       "rejection": null,
       "selected_rank": 27
-    },
-    {
-      "id": 1562642,
-      "type": "movie",
-      "title": "Ghost Soldier",
-      "kind": "theatrical",
-      "premiere": "2026-11-11",
-      "age": 3,
-      "tmdb": 8.833,
-      "tmdb_votes": 12,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.228,
-      "growth_status": "rising",
-      "growth_signal": 0.2673,
-      "rank_age": 3,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 24.442,
-        "demand": 24.828,
-        "fresh": 28.586
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.822,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 24.828,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1559980,
-      "type": "movie",
-      "title": "Евангелие от Рождества Христова",
-      "kind": "digital",
-      "premiere": "2026-11-11",
-      "age": 3,
-      "tmdb": 7.462,
-      "tmdb_votes": 13,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.115,
-      "growth_status": "rising",
-      "growth_signal": 0.7062,
-      "rank_age": 3,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 24.653,
-        "demand": 24.658,
-        "fresh": 28.981
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.719,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 24.658,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
     },
     {
       "id": 200875,
@@ -2849,15 +2971,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5591410
       },
-      "attention": 0.112,
+      "attention": 0.111,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 255,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 26.264,
-        "demand": 24.419,
-        "fresh": 24.935
+        "baseline": 26.209,
+        "demand": 24.359,
+        "fresh": 24.883
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2872,30 +2994,39 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 24.419,
+      "base_score": 24.359,
       "rejection": "old_no_current_interest",
       "selected_rank": null
     },
     {
-      "id": 1286656,
+      "id": 1377237,
       "type": "movie",
-      "title": "Рокки — это я",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 8,
-      "tmdb": 8.75,
-      "tmdb_votes": 22,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.235,
-      "growth_status": "rising",
-      "growth_signal": 0.1452,
-      "rank_age": 8,
+      "title": "Курьер",
+      "kind": "digital",
+      "premiere": "2026-10-13",
+      "age": 68,
+      "tmdb": 8.199,
+      "tmdb_votes": 841,
+      "imdb": {
+        "value": 6.2,
+        "votes": 20045,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7,
+        "votes": 25780,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 7178187
+      },
+      "attention": 0.29,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 68,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 24.172,
-        "demand": 24.392,
-        "fresh": 27.948
+        "baseline": 24.016,
+        "demand": 24.346,
+        "fresh": 26.024
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2903,15 +3034,15 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.935,
+      "quality": 7.027,
       "agreement": {
-        "sources": 0,
+        "sources": 3,
+        "spread": 1.999,
         "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
+        "level": "disputed"
       },
-      "base_score": 24.392,
-      "rejection": "insufficient_votes",
+      "base_score": 24.346,
+      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -2934,15 +3065,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12245586
       },
-      "attention": 0.052,
+      "attention": 0.051,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 190,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 27.476,
-        "demand": 24.338,
-        "fresh": 25.426
+        "baseline": 27.431,
+        "demand": 24.288,
+        "fresh": 25.381
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2957,7 +3088,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 24.338,
+      "base_score": 24.288,
       "rejection": "old_no_current_interest",
       "selected_rank": null
     },
@@ -2972,15 +3103,15 @@
       "tmdb_votes": 739,
       "imdb": null,
       "kp": null,
-      "attention": 0.071,
+      "attention": 0.075,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 52,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 25.384,
-        "demand": 23.49,
-        "fresh": 27.847
+        "baseline": 25.604,
+        "demand": 23.73,
+        "fresh": 28.059
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -2995,7 +3126,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 23.49,
+      "base_score": 23.73,
       "rejection": null,
       "selected_rank": 28
     },
@@ -3047,6 +3178,44 @@
       "selected_rank": null
     },
     {
+      "id": 1379486,
+      "type": "movie",
+      "title": "Психопатка",
+      "kind": "theatrical",
+      "premiere": "2026-11-13",
+      "age": 1,
+      "tmdb": 5,
+      "tmdb_votes": 1,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.083,
+      "growth_status": "rising",
+      "growth_signal": 0.7755,
+      "rank_age": 1,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 23.308,
+        "demand": 23.298,
+        "fresh": 27.848
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.638,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 23.298,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 207484,
       "type": "tv",
       "title": "Чужестранка: Кровь от крови моей",
@@ -3062,15 +3231,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5089523
       },
-      "attention": 0.146,
+      "attention": 0.145,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 57,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 24.657,
-        "demand": 23.286,
-        "fresh": 25.931
+        "baseline": 24.612,
+        "demand": 23.236,
+        "fresh": 25.886
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3085,93 +3254,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 23.286,
+      "base_score": 23.236,
       "rejection": "season_rating_unconfirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 1379486,
-      "type": "movie",
-      "title": "Психопатка",
-      "kind": "theatrical",
-      "premiere": "2026-11-13",
-      "age": 1,
-      "tmdb": 5,
-      "tmdb_votes": 1,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.08,
-      "growth_status": "rising",
-      "growth_signal": 0.7755,
-      "rank_age": 1,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 23.173,
-        "demand": 23.148,
-        "fresh": 27.713
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.638,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 23.148,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1283515,
-      "type": "movie",
-      "title": "Тайный дневник Верити",
-      "kind": "digital",
-      "premiere": "2026-10-27",
-      "age": 43,
-      "tmdb": 6.991,
-      "tmdb_votes": 690,
-      "imdb": {
-        "value": 6.1,
-        "votes": 7074,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.4,
-        "votes": 4779,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 6789621
-      },
-      "attention": 0.369,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 43,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 21.247,
-        "demand": 22.96,
-        "fresh": 24.832
-      },
-      "external_popularity_rank": 14,
-      "external_bonus": 0.0546,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": true,
-      "quality": 6.474,
-      "agreement": {
-        "sources": 3,
-        "spread": 0.891,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "base_score": 22.96,
-      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -3190,15 +3274,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1304327
       },
-      "attention": 0.288,
+      "attention": 0.287,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 6,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 21.095,
-        "demand": 22.058,
-        "fresh": 25.416
+        "baseline": 21.05,
+        "demand": 22.008,
+        "fresh": 25.371
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3213,55 +3297,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 22.058,
+      "base_score": 22.008,
       "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 1101412,
-      "type": "movie",
-      "title": "Вышка 2",
-      "kind": "digital",
-      "premiere": "2026-10-06",
-      "age": 73,
-      "tmdb": 7.241,
-      "tmdb_votes": 784,
-      "imdb": {
-        "value": 5.6,
-        "votes": 482,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 5.9,
-        "votes": 26148,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 5610132
-      },
-      "attention": 0.377,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 73,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 19.987,
-        "demand": 21.872,
-        "fresh": 23.009
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.339,
-      "agreement": {
-        "sources": 3,
-        "spread": 1.641,
-        "bonus": 0,
-        "level": "disputed"
-      },
-      "base_score": 21.872,
-      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -3275,15 +3312,15 @@
       "tmdb_votes": 3,
       "imdb": null,
       "kp": null,
-      "attention": 0.063,
+      "attention": 0.065,
       "growth_status": "rising",
       "growth_signal": 0.8976,
       "rank_age": 127,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 21.856,
-        "demand": 21.675,
-        "fresh": 23.443
+        "baseline": 21.946,
+        "demand": 21.775,
+        "fresh": 23.533
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3298,7 +3335,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 21.675,
+      "base_score": 21.775,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3322,15 +3359,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 9168581
       },
-      "attention": 0.15,
+      "attention": 0.149,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 59,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 22.516,
-        "demand": 21.489,
-        "fresh": 24.068
+        "baseline": 22.471,
+        "demand": 21.439,
+        "fresh": 24.023
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3345,7 +3382,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 21.489,
+      "base_score": 21.439,
       "rejection": null,
       "selected_rank": 29
     },
@@ -3369,15 +3406,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5698586
       },
-      "attention": 0.124,
+      "attention": 0.123,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 173,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 23.159,
-        "demand": 21.484,
-        "fresh": 22.381
+        "baseline": 23.114,
+        "demand": 21.434,
+        "fresh": 22.336
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3392,30 +3429,30 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 21.484,
+      "base_score": 21.434,
       "rejection": null,
       "selected_rank": 30
     },
     {
-      "id": 91555,
-      "type": "tv",
-      "title": "All Elite Wrestling: Dynamite",
-      "kind": "season",
-      "premiere": "2026-01-07",
-      "age": 311,
-      "tmdb": 7.9,
-      "tmdb_votes": 91,
+      "id": 1288069,
+      "type": "movie",
+      "title": "Тенцинг",
+      "kind": "digital",
+      "premiere": "2026-10-15",
+      "age": 36,
+      "tmdb": 8.208,
+      "tmdb_votes": 279,
       "imdb": null,
       "kp": null,
-      "attention": 0.187,
+      "attention": 0.07,
       "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 311,
-      "discovery_pass": 1,
+      "rank_age": 36,
+      "discovery_pass": 2,
       "model_scores": {
-        "baseline": 22.288,
-        "demand": 21.325,
-        "fresh": 20.975
+        "baseline": 23.138,
+        "demand": 21.19,
+        "fresh": 24.74
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3423,16 +3460,16 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 7.463,
+      "quality": 7.687,
       "agreement": {
-        "sources": 0,
+        "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 21.325,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
+      "base_score": 21.19,
+      "rejection": null,
+      "selected_rank": 31
     },
     {
       "id": 76479,
@@ -3454,15 +3491,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 460586
       },
-      "attention": 0.199,
+      "attention": 0.198,
       "growth_status": "rising",
       "growth_signal": 0.0924,
       "rank_age": 220,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 21.613,
-        "demand": 21.154,
-        "fresh": 21.255
+        "baseline": 21.568,
+        "demand": 21.104,
+        "fresh": 21.21
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3477,47 +3514,9 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 21.154,
+      "base_score": 21.104,
       "rejection": "old_no_current_interest",
       "selected_rank": null
-    },
-    {
-      "id": 1288069,
-      "type": "movie",
-      "title": "Тенцинг",
-      "kind": "digital",
-      "premiere": "2026-10-15",
-      "age": 36,
-      "tmdb": 8.208,
-      "tmdb_votes": 279,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.069,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 36,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 23.093,
-        "demand": 21.14,
-        "fresh": 24.695
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.687,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 21.14,
-      "rejection": null,
-      "selected_rank": 31
     },
     {
       "id": 279471,
@@ -3555,53 +3554,6 @@
       },
       "base_score": 20.999,
       "rejection": "old_no_current_interest",
-      "selected_rank": null
-    },
-    {
-      "id": 1384216,
-      "type": "movie",
-      "title": "Собачьи звёзды",
-      "kind": "digital",
-      "premiere": "2026-10-27",
-      "age": 78,
-      "tmdb": 7.179,
-      "tmdb_votes": 992,
-      "imdb": {
-        "value": 6.5,
-        "votes": 6848,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.4,
-        "votes": 5619,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 6548088
-      },
-      "attention": 0.257,
-      "growth_status": "rising",
-      "growth_signal": 0.1485,
-      "rank_age": 78,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 20.075,
-        "demand": 20.88,
-        "fresh": 22.515
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.669,
-      "agreement": {
-        "sources": 3,
-        "spread": 0.779,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "base_score": 20.88,
-      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -3662,15 +3614,15 @@
       "tmdb_votes": 128,
       "imdb": null,
       "kp": null,
-      "attention": 0.156,
+      "attention": 0.155,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 45,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 21.348,
-        "demand": 20.605,
-        "fresh": 23.491
+        "baseline": 21.303,
+        "demand": 20.555,
+        "fresh": 23.446
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3685,9 +3637,56 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 20.605,
+      "base_score": 20.555,
       "rejection": null,
       "selected_rank": 33
+    },
+    {
+      "id": 1101412,
+      "type": "movie",
+      "title": "Вышка 2",
+      "kind": "digital",
+      "premiere": "2026-10-06",
+      "age": 73,
+      "tmdb": 7.241,
+      "tmdb_votes": 784,
+      "imdb": {
+        "value": 5.6,
+        "votes": 482,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 5.9,
+        "votes": 26148,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5610132
+      },
+      "attention": 0.347,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 73,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 18.637,
+        "demand": 20.372,
+        "fresh": 21.659
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.339,
+      "agreement": {
+        "sources": 3,
+        "spread": 1.641,
+        "bonus": 0,
+        "level": "disputed"
+      },
+      "base_score": 20.372,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
     },
     {
       "id": 1669915,
@@ -3700,15 +3699,15 @@
       "tmdb_votes": 16,
       "imdb": null,
       "kp": null,
-      "attention": 0.165,
+      "attention": 0.167,
       "growth_status": "rising",
       "growth_signal": 0.1881,
       "rank_age": 36,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 20.047,
-        "demand": 20.029,
-        "fresh": 23.105
+        "baseline": 20.137,
+        "demand": 20.129,
+        "fresh": 23.195
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3723,7 +3722,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 20.029,
+      "base_score": 20.129,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3857,19 +3856,19 @@
       "kind": "series",
       "premiere": "2026-08-05",
       "age": 101,
-      "tmdb": 8.034,
-      "tmdb_votes": 190,
+      "tmdb": 8.045,
+      "tmdb_votes": 191,
       "imdb": null,
       "kp": null,
-      "attention": 0.102,
+      "attention": 0.101,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 101,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 20.169,
-        "demand": 18.809,
-        "fresh": 20.791
+        "baseline": 20.224,
+        "demand": 18.845,
+        "fresh": 20.832
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3877,14 +3876,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 7.447,
+      "quality": 7.455,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 18.809,
+      "base_score": 18.845,
       "rejection": null,
       "selected_rank": 32
     },
@@ -3899,15 +3898,15 @@
       "tmdb_votes": 94,
       "imdb": null,
       "kp": null,
-      "attention": 0.049,
+      "attention": 0.05,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 64,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 20.508,
-        "demand": 18.598,
-        "fresh": 21.568
+        "baseline": 20.553,
+        "demand": 18.648,
+        "fresh": 21.613
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3922,7 +3921,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 18.598,
+      "base_score": 18.648,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3946,15 +3945,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12465988
       },
-      "attention": 0.055,
+      "attention": 0.056,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 148,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 20.276,
-        "demand": 18.266,
-        "fresh": 19.792
+        "baseline": 20.321,
+        "demand": 18.316,
+        "fresh": 19.837
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -3969,56 +3968,9 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 18.266,
+      "base_score": 18.316,
       "rejection": null,
       "selected_rank": 34
-    },
-    {
-      "id": 1377237,
-      "type": "movie",
-      "title": "Курьер",
-      "kind": "digital",
-      "premiere": "2026-10-13",
-      "age": 68,
-      "tmdb": 8.198,
-      "tmdb_votes": 840,
-      "imdb": {
-        "value": 6.2,
-        "votes": 20045,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 7,
-        "votes": 25780,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 7178187
-      },
-      "attention": 0.168,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 68,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 18.513,
-        "demand": 18.235,
-        "fresh": 20.523
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.026,
-      "agreement": {
-        "sources": 3,
-        "spread": 1.998,
-        "bonus": 0,
-        "level": "disputed"
-      },
-      "base_score": 18.235,
-      "rejection": "buzz_not_confirmed",
-      "selected_rank": null
     },
     {
       "id": 248830,
@@ -4087,15 +4039,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 9349321
       },
-      "attention": 0.126,
+      "attention": 0.125,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 149,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 18.822,
-        "demand": 17.829,
-        "fresh": 18.988
+        "baseline": 18.777,
+        "demand": 17.779,
+        "fresh": 18.943
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4110,7 +4062,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 17.829,
+      "base_score": 17.779,
       "rejection": null,
       "selected_rank": 35
     },
@@ -4200,50 +4152,50 @@
       "selected_rank": null
     },
     {
-      "id": 273247,
-      "type": "tv",
-      "title": "Подноготная",
-      "kind": "season",
-      "premiere": "2026-10-14",
-      "age": 31,
-      "tmdb": 6.953,
-      "tmdb_votes": 86,
+      "id": 1283515,
+      "type": "movie",
+      "title": "Тайный дневник Верити",
+      "kind": "digital",
+      "premiere": "2026-10-27",
+      "age": 43,
+      "tmdb": 6.991,
+      "tmdb_votes": 690,
       "imdb": {
-        "value": 7.3,
-        "votes": 11497,
+        "value": 6.1,
+        "votes": 7074,
         "via": "kinopoisk_unofficial"
       },
       "kp": {
-        "value": 6.9,
-        "votes": 2276,
+        "value": 6.4,
+        "votes": 4779,
         "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 8042172
+        "kinopoisk_id": 6789621
       },
-      "attention": 0.142,
-      "growth_status": "unknown",
+      "attention": 0.26,
+      "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 31,
+      "rank_age": 43,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 17.119,
-        "demand": 17.17,
-        "fresh": 21.669
+        "baseline": 16.342,
+        "demand": 17.51,
+        "fresh": 19.927
       },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
+      "external_popularity_rank": 14,
+      "external_bonus": 0.0341,
       "rank_deltas": {},
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.769,
+      "quality": 6.474,
       "agreement": {
-        "sources": 2,
+        "sources": 3,
+        "spread": 0.891,
         "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
+        "level": "mixed"
       },
-      "base_score": 17.17,
-      "rejection": "insufficient_votes",
+      "base_score": 17.51,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -4253,19 +4205,19 @@
       "kind": "series",
       "premiere": "2026-07-14",
       "age": 123,
-      "tmdb": 7.3,
-      "tmdb_votes": 319,
+      "tmdb": 7.333,
+      "tmdb_votes": 320,
       "imdb": null,
       "kp": null,
-      "attention": 0.104,
+      "attention": 0.103,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 123,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 17.89,
-        "demand": 17.156,
-        "fresh": 19.392
+        "baseline": 18.163,
+        "demand": 17.383,
+        "fresh": 19.629
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4273,14 +4225,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 7.102,
+      "quality": 7.125,
       "agreement": {
         "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 17.156,
+      "base_score": 17.383,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4304,15 +4256,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8549783
       },
-      "attention": 0.214,
+      "attention": 0.215,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 78,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 16.625,
-        "demand": 17.113,
-        "fresh": 18.963
+        "baseline": 16.67,
+        "demand": 17.163,
+        "fresh": 19.008
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4327,7 +4279,101 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 17.113,
+      "base_score": 17.163,
+      "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 273247,
+      "type": "tv",
+      "title": "Подноготная",
+      "kind": "season",
+      "premiere": "2026-10-14",
+      "age": 31,
+      "tmdb": 6.953,
+      "tmdb_votes": 86,
+      "imdb": {
+        "value": 7.3,
+        "votes": 11497,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.9,
+        "votes": 2276,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 8042172
+      },
+      "attention": 0.141,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 31,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 17.064,
+        "demand": 17.11,
+        "fresh": 21.616
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.769,
+      "agreement": {
+        "sources": 2,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 17.11,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1384216,
+      "type": "movie",
+      "title": "Собачьи звёзды",
+      "kind": "digital",
+      "premiere": "2026-10-27",
+      "age": 78,
+      "tmdb": 7.179,
+      "tmdb_votes": 992,
+      "imdb": {
+        "value": 6.5,
+        "votes": 6848,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.4,
+        "votes": 5619,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6548088
+      },
+      "attention": 0.18,
+      "growth_status": "rising",
+      "growth_signal": 0.1485,
+      "rank_age": 78,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 16.61,
+        "demand": 17.03,
+        "fresh": 19.05
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.669,
+      "agreement": {
+        "sources": 3,
+        "spread": 0.779,
+        "bonus": 0,
+        "level": "mixed"
+      },
+      "base_score": 17.03,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4351,15 +4397,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1040427
       },
-      "attention": 0.152,
+      "attention": 0.151,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 29,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 17.096,
-        "demand": 16.976,
-        "fresh": 20.309
+        "baseline": 17.051,
+        "demand": 16.926,
+        "fresh": 20.264
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4374,7 +4420,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 16.976,
+      "base_score": 16.926,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4398,15 +4444,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5287148
       },
-      "attention": 0.233,
+      "attention": 0.235,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 92,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 15.652,
-        "demand": 16.794,
-        "fresh": 18.737
+        "baseline": 15.762,
+        "demand": 16.914,
+        "fresh": 18.843
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4421,7 +4467,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 16.794,
+      "base_score": 16.914,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4516,25 +4562,25 @@
       "selected_rank": null
     },
     {
-      "id": 299939,
-      "type": "tv",
-      "title": "Монстр: История Лиззи Борден",
-      "kind": "series",
-      "premiere": "2026-09-17",
-      "age": 58,
-      "tmdb": 7.1,
-      "tmdb_votes": 255,
+      "id": 1697911,
+      "type": "movie",
+      "title": "Drummer Boy",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 8,
+      "tmdb": 7.8,
+      "tmdb_votes": 5,
       "imdb": null,
       "kp": null,
-      "attention": 0.138,
+      "attention": 0.164,
       "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 58,
+      "rank_age": 8,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 16.324,
-        "demand": 16.048,
-        "fresh": 18.709
+        "baseline": 15.737,
+        "demand": 16.039,
+        "fresh": 19.95
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4542,15 +4588,15 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.941,
+      "quality": 6.69,
       "agreement": {
-        "sources": 1,
+        "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 16.048,
-      "rejection": "buzz_not_confirmed",
+      "base_score": 16.039,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -4592,25 +4638,25 @@
       "selected_rank": null
     },
     {
-      "id": 1697911,
-      "type": "movie",
-      "title": "Drummer Boy",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 8,
-      "tmdb": 7.8,
-      "tmdb_votes": 5,
+      "id": 299939,
+      "type": "tv",
+      "title": "Монстр: История Лиззи Борден",
+      "kind": "series",
+      "premiere": "2026-09-17",
+      "age": 58,
+      "tmdb": 7.1,
+      "tmdb_votes": 255,
       "imdb": null,
       "kp": null,
-      "attention": 0.162,
+      "attention": 0.137,
       "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 8,
+      "rank_age": 58,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 15.647,
-        "demand": 15.939,
-        "fresh": 19.86
+        "baseline": 16.279,
+        "demand": 15.998,
+        "fresh": 18.664
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4618,63 +4664,97 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.69,
+      "quality": 6.941,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 15.998,
+      "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 1148365,
+      "type": "movie",
+      "title": "Matchbox: фильм",
+      "kind": "digital",
+      "premiere": "2026-10-08",
+      "age": 37,
+      "tmdb": 7.533,
+      "tmdb_votes": 630,
+      "imdb": null,
+      "kp": {
+        "value": 5.9,
+        "votes": 1543,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6601550
+      },
+      "attention": 0.183,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 37,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 15.546,
+        "demand": 15.97,
+        "fresh": 18.929
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.675,
+      "agreement": {
+        "sources": 2,
+        "spread": 1.633,
+        "bonus": 0,
+        "level": "disputed"
+      },
+      "base_score": 15.97,
+      "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 1585239,
+      "type": "movie",
+      "title": "Тусовщик",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 8,
+      "tmdb": 7.9,
+      "tmdb_votes": 22,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.059,
+      "growth_status": "rising",
+      "growth_signal": 0.2508,
+      "rank_age": 8,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 16.399,
+        "demand": 15.944,
+        "fresh": 20.38
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.82,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 15.939,
+      "base_score": 15.944,
       "rejection": "insufficient_votes",
       "selected_rank": null
-    },
-    {
-      "id": 287620,
-      "type": "tv",
-      "title": "Стюарт Блум не смог спасти вселенную",
-      "kind": "series",
-      "premiere": "2026-07-23",
-      "age": 114,
-      "tmdb": 8.191,
-      "tmdb_votes": 254,
-      "imdb": {
-        "value": 6.9,
-        "votes": 15320,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 7.2,
-        "votes": 4760,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 5310825
-      },
-      "attention": 0.096,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 114,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 16.923,
-        "demand": 15.928,
-        "fresh": 17.726
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.226,
-      "agreement": {
-        "sources": 3,
-        "spread": 1.291,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "base_score": 15.928,
-      "rejection": null,
-      "selected_rank": 36
     },
     {
       "id": 254420,
@@ -4711,82 +4791,6 @@
         "level": "unconfirmed"
       },
       "base_score": 15.922,
-      "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 65701,
-      "type": "tv",
-      "title": "С добрым мифическим утром",
-      "kind": "season",
-      "premiere": "2026-09-07",
-      "age": 68,
-      "tmdb": 6.959,
-      "tmdb_votes": 98,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.222,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 68,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 15.081,
-        "demand": 15.91,
-        "fresh": 17.928
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.557,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 15.91,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 241372,
-      "type": "tv",
-      "title": "56 дней",
-      "kind": "series",
-      "premiere": "2026-02-18",
-      "age": 269,
-      "tmdb": 7.4,
-      "tmdb_votes": 249,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.1,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 269,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 16.711,
-        "demand": 15.907,
-        "fresh": 16.336
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.13,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 15.907,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4838,25 +4842,25 @@
       "selected_rank": null
     },
     {
-      "id": 1585239,
-      "type": "movie",
-      "title": "Тусовщик",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 8,
-      "tmdb": 7.9,
-      "tmdb_votes": 22,
+      "id": 241372,
+      "type": "tv",
+      "title": "56 дней",
+      "kind": "series",
+      "premiere": "2026-02-18",
+      "age": 269,
+      "tmdb": 7.4,
+      "tmdb_votes": 249,
       "imdb": null,
       "kp": null,
-      "attention": 0.058,
-      "growth_status": "rising",
-      "growth_signal": 0.2508,
-      "rank_age": 8,
+      "attention": 0.099,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 269,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 16.354,
-        "demand": 15.894,
-        "fresh": 20.335
+        "baseline": 16.656,
+        "demand": 15.847,
+        "fresh": 16.283
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4864,57 +4868,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.82,
+      "quality": 7.13,
       "agreement": {
-        "sources": 0,
+        "sources": 1,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 15.894,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1148365,
-      "type": "movie",
-      "title": "Matchbox: фильм",
-      "kind": "digital",
-      "premiere": "2026-10-08",
-      "age": 37,
-      "tmdb": 7.533,
-      "tmdb_votes": 630,
-      "imdb": null,
-      "kp": {
-        "value": 5.9,
-        "votes": 1543,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 6601550
-      },
-      "attention": 0.181,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 37,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 15.456,
-        "demand": 15.87,
-        "fresh": 18.839
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.675,
-      "agreement": {
-        "sources": 2,
-        "spread": 1.633,
-        "bonus": 0,
-        "level": "disputed"
-      },
-      "base_score": 15.87,
+      "base_score": 15.847,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4938,15 +4899,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 79847
       },
-      "attention": 0.215,
+      "attention": 0.214,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 369,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 15.518,
-        "demand": 15.814,
-        "fresh": 15.131
+        "baseline": 15.473,
+        "demand": 15.764,
+        "fresh": 15.086
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -4961,7 +4922,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 15.814,
+      "base_score": 15.764,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4985,15 +4946,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5212130
       },
-      "attention": 0.154,
+      "attention": 0.153,
       "growth_status": "falling",
       "growth_signal": 0,
       "rank_age": 422,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 16.165,
-        "demand": 15.655,
-        "fresh": 15.157
+        "baseline": 16.12,
+        "demand": 15.605,
+        "fresh": 15.112
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5008,7 +4969,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 15.655,
+      "base_score": 15.605,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -5027,7 +4988,7 @@
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 157,
-      "discovery_pass": 1,
+      "discovery_pass": 2,
       "model_scores": {
         "baseline": 16.816,
         "demand": 15.604,
@@ -5048,66 +5009,32 @@
       },
       "base_score": 15.604,
       "rejection": null,
-      "selected_rank": 37
+      "selected_rank": 36
     },
     {
-      "id": 1772726,
+      "id": 1458099,
       "type": "movie",
-      "title": "Confession",
-      "kind": "digital",
-      "premiere": "2026-11-11",
-      "age": 3,
-      "tmdb": 5,
-      "tmdb_votes": 1,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.047,
-      "growth_status": "rising",
-      "growth_signal": 0.3795,
-      "rank_age": 3,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 15.68,
-        "demand": 15.49,
-        "fresh": 20.152
+      "title": "Единственный карманник в Нью-Йорке",
+      "kind": "theatrical",
+      "premiere": "2026-10-16",
+      "age": 29,
+      "tmdb": 7.6,
+      "tmdb_votes": 18,
+      "imdb": {
+        "value": 7.3,
+        "votes": 183,
+        "via": "kinopoisk_unofficial"
       },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.638,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 15.49,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 291339,
-      "type": "tv",
-      "title": "Память убийцы",
-      "kind": "series",
-      "premiere": "2026-01-25",
-      "age": 293,
-      "tmdb": 7.8,
-      "tmdb_votes": 93,
-      "imdb": null,
       "kp": null,
-      "attention": 0.098,
+      "attention": 0.102,
       "growth_status": "unknown",
       "growth_signal": 0,
-      "rank_age": 293,
+      "rank_age": 29,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 16.182,
-        "demand": 15.405,
-        "fresh": 15.685
+        "baseline": 15.861,
+        "demand": 15.601,
+        "fresh": 20.465
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5115,14 +5042,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 7.109,
+      "quality": 6.831,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 15.405,
+      "base_score": 15.601,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -5137,15 +5064,15 @@
       "tmdb_votes": 247,
       "imdb": null,
       "kp": null,
-      "attention": 0.126,
+      "attention": 0.129,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 29,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 15.266,
-        "demand": 15.366,
-        "fresh": 20.046
+        "baseline": 15.431,
+        "demand": 15.546,
+        "fresh": 20.205
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5160,8 +5087,84 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 15.366,
+      "base_score": 15.546,
       "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 1772726,
+      "type": "movie",
+      "title": "Confession",
+      "kind": "digital",
+      "premiere": "2026-11-11",
+      "age": 3,
+      "tmdb": 5,
+      "tmdb_votes": 1,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.046,
+      "growth_status": "rising",
+      "growth_signal": 0.3795,
+      "rank_age": 3,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 15.635,
+        "demand": 15.44,
+        "fresh": 20.107
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.638,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 15.44,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 291339,
+      "type": "tv",
+      "title": "Память убийцы",
+      "kind": "series",
+      "premiere": "2026-01-25",
+      "age": 293,
+      "tmdb": 7.8,
+      "tmdb_votes": 93,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.097,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 293,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 16.127,
+        "demand": 15.345,
+        "fresh": 15.632
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.109,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 15.345,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -5175,15 +5178,15 @@
       "tmdb_votes": 3,
       "imdb": null,
       "kp": null,
-      "attention": 0.107,
+      "attention": 0.11,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 8,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 14.988,
-        "demand": 14.977,
-        "fresh": 20.655
+        "baseline": 15.153,
+        "demand": 15.157,
+        "fresh": 20.814
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5198,46 +5201,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 14.977,
+      "base_score": 15.157,
       "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1236045,
-      "type": "movie",
-      "title": "Животные",
-      "kind": "digital",
-      "premiere": "2026-10-09",
-      "age": 36,
-      "tmdb": 6.879,
-      "tmdb_votes": 745,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.124,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 36,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 15.018,
-        "demand": 14.847,
-        "fresh": 18.127
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.843,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 14.847,
-      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -5251,15 +5216,15 @@
       "tmdb_votes": 3,
       "imdb": null,
       "kp": null,
-      "attention": 0.121,
+      "attention": 0.124,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 33,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 14.709,
-        "demand": 14.805,
-        "fresh": 19.369
+        "baseline": 14.874,
+        "demand": 14.985,
+        "fresh": 19.528
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5274,8 +5239,46 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 14.805,
+      "base_score": 14.985,
       "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1236045,
+      "type": "movie",
+      "title": "Животные",
+      "kind": "digital",
+      "premiere": "2026-10-09",
+      "age": 36,
+      "tmdb": 6.879,
+      "tmdb_votes": 745,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.126,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 36,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 15.108,
+        "demand": 14.947,
+        "fresh": 18.217
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.843,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 14.947,
+      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -5336,15 +5339,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7104903
       },
-      "attention": 0.192,
+      "attention": 0.194,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 85,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 13.997,
-        "demand": 14.589,
-        "fresh": 16.411
+        "baseline": 14.087,
+        "demand": 14.689,
+        "fresh": 16.501
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5359,8 +5362,55 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 14.589,
+      "base_score": 14.689,
       "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 1288445,
+      "type": "movie",
+      "title": "Мятеж",
+      "kind": "digital",
+      "premiere": "2026-09-08",
+      "age": 85,
+      "tmdb": 7.616,
+      "tmdb_votes": 1075,
+      "imdb": {
+        "value": 5.7,
+        "votes": 9434,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.1,
+        "votes": 38519,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5582050
+      },
+      "attention": 0.196,
+      "growth_status": "rising",
+      "growth_signal": 0.1221,
+      "rank_age": 85,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 13.646,
+        "demand": 14.596,
+        "fresh": 16.398
+      },
+      "external_popularity_rank": 60,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.417,
+      "agreement": {
+        "sources": 3,
+        "spread": 1.916,
+        "bonus": 0,
+        "level": "disputed"
+      },
+      "base_score": 14.596,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -5402,53 +5452,6 @@
       "selected_rank": null
     },
     {
-      "id": 1288445,
-      "type": "movie",
-      "title": "Мятеж",
-      "kind": "digital",
-      "premiere": "2026-09-08",
-      "age": 85,
-      "tmdb": 7.616,
-      "tmdb_votes": 1075,
-      "imdb": {
-        "value": 5.7,
-        "votes": 9434,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.1,
-        "votes": 38519,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 5582050
-      },
-      "attention": 0.195,
-      "growth_status": "rising",
-      "growth_signal": 0.1221,
-      "rank_age": 85,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 13.601,
-        "demand": 14.546,
-        "fresh": 16.353
-      },
-      "external_popularity_rank": 60,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.417,
-      "agreement": {
-        "sources": 3,
-        "spread": 1.916,
-        "bonus": 0,
-        "level": "disputed"
-      },
-      "base_score": 14.546,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
       "id": 304842,
       "type": "tv",
       "title": "Дроп: Снегопад. Сага",
@@ -5459,15 +5462,15 @@
       "tmdb_votes": 46,
       "imdb": null,
       "kp": null,
-      "attention": 0.118,
+      "attention": 0.117,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 67,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 14.835,
-        "demand": 14.514,
-        "fresh": 17.074
+        "baseline": 14.79,
+        "demand": 14.464,
+        "fresh": 17.029
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5482,83 +5485,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 14.514,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1458099,
-      "type": "movie",
-      "title": "Единственный карманник в Нью-Йорке",
-      "kind": "theatrical",
-      "premiere": "2026-10-16",
-      "age": 29,
-      "tmdb": 7.6,
-      "tmdb_votes": 18,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.099,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 29,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 14.653,
-        "demand": 14.508,
-        "fresh": 19.386
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.758,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 14.508,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 298505,
-      "type": "tv",
-      "title": "Академия ведьм",
-      "kind": "series",
-      "premiere": "2026-10-01",
-      "age": 44,
-      "tmdb": 7.4,
-      "tmdb_votes": 51,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.114,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 44,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 14.446,
-        "demand": 14.213,
-        "fresh": 17.334
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.85,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 14.213,
+      "base_score": 14.464,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -5582,15 +5509,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5452841
       },
-      "attention": 0.139,
+      "attention": 0.141,
       "growth_status": "rising",
       "growth_signal": 0.1221,
       "rank_age": 169,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 14.145,
-        "demand": 14.198,
-        "fresh": 15.062
+        "baseline": 14.235,
+        "demand": 14.298,
+        "fresh": 15.152
       },
       "external_popularity_rank": 56,
       "external_bonus": 0.0017,
@@ -5605,8 +5532,46 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 14.198,
+      "base_score": 14.298,
       "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 298505,
+      "type": "tv",
+      "title": "Академия ведьм",
+      "kind": "series",
+      "premiere": "2026-10-01",
+      "age": 44,
+      "tmdb": 7.4,
+      "tmdb_votes": 51,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.113,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 44,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 14.401,
+        "demand": 14.163,
+        "fresh": 17.289
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.85,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 14.163,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -5620,15 +5585,15 @@
       "tmdb_votes": 96,
       "imdb": null,
       "kp": null,
-      "attention": 0.217,
+      "attention": 0.218,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 64,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 12.981,
-        "demand": 14.066,
-        "fresh": 16.196
+        "baseline": 13.026,
+        "demand": 14.116,
+        "fresh": 16.241
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5643,7 +5608,54 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 14.066,
+      "base_score": 14.116,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1108427,
+      "type": "movie",
+      "title": "Моана",
+      "kind": "digital",
+      "premiere": "2026-09-08",
+      "age": 127,
+      "tmdb": 7.4,
+      "tmdb_votes": 1055,
+      "imdb": {
+        "value": 5.8,
+        "votes": 13302,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.6,
+        "votes": 25574,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5301021
+      },
+      "attention": 0.175,
+      "growth_status": "rising",
+      "growth_signal": 0.0891,
+      "rank_age": 127,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 13.131,
+        "demand": 13.744,
+        "fresh": 14.951
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.547,
+      "agreement": {
+        "sources": 3,
+        "spread": 1.6,
+        "bonus": 0,
+        "level": "disputed"
+      },
+      "base_score": 13.744,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -5686,53 +5698,6 @@
       "selected_rank": null
     },
     {
-      "id": 1108427,
-      "type": "movie",
-      "title": "Моана",
-      "kind": "digital",
-      "premiere": "2026-09-08",
-      "age": 127,
-      "tmdb": 7.4,
-      "tmdb_votes": 1055,
-      "imdb": {
-        "value": 5.8,
-        "votes": 13302,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.6,
-        "votes": 25574,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 5301021
-      },
-      "attention": 0.173,
-      "growth_status": "rising",
-      "growth_signal": 0.0891,
-      "rank_age": 127,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 13.041,
-        "demand": 13.644,
-        "fresh": 14.861
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.547,
-      "agreement": {
-        "sources": 3,
-        "spread": 1.6,
-        "bonus": 0,
-        "level": "disputed"
-      },
-      "base_score": 13.644,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
       "id": 243954,
       "type": "tv",
       "title": "Лихачи",
@@ -5752,15 +5717,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5965208
       },
-      "attention": 0.045,
+      "attention": 0.046,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 543,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 15.168,
-        "demand": 13.532,
-        "fresh": 13.425
+        "baseline": 15.213,
+        "demand": 13.582,
+        "fresh": 13.47
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5775,7 +5740,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 13.532,
+      "base_score": 13.582,
       "rejection": "very_old_no_breakout",
       "selected_rank": null
     },
@@ -5799,15 +5764,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8958690
       },
-      "attention": 0.135,
+      "attention": 0.137,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 29,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 12.861,
-        "demand": 13.368,
-        "fresh": 17.964
+        "baseline": 12.971,
+        "demand": 13.488,
+        "fresh": 18.07
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5822,7 +5787,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 13.368,
+      "base_score": 13.488,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -5837,15 +5802,15 @@
       "tmdb_votes": 70,
       "imdb": null,
       "kp": null,
-      "attention": 0.143,
+      "attention": 0.145,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 50,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 13.076,
-        "demand": 13.349,
-        "fresh": 16.175
+        "baseline": 13.166,
+        "demand": 13.449,
+        "fresh": 16.265
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5860,30 +5825,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 13.349,
+      "base_score": 13.449,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
-      "id": 333101,
-      "type": "tv",
-      "title": "Остров сокровищ",
-      "kind": "series",
-      "premiere": "2026-10-11",
-      "age": 34,
-      "tmdb": 6.733,
-      "tmdb_votes": 45,
+      "id": 1644210,
+      "type": "movie",
+      "title": "Robotica",
+      "kind": "theatrical",
+      "premiere": "2026-08-01",
+      "age": 105,
+      "tmdb": 3.2,
+      "tmdb_votes": 5,
       "imdb": null,
       "kp": null,
-      "attention": 0.128,
+      "attention": 0.188,
       "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 34,
+      "rank_age": 105,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 13.09,
-        "demand": 13.248,
-        "fresh": 16.563
+        "baseline": 12.521,
+        "demand": 13.227,
+        "fresh": 14.711
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -5891,15 +5856,15 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.67,
+      "quality": 6.531,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 13.248,
-      "rejection": "insufficient_votes",
+      "base_score": 13.227,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -5950,106 +5915,25 @@
       "selected_rank": null
     },
     {
-      "id": 1644210,
-      "type": "movie",
-      "title": "Robotica",
-      "kind": "theatrical",
-      "premiere": "2026-08-01",
-      "age": 105,
-      "tmdb": 3.2,
-      "tmdb_votes": 5,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.187,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 105,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 12.476,
-        "demand": 13.177,
-        "fresh": 14.666
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.531,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 13.177,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 259702,
+      "id": 333101,
       "type": "tv",
-      "title": "Дом духов",
+      "title": "Остров сокровищ",
       "kind": "series",
-      "premiere": "2026-04-29",
-      "age": 199,
-      "tmdb": 8.455,
-      "tmdb_votes": 88,
-      "imdb": null,
-      "kp": {
-        "value": 7.2,
-        "votes": 1070,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 11884129
-      },
-      "attention": 0.057,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 199,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 14.257,
-        "demand": 13.053,
-        "fresh": 14.036
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.234,
-      "agreement": {
-        "sources": 1,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 13.053,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1376400,
-      "type": "movie",
-      "title": "Арахнид",
-      "kind": "digital",
-      "premiere": "2026-11-10",
-      "age": 29,
-      "tmdb": 6.095,
-      "tmdb_votes": 58,
+      "premiere": "2026-10-11",
+      "age": 34,
+      "tmdb": 6.733,
+      "tmdb_votes": 45,
       "imdb": null,
       "kp": null,
-      "attention": 0.159,
+      "attention": 0.127,
       "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 29,
+      "rank_age": 34,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 12.336,
-        "demand": 12.976,
-        "fresh": 16.274
+        "baseline": 13.045,
+        "demand": 13.198,
+        "fresh": 16.518
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6057,100 +5941,15 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.487,
+      "quality": 6.67,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 12.976,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 253391,
-      "type": "tv",
-      "title": "Шериф округа",
-      "kind": "season",
-      "premiere": "2026-10-09",
-      "age": 36,
-      "tmdb": 7.298,
-      "tmdb_votes": 63,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.132,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 36,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 12.728,
-        "demand": 12.976,
-        "fresh": 16.216
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.631,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 12.976,
+      "base_score": 13.198,
       "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 277439,
-      "type": "tv",
-      "title": "Мыс страха",
-      "kind": "series",
-      "premiere": "2026-06-04",
-      "age": 163,
-      "tmdb": 7.133,
-      "tmdb_votes": 211,
-      "imdb": {
-        "value": 6.7,
-        "votes": 26338,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.6,
-        "votes": 14803,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 6576642
-      },
-      "attention": 0.116,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 163,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 12.933,
-        "demand": 12.897,
-        "fresh": 14.312
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.745,
-      "agreement": {
-        "sources": 3,
-        "spread": 0.533,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "base_score": 12.897,
-      "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
     {
@@ -6173,15 +5972,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8005532
       },
-      "attention": 0.077,
+      "attention": 0.081,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 65,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 13.228,
-        "demand": 12.888,
-        "fresh": 16.708
+        "baseline": 13.448,
+        "demand": 13.128,
+        "fresh": 16.92
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6196,8 +5995,127 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 12.888,
+      "base_score": 13.128,
       "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 259702,
+      "type": "tv",
+      "title": "Дом духов",
+      "kind": "series",
+      "premiere": "2026-04-29",
+      "age": 199,
+      "tmdb": 8.455,
+      "tmdb_votes": 88,
+      "imdb": null,
+      "kp": {
+        "value": 7.2,
+        "votes": 1070,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 11884129
+      },
+      "attention": 0.058,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 199,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 14.302,
+        "demand": 13.103,
+        "fresh": 14.081
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.234,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 13.103,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1376400,
+      "type": "movie",
+      "title": "Арахнид",
+      "kind": "digital",
+      "premiere": "2026-11-10",
+      "age": 29,
+      "tmdb": 6.095,
+      "tmdb_votes": 58,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.161,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 29,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 12.426,
+        "demand": 13.076,
+        "fresh": 16.364
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.487,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 13.076,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 253391,
+      "type": "tv",
+      "title": "Шериф округа",
+      "kind": "season",
+      "premiere": "2026-10-09",
+      "age": 36,
+      "tmdb": 7.298,
+      "tmdb_votes": 63,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.131,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 36,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 12.683,
+        "demand": 12.926,
+        "fresh": 16.171
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.631,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 12.926,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -6216,15 +6134,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8883816
       },
-      "attention": 0.102,
+      "attention": 0.105,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 36,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 12.525,
-        "demand": 12.658,
-        "fresh": 17.237
+        "baseline": 12.69,
+        "demand": 12.838,
+        "fresh": 17.396
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6239,7 +6157,54 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 12.658,
+      "base_score": 12.838,
+      "rejection": "buzz_not_confirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 277439,
+      "type": "tv",
+      "title": "Мыс страха",
+      "kind": "series",
+      "premiere": "2026-06-04",
+      "age": 163,
+      "tmdb": 7.132,
+      "tmdb_votes": 212,
+      "imdb": {
+        "value": 6.7,
+        "votes": 26338,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.6,
+        "votes": 14803,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6576642
+      },
+      "attention": 0.115,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 163,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 12.878,
+        "demand": 12.837,
+        "fresh": 14.259
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.745,
+      "agreement": {
+        "sources": 3,
+        "spread": 0.532,
+        "bonus": 0,
+        "level": "mixed"
+      },
+      "base_score": 12.837,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -6254,15 +6219,15 @@
       "tmdb_votes": 227,
       "imdb": null,
       "kp": null,
-      "attention": 0.091,
+      "attention": 0.094,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 38,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 12.653,
-        "demand": 12.632,
-        "fresh": 17.224
+        "baseline": 12.818,
+        "demand": 12.813,
+        "fresh": 17.382
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6277,46 +6242,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 12.632,
+      "base_score": 12.813,
       "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 258989,
-      "type": "tv",
-      "title": "Величайший",
-      "kind": "series",
-      "premiere": "2026-11-04",
-      "age": 10,
-      "tmdb": 5.1,
-      "tmdb_votes": 18,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.14,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 10,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 11.879,
-        "demand": 12.449,
-        "fresh": 16.416
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.473,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 12.449,
-      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -6330,15 +6257,15 @@
       "tmdb_votes": 9,
       "imdb": null,
       "kp": null,
-      "attention": 0.082,
+      "attention": 0.086,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 22,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 12.492,
-        "demand": 12.441,
-        "fresh": 17.702
+        "baseline": 12.712,
+        "demand": 12.681,
+        "fresh": 17.913
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6353,8 +6280,46 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 12.441,
+      "base_score": 12.681,
       "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 258989,
+      "type": "tv",
+      "title": "Величайший",
+      "kind": "series",
+      "premiere": "2026-11-04",
+      "age": 10,
+      "tmdb": 5.1,
+      "tmdb_votes": 18,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.139,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 10,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 11.834,
+        "demand": 12.399,
+        "fresh": 16.371
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.473,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 12.399,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -6406,15 +6371,15 @@
       "tmdb_votes": 23,
       "imdb": null,
       "kp": null,
-      "attention": 0.094,
+      "attention": 0.095,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 25,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 12.175,
-        "demand": 12.112,
-        "fresh": 15.85
+        "baseline": 12.22,
+        "demand": 12.162,
+        "fresh": 15.895
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6429,7 +6394,92 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 12.112,
+      "base_score": 12.162,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1380417,
+      "type": "movie",
+      "title": "Любой ценой",
+      "kind": "digital",
+      "premiere": "2026-10-20",
+      "age": 71,
+      "tmdb": 6.573,
+      "tmdb_votes": 109,
+      "imdb": {
+        "value": 6.5,
+        "votes": 8732,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.2,
+        "votes": 2661,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6955070
+      },
+      "attention": 0.168,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 71,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 11.274,
+        "demand": 12.021,
+        "fresh": 14.245
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.452,
+      "agreement": {
+        "sources": 3,
+        "spread": 0.373,
+        "bonus": 0,
+        "level": "mixed"
+      },
+      "base_score": 12.021,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 939541,
+      "type": "movie",
+      "title": "Christmas at the Kringles",
+      "kind": "theatrical",
+      "premiere": "2026-10-30",
+      "age": 15,
+      "tmdb": 6,
+      "tmdb_votes": 6,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.078,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 15,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 11.984,
+        "demand": 11.976,
+        "fresh": 17.549
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.623,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 11.976,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -6472,6 +6522,120 @@
       "selected_rank": null
     },
     {
+      "id": 1241052,
+      "type": "movie",
+      "title": "Мышь",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 8,
+      "tmdb": 10,
+      "tmdb_votes": 1,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.062,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 8,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 12.056,
+        "demand": 11.877,
+        "fresh": 17.869
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.674,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 11.877,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 305357,
+      "type": "tv",
+      "title": "Совсем другой мир",
+      "kind": "series",
+      "premiere": "2026-09-24",
+      "age": 51,
+      "tmdb": 7.5,
+      "tmdb_votes": 25,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.06,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 51,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 12.232,
+        "demand": 11.855,
+        "fresh": 16.23
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.779,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 11.855,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1476746,
+      "type": "movie",
+      "title": "Флорист",
+      "kind": "digital",
+      "premiere": "2026-10-09",
+      "age": 36,
+      "tmdb": 5.667,
+      "tmdb_votes": 36,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.148,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 36,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 11.173,
+        "demand": 11.825,
+        "fresh": 14.986
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.449,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 11.825,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
       "id": 258742,
       "type": "tv",
       "title": "Всё честно",
@@ -6491,15 +6655,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7077069
       },
-      "attention": 0.144,
+      "attention": 0.143,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 10,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 11.147,
-        "demand": 11.867,
-        "fresh": 15.814
+        "baseline": 11.102,
+        "demand": 11.817,
+        "fresh": 15.769
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6514,159 +6678,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 11.867,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 305357,
-      "type": "tv",
-      "title": "Совсем другой мир",
-      "kind": "series",
-      "premiere": "2026-09-24",
-      "age": 51,
-      "tmdb": 7.5,
-      "tmdb_votes": 25,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.059,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 51,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 12.177,
-        "demand": 11.795,
-        "fresh": 16.177
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.779,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 11.795,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1241052,
-      "type": "movie",
-      "title": "Мышь",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 8,
-      "tmdb": 10,
-      "tmdb_votes": 1,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.06,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 8,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 11.946,
-        "demand": 11.757,
-        "fresh": 17.763
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.674,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 11.757,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 939541,
-      "type": "movie",
-      "title": "Christmas at the Kringles",
-      "kind": "theatrical",
-      "premiere": "2026-10-30",
-      "age": 15,
-      "tmdb": 6,
-      "tmdb_votes": 6,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.074,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 15,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 11.764,
-        "demand": 11.736,
-        "fresh": 17.337
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.623,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 11.736,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1476746,
-      "type": "movie",
-      "title": "Флорист",
-      "kind": "digital",
-      "premiere": "2026-10-09",
-      "age": 36,
-      "tmdb": 5.667,
-      "tmdb_votes": 36,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.146,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 36,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 11.083,
-        "demand": 11.725,
-        "fresh": 14.896
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.449,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 11.725,
+      "base_score": 11.817,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -6681,15 +6693,15 @@
       "tmdb_votes": 30,
       "imdb": null,
       "kp": null,
-      "attention": 0.051,
+      "attention": 0.052,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 43,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 12.374,
-        "demand": 11.721,
-        "fresh": 15.183
+        "baseline": 12.419,
+        "demand": 11.771,
+        "fresh": 15.228
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6704,7 +6716,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 11.721,
+      "base_score": 11.771,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -6747,53 +6759,6 @@
       "selected_rank": null
     },
     {
-      "id": 302074,
-      "type": "tv",
-      "title": "Ар-Джей Декер",
-      "kind": "season",
-      "premiere": "2026-09-15",
-      "age": 60,
-      "tmdb": 7.424,
-      "tmdb_votes": 66,
-      "imdb": {
-        "value": 7,
-        "votes": 646,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.7,
-        "votes": 1479,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 11464269
-      },
-      "attention": 0.122,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 60,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 11.421,
-        "demand": 11.656,
-        "fresh": 14.351
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.61,
-      "agreement": {
-        "sources": 2,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 11.656,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
       "id": 1432306,
       "type": "movie",
       "title": "Оно. Ночной кошмар",
@@ -6813,15 +6778,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7373640
       },
-      "attention": 0.184,
+      "attention": 0.185,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 309,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 10.714,
-        "demand": 11.634,
-        "fresh": 11.138
+        "baseline": 10.769,
+        "demand": 11.694,
+        "fresh": 11.191
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6836,30 +6801,39 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 11.634,
+      "base_score": 11.694,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
-      "id": 292742,
+      "id": 302074,
       "type": "tv",
-      "title": "Изгнанники SWAT",
-      "kind": "series",
-      "premiere": "2026-09-25",
-      "age": 50,
-      "tmdb": 6.269,
-      "tmdb_votes": 26,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.12,
+      "title": "Ар-Джей Декер",
+      "kind": "season",
+      "premiere": "2026-09-15",
+      "age": 60,
+      "tmdb": 7.424,
+      "tmdb_votes": 66,
+      "imdb": {
+        "value": 7,
+        "votes": 646,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 6.7,
+        "votes": 1479,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 11464269
+      },
+      "attention": 0.121,
       "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 50,
-      "discovery_pass": 1,
+      "rank_age": 60,
+      "discovery_pass": 2,
       "model_scores": {
-        "baseline": 11.316,
-        "demand": 11.577,
-        "fresh": 14.519
+        "baseline": 11.375,
+        "demand": 11.606,
+        "fresh": 14.306
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6867,14 +6841,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.59,
+      "quality": 6.61,
       "agreement": {
-        "sources": 0,
+        "sources": 2,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 11.577,
+      "base_score": 11.606,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -6927,15 +6901,15 @@
       "tmdb_votes": 27,
       "imdb": null,
       "kp": null,
-      "attention": 0.13,
+      "attention": 0.129,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 37,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 10.711,
-        "demand": 11.22,
-        "fresh": 14.444
+        "baseline": 10.666,
+        "demand": 11.17,
+        "fresh": 14.399
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6950,7 +6924,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 11.22,
+      "base_score": 11.17,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -6974,15 +6948,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5595288
       },
-      "attention": 0.132,
+      "attention": 0.134,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 71,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 10.324,
-        "demand": 10.984,
-        "fresh": 14.198
+        "baseline": 10.434,
+        "demand": 11.104,
+        "fresh": 14.304
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -6997,7 +6971,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 10.984,
+      "base_score": 11.104,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -7010,17 +6984,21 @@
       "age": 330,
       "tmdb": 3.6,
       "tmdb_votes": 17,
-      "imdb": null,
+      "imdb": {
+        "value": 4.5,
+        "votes": 58,
+        "via": "kinopoisk_unofficial"
+      },
       "kp": null,
-      "attention": 0.209,
+      "attention": 0.21,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 330,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 9.919,
-        "demand": 10.964,
-        "fresh": 10.432
+        "baseline": 9.964,
+        "demand": 11.014,
+        "fresh": 10.477
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7028,15 +7006,53 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.32,
+      "quality": 6.31,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 10.964,
+      "base_score": 11.014,
       "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1596249,
+      "type": "movie",
+      "title": "Ha-Chan, Shake Your Booty!",
+      "kind": "theatrical",
+      "premiere": "2026-09-23",
+      "age": 52,
+      "tmdb": 8.3,
+      "tmdb_votes": 3,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.054,
+      "growth_status": "rising",
+      "growth_signal": 0.1155,
+      "rank_age": 52,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 11.218,
+        "demand": 10.979,
+        "fresh": 14.202
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.685,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 10.979,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -7050,15 +7066,15 @@
       "tmdb_votes": 11,
       "imdb": null,
       "kp": null,
-      "attention": 0.189,
+      "attention": 0.188,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 313,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 10.045,
-        "demand": 10.853,
-        "fresh": 10.485
+        "baseline": 10,
+        "demand": 10.803,
+        "fresh": 10.44
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7073,84 +7089,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 10.853,
+      "base_score": 10.803,
       "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1015154,
-      "type": "movie",
-      "title": "Luciérnagas en El Mozote",
-      "kind": "theatrical",
-      "premiere": "2026-04-17",
-      "age": 338,
-      "tmdb": 8.711,
-      "tmdb_votes": 45,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.044,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 338,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 11.853,
-        "demand": 10.732,
-        "fresh": 10.998
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.151,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 10.732,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 336913,
-      "type": "tv",
-      "title": "הבריחה",
-      "kind": "series",
-      "premiere": "2026-10-10",
-      "age": 35,
-      "tmdb": 10,
-      "tmdb_votes": 1,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.055,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 35,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 10.867,
-        "demand": 10.653,
-        "fresh": 15.607
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.674,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 10.653,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -7169,15 +7109,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5450043
       },
-      "attention": 0.088,
+      "attention": 0.091,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 22,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 10.293,
-        "demand": 10.588,
-        "fresh": 15.788
+        "baseline": 10.458,
+        "demand": 10.768,
+        "fresh": 15.947
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7192,8 +7132,84 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 10.588,
+      "base_score": 10.768,
       "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 336913,
+      "type": "tv",
+      "title": "הבריחה",
+      "kind": "series",
+      "premiere": "2026-10-10",
+      "age": 35,
+      "tmdb": 10,
+      "tmdb_votes": 1,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.056,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 35,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 10.922,
+        "demand": 10.713,
+        "fresh": 15.66
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.674,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 10.713,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1015154,
+      "type": "movie",
+      "title": "Luciérnagas en El Mozote",
+      "kind": "theatrical",
+      "premiere": "2026-04-17",
+      "age": 338,
+      "tmdb": 8.711,
+      "tmdb_votes": 45,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.043,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 338,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 11.808,
+        "demand": 10.682,
+        "fresh": 10.953
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.151,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 10.682,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -7207,15 +7223,15 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.041,
+      "attention": 0.042,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 1,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 10.82,
-        "demand": 10.575,
-        "fresh": 17.031
+        "baseline": 10.875,
+        "demand": 10.635,
+        "fresh": 17.084
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7230,7 +7246,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 10.575,
+      "base_score": 10.635,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -7254,15 +7270,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1448630
       },
-      "attention": 0.206,
+      "attention": 0.207,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 472,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 9.463,
-        "demand": 10.493,
-        "fresh": 9.656
+        "baseline": 9.508,
+        "demand": 10.543,
+        "fresh": 9.701
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7277,7 +7293,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 10.493,
+      "base_score": 10.543,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -7339,15 +7355,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6426123
       },
-      "attention": 0.14,
+      "attention": 0.142,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 64,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 9.516,
-        "demand": 10.216,
-        "fresh": 12.731
+        "baseline": 9.606,
+        "demand": 10.316,
+        "fresh": 12.821
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7362,46 +7378,8 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 10.216,
+      "base_score": 10.316,
       "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1381221,
-      "type": "movie",
-      "title": "Мисти Грин",
-      "kind": "digital",
-      "premiere": "2026-11-09",
-      "age": 36,
-      "tmdb": 7.1,
-      "tmdb_votes": 8,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.066,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 36,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 10.296,
-        "demand": 10.136,
-        "fresh": 13.707
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.674,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 10.136,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -7415,15 +7393,15 @@
       "tmdb_votes": 191,
       "imdb": null,
       "kp": null,
-      "attention": 0.096,
+      "attention": 0.099,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 22,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 9.576,
-        "demand": 10.056,
-        "fresh": 15.191
+        "baseline": 9.741,
+        "demand": 10.236,
+        "fresh": 15.349
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7438,30 +7416,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 10.056,
+      "base_score": 10.236,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
-      "id": 1374853,
+      "id": 1381221,
       "type": "movie",
-      "title": "A Christmas Party",
+      "title": "Мисти Грин",
       "kind": "digital",
-      "premiere": "2026-11-12",
-      "age": 2,
-      "tmdb": 1,
-      "tmdb_votes": 1,
+      "premiere": "2026-11-09",
+      "age": 36,
+      "tmdb": 7.1,
+      "tmdb_votes": 8,
       "imdb": null,
       "kp": null,
-      "attention": 0.041,
-      "growth_status": "unknown",
+      "attention": 0.067,
+      "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 2,
-      "discovery_pass": 1,
+      "rank_age": 36,
+      "discovery_pass": 2,
       "model_scores": {
-        "baseline": 10.187,
-        "demand": 10.017,
-        "fresh": 16.421
+        "baseline": 10.341,
+        "demand": 10.186,
+        "fresh": 13.752
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7469,14 +7447,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.61,
+      "quality": 6.674,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 10.017,
+      "base_score": 10.186,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -7491,15 +7469,15 @@
       "tmdb_votes": 16,
       "imdb": null,
       "kp": null,
-      "attention": 0.037,
+      "attention": 0.038,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 59,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 10.568,
-        "demand": 9.957,
-        "fresh": 13.101
+        "baseline": 10.613,
+        "demand": 10.007,
+        "fresh": 13.146
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7514,7 +7492,83 @@
         "spread": null,
         "level": "unconfirmed"
       },
+      "base_score": 10.007,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1374853,
+      "type": "movie",
+      "title": "A Christmas Party",
+      "kind": "digital",
+      "premiere": "2026-11-12",
+      "age": 2,
+      "tmdb": 1,
+      "tmdb_votes": 1,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.04,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 2,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 10.132,
+        "demand": 9.957,
+        "fresh": 16.368
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.61,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
       "base_score": 9.957,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 322267,
+      "type": "tv",
+      "title": "Молодожёны",
+      "kind": "series",
+      "premiere": "2026-10-23",
+      "age": 22,
+      "tmdb": 5.5,
+      "tmdb_votes": 4,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.048,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 22,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 10.05,
+        "demand": 9.901,
+        "fresh": 15.397
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.618,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 9.901,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -7538,15 +7592,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12898669
       },
-      "attention": 0.11,
+      "attention": 0.109,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 53,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 9.506,
-        "demand": 9.901,
-        "fresh": 12.82
+        "baseline": 9.461,
+        "demand": 9.851,
+        "fresh": 12.775
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7561,84 +7615,8 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 9.901,
+      "base_score": 9.851,
       "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 322267,
-      "type": "tv",
-      "title": "Молодожёны",
-      "kind": "series",
-      "premiere": "2026-10-23",
-      "age": 22,
-      "tmdb": 5.5,
-      "tmdb_votes": 4,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.047,
-      "growth_status": "unknown",
-      "growth_signal": 0,
-      "rank_age": 22,
-      "discovery_pass": 2,
-      "model_scores": {
-        "baseline": 9.995,
-        "demand": 9.841,
-        "fresh": 15.344
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.618,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 9.841,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1450257,
-      "type": "movie",
-      "title": "Clika",
-      "kind": "digital",
-      "premiere": "2026-02-24",
-      "age": 295,
-      "tmdb": 8.3,
-      "tmdb_votes": 47,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.038,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 295,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 10.676,
-        "demand": 9.679,
-        "fresh": 10.142
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 7.065,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 9.679,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -7657,15 +7635,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1184898
       },
-      "attention": 0.129,
+      "attention": 0.132,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 141,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 8.986,
-        "demand": 9.631,
-        "fresh": 11.279
+        "baseline": 9.151,
+        "demand": 9.811,
+        "fresh": 11.438
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7680,7 +7658,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 9.631,
+      "base_score": 9.811,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -7695,15 +7673,15 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.033,
+      "attention": 0.034,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 28,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 9.851,
-        "demand": 9.527,
-        "fresh": 14.9
+        "baseline": 9.906,
+        "demand": 9.587,
+        "fresh": 14.953
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7718,8 +7696,50 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 9.527,
+      "base_score": 9.587,
       "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 292742,
+      "type": "tv",
+      "title": "Изгнанники SWAT",
+      "kind": "series",
+      "premiere": "2026-09-25",
+      "age": 50,
+      "tmdb": 6.269,
+      "tmdb_votes": 26,
+      "imdb": {
+        "value": 5.5,
+        "votes": 883,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": null,
+      "attention": 0.119,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 50,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 8.897,
+        "demand": 9.492,
+        "fresh": 12.438
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.167,
+      "agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 9.492,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
@@ -7733,15 +7753,15 @@
       "tmdb_votes": 41,
       "imdb": null,
       "kp": null,
-      "attention": 0.106,
+      "attention": 0.105,
       "growth_status": "falling",
       "growth_signal": 0,
       "rank_age": 191,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 9.372,
-        "demand": 9.436,
-        "fresh": 10.245
+        "baseline": 9.327,
+        "demand": 9.386,
+        "fresh": 10.2
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7756,7 +7776,45 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 9.436,
+      "base_score": 9.386,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 324637,
+      "type": "tv",
+      "title": "Locker Diaries: Camp Rock",
+      "kind": "series",
+      "premiere": "2026-10-03",
+      "age": 42,
+      "tmdb": 10,
+      "tmdb_votes": 1,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.036,
+      "growth_status": "unknown",
+      "growth_signal": 0,
+      "rank_age": 42,
+      "discovery_pass": 2,
+      "model_scores": {
+        "baseline": 9.637,
+        "demand": 9.328,
+        "fresh": 14.166
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.674,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 9.328,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -7799,25 +7857,29 @@
       "selected_rank": null
     },
     {
-      "id": 324637,
-      "type": "tv",
-      "title": "Locker Diaries: Camp Rock",
-      "kind": "series",
-      "premiere": "2026-10-03",
-      "age": 42,
-      "tmdb": 10,
-      "tmdb_votes": 1,
-      "imdb": null,
+      "id": 1639683,
+      "type": "movie",
+      "title": "AEW Double or Nothing 2026",
+      "kind": "digital",
+      "premiere": "2026-05-24",
+      "age": 174,
+      "tmdb": 9.4,
+      "tmdb_votes": 17,
+      "imdb": {
+        "value": 9.1,
+        "votes": 46,
+        "via": "kinopoisk_unofficial"
+      },
       "kp": null,
-      "attention": 0.035,
-      "growth_status": "unknown",
+      "attention": 0.027,
+      "growth_status": "flat",
       "growth_signal": 0,
-      "rank_age": 42,
-      "discovery_pass": 2,
+      "rank_age": 174,
+      "discovery_pass": 1,
       "model_scores": {
-        "baseline": 9.582,
-        "demand": 9.268,
-        "fresh": 14.113
+        "baseline": 9.758,
+        "demand": 8.888,
+        "fresh": 10.259
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -7825,14 +7887,14 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.674,
+      "quality": 6.963,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 9.268,
+      "base_score": 8.888,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -7960,44 +8022,6 @@
       "selected_rank": null
     },
     {
-      "id": 1639683,
-      "type": "movie",
-      "title": "AEW Double or Nothing 2026",
-      "kind": "digital",
-      "premiere": "2026-05-24",
-      "age": 174,
-      "tmdb": 9.4,
-      "tmdb_votes": 17,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.027,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 174,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 9.571,
-        "demand": 8.727,
-        "fresh": 10.098
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.948,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 8.727,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
       "id": 1383731,
       "type": "movie",
       "title": "Мститель",
@@ -8017,15 +8041,15 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6601431
       },
-      "attention": 0.049,
+      "attention": 0.048,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 253,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 9.078,
-        "demand": 8.466,
-        "fresh": 9.095
+        "baseline": 9.033,
+        "demand": 8.416,
+        "fresh": 9.05
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8040,7 +8064,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 8.466,
+      "base_score": 8.416,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -8055,15 +8079,15 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.061,
+      "attention": 0.062,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 30,
       "discovery_pass": 2,
       "model_scores": {
-        "baseline": 7.421,
-        "demand": 7.726,
-        "fresh": 12.795
+        "baseline": 7.476,
+        "demand": 7.786,
+        "fresh": 12.848
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8078,7 +8102,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 7.726,
+      "base_score": 7.786,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -8131,15 +8155,15 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.053,
+      "attention": 0.054,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 6,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 7.183,
-        "demand": 7.448,
-        "fresh": 11.98
+        "baseline": 7.228,
+        "demand": 7.498,
+        "fresh": 12.025
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8154,7 +8178,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 7.448,
+      "base_score": 7.498,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -8169,15 +8193,15 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.039,
+      "attention": 0.04,
       "growth_status": "unknown",
       "growth_signal": 0,
       "rank_age": 2,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 7.076,
-        "demand": 7.272,
-        "fresh": 13.668
+        "baseline": 7.132,
+        "demand": 7.331,
+        "fresh": 13.721
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8192,46 +8216,8 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 7.272,
+      "base_score": 7.331,
       "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1604970,
-      "type": "movie",
-      "title": "AEW Revolution 2026",
-      "kind": "digital",
-      "premiere": "2026-03-15",
-      "age": 244,
-      "tmdb": 9,
-      "tmdb_votes": 12,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.03,
-      "growth_status": "flat",
-      "growth_signal": 0,
-      "rank_age": 244,
-      "discovery_pass": 1,
-      "model_scores": {
-        "baseline": 7.729,
-        "demand": 7.101,
-        "fresh": 7.88
-      },
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "rank_deltas": {},
-      "vote_growth": {},
-      "momentum_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.836,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 7.101,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -8273,6 +8259,48 @@
       "selected_rank": null
     },
     {
+      "id": 1604970,
+      "type": "movie",
+      "title": "AEW Revolution 2026",
+      "kind": "digital",
+      "premiere": "2026-03-15",
+      "age": 244,
+      "tmdb": 9,
+      "tmdb_votes": 12,
+      "imdb": {
+        "value": 9.2,
+        "votes": 13,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": null,
+      "attention": 0.03,
+      "growth_status": "flat",
+      "growth_signal": 0,
+      "rank_age": 244,
+      "discovery_pass": 1,
+      "model_scores": {
+        "baseline": 7.192,
+        "demand": 6.64,
+        "fresh": 7.42
+      },
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "rank_deltas": {},
+      "vote_growth": {},
+      "momentum_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.793,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 6.64,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 1813392,
       "type": "movie",
       "title": "A COLD SEASON",
@@ -8283,15 +8311,15 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.033,
+      "attention": 0.032,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 4,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 6.349,
-        "demand": 6.514,
-        "fresh": 11.213
+        "baseline": 6.304,
+        "demand": 6.464,
+        "fresh": 11.168
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8306,7 +8334,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 6.514,
+      "base_score": 6.464,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -8359,15 +8387,15 @@
       "tmdb_votes": 10,
       "imdb": null,
       "kp": null,
-      "attention": 0.043,
+      "attention": 0.044,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 492,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 6.691,
-        "demand": 6.25,
-        "fresh": 6.203
+        "baseline": 6.736,
+        "demand": 6.3,
+        "fresh": 6.248
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8382,7 +8410,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 6.25,
+      "base_score": 6.3,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -8397,15 +8425,15 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.031,
+      "attention": 0.032,
       "growth_status": "flat",
       "growth_signal": 0,
       "rank_age": 10,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 6.062,
-        "demand": 6.217,
-        "fresh": 10.729
+        "baseline": 6.107,
+        "demand": 6.267,
+        "fresh": 10.774
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8420,30 +8448,30 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 6.217,
+      "base_score": 6.267,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
-      "id": 1580253,
-      "type": "movie",
-      "title": "Hazbin Hotel: Live on Broadway",
-      "kind": "digital",
-      "premiere": "2025-11-17",
-      "age": 362,
-      "tmdb": 8.3,
-      "tmdb_votes": 10,
+      "id": 342001,
+      "type": "tv",
+      "title": "أزمة-هوية",
+      "kind": "series",
+      "premiere": "2026-11-13",
+      "age": 1,
+      "tmdb": 0,
+      "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.036,
-      "growth_status": "flat",
+      "attention": 0.018,
+      "growth_status": "unknown",
       "growth_signal": 0,
-      "rank_age": 362,
+      "rank_age": 1,
       "discovery_pass": 1,
       "model_scores": {
-        "baseline": 6.532,
-        "demand": 6.069,
-        "fresh": 6.301
+        "baseline": 5.956,
+        "demand": 6.046,
+        "fresh": 12.636
       },
       "external_popularity_rank": null,
       "external_bonus": 0,
@@ -8451,15 +8479,15 @@
       "vote_growth": {},
       "momentum_bonus": 0,
       "cross_source_interest": false,
-      "quality": 6.76,
+      "quality": 0,
       "agreement": {
         "sources": 0,
         "bonus": 0,
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 6.069,
-      "rejection": "insufficient_votes",
+      "base_score": 6.046,
+      "rejection": "quality_below_floor",
       "selected_rank": null
     }
   ]
