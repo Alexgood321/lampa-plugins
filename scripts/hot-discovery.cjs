@@ -667,7 +667,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     const prior=sourceBudget.cached(tmdbMemo,memoKey,nowDate,
       sourceBudget.TMDB_DETAIL_TTL_HOURS);
     let data;
-    let currentPopularityObserved=true,currentVotesObserved=true;
+    let currentPopularityObserved=false,currentVotesObserved=false;
     if(prior){
       stats.tmdb_detail_cache_hits++;
       const fresh=sourceBudget.overlayFreshSignals(prior,raw);
@@ -680,6 +680,9 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
       stats.tmdb_detail_cache_misses++;
       const extra=type==='movie'?'release_dates,external_ids':'external_ids';
       data=await tmdb(type+'/'+raw.id+'?append_to_response='+extra);
+      const observed=sourceBudget.overlayFreshSignals({},data);
+      currentPopularityObserved=observed.current_popularity;
+      currentVotesObserved=observed.current_votes;
       if(data&&data.id===raw.id){
         const normalized=sourceBudget.normalizeDetail(data,type);
         if(normalized)sourceBudget.save(tmdbMemo,memoKey,normalized,nowDate);
