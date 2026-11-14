@@ -271,7 +271,7 @@ function attentionFor(c,peers) {
     external_rank:outside.rank,cross_confirmed:outside.cross_confirmed,
     day,week,popularity_percentile:round(pop,3),
     trend_confirmed:activeDay&&activeWeek,
-    source_count:Number(activeDay)+Number(activeWeek)+Number(!!outside.rank)};
+    source_count:Number(activeDay||activeWeek)+Number(!!outside.rank)};
 }
 function trendScore(c,peers) {return attentionFor(c,peers).score;}
 // Season launch must be backed by at least one actually aired regular episode.
