@@ -4,11 +4,13 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const kpDemand = require('./kp-demand-history.cjs');
+const hot47 = require('./hot-ranking-4-7.cjs');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
 const DAY = 86400000;
-const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
+const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 320, MAX_MDB_CALLS = 50;
+const MAX_FIRST_PASS = 260;
 // Total HTTP calls per run; each new rated title may cost search + details.
 const MAX_KP_CALLS = 45, KP_RATING_TTL_DAYS = 3, KP_MISS_TTL_DAYS = 1;
 const KP_POPULAR_PAGES = 3, KP_POPULAR_CACHE_HOURS = 36;
@@ -55,10 +57,12 @@ function moviePremiere(details,now) {
   const theatrical=earliestTheatrical&&daysSince(earliestTheatrical,now)>=0?
     earliestTheatrical:null;
   const releasedOriginal=original&&daysSince(original,now)>=0?original:null;
-  const actual=digital&&(!original||digital>=original)?digital:
+  const actual=digital&&(!original||digital>=original||
+    (theatrical&&digital<theatrical))?digital:
     (theatrical||releasedOriginal);
+  const firstUS=[digital,theatrical].filter(Boolean).sort()[0]||null;
   return {date:actual,kind:actual===digital?'digital':'theatrical',
-    original,digital,theatrical};
+    original,digital,theatrical,firstUS};
 }
 function tvPremiere(details,now) {
   const original=isoDate(details.first_air_date);
@@ -254,8 +258,12 @@ function attentionFor(c,peers) {
   const activeDay=!!c.surs_hot_trend_day,activeWeek=!!c.surs_hot_trend_week;
   // A historically popular but currently untrending series should not top
   // the feed purely because its cumulative rating is excellent.
+  // Day/week trends are correlated observations from ONE provider (TMDB).
+  // They form one source signal; both days are not independent confirmations.
+  const leading=Math.max(day,week),supporting=Math.min(day,week);
+  const tmdbTrend=.85*leading+.15*supporting;
   const interest=activeDay||activeWeek?
-    .52*day+.30*week+.18*pop:.25*pop;
+    .82*tmdbTrend+.18*pop:.25*pop;
   const outside=externalPopularity(c);
   return {score:round(Math.min(1,interest+outside.bonus),3),
     tmdb_score:round(Math.min(1,interest),3),
@@ -263,7 +271,7 @@ function attentionFor(c,peers) {
     external_rank:outside.rank,cross_confirmed:outside.cross_confirmed,
     day,week,popularity_percentile:round(pop,3),
     trend_confirmed:activeDay&&activeWeek,
-    source_count:Number(activeDay)+Number(activeWeek)+Number(!!outside.rank)};
+    source_count:Number(activeDay||activeWeek)+Number(!!outside.rank)};
 }
 function trendScore(c,peers) {return attentionFor(c,peers).score;}
 // Season launch must be backed by at least one actually aired regular episode.
@@ -308,9 +316,10 @@ function growthFor(c,history,now) {
     periods[horizon+'d']=round(score,3);
   }
   const values=Object.values(periods);
-  return {score:values.length?
-      round(values.reduce((a,b)=>a+b,0)/values.length,3):.5,
-    measured:values.length>0,periods};
+  const score=values.length?
+    round(values.reduce((a,b)=>a+b,0)/values.length,3):.5;
+  const state=hot47.growthState(score,periods);
+  return {score,measured:values.length>0,periods,...state};
 }
 function eligibilityReason(c,now) {
   if(!c.poster_path)return 'poster_missing';
@@ -349,16 +358,20 @@ function eligibilityReason(c,now) {
       c.surs_hot_quality>=7.7&&trending))
       return 'season_rating_unconfirmed';
   }
+  // Old releases require live, independently observable activity.
+  // A 181-day threshold never directly subtracts any ranking score.
+  const activity=hot47.oldActivity(c,{
+    status:c.surs_hot_growth_status,signal:c.surs_hot_growth_signal},
+    Number(c.surs_hot_rank_age));
+  if(!activity.ok)return activity.reason;
   return null;
 }
 function recencyTier(c,now) {
-  const premiereAge=daysSince(c.surs_hot_premiere_date,now);
-  // TV series: use the current verified season premiere, never season one.
-  // Films: a belated streaming release cannot reset the age of an older film.
-  const originalAge=c.type==='movie'&&c.surs_hot_original_date?
-    daysSince(c.surs_hot_original_date,now):premiereAge;
-  const age=c.type==='movie'?Math.max(premiereAge,originalAge):premiereAge;
-  return {age,tier:age<=60?0:age<=120?1:age<=365?2:3};
+  // Retain tiers for diagnostics only; no tier is permitted to add or
+  // subtract points in the rank formula.
+  const ranked=hot47.rankAge(c,now),age=ranked.age;
+  return {age,date:ranked.date,confirmed_us:ranked.confirmed_us,
+    tier:age<=60?0:age<=120?1:age<=365?2:3};
 }
 function isReturning(c) {
   return c.type==='tv'&&c.surs_hot_premiere_kind==='season';
@@ -366,59 +379,54 @@ function isReturning(c) {
 function kindOf(c) {
   return isReturning(c)?'returning_tv':c.type==='movie'?'movie':'new_tv';
 }
-function diversityPenalty(candidate,chosen) {
+function diversityPenalty(candidate,chosen,position=chosen.length+1) {
   const recent=chosen.slice(-5),kind=kindOf(candidate);
   const sameKind=recent.filter(x=>kindOf(x)===kind).length;
-  // Only a small within-band penalty. Date and actual buzz remain dominant.
   const genres=Array.isArray(candidate.genre_ids)?candidate.genre_ids:[];
   const first=genres[0];
   const repeats=first==null?0:recent.filter(x=>
     Array.isArray(x.genre_ids)&&x.genre_ids[0]===first).length;
-  return Math.max(0,sameKind-2)*.45+Math.max(0,repeats-2)*.30;
+  // Editorial diversity is a SOFT bounded selection penalty, never a
+  // 25-point age cliff, hard quota or reduction to the public Hot Score.
+  let penalty=Math.max(0,sameKind-2)*.6+Math.max(0,repeats-2)*.3;
+  if(isReturning(candidate)){
+    const n=chosen.filter(isReturning).length;
+    const guide=position<=10?3:position<=20?6:12;
+    if(n>=guide)penalty+=Math.min(4,2+(n-guide)*.6);
+  }
+  if(candidate.surs_hot_track==='breakout'){
+    const n=chosen.filter(x=>x.surs_hot_track==='breakout').length;
+    const guide=position<=10?2:position<=20?5:10;
+    if(n>=guide)penalty+=Math.min(3,1.4+(n-guide)*.5);
+  }
+  return round(Math.min(6,penalty),3);
 }
-function curatedSelection(candidates,previous) {
+function curatedSelection(candidates,previous,model='baseline') {
   const remaining=candidates.slice(),picked=[];
-  // When there are plenty of independent films and new series, do not fill
-  // the bottom of the shelf with extra returning seasons just to reach 40.
-  // When almost everything eligible is a returning season, relax the cap.
-  const alternativeSupply=candidates.filter(c=>!isReturning(c)).length;
   const previousRank=new Map((previous?.items||[])
     .map((c,i)=>[identity(c),i]));
-  let returning=0,breakouts=0,lastScore=100;
-  for(let position=1;position<=MAX_ITEMS&&remaining.length;position++) {
-    const returnLimit=position<=10?TOP10_RETURNING_LIMIT:
-      position<=20?TOP20_RETURNING_LIMIT:TOP40_RETURNING_LIMIT;
-    const buzzLimit=position<=10?2:position<=20?5:10;
-    let pool=remaining.filter(c=>!(isReturning(c)&&returning>=returnLimit));
-    if(!pool.length) {
-      if(alternativeSupply>=22&&position>20&&
-          returning>=TOP40_RETURNING_LIMIT&&picked.length>=MIN_ITEMS)
-        break;
-      pool=remaining;
-    }
-    const notBreakout=pool.filter(c=>!(
-      c.surs_hot_track==='breakout'&&breakouts>=buzzLimit));
-    if(notBreakout.length)pool=notBreakout;
-    pool.sort((a,b)=>{
-      const sa=a.surs_hot_base_score-diversityPenalty(a,picked);
-      const sb=b.surs_hot_base_score-diversityPenalty(b,picked);
+  for(let position=1;position<=MAX_ITEMS&&remaining.length;position++){
+    remaining.sort((a,b)=>{
+      const sa=number(a.surs_hot_model_scores?.[model]??a.surs_hot_base_score)-
+        diversityPenalty(a,picked,position);
+      const sb=number(b.surs_hot_model_scores?.[model]??b.surs_hot_base_score)-
+        diversityPenalty(b,picked,position);
       if(Math.abs(sb-sa)>.000001)return sb-sa;
       const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
       if(pa!==undefined&&pb!==undefined&&pa!==pb)return pa-pb;
       return identity(a).localeCompare(identity(b));
     });
-    const winner=pool[0],idx=remaining.indexOf(winner);
-    remaining.splice(idx,1);
-    const effective=winner.surs_hot_base_score-diversityPenalty(winner,picked);
-    lastScore=Math.max(0,round(Math.min(effective,lastScore-.02),2));
-    picked.push({...winner,surs_hot_score:lastScore,
+    const winner=remaining.shift();
+    const editorialPenalty=diversityPenalty(winner,picked,position);
+    const modelScore=number(winner.surs_hot_model_scores?.[model]??winner.surs_hot_base_score);
+    picked.push({...winner,surs_hot_score:round(modelScore,2),
+      surs_hot_demand_score:round(modelScore,2),
+      surs_hot_editorial_penalty:editorialPenalty,
       surs_hot_rank:position});
-    if(isReturning(winner))returning++;
-    if(winner.surs_hot_track==='breakout')breakouts++;
   }
   return picked;
 }
-function scoreCandidates(candidates,history,now,previous) {
+function scoreCandidates(candidates,history,now,previous,model='baseline') {
   for(const c of candidates) {
     const age=daysSince(c.surs_hot_premiere_date,now);
     const quality=qualityFor(c),attention=attentionFor(c,candidates),
@@ -442,36 +450,33 @@ function scoreCandidates(candidates,history,now,previous) {
     c.surs_hot_growth=growth.score;
     c.surs_hot_growth_measured=growth.measured;
     c.surs_hot_growth_periods=growth.periods;
+    c.surs_hot_growth_status=growth.status;
+    c.surs_hot_growth_signal=growth.signal;
+    c.surs_hot_growth_confirmed=growth.confirmed;
     c.surs_hot_age=age;
     const period=recencyTier(c,now);
     c.surs_hot_rank_age=period.age;
+    c.surs_hot_rank_date=period.date;
+    c.surs_hot_age_source_verified=period.confirmed_us;
     c.surs_hot_recency_tier=period.tier;
     c.surs_hot_provisional=number(c.vote_count)<MIN_VOTES||
       (c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating);
     c.surs_hot_track=quality.score<QUALITY_FLOOR?'breakout':
       quality.score>=7.8?'critically_strong':'qualified';
-    // Demand first, reliable quality second. Premiere freshness is represented
-    // by priority bands + a smooth decay inside each band.
-    // A single daily observation is not yet a confirmed multi-day trend.
-    const confirmedGrowth=Object.keys(growth.periods).some(p=>p!=='1d');
-    const weights=confirmedGrowth?
-      {attention:.45,quality:.35,freshness:.05,growth:.15}:
-      {attention:.55,quality:.40,freshness:.05,growth:0};
-    c.surs_hot_growth_confirmed=confirmedGrowth;
-    const q=Math.min(1,Math.max(0,(quality.score-6.4)/2.8));
-    const duration=period.tier===0?60:period.tier===1?60:
-      period.tier===2?245:185;
-    const start=period.tier===0?0:period.tier===1?60:
-      period.tier===2?120:365;
-    const freshness=Math.max(0,Math.min(1,1-(period.age-start)/duration));
-    c.surs_hot_freshness=round(freshness,3);
-    c.surs_hot_weights=weights;
-    const relevance=weights.attention*attention.score+weights.quality*q+
-      weights.freshness*freshness+weights.growth*growth.score;
-    c.surs_hot_base_score=round(75-25*period.tier+24.5*relevance,3);
+    const freshness=hot47.smoothFreshness(period.age);
+    c.surs_hot_freshness=freshness;
+    c.surs_hot_model_scores={};
+    const metrics={attention:attention.score,quality:quality.score,
+      growth:growth.signal,freshness};
+    for(const [name,weights] of Object.entries(hot47.WEIGHTS)){
+      const effective=hot47.effectiveWeights(weights,growth.confirmed);
+      c.surs_hot_model_scores[name]=hot47.modelScore(metrics,effective,true);
+    }
+    c.surs_hot_weights=hot47.effectiveWeights(
+      hot47.WEIGHTS[model]||hot47.WEIGHTS.baseline,growth.confirmed);
+    c.surs_hot_base_score=c.surs_hot_model_scores[model]??c.surs_hot_model_scores.baseline;
   }
-  const eligible=candidates.filter(c=>!eligibilityReason(c,now));
-  return curatedSelection(eligible,previous);
+  return curatedSelection(candidates.filter(c=>!eligibilityReason(c,now)),previous,model);
 }
 function nextHistory(history,candidates,now) {
   const day=dateOnly(now);
@@ -517,6 +522,9 @@ function toCard(raw,details,type,premiere) {
     surs_hot_season:premiere.number||null,
     surs_hot_original_date:premiere.original,
     surs_hot_digital_date:premiere.digital||null,
+    surs_hot_first_us_release_date:premiere.firstUS||null,
+    surs_hot_digital_status:type==='movie'?
+      (premiere.digital?'verified_us_digital_date':'digital_date_unconfirmed'):null,
     surs_hot_discovery:raw._channels||[],
     surs_hot_trend_day:raw._trendDay||null,surs_hot_trend_week:raw._trendWeek||null,
     surs_hot_imdb_id:/^tt\d{6,12}$/.test(String(details.external_ids?.imdb_id||
@@ -534,7 +542,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     kp_popularity_calls:0,kp_popularity_failures:0,
     kp_popularity_cache_hit:false,kp_popularity_matched:0,
     kp_vote_refresh_calls:0,kp_vote_refresh_failures:0,kp_votes_recorded:0,
-    season_calls:0,discovered:0,us_verified:0,eligible:0};
+    season_calls:0,discovered:0,us_verified:0,eligible:0,
+    first_pass_details:0,second_pass_details:0,second_pass_verified:0};
   const tmdb=async relative=>{
     stats.tmdb_calls++;
     const keyAuth=/^[0-9a-f]{32}$/i.test(tmdbToken);
@@ -590,16 +599,44 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   stats.discovered=found.size;
   // Round-robin discovery lanes to prevent Trending or Popularity monopolizing details.
   const keys=[],visited=new Set(),queues=[...buckets.values()].map(x=>[...new Set(x)]);
+  const primaryLimit=Math.min(detailLimit,MAX_FIRST_PASS);
   let remaining=true;
-  while(keys.length<detailLimit&&remaining){
+  while(keys.length<primaryLimit&&remaining){
     remaining=false;
     for(const queue of queues){
       while(queue.length&&visited.has(queue[0]))queue.shift();
-      if(queue.length&&keys.length<detailLimit){
+      if(queue.length&&keys.length<primaryLimit){
         const key=queue.shift();visited.add(key);keys.push(key);remaining=true;
       }
     }
   }
+  stats.first_pass_details=keys.length;
+  // Pass two: independently scan eligible-looking discoveries ignored by the
+  // original 260-key detail budget. No titles are invented and every extra
+  // candidate must still pass the same verified US/release/quality checks.
+  if(keys.length<detailLimit){
+    const extras=[...found.entries()].filter(([key])=>!visited.has(key))
+      .map(([key,raw])=>{
+        const date=isoDate(raw.release_date||raw.first_air_date);
+        const age=daysSince(date,nowDate);
+        const recent=Math.max(0,1-Math.max(0,age)/550);
+        const buzz=Math.max(rankHeat(raw._trendDay),rankHeat(raw._trendWeek));
+        return {key,type:raw.type,priority:3*buzz+Math.log1p(number(raw.popularity))*.15+
+          Math.max(0,number(raw.vote_average)-6)*.05+recent*.55};
+      });
+    const groups={movie:[],tv:[]};
+    for(const x of extras)groups[x.type]?.push(x);
+    for(const list of Object.values(groups))
+      list.sort((a,b)=>b.priority-a.priority||a.key.localeCompare(b.key));
+    let turn=0;
+    while(keys.length<detailLimit&&(groups.movie.length||groups.tv.length)){
+      const type=turn++%2?'tv':'movie';
+      const row=(groups[type].length?groups[type]:groups[type==='tv'?'movie':'tv']).shift();
+      if(row&&!visited.has(row.key)){visited.add(row.key);keys.push(row.key);}
+    }
+  }
+  stats.second_pass_details=keys.length-stats.first_pass_details;
+  const secondPassKeys=new Set(keys.slice(stats.first_pass_details));
   const detailRows=await poolMap(keys,5,async key=>{
     const raw=found.get(key),type=raw.type;
     const extra=type==='movie'?'release_dates,external_ids':'external_ids';
@@ -608,10 +645,13 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     const p=type==='movie'?moviePremiere(data,nowDate):tvPremiere(data,nowDate);
     const age=daysSince(p.date,nowDate);
     if(age<0||age>550)return null;
-    return toCard(raw,data,type,p);
+    const card=toCard(raw,data,type,p);
+    card.surs_hot_discovery_pass=secondPassKeys.has(key)?2:1;
+    return card;
   });
   const candidates=detailRows.filter(Boolean);
   stats.us_verified=candidates.length;
+  stats.second_pass_verified=candidates.filter(c=>c.surs_hot_discovery_pass===2).length;
   const seasonCandidates=candidates.filter(c=>c.type==='tv'&&
     c.surs_hot_premiere_kind==='season')
     .sort((a,b)=>number(b.popularity)-number(a.popularity))
@@ -644,7 +684,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   };
   if(kinopoiskKey){
     // Reserve the daily quota for works that are plausible top-40 picks.
-    const preview=scoreCandidates(candidates,history,nowDate,previous);
+    const preview=scoreCandidates(candidates,history,nowDate,previous,'demand');
     const indexed=new Map(candidates.map(c=>[identity(c),c]));
     const order=[...preview.map(c=>indexed.get(identity(c))),
       ...candidates.slice().sort((a,b)=>
@@ -806,8 +846,17 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   }
   if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
     throw Error('TMDB partial outage: refusing to replace last verified feed');
-  const items=scoreCandidates(candidates,history,nowDate,previous);
+  const items=scoreCandidates(candidates,history,nowDate,previous,'demand');
   const comparison=kpDemand.compareTop(previous,items);
+  const eligibleForVariants=candidates.filter(c=>!eligibilityReason(c,nowDate));
+  const modelComparison=hot47.compareModels(eligibleForVariants,{
+    baseline:curatedSelection(eligibleForVariants,previous,'baseline'),
+    demand:items,
+    fresh:curatedSelection(eligibleForVariants,previous,'fresh')
+  });
+  stats.second_pass_eligible=eligibleForVariants.filter(c=>
+    c.surs_hot_discovery_pass===2).length;
+  stats.second_pass_selected=items.filter(c=>c.surs_hot_discovery_pass===2).length;
   const rejections={};
   for(const c of candidates){
     const reason=eligibilityReason(c,nowDate);
@@ -825,7 +874,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.6',
+  const audit={schema:1,algorithm:'hot-discovery-4.7',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -836,6 +885,11 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         tmdb:c.vote_average,tmdb_votes:c.vote_count,
         imdb:c.surs_hot_ratings?.imdb||null,kp:c.surs_hot_ratings?.kp||null,
         attention:c.surs_hot_attention,
+        growth_status:c.surs_hot_growth_status,
+        growth_signal:c.surs_hot_growth_signal,
+        rank_age:c.surs_hot_rank_age,
+        discovery_pass:c.surs_hot_discovery_pass,
+        model_scores:c.surs_hot_model_scores,
         external_popularity_rank:c.surs_hot_kinopoisk_popularity_rank||null,
         external_bonus:c.surs_hot_external_demand_bonus||0,
         rank_deltas:c.surs_hot_kinopoisk_rank_deltas||{},
@@ -847,15 +901,16 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.6',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.7',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'attention-quality-consensus-v4-ru-momentum',
-      comparison,
+      ranking_model:'source-aware-demand-first-v4.7',
+      active_model:'demand',
+      comparison,model_comparison:modelComparison,
       external_demand:{
         source:'kinopoisk_unofficial_TOP_POPULAR_ALL',
         refreshed_at:usePopular?kpPopular.fetched_at:null,
@@ -876,8 +931,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         rating_history_dates:updatedVoteHistory.map(x=>x.date),
         not_stream_count:true
       },
-      weights_with_growth:{attention:45,quality:35,freshness:5,growth:15},
-      weights_without_growth:{attention:55,quality:40,freshness:5,growth:0},
+      weights_with_growth:{attention:50,quality:30,freshness:5,growth:15},
+      weights_without_growth:{attention:60,quality:35,freshness:5,growth:0},
       rating_coverage:{
         tmdb:items.filter(c=>number(c.vote_count)>0).length,
         imdb:items.filter(c=>stableRating(c.surs_hot_ratings?.imdb)).length,
@@ -894,6 +949,16 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
       rejections,
       provisional:items.filter(c=>c.surs_hot_provisional).length,
       measured_growth:items.filter(c=>c.surs_hot_growth_measured).length,
+      positive_growth:items.filter(c=>c.surs_hot_growth_status==='rising').length,
+      falling_growth:items.filter(c=>c.surs_hot_growth_status==='falling').length,
+      flat_growth:items.filter(c=>c.surs_hot_growth_status==='flat').length,
+      unknown_growth:items.filter(c=>c.surs_hot_growth_status==='unknown').length,
+      digital_status: {
+        verified:items.filter(c=>c.type==='movie'&&
+          c.surs_hot_digital_status==='verified_us_digital_date').length,
+        unknown:items.filter(c=>c.type==='movie'&&
+          c.surs_hot_digital_status==='digital_date_unconfirmed').length
+      },
       top10:items.slice(0,10).map(c=>({id:c.id,type:c.type,title:c.title,
         premiere:c.surs_hot_premiere_date,kind:c.surs_hot_premiere_kind,
         score:c.surs_hot_score,quality:c.surs_hot_quality,heat:c.surs_hot_heat}))}};

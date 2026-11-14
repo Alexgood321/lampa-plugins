@@ -6,6 +6,7 @@ on:
     paths:
       - scripts/hot-discovery.cjs
       - scripts/kp-demand-history.cjs
+      - scripts/hot-ranking-4-7.cjs
       - .github/workflows/hot-discovery.yml
   schedule:
     - cron: '17 */3 * * *'
@@ -35,7 +36,8 @@ jobs:
         run: |
           node --check scripts/hot-discovery.cjs
           node --check scripts/kp-demand-history.cjs
-          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs
+          node --check scripts/hot-ranking-4-7.cjs
+          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs
       - name: Fetch and rank
         id: compute
         env:

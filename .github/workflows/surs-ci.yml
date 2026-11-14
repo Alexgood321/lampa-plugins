@@ -11,6 +11,7 @@ on:
       - scripts/build-surs.cjs
       - scripts/hot-discovery.cjs
       - scripts/kp-demand-history.cjs
+      - scripts/hot-ranking-4-7.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -26,6 +27,7 @@ on:
       - scripts/build-surs.cjs
       - scripts/hot-discovery.cjs
       - scripts/kp-demand-history.cjs
+      - scripts/hot-ranking-4-7.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -43,7 +45,8 @@ jobs:
           node-version: '22'
       - run: node --check scripts/hot-discovery.cjs
       - run: node --check scripts/kp-demand-history.cjs
-      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs
+      - run: node --check scripts/hot-ranking-4-7.cjs
+      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs
       - run: node scripts/build-surs.cjs --check
       - run: node --check surs-editor.js
       - run: node --check surs.js
@@ -56,7 +59,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.6 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 4.7 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'feat/hot-discovery-')
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -77,18 +80,48 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.6')throw Error('New 4.6 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-4.7')throw Error('New 4.6 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
+          const models=after.diagnostics.model_comparison;
+          if(!models||!models.models||!models.models.baseline||
+            !models.models.demand||!models.models.fresh)
+            throw Error('Missing same-candidate model comparison');
+          const sum=after.diagnostics.second_pass_details;
+          console.log('SECOND_PASS:',JSON.stringify({
+            details:sum,verified:after.diagnostics.second_pass_verified,
+            selected:after.diagnostics.second_pass_selected}));
+          console.log('MODEL_COMPARISON:',JSON.stringify(models));
           const evidence=after.diagnostics.external_demand;
           console.log('BEFORE:',before.algorithm,before.items.length,'items');
           console.log('AFTER:',after.algorithm,after.items.length,'items');
           console.log('TOP40_COMPARISON:',JSON.stringify(c));
           console.log('KP_EVIDENCE:',JSON.stringify(evidence));
           console.log('TOP10:',JSON.stringify(after.diagnostics.top10));
+          const key=x=>x.type+':'+x.id;
+          const oldIds=new Set(before.items.map(key));
+          const newIds=new Set(after.items.map(key));
+          console.log('NEW_CARDS:',JSON.stringify(after.items.filter(x=>
+            !oldIds.has(key(x))).map(x=>({rank:x.surs_hot_rank,
+            title:x.title,age:x.surs_hot_rank_age,score:x.surs_hot_score}))));
+          console.log('REMOVED_CARDS:',JSON.stringify(before.items.filter(x=>
+            !newIds.has(key(x))).map(x=>({rank:x.surs_hot_rank,
+            title:x.title,age:x.surs_hot_rank_age}))));
+          console.log('TOP20_CARDS:',JSON.stringify(after.items.slice(0,20).map(x=>({
+            rank:x.surs_hot_rank,title:x.title,kind:x.surs_hot_premiere_kind,
+            score:x.surs_hot_score,age:x.surs_hot_rank_age,
+            trend_day:x.surs_hot_trend_day,trend_week:x.surs_hot_trend_week,
+            kp_rank:x.surs_hot_kinopoisk_popularity_rank,
+            growth_status:x.surs_hot_growth_status
+          }))));
+          if(after.items.some(x=>Math.abs(x.surs_hot_score-
+            Math.round(x.surs_hot_base_score*100)/100)>.011))
+            throw Error('Published scores must never be altered by curation');
+          if(after.items.some(x=>x.surs_hot_attention_sources>2))
+            throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.6 real dry-run (no publishing)\n'+
+            '### Hot 4.7 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+
@@ -96,6 +129,31 @@ jobs:
             '\nKP rank movement samples: '+evidence.momentum_rank_measured+
             ', vote-growth samples: '+evidence.momentum_votes_measured+
             ', positive KP momentum: '+evidence.momentum_positive+'\n');
+          NODE
+          # Counterfactual: rank the EXACT 4.7 selected cards using the 4.6
+          # scoring engine from main. This isolates ranking changes, but not
+          # the discovery/eligibility effects of the two engines.
+          git fetch --depth=2 origin main
+          git show origin/main:scripts/hot-discovery.cjs > scripts/hot-discovery-v46-shadow.cjs
+          node - <<'NODE'
+          const old=require('./scripts/hot-discovery-v46-shadow.cjs');
+          const fs=require('node:fs');
+          const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
+          const previous=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
+            '/hot-discovery-before.json','utf8'));
+          const history=JSON.parse(fs.readFileSync('data/hot-discovery-history.json','utf8'));
+          const input=structuredClone(after.items);
+          const oldRows=old.scoreCandidates(input,history,
+            new Date(after.generated_at),previous);
+          const id=x=>x.type+':'+x.id;
+          const oldTop=oldRows.slice(0,10).map(id);
+          const newTop=after.items.slice(0,10).map(id);
+          const overlap=newTop.filter(x=>oldTop.includes(x)).length;
+          console.log('SAME_CANDIDATES_46_VS_47:',JSON.stringify({
+            sample_size:input.length,old_selected:oldRows.length,
+            old_top10:oldTop,new_top10:newTop,top10_overlap:overlap,
+            caveat:'Same 4.7-selected cards; does not measure old-only candidates or real viewer clicks'
+          }));
           NODE
           git diff --stat -- data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json
 
