@@ -12,6 +12,7 @@ on:
       - scripts/hot-discovery.cjs
       - scripts/kp-demand-history.cjs
       - scripts/hot-ranking-4-7.cjs
+      - scripts/hot-source-budget.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -28,6 +29,7 @@ on:
       - scripts/hot-discovery.cjs
       - scripts/kp-demand-history.cjs
       - scripts/hot-ranking-4-7.cjs
+      - scripts/hot-source-budget.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -46,7 +48,8 @@ jobs:
       - run: node --check scripts/hot-discovery.cjs
       - run: node --check scripts/kp-demand-history.cjs
       - run: node --check scripts/hot-ranking-4-7.cjs
-      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs
+      - run: node --check scripts/hot-source-budget.cjs
+      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs
       - run: node scripts/build-surs.cjs --check
       - run: node --check surs-editor.js
       - run: node --check surs.js
@@ -59,7 +62,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.7 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 4.8 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'feat/hot-discovery-')
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -80,7 +83,7 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.7')throw Error('New 4.6 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-4.8')throw Error('New 4.6 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
@@ -121,7 +124,7 @@ jobs:
           if(after.items.some(x=>x.surs_hot_attention_sources>2))
             throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.7 real dry-run (no publishing)\n'+
+            '### Hot 4.8 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+
@@ -155,5 +158,26 @@ jobs:
             caveat:'Same 4.7-selected cards; does not measure old-only candidates or real viewer clicks'
           }));
           NODE
-          git diff --stat -- data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json
+          # Verify repeat run reuses verified TMDB metadata and stays under KP caps.
+          node scripts/hot-discovery.cjs > "${RUNNER_TEMP}/hot-discovery-repeat.json"
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const first=JSON.parse(fs.readFileSync(
+            process.env.RUNNER_TEMP+'/hot-discovery-run.json','utf8'));
+          const again=JSON.parse(fs.readFileSync(
+            process.env.RUNNER_TEMP+'/hot-discovery-repeat.json','utf8'));
+          const a=first.diagnostics,b=again.diagnostics;
+          if(!b.tmdb_detail_cache_hits||b.tmdb_calls>=a.tmdb_calls)
+            throw Error('TMDB cache did not reduce repeated API calls');
+          if(b.kp_daily_used>210||b.kp_calls>45)
+            throw Error('Kinopoisk API budget exceeded');
+          console.log('REPEAT_CACHE:',JSON.stringify({
+            before_tmdb_calls:a.tmdb_calls,repeat_tmdb_calls:b.tmdb_calls,
+            cache_hits:b.tmdb_detail_cache_hits,
+            season_cache_hits:b.tmdb_season_cache_hits,
+            kp_daily_used:b.kp_daily_used,
+            kp_daily_remaining:b.kp_daily_remaining,
+            kp_run_calls:b.kp_calls}));
+          NODE
+          git diff --stat -- data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json data/hot-discovery-tmdb-cache.json
 

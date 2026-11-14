@@ -1,3 +1,21 @@
+# SURS Hot Discovery 4.8: API budgets and verified-source caching
+
+## 4.8 goals
+
+Keep the established **4.7 demand-first ranking model and admission rules**, while reducing unnecessary recurring provider calls and making source coverage auditable. No manufactured ratings, views, streaming availability or artificially inflated triple-rating percentage.
+
+- **Kinopoisk**: record a UTC-day request ledger in `data/hot-discovery-kp-cache.json`. Target a conservative 210 logical API requests/day and a hard maximum 45 per generator run, including exact-ID search, detail, popularity pages and verified daily vote observations. This is a safety budget below the provider's advertised default of 500 requests/day for new accounts, not a statement about an individual account's actual quota. The default HTTP transport counts each retry attempt before the network request and refuses retries that would exceed the budget. The persisted ledger represents the generator's attempted KP HTTP requests. Reserve capacity for the daily popular list and a small number of vote observations before exhausting the budget on searches; missing data remains unknown.
+- **TMDB**: persist a small explicitly normalized metadata cache at `data/hot-discovery-tmdb-cache.json`. Detail observations have a 9-hour TTL, aired-season metadata a 6-hour TTL, cache retention 36 hours. Trending and discovery pages are **never cached by this mechanism**; their new popularity/vote values can refresh cards. Expired metadata is refetched and every cached result still undergoes US, release-date, genre and season checks. Cached data does not stand in for playback statistics.
+- **Diagnostics**: expose per-run TMDB detail/season cache hits and misses, KP daily carried usage, consumed/remaining daily budget, per-run requests and rating calls deferred by quota. The existing triple-rating coverage remains an observation, never a quota enforced by deleting low-coverage titles.
+- **Integrity**: SURS schema 1 preserved; separate persistent files are published together by the validated GitHub Actions workflow, including the new TMDB cache. `sameDay` continues to avoid gratuitous homepage reordering.
+- **Validation**: unit tests explicitly check daily quota rollover, reservation, cache normalization/expiry, second same-day generation and expired cache regeneration. PR dry-run compares old vs new top-40 and makes an additional same-day generation to confirm TMDB request savings without publishing.
+
+## Limits
+
+The provider's stated daily quota may vary by account. The ledger counts each outbound attempt made by the default transport (including retries), but does not account for other applications using the same token. Mocked transports charge one call per invocation. The TMDB cache shortens repeated work but cannot independently improve unavailable IMDb/KP ratings. No source counts are presented as verified film views.
+
+---
+
 # SURS Hot Discovery 4.7: source-aware, demand-first ranking
 
 ## Scope and verification

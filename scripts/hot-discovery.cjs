@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const kpDemand = require('./kp-demand-history.cjs');
 const hot47 = require('./hot-ranking-4-7.cjs');
+const sourceBudget = require('./hot-source-budget.cjs');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
@@ -122,8 +123,11 @@ function discoveryJobs(now) {
       '&sort_by=popularity.desc&page='+page});
   return jobs;
 }
-async function requestJSON(url,headers={},post=null) {
+async function requestJSON(url,headers={},post=null,onAttempt=null) {
   for(let attempt=0;attempt<3;attempt++) {
+    // Invoke the quota callback BEFORE opening each HTTP attempt. A rejected
+    // budget is never caught and retried as an upstream failure.
+    if(typeof onAttempt==='function')onAttempt();
     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
     try {
       const res=await fetch(url,{signal:ctrl.signal,headers:{
@@ -532,10 +536,13 @@ function toCard(raw,details,type,premiere) {
   return card;
 }
 async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpCache={},
-  listIds=[],history={},previous=null,
+  tmdbCache={},listIds=[],history={},previous=null,
   transport=requestJSON,detailLimit=MAX_DETAILS}={}) {
   if(!tmdbToken)throw Error('Missing TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY');
-  const nowDate=new Date(now),stats={tmdb_calls:0,tmdb_failures:0,mdblist_calls:0,
+  const nowDate=new Date(now),tmdbMemo=sourceBudget.memo(tmdbCache),
+    stats={tmdb_calls:0,tmdb_failures:0,tmdb_detail_cache_hits:0,
+    tmdb_detail_cache_misses:0,tmdb_season_cache_hits:0,tmdb_season_cache_misses:0,
+    mdblist_calls:0,
     mdblist_failures:0,kp_calls:0,kp_failures:0,kp_matched:0,
     kp_search_calls:0,kp_detail_calls:0,kp_cache_hits:0,
     kp_search_empty:0,kp_detail_unrated:0,kp_no_imdb:0,
@@ -639,8 +646,27 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   const secondPassKeys=new Set(keys.slice(stats.first_pass_details));
   const detailRows=await poolMap(keys,5,async key=>{
     const raw=found.get(key),type=raw.type;
-    const extra=type==='movie'?'release_dates,external_ids':'external_ids';
-    const data=await tmdb(type+'/'+raw.id+'?append_to_response='+extra);
+    const memoKey='detail:'+key;
+    const prior=sourceBudget.cached(tmdbMemo,memoKey,nowDate,
+      sourceBudget.TMDB_DETAIL_TTL_HOURS);
+    let data;
+    if(prior){
+      stats.tmdb_detail_cache_hits++;
+      // Discovery/Trending responses supply fresher dynamic metrics. Static
+      // metadata is reused only within the bounded TTL.
+      data={...prior,
+        popularity:Math.max(number(prior.popularity),number(raw.popularity)),
+        vote_count:number(raw.vote_count)>0?number(raw.vote_count):prior.vote_count,
+        vote_average:number(raw.vote_count)>0?number(raw.vote_average):prior.vote_average};
+    }else{
+      stats.tmdb_detail_cache_misses++;
+      const extra=type==='movie'?'release_dates,external_ids':'external_ids';
+      data=await tmdb(type+'/'+raw.id+'?append_to_response='+extra);
+      if(data&&data.id===raw.id){
+        const normalized=sourceBudget.normalizeDetail(data,type);
+        if(normalized)sourceBudget.save(tmdbMemo,memoKey,normalized,nowDate);
+      }
+    }
     if(!data||!data.id||!eligibleUS(data,type)||!data.poster_path||blocked(data,type))return null;
     const p=type==='movie'?moviePremiere(data,nowDate):tvPremiere(data,nowDate);
     const age=daysSince(p.date,nowDate);
@@ -657,8 +683,19 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     .sort((a,b)=>number(b.popularity)-number(a.popularity))
     .slice(0,MAX_SEASON_CALLS);
   await poolMap(seasonCandidates,4,async c=>{
-    stats.season_calls++;
-    const d=await tmdb('tv/'+c.id+'/season/'+c.surs_hot_season);
+    const key='season:tv:'+c.id+':'+c.surs_hot_season;
+    let d=sourceBudget.cached(tmdbMemo,key,nowDate,
+      sourceBudget.TMDB_SEASON_TTL_HOURS);
+    if(d)stats.tmdb_season_cache_hits++;
+    else{
+      stats.tmdb_season_cache_misses++;
+      stats.season_calls++;
+      d=await tmdb('tv/'+c.id+'/season/'+c.surs_hot_season);
+      if(d&&Number(d.season_number)===c.surs_hot_season){
+        const normalized=sourceBudget.normalizeSeason(d);
+        if(normalized)sourceBudget.save(tmdbMemo,key,normalized,nowDate);
+      }
+    }
     verifySeason(c,d,nowDate);
   });
   if(mdblistKey){
@@ -676,6 +713,33 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     });
   }
   const kpEntries={...(kpCache?.entries||{})},nowDay=dateOnly(nowDate);
+  const kpBudget=sourceBudget.dailyBudget(kpCache?.daily_budget,nowDate,
+    {daily:sourceBudget.KP_DAILY_BUDGET,run:MAX_KP_CALLS});
+  stats.kp_daily_carried=kpBudget.carried;
+  const kpRequest=async url=>{
+    const onAttempt=()=>{
+      if(!kpBudget.charge())throw Error('KP request budget exhausted');
+      stats.kp_calls++;
+    };
+    const headers={'X-API-KEY':kinopoiskKey};
+    // Default transport retries 429/5xx up to three times, so every actual
+    // outbound HTTP attempt must be charged. Mock transports represent one
+    // physical call and keep deterministic test accounting.
+    if(transport===requestJSON)return requestJSON(url,headers,null,onAttempt);
+    onAttempt();
+    return transport(url,headers);
+  };
+  // The published top needs up to 3 calls/day. Daily vote-count sampling
+  // needs its own reserved budget to avoid starvation by rating searches.
+  const priorTop=kpCache?.popular;
+  const topFresh=priorTop?.fetched_at&&
+    dateOnly(priorTop.fetched_at)===nowDay;
+  const topReserve=topFresh?0:KP_POPULAR_PAGES;
+  const todaysVotes=(kpCache?.rating_history||[])
+    .find(x=>x.date===nowDay)?.entries?.length||0;
+  const voteReserve= todaysVotes>=KP_VOTE_REFRESH_DAILY?0:
+    Math.min(8,KP_VOTE_REFRESH_DAILY-todaysVotes);
+  const reserve=topReserve+voteReserve;
   const validKpEntry=(row,imdbId)=>{
     if(!row||row.imdbId!==imdbId||!isoDate(row.checked_at))return false;
     const age=daysSince(row.checked_at,nowDate);
@@ -703,11 +767,13 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
           ...(!prior.imdb&&cached.imdb?{imdb:cached.imdb}:{})}:{})};
         continue;
       }
-      if(stats.kp_calls+2>MAX_KP_CALLS)continue;
+      if(!kpBudget.can(2,reserve)){
+        stats.kp_rating_budget_deferred=(stats.kp_rating_budget_deferred||0)+1;
+        continue;
+      }
       try{
-        stats.kp_calls++;stats.kp_search_calls++;
-        const found=await transport(KP_API+'?imdbId='+encodeURIComponent(imdbId),
-          {'X-API-KEY':kinopoiskKey});
+        stats.kp_search_calls++;
+        const found=await kpRequest(KP_API+'?imdbId='+encodeURIComponent(imdbId));
         const row=matchedKpSearchRow(found,imdbId);
         if(!row){
           stats.kp_search_empty++;
@@ -718,9 +784,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         // The search endpoint doesn't expose the vote counts. Fetch details
         // only for an exact IMDb-ID match, and verify the detail response too.
         if(!parsed.kp){
-          stats.kp_calls++;stats.kp_detail_calls++;
-          const details=await transport(KP_API+'/'+row.kinopoiskId,
-            {'X-API-KEY':kinopoiskKey});
+          stats.kp_detail_calls++;
+          const details=await kpRequest(KP_API+'/'+row.kinopoiskId);
           parsed=parseKinopoisk(details,imdbId);
         }
         if(!parsed.kp)stats.kp_detail_unrated++;
@@ -752,9 +817,12 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     let allPagesValid=true;
     for(let page=1;page<=KP_POPULAR_PAGES;page++){
       try{
+        if(!kpBudget.can()){
+          stats.kp_popularity_budget_deferred=(stats.kp_popularity_budget_deferred||0)+1;
+          allPagesValid=false;break;
+        }
         stats.kp_popularity_calls++;
-        const data=await transport(KP_API+'/collections?type=TOP_POPULAR_ALL&page='+page,
-          {'X-API-KEY':kinopoiskKey});
+        const data=await kpRequest(KP_API+'/collections?type=TOP_POPULAR_ALL&page='+page);
         if(!Array.isArray(data?.items))throw Error('Bad KP popular collection response');
         data.items.forEach((row,i)=>{
           const id=Number(row.kinopoiskId);
@@ -811,12 +879,12 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     let refreshed=0;
     for(const c of ranked){
       if(refreshed>=KP_VOTE_REFRESH_DAILY||dayVotes.size>=KP_VOTE_REFRESH_DAILY||
-        stats.kp_calls>=MAX_KP_CALLS)break;
+        !kpBudget.can())break;
       const kpId=Number(c.surs_hot_ratings.kp.kinopoisk_id);
       if(dayVotes.has(kpId))continue;
-      refreshed++;stats.kp_calls++;stats.kp_vote_refresh_calls++;
+      refreshed++;stats.kp_vote_refresh_calls++;
       try{
-        const detail=await transport(KP_API+'/'+kpId,{'X-API-KEY':kinopoiskKey});
+        const detail=await kpRequest(KP_API+'/'+kpId);
         if(Number(detail?.kinopoiskId)!==kpId||
           String(detail?.imdbId)!==c.surs_hot_imdb_id)continue;
         const updated=parseKinopoisk(detail,c.surs_hot_imdb_id);
@@ -831,6 +899,9 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     }
   }
   stats.kp_votes_recorded=dayVotes.size;
+  stats.kp_daily_used=kpBudget.used;
+  stats.kp_daily_remaining=Math.max(0,sourceBudget.KP_DAILY_BUDGET-kpBudget.used);
+  stats.kp_run_remaining=kpBudget.remaining();
   const updatedVoteHistory=kpDemand.snapshots(
     [...voteHistory.filter(x=>x.date!==nowDay),
       ...(dayVotes.size?[{date:nowDay,
@@ -874,7 +945,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.7',
+  const audit={schema:1,algorithm:'hot-discovery-4.8',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -901,14 +972,14 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.7',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.8',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-demand-first-v4.7',
+      ranking_model:'source-aware-demand-first-v4.8-cached',
       active_model:'demand',
       comparison,model_comparison:modelComparison,
       external_demand:{
@@ -966,7 +1037,9 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   return {feed,audit,history:nextHistory(history,candidates,nowDate),
     kpCache:{schema:1,entries:kpEntries,
       ...(validPop(kpPopular)?{popular:kpPopular}:{}),
-      popular_history:rankHistory,rating_history:updatedVoteHistory}};
+      popular_history:rankHistory,rating_history:updatedVoteHistory,
+      daily_budget:kpBudget.snapshot()},
+    tmdbCache:sourceBudget.prune(tmdbMemo,nowDate)};
 }
 function readJSON(file,fallback) {try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch(e){return fallback;}}
 async function main(){
@@ -974,11 +1047,13 @@ async function main(){
   const historyFile=path.join(root,'data','hot-discovery-history.json');
   const auditFile=path.join(root,'data','hot-discovery-audit.json');
   const kpCacheFile=path.join(root,'data','hot-discovery-kp-cache.json');
+  const tmdbCacheFile=path.join(root,'data','hot-discovery-tmdb-cache.json');
   const now=new Date(),old=readJSON(out,null);
   const result=await build({now,tmdbToken:process.env.TMDB_READ_ACCESS_TOKEN||
     process.env.TMDB_API_KEY||'',mdblistKey:process.env.MDBLIST_API_KEY||'',
     kinopoiskKey:process.env.KINOPOISK_API_KEY||'',
     kpCache:readJSON(kpCacheFile,{schema:1,entries:{}}),
+    tmdbCache:readJSON(tmdbCacheFile,{schema:1,entries:{}}),
     listIds:(process.env.MDBLIST_LIST_IDS||'').split(',').map(x=>x.trim()).filter(Boolean),
     previous:old,history:readJSON(historyFile,{schema:1,snapshots:[]})});
   fs.mkdirSync(path.dirname(out),{recursive:true});
@@ -1005,6 +1080,8 @@ async function main(){
   fs.renameSync(auditFile+'.tmp',auditFile);
   fs.writeFileSync(kpCacheFile+'.tmp',JSON.stringify(result.kpCache,null,2)+'\n');
   fs.renameSync(kpCacheFile+'.tmp',kpCacheFile);
+  fs.writeFileSync(tmdbCacheFile+'.tmp',JSON.stringify(result.tmdbCache)+'\n');
+  fs.renameSync(tmdbCacheFile+'.tmp',tmdbCacheFile);
   process.stdout.write(JSON.stringify({generated_at:result.feed.generated_at,
     selected:result.feed.items.length,diagnostics:result.feed.diagnostics})+'\n');
 }
@@ -1012,4 +1089,4 @@ if(require.main===module)main().catch(e=>{console.error(e.message);process.exitC
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
   scoreCandidates,recencyTier,attentionFor,curatedSelection,eligibilityReason,
   verifySeason,nextHistory,validateFeed,build,parseMdb,parseKinopoisk,
-  qualityAgreement,matchedKpSearchRow,externalPopularity,daysSince};
+  qualityAgreement,matchedKpSearchRow,externalPopularity,daysSince,requestJSON};
