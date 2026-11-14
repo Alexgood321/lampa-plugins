@@ -54,4 +54,23 @@ function compare(eligible,previous,variants){
   return {candidate_count:eligible.length,variants:out,
     note:'The comparison uses only observed demand proxies, not viewer behavior; prefer the weakest soft editorial adjustment that avoids material rank disruptions.'};
 }
-module.exports={interestPenalty,summarize,compare};
+function selectVariant(comparison){
+  const stats=comparison?.variants||{};
+  const control=stats.zero;
+  if(!control)return {name:'zero',strength:0,reason:'no_control'};
+  // The preference exists only to move genuinely current-demand titles into
+  // the top 20. Never activate it merely because it reorders positions.
+  for(const [name,strength] of [['light',2],['balanced',4],['strong',6]]){
+    const v=stats[name];
+    if(!v)continue;
+    if(v.top20_observed_interest<=control.top20_observed_interest)continue;
+    if(v.top20_three_ratings<control.top20_three_ratings-1)continue;
+    if(v.top10_overlap_control<9)continue;
+    if(v.mean_shared_rank_move>control.mean_shared_rank_move+1.5)continue;
+    if(v.max_shared_rank_move>control.max_shared_rank_move+4)continue;
+    return {name,strength,reason:'measured_interest_coverage_gain',
+      uplift:v.top20_observed_interest-control.top20_observed_interest};
+  }
+  return {name:'zero',strength:0,reason:'no_safe_observed_gain',uplift:0};
+}
+module.exports={interestPenalty,summarize,compare,selectVariant};
