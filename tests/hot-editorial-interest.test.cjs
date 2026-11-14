@@ -94,3 +94,39 @@ test('bounded preference uses the same candidate set and reports tradeoffs',()=>
   for(const rows of Object.values(variants))
     assert.deepEqual(new Set(rows.map(x=>x.id)).size,title.length);
 });
+
+test('selector keeps unadjusted order when all variants have equal interest coverage',()=>{
+  const variants={zero:{top20_observed_interest:16,top20_three_ratings:18,
+    top10_overlap_control:10,mean_shared_rank_move:1.61,max_shared_rank_move:6},
+    light:{top20_observed_interest:16,top20_three_ratings:18,
+    top10_overlap_control:10,mean_shared_rank_move:1.65,max_shared_rank_move:7},
+    balanced:{top20_observed_interest:16,top20_three_ratings:18,
+    top10_overlap_control:10,mean_shared_rank_move:1.71,max_shared_rank_move:8},
+    strong:{top20_observed_interest:16,top20_three_ratings:18,
+    top10_overlap_control:10,mean_shared_rank_move:1.77,max_shared_rank_move:9}};
+  assert.deepEqual(editorial.selectVariant({variants}),
+    {name:'zero',strength:0,reason:'no_safe_observed_gain',uplift:0});
+});
+
+test('selector chooses lowest safe strength with real same-candidate coverage lift',()=>{
+  const base={top20_observed_interest:16,top20_three_ratings:18,
+    top10_overlap_control:10,mean_shared_rank_move:1.5,max_shared_rank_move:6};
+  const stats={zero:base,
+    light:{...base,top20_observed_interest:17,
+      top10_overlap_control:9,mean_shared_rank_move:1.8,max_shared_rank_move:8},
+    balanced:{...base,top20_observed_interest:18},
+    strong:{...base,top20_observed_interest:19}};
+  assert.deepEqual(editorial.selectVariant({variants:stats}),
+    {name:'light',strength:2,reason:'measured_interest_coverage_gain',uplift:1});
+});
+
+test('selector refuses interest gains that sacrifice independent rating evidence',()=>{
+  const base={top20_observed_interest:16,top20_three_ratings:18,
+    top10_overlap_control:10,mean_shared_rank_move:1.5,max_shared_rank_move:6};
+  const unsafe={...base,top20_observed_interest:17,
+    top20_three_ratings:16};
+  const unstable={...base,top20_observed_interest:17,
+    top10_overlap_control:7};
+  const stats={zero:base,light:unsafe,balanced:unstable,strong:unsafe};
+  assert.equal(editorial.selectVariant({variants:stats}).strength,0);
+});
