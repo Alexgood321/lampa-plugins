@@ -1018,17 +1018,20 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   }
   if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
     throw Error('TMDB partial outage: refusing to replace last verified feed');
-  const items=scoreCandidates(candidates,history,nowDate,previous,'demand',true,4);
-  const comparison=kpDemand.compareTop(previous,items);
+  const unadjusted=scoreCandidates(candidates,history,nowDate,previous,'demand',true,0);
   const eligibleForVariants=candidates.filter(c=>!eligibilityReason(c,nowDate,true));
   const sameCandidates={
-    zero:curatedSelection(eligibleForVariants,previous,'demand',0),
+    zero:unadjusted,
     light:curatedSelection(eligibleForVariants,previous,'demand',2),
-    balanced:items,
+    balanced:curatedSelection(eligibleForVariants,previous,'demand',4),
     strong:curatedSelection(eligibleForVariants,previous,'demand',6)
   };
   const editorialComparison=editorialInterest.compare(
     eligibleForVariants,previous?.items||[],sameCandidates);
+  const editorialChoice=editorialInterest.selectVariant(editorialComparison);
+  editorialComparison.selection=editorialChoice;
+  const items=sameCandidates[editorialChoice.name];
+  const comparison=kpDemand.compareTop(previous,items);
   const interestEvidence=evidenceGate.diagnostic(items,[]);
   const modelComparison=hot47.compareModels(eligibleForVariants,{
     baseline:curatedSelection(eligibleForVariants,previous,'baseline'),
@@ -1131,7 +1134,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
       ranking_model:'source-aware-demand-first-v4.13-editorial',
       interest_evidence:interestEvidence,
-      editorial_interest_strength:4,
+      editorial_interest_strength:editorialChoice.strength,
+      editorial_interest_selection_reason:editorialChoice.reason,
       editorial_interest_comparison:editorialComparison,
       rating_evidence:ratingConfidence,
       active_model:'demand',
