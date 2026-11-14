@@ -121,7 +121,7 @@ test('strict build publishes complete source lanes but refuses broken TMDB week 
     history:{snapshots:[]},detailLimit:40,
     strictSourceHealth:true};
   const result=await hot.build(opts);
-  assert.equal(result.feed.algorithm,'hot-discovery-4.11');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.12');
   assert.equal(result.feed.diagnostics.feed_integrity.validated,true);
   assert.equal(result.feed.diagnostics.feed_integrity.source_health.healthy,true);
   assert.ok(result.feed.items.length>=12);
