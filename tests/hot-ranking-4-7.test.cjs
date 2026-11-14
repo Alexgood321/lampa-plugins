@@ -158,3 +158,20 @@ test('measured declining growth cannot masquerade as positive momentum',()=>{
   assert.equal(row.surs_hot_growth_signal,0);
   assert.equal(row.surs_hot_weights.growth,.15);
 });
+
+test('high-quality 200+ day KP top-60 title is eligible without fake freshness',()=>{
+  const title={...base(1810,244),popularity:180,
+    surs_hot_kinopoisk_popularity_rank:41,
+    surs_hot_ratings:{imdb:{value:8.7,votes:200000},
+      kp:{value:8.5,votes:200000}}};
+  const out=hot.scoreCandidates([title],{snapshots:[]},NOW,null);
+  assert.equal(out.length,1);
+  assert.equal(out[0].surs_hot_rank_age,244);
+  assert.equal(out[0].surs_hot_growth_signal,0);
+  const weak={...base(1811,244),popularity:180,
+    surs_hot_kinopoisk_popularity_rank:41,
+    surs_hot_ratings:{imdb:{value:7.1,votes:200000},
+      kp:{value:7.2,votes:200000}}};
+  const w=hot.scoreCandidates([weak],{snapshots:[]},NOW,null);
+  assert.equal(w.length,0);
+});
