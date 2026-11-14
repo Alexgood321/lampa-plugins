@@ -53,6 +53,8 @@ function effectiveWeights(weights,confirmed){
   // Preserve the documented 4.6 fallback instead of silently rebasing it.
   if(weights===WEIGHTS.baseline)return {
     attention:.55,quality:.40,growth:0,freshness:.05};
+  if(weights===WEIGHTS.demand)return {
+    attention:.60,quality:.35,growth:0,freshness:.05};
   const base=weights.attention+weights.quality+weights.freshness;
   return {attention:round(weights.attention/base,6),
     quality:round(weights.quality/base,6),growth:0,
