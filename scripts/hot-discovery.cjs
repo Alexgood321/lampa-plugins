@@ -9,7 +9,8 @@ const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
 const DAY = 86400000;
-const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 260, MAX_MDB_CALLS = 50;
+const MIN_ITEMS = 12, MAX_ITEMS = 40, MAX_DETAILS = 320, MAX_MDB_CALLS = 50;
+const MAX_FIRST_PASS = 260;
 // Total HTTP calls per run; each new rated title may cost search + details.
 const MAX_KP_CALLS = 45, KP_RATING_TTL_DAYS = 3, KP_MISS_TTL_DAYS = 1;
 const KP_POPULAR_PAGES = 3, KP_POPULAR_CACHE_HOURS = 36;
@@ -540,7 +541,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     kp_popularity_calls:0,kp_popularity_failures:0,
     kp_popularity_cache_hit:false,kp_popularity_matched:0,
     kp_vote_refresh_calls:0,kp_vote_refresh_failures:0,kp_votes_recorded:0,
-    season_calls:0,discovered:0,us_verified:0,eligible:0};
+    season_calls:0,discovered:0,us_verified:0,eligible:0,
+    first_pass_details:0,second_pass_details:0,second_pass_verified:0};
   const tmdb=async relative=>{
     stats.tmdb_calls++;
     const keyAuth=/^[0-9a-f]{32}$/i.test(tmdbToken);
@@ -596,16 +598,44 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   stats.discovered=found.size;
   // Round-robin discovery lanes to prevent Trending or Popularity monopolizing details.
   const keys=[],visited=new Set(),queues=[...buckets.values()].map(x=>[...new Set(x)]);
+  const primaryLimit=Math.min(detailLimit,MAX_FIRST_PASS);
   let remaining=true;
-  while(keys.length<detailLimit&&remaining){
+  while(keys.length<primaryLimit&&remaining){
     remaining=false;
     for(const queue of queues){
       while(queue.length&&visited.has(queue[0]))queue.shift();
-      if(queue.length&&keys.length<detailLimit){
+      if(queue.length&&keys.length<primaryLimit){
         const key=queue.shift();visited.add(key);keys.push(key);remaining=true;
       }
     }
   }
+  stats.first_pass_details=keys.length;
+  // Pass two: independently scan eligible-looking discoveries ignored by the
+  // original 260-key detail budget. No titles are invented and every extra
+  // candidate must still pass the same verified US/release/quality checks.
+  if(keys.length<detailLimit){
+    const extras=[...found.entries()].filter(([key])=>!visited.has(key))
+      .map(([key,raw])=>{
+        const date=isoDate(raw.release_date||raw.first_air_date);
+        const age=daysSince(date,nowDate);
+        const recent=Math.max(0,1-Math.max(0,age)/550);
+        const buzz=Math.max(rankHeat(raw._trendDay),rankHeat(raw._trendWeek));
+        return {key,type:raw.type,priority:3*buzz+Math.log1p(number(raw.popularity))*.15+
+          Math.max(0,number(raw.vote_average)-6)*.05+recent*.55};
+      });
+    const groups={movie:[],tv:[]};
+    for(const x of extras)groups[x.type]?.push(x);
+    for(const list of Object.values(groups))
+      list.sort((a,b)=>b.priority-a.priority||a.key.localeCompare(b.key));
+    let turn=0;
+    while(keys.length<detailLimit&&(groups.movie.length||groups.tv.length)){
+      const type=turn++%2?'tv':'movie';
+      const row=(groups[type].length?groups[type]:groups[type==='tv'?'movie':'tv']).shift();
+      if(row&&!visited.has(row.key)){visited.add(row.key);keys.push(row.key);}
+    }
+  }
+  stats.second_pass_details=keys.length-stats.first_pass_details;
+  const secondPassKeys=new Set(keys.slice(stats.first_pass_details));
   const detailRows=await poolMap(keys,5,async key=>{
     const raw=found.get(key),type=raw.type;
     const extra=type==='movie'?'release_dates,external_ids':'external_ids';
@@ -614,10 +644,13 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     const p=type==='movie'?moviePremiere(data,nowDate):tvPremiere(data,nowDate);
     const age=daysSince(p.date,nowDate);
     if(age<0||age>550)return null;
-    return toCard(raw,data,type,p);
+    const card=toCard(raw,data,type,p);
+    card.surs_hot_discovery_pass=secondPassKeys.has(key)?2:1;
+    return card;
   });
   const candidates=detailRows.filter(Boolean);
   stats.us_verified=candidates.length;
+  stats.second_pass_verified=candidates.filter(c=>c.surs_hot_discovery_pass===2).length;
   const seasonCandidates=candidates.filter(c=>c.type==='tv'&&
     c.surs_hot_premiere_kind==='season')
     .sort((a,b)=>number(b.popularity)-number(a.popularity))
@@ -814,6 +847,15 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     throw Error('TMDB partial outage: refusing to replace last verified feed');
   const items=scoreCandidates(candidates,history,nowDate,previous);
   const comparison=kpDemand.compareTop(previous,items);
+  const eligibleForVariants=candidates.filter(c=>!eligibilityReason(c,nowDate));
+  const modelComparison=hot47.compareModels(eligibleForVariants,{
+    baseline:items,
+    demand:curatedSelection(eligibleForVariants,previous,'demand'),
+    fresh:curatedSelection(eligibleForVariants,previous,'fresh')
+  });
+  stats.second_pass_eligible=eligibleForVariants.filter(c=>
+    c.surs_hot_discovery_pass===2).length;
+  stats.second_pass_selected=items.filter(c=>c.surs_hot_discovery_pass===2).length;
   const rejections={};
   for(const c of candidates){
     const reason=eligibilityReason(c,nowDate);
@@ -831,7 +873,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.6',
+  const audit={schema:1,algorithm:'hot-discovery-4.7',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -842,6 +884,11 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         tmdb:c.vote_average,tmdb_votes:c.vote_count,
         imdb:c.surs_hot_ratings?.imdb||null,kp:c.surs_hot_ratings?.kp||null,
         attention:c.surs_hot_attention,
+        growth_status:c.surs_hot_growth_status,
+        growth_signal:c.surs_hot_growth_signal,
+        rank_age:c.surs_hot_rank_age,
+        discovery_pass:c.surs_hot_discovery_pass,
+        model_scores:c.surs_hot_model_scores,
         external_popularity_rank:c.surs_hot_kinopoisk_popularity_rank||null,
         external_bonus:c.surs_hot_external_demand_bonus||0,
         rank_deltas:c.surs_hot_kinopoisk_rank_deltas||{},
@@ -853,15 +900,15 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.6',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.7',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'attention-quality-consensus-v4-ru-momentum',
-      comparison,
+      ranking_model:'source-aware-smooth-v4.7',
+      comparison,model_comparison:modelComparison,
       external_demand:{
         source:'kinopoisk_unofficial_TOP_POPULAR_ALL',
         refreshed_at:usePopular?kpPopular.fetched_at:null,
@@ -900,6 +947,16 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
       rejections,
       provisional:items.filter(c=>c.surs_hot_provisional).length,
       measured_growth:items.filter(c=>c.surs_hot_growth_measured).length,
+      positive_growth:items.filter(c=>c.surs_hot_growth_status==='rising').length,
+      falling_growth:items.filter(c=>c.surs_hot_growth_status==='falling').length,
+      flat_growth:items.filter(c=>c.surs_hot_growth_status==='flat').length,
+      unknown_growth:items.filter(c=>c.surs_hot_growth_status==='unknown').length,
+      digital_status: {
+        verified:items.filter(c=>c.type==='movie'&&
+          c.surs_hot_digital_status==='verified_us_digital_date').length,
+        unknown:items.filter(c=>c.type==='movie'&&
+          c.surs_hot_digital_status==='digital_date_unconfirmed').length
+      },
       top10:items.slice(0,10).map(c=>({id:c.id,type:c.type,title:c.title,
         premiere:c.surs_hot_premiere_date,kind:c.surs_hot_premiere_kind,
         score:c.surs_hot_score,quality:c.surs_hot_quality,heat:c.surs_hot_heat}))}};
