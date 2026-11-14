@@ -39,7 +39,7 @@ jobs:
           node --check scripts/kp-demand-history.cjs
           node --check scripts/hot-ranking-4-7.cjs
           node --check scripts/hot-source-budget.cjs
-          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs
+          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs
       - name: Fetch and rank
         id: compute
         env:

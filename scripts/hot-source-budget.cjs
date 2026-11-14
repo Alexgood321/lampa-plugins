@@ -81,6 +81,31 @@ function normalizeSeason(d){
       episode_number:e.episode_number,air_date:e.air_date,
       vote_count:e.vote_count,vote_average:e.vote_average}))};
 }
+// Cache contains static metadata and the old dynamic fields. A new TMDB
+// discovery response is the current observation, EVEN WHEN its metrics fell.
+// Never use Math.max(old,now): doing so fabricates sustained demand.
+function overlayFreshSignals(prior,observed) {
+  const raw=observed&&typeof observed==='object'?observed:{};
+  const has=(key,min,max=Infinity,integer=false)=>{
+    if(!Object.prototype.hasOwnProperty.call(raw,key)||
+      raw[key]===null||raw[key]==='')return false;
+    const n=Number(raw[key]);
+    return Number.isFinite(n)&&n>=min&&n<=max&&
+      (!integer||Number.isSafeInteger(n));
+  };
+  const currentPopularity=has('popularity',0);
+  const currentVotes=has('vote_count',0,Infinity,true);
+  const currentAverage=has('vote_average',0,10);
+  return {
+    data:{...prior,
+      ...(currentPopularity?{popularity:Number(raw.popularity)}:{}),
+      ...(currentVotes?{vote_count:Number(raw.vote_count)}:{}),
+      ...(currentAverage?{vote_average:Number(raw.vote_average)}:{})},
+    current_popularity:currentPopularity,
+    current_votes:currentVotes,
+    current_rating:currentAverage
+  };
+}
 function prune(cache,now){
   const pairs=Object.entries(cache?.entries||{}).filter(([k,e])=>k&&e&&
     e.data&&e.at&&Number.isFinite(hours(now,e.at))&&
@@ -91,4 +116,4 @@ function prune(cache,now){
 }
 module.exports={KP_DAILY_BUDGET,TMDB_DETAIL_TTL_HOURS,
   TMDB_SEASON_TTL_HOURS,TMDB_CACHE_RETENTION_HOURS,dailyBudget,memo,
-  cached,save,normalizeDetail,normalizeSeason,prune};
+  cached,save,normalizeDetail,normalizeSeason,overlayFreshSignals,prune};
