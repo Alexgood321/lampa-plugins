@@ -19,6 +19,7 @@
 - Keep the established first **260** round-robin detail candidates. Inspect up to **60 more** previously overlooked candidates using an additional ranked, movie/TV-balanced pass. All candidates pass the same US, premiere, metadata and quality checks.
 - Record verified digital US release metadata; `digital_date_unconfirmed` means **no verified digital date** in TMDB, not that streaming is unavailable.
 - Recalculate three candidate-weight variants from the **same already-verified candidate set** (baseline 45/35/15/5; demand 50/30/15/5; fresh 45/30/15/10) and log their top-10 composition, mean age and cross-platform confirmations. This is a descriptive comparison, **not** an independent measure of ranking correctness.
+- **Active 4.7 model is demand 50/30/15/5**, with 60/35/0/5 when multi-day growth evidence is missing. In the live PR preview, this candidate set yielded a top-10 with 10/10 TMDB-trending titles and 6/10 titles also in KP TOP, compared with the historical baseline candidate-set 9/10 trending. This is a choice for the *Hot* shelf intent, not proof of user engagement.
 - Preserve offline fallback, capped KP calls, separately sourced KP daily history, stable homepage settings, 40-item max and per-day publishing. Run a real API dry-run in the PR CI without pushing data.
 
 ### Remaining limits
