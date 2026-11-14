@@ -934,7 +934,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.7',
+  const audit={schema:1,algorithm:'hot-discovery-4.8',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -961,14 +961,14 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.7',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.8',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-demand-first-v4.7',
+      ranking_model:'source-aware-demand-first-v4.8-cached',
       active_model:'demand',
       comparison,model_comparison:modelComparison,
       external_demand:{
@@ -1036,11 +1036,13 @@ async function main(){
   const historyFile=path.join(root,'data','hot-discovery-history.json');
   const auditFile=path.join(root,'data','hot-discovery-audit.json');
   const kpCacheFile=path.join(root,'data','hot-discovery-kp-cache.json');
+  const tmdbCacheFile=path.join(root,'data','hot-discovery-tmdb-cache.json');
   const now=new Date(),old=readJSON(out,null);
   const result=await build({now,tmdbToken:process.env.TMDB_READ_ACCESS_TOKEN||
     process.env.TMDB_API_KEY||'',mdblistKey:process.env.MDBLIST_API_KEY||'',
     kinopoiskKey:process.env.KINOPOISK_API_KEY||'',
     kpCache:readJSON(kpCacheFile,{schema:1,entries:{}}),
+    tmdbCache:readJSON(tmdbCacheFile,{schema:1,entries:{}}),
     listIds:(process.env.MDBLIST_LIST_IDS||'').split(',').map(x=>x.trim()).filter(Boolean),
     previous:old,history:readJSON(historyFile,{schema:1,snapshots:[]})});
   fs.mkdirSync(path.dirname(out),{recursive:true});
@@ -1067,6 +1069,8 @@ async function main(){
   fs.renameSync(auditFile+'.tmp',auditFile);
   fs.writeFileSync(kpCacheFile+'.tmp',JSON.stringify(result.kpCache,null,2)+'\n');
   fs.renameSync(kpCacheFile+'.tmp',kpCacheFile);
+  fs.writeFileSync(tmdbCacheFile+'.tmp',JSON.stringify(result.tmdbCache)+'\n');
+  fs.renameSync(tmdbCacheFile+'.tmp',tmdbCacheFile);
   process.stdout.write(JSON.stringify({generated_at:result.feed.generated_at,
     selected:result.feed.items.length,diagnostics:result.feed.diagnostics})+'\n');
 }
