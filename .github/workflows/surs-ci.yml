@@ -10,6 +10,7 @@ on:
       - build/surs.source.txt
       - scripts/build-surs.cjs
       - scripts/hot-discovery.cjs
+      - scripts/kp-demand-history.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -40,7 +41,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --check scripts/hot-discovery.cjs
-      - run: node --test tests/hot-discovery.test.cjs
+      - run: node --check scripts/kp-demand-history.cjs
+      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs
       - run: node scripts/build-surs.cjs --check
       - run: node --check surs-editor.js
       - run: node --check surs.js
