@@ -10,6 +10,7 @@ on:
       - scripts/hot-source-budget.cjs
       - scripts/hot-feed-integrity.cjs
       - scripts/hot-evidence-gate.cjs
+      - scripts/hot-editorial-interest.cjs
       - .github/workflows/hot-discovery.yml
   schedule:
     - cron: '17 */3 * * *'
@@ -43,7 +44,8 @@ jobs:
           node --check scripts/hot-source-budget.cjs
           node --check scripts/hot-feed-integrity.cjs
           node --check scripts/hot-evidence-gate.cjs
-          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs tests/hot-kp-pacing.test.cjs tests/hot-feed-integrity.test.cjs tests/hot-evidence-gate.test.cjs
+          node --check scripts/hot-editorial-interest.cjs
+          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs tests/hot-kp-pacing.test.cjs tests/hot-feed-integrity.test.cjs tests/hot-evidence-gate.test.cjs tests/hot-editorial-interest.test.cjs
       - name: Fetch and rank
         id: compute
         env:
