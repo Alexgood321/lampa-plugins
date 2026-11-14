@@ -84,8 +84,13 @@ test('no source missingness penalty is ever subtracted from the objective score'
 });
 
 test('filtered single-source long tail is traceable and not forced into 40-card shelf',()=>{
-  const strong=Array.from({length:20},(_,i)=>card(100+i,{
-    source_count:3,day:i+1}));
+  const strong=Array.from({length:20},(_,i)=>({
+    ...card(100+i,{source_count:3,day:i+1}),
+    surs_hot_ratings:{
+      imdb:{value:8.15,votes:6000},
+      kp:{value:8.1,votes:8000}
+    }
+  }));
   const unsupported=Array.from({length:10},(_,i)=>card(200+i,{
     source_count:1,age:70+i,percentile:.15}));
   const supported=Array.from({length:3},(_,i)=>card(300+i,{
