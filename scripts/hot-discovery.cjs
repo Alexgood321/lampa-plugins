@@ -684,7 +684,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   };
   if(kinopoiskKey){
     // Reserve the daily quota for works that are plausible top-40 picks.
-    const preview=scoreCandidates(candidates,history,nowDate,previous);
+    const preview=scoreCandidates(candidates,history,nowDate,previous,'demand');
     const indexed=new Map(candidates.map(c=>[identity(c),c]));
     const order=[...preview.map(c=>indexed.get(identity(c))),
       ...candidates.slice().sort((a,b)=>
@@ -846,12 +846,12 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   }
   if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
     throw Error('TMDB partial outage: refusing to replace last verified feed');
-  const items=scoreCandidates(candidates,history,nowDate,previous);
+  const items=scoreCandidates(candidates,history,nowDate,previous,'demand');
   const comparison=kpDemand.compareTop(previous,items);
   const eligibleForVariants=candidates.filter(c=>!eligibilityReason(c,nowDate));
   const modelComparison=hot47.compareModels(eligibleForVariants,{
-    baseline:items,
-    demand:curatedSelection(eligibleForVariants,previous,'demand'),
+    baseline:curatedSelection(eligibleForVariants,previous,'baseline'),
+    demand:items,
     fresh:curatedSelection(eligibleForVariants,previous,'fresh')
   });
   stats.second_pass_eligible=eligibleForVariants.filter(c=>
@@ -908,7 +908,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-smooth-v4.7',
+      ranking_model:'source-aware-demand-first-v4.7',
+      active_model:'demand',
       comparison,model_comparison:modelComparison,
       external_demand:{
         source:'kinopoisk_unofficial_TOP_POPULAR_ALL',
@@ -930,8 +931,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         rating_history_dates:updatedVoteHistory.map(x=>x.date),
         not_stream_count:true
       },
-      weights_with_growth:{attention:45,quality:35,freshness:5,growth:15},
-      weights_without_growth:{attention:55,quality:40,freshness:5,growth:0},
+      weights_with_growth:{attention:50,quality:30,freshness:5,growth:15},
+      weights_without_growth:{attention:60,quality:35,freshness:5,growth:0},
       rating_coverage:{
         tmdb:items.filter(c=>number(c.vote_count)>0).length,
         imdb:items.filter(c=>stableRating(c.surs_hot_ratings?.imdb)).length,
