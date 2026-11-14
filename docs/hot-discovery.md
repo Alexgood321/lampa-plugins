@@ -1,3 +1,17 @@
+# Hot Discovery 4.9: observable demand and rating evidence
+
+The 4.8 verified TMDB metadata cache could accidentally retain an older, higher `popularity` using `Math.max(prior.popularity, current.popularity)`. This **inflated or froze observed TMDB demand** when a title declined between 3-hour generator runs.
+
+4.9 replaces that merge with `overlayFreshSignals`: finite **current** TMDB discovery popularity, vote count, and vote average override cached values even when lower (or explicitly zero). Missing or invalid current fields retain verified cached metadata but are marked `surs_hot_current_popularity_observed=false` and cannot generate confirmed positive momentum. Fresh detail responses are separately identified as observed when their metric is present.
+
+The ranking weights, country rules, season verification, and remaining API quotas are unchanged. New schema-1-compatible diagnostics report how many selected cards have verifiable ratings from one, two, or three services, including the top 10/20; missing IMDb/KP values are classified by available provider evidence and never guessed or interpreted as a low rating. Per-card `surs_hot_rating_evidence` describes source coverage, **not** calibrated probability of quality.
+
+**Known limitation:** MDBList is optional and currently unavailable if its key is not configured; IMDb's free datasets carry restrictions on reuse and public redistribution. The builder does not scrape IMDb or silently enable a disallowed source. Missing provider ratings can only be filled by an authorized service returning a verified title ID and actual rating/vote count.
+
+Tests: current popularity and vote counts may drop or become zero on a cache hit; a missing current observation is explicitly unknown; actual 4.9 dry run must not change the relative order solely because of this code. Publish only after offline tests and real compare.
+
+---
+
 # SURS Hot Discovery 4.8: API budgets and verified-source caching
 
 ## 4.8 goals
