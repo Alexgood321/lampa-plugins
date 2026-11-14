@@ -23,7 +23,11 @@ function movieAgeSource(card,now){
   const us=day(card.surs_hot_first_us_release_date);
   const original=day(card.surs_hot_original_date);
   const premiere=day(card.surs_hot_premiere_date);
-  const first=us||original||premiere;
+  // A long-delayed digital entry is not a new film: fall back to the
+  // original premiere when it predates the only documented US release
+  // by more than 45 days. A 1-2-day regional discrepancy cannot move age.
+  const delayed=us&&original&&age(original,now)-age(us,now)>45;
+  const first=delayed?original:(us||original||premiere);
   const d=age(first,now);
   return {date:first,age:d<0?9999:d,confirmed_us:!!us};
 }
