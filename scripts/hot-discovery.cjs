@@ -765,12 +765,13 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     const ranked=candidates.filter(c=>
       Number.isInteger(c.surs_hot_kinopoisk_popularity_rank)&&
       Number.isSafeInteger(Number(c.surs_hot_ratings?.kp?.kinopoisk_id))&&
-      /^tt\\d{6,12}$/.test(String(c.surs_hot_imdb_id||'')))
+      /^tt\d{6,12}$/.test(String(c.surs_hot_imdb_id||'')))
       .sort((a,b)=>a.surs_hot_kinopoisk_popularity_rank-
         b.surs_hot_kinopoisk_popularity_rank);
     let refreshed=0;
     for(const c of ranked){
-      if(refreshed>=KP_VOTE_REFRESH_DAILY||stats.kp_calls>=MAX_KP_CALLS)break;
+      if(refreshed>=KP_VOTE_REFRESH_DAILY||dayVotes.size>=KP_VOTE_REFRESH_DAILY||
+        stats.kp_calls>=MAX_KP_CALLS)break;
       const kpId=Number(c.surs_hot_ratings.kp.kinopoisk_id);
       if(dayVotes.has(kpId))continue;
       refreshed++;stats.kp_calls++;stats.kp_vote_refresh_calls++;
