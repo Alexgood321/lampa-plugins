@@ -130,5 +130,30 @@ jobs:
             ', vote-growth samples: '+evidence.momentum_votes_measured+
             ', positive KP momentum: '+evidence.momentum_positive+'\n');
           NODE
+          # Counterfactual: rank the EXACT 4.7 selected cards using the 4.6
+          # scoring engine from main. This isolates ranking changes, but not
+          # the discovery/eligibility effects of the two engines.
+          git fetch --depth=2 origin main
+          git show origin/main:scripts/hot-discovery.cjs > scripts/hot-discovery-v46-shadow.cjs
+          node - <<'NODE'
+          const old=require('./scripts/hot-discovery-v46-shadow.cjs');
+          const fs=require('node:fs');
+          const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
+          const previous=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
+            '/hot-discovery-before.json','utf8'));
+          const history=JSON.parse(fs.readFileSync('data/hot-discovery-history.json','utf8'));
+          const input=structuredClone(after.items);
+          const oldRows=old.scoreCandidates(input,history,
+            new Date(after.generated_at),previous);
+          const id=x=>x.type+':'+x.id;
+          const oldTop=oldRows.slice(0,10).map(id);
+          const newTop=after.items.slice(0,10).map(id);
+          const overlap=newTop.filter(x=>oldTop.includes(x)).length;
+          console.log('SAME_CANDIDATES_46_VS_47:',JSON.stringify({
+            sample_size:input.length,old_selected:oldRows.length,
+            old_top10:oldTop,new_top10:newTop,top10_overlap:overlap,
+            caveat:'Same 4.7-selected cards; does not measure old-only candidates or real viewer clicks'
+          }));
+          NODE
           git diff --stat -- data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json
 
