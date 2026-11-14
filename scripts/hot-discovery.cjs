@@ -8,6 +8,7 @@ const hot47 = require('./hot-ranking-4-7.cjs');
 const sourceBudget = require('./hot-source-budget.cjs');
 const integrity = require('./hot-feed-integrity.cjs');
 const evidenceGate = require('./hot-evidence-gate.cjs');
+const editorialInterest = require('./hot-editorial-interest.cjs');
 const BASE = 'https://api.themoviedb.org/3';
 const MDB = 'https://api.mdblist.com';
 const KP_API = 'https://kinopoiskapiunofficial.tech/api/v2.2/films';
@@ -417,32 +418,38 @@ function diversityPenalty(candidate,chosen,position=chosen.length+1) {
   }
   return round(Math.min(6,penalty),3);
 }
-function curatedSelection(candidates,previous,model='baseline') {
+function curatedSelection(candidates,previous,model='baseline',interestStrength=0) {
   const remaining=candidates.slice(),picked=[];
   const previousRank=new Map((previous?.items||[])
     .map((c,i)=>[identity(c),i]));
   for(let position=1;position<=MAX_ITEMS&&remaining.length;position++){
     remaining.sort((a,b)=>{
       const sa=number(a.surs_hot_model_scores?.[model]??a.surs_hot_base_score)-
-        diversityPenalty(a,picked,position);
+        diversityPenalty(a,picked,position)-
+        editorialInterest.interestPenalty(a,position,interestStrength);
       const sb=number(b.surs_hot_model_scores?.[model]??b.surs_hot_base_score)-
-        diversityPenalty(b,picked,position);
+        diversityPenalty(b,picked,position)-
+        editorialInterest.interestPenalty(b,position,interestStrength);
       if(Math.abs(sb-sa)>.000001)return sb-sa;
       const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
       if(pa!==undefined&&pb!==undefined&&pa!==pb)return pa-pb;
       return identity(a).localeCompare(identity(b));
     });
     const winner=remaining.shift();
-    const editorialPenalty=diversityPenalty(winner,picked,position);
+    const varietyPenalty=diversityPenalty(winner,picked,position);
+    const interestPenalty=editorialInterest.interestPenalty(
+      winner,position,interestStrength);
     const modelScore=number(winner.surs_hot_model_scores?.[model]??winner.surs_hot_base_score);
     picked.push({...winner,surs_hot_score:round(modelScore,2),
       surs_hot_demand_score:round(modelScore,2),
-      surs_hot_editorial_penalty:editorialPenalty,
+      surs_hot_editorial_penalty:round(varietyPenalty+interestPenalty,3),
+      surs_hot_editorial_diversity_penalty:varietyPenalty,
+      surs_hot_editorial_interest_penalty:interestPenalty,
       surs_hot_rank:position});
   }
   return picked;
 }
-function scoreCandidates(candidates,history,now,previous,model='baseline',requireCurrentInterest=false) {
+function scoreCandidates(candidates,history,now,previous,model='baseline',requireCurrentInterest=false,interestStrength=0) {
   for(const c of candidates) {
     const age=daysSince(c.surs_hot_premiere_date,now);
     const quality=qualityFor(c),attention=attentionFor(c,candidates),
@@ -505,7 +512,7 @@ function scoreCandidates(candidates,history,now,previous,model='baseline',requir
     c.surs_hot_base_score=c.surs_hot_model_scores[model]??c.surs_hot_model_scores.baseline;
     c.surs_hot_interest_evidence=evidenceGate.evidence(c);
   }
-  return curatedSelection(candidates.filter(c=>!eligibilityReason(c,now,requireCurrentInterest)),previous,model);
+  return curatedSelection(candidates.filter(c=>!eligibilityReason(c,now,requireCurrentInterest)),previous,model,interestStrength);
 }
 function nextHistory(history,candidates,now) {
   const day=dateOnly(now);
@@ -1011,9 +1018,17 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   }
   if(stats.tmdb_failures>Math.max(3,Math.floor(stats.tmdb_calls*.25)))
     throw Error('TMDB partial outage: refusing to replace last verified feed');
-  const items=scoreCandidates(candidates,history,nowDate,previous,'demand',true);
+  const items=scoreCandidates(candidates,history,nowDate,previous,'demand',true,4);
   const comparison=kpDemand.compareTop(previous,items);
   const eligibleForVariants=candidates.filter(c=>!eligibilityReason(c,nowDate,true));
+  const sameCandidates={
+    zero:curatedSelection(eligibleForVariants,previous,'demand',0),
+    light:curatedSelection(eligibleForVariants,previous,'demand',2),
+    balanced:items,
+    strong:curatedSelection(eligibleForVariants,previous,'demand',6)
+  };
+  const editorialComparison=editorialInterest.compare(
+    eligibleForVariants,previous?.items||[],sameCandidates);
   const interestEvidence=evidenceGate.diagnostic(items,[]);
   const modelComparison=hot47.compareModels(eligibleForVariants,{
     baseline:curatedSelection(eligibleForVariants,previous,'baseline'),
@@ -1077,7 +1092,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.12',
+  const audit={schema:1,algorithm:'hot-discovery-4.13',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -1094,6 +1109,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         discovery_pass:c.surs_hot_discovery_pass,
         model_scores:c.surs_hot_model_scores,
         interest_evidence:c.surs_hot_interest_evidence,
+        editorial_interest_penalty:items.find(x=>
+          identity(x)===identity(c))?.surs_hot_editorial_interest_penalty||0,
         external_popularity_rank:c.surs_hot_kinopoisk_popularity_rank||null,
         external_bonus:c.surs_hot_external_demand_bonus||0,
         rank_deltas:c.surs_hot_kinopoisk_rank_deltas||{},
@@ -1105,15 +1122,17 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate,true),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.12',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.13',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-demand-first-v4.12-evidence',
+      ranking_model:'source-aware-demand-first-v4.13-editorial',
       interest_evidence:interestEvidence,
+      editorial_interest_strength:4,
+      editorial_interest_comparison:editorialComparison,
       rating_evidence:ratingConfidence,
       active_model:'demand',
       comparison,model_comparison:modelComparison,
