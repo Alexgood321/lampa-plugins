@@ -94,8 +94,9 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.4');
-  assert.equal(result.feed.diagnostics.ranking_model,'attention-quality-consensus-v2');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.5');
+  assert.equal(result.feed.diagnostics.ranking_model,
+    'attention-quality-consensus-v3-ru-demand');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,60);
@@ -483,7 +484,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',
     mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
     transport,history:{snapshots:[]},detailLimit:80});
-  assert.equal(result.feed.algorithm,'hot-discovery-4.4');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.5');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
@@ -506,4 +507,85 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   assert.ok(result.audit.candidates.some(x=>x.kp&&x.imdb));
   assert.ok(!JSON.stringify(result.feed).includes('kp-fixture'));
   assert.ok(!JSON.stringify(result.audit).includes('mdb-fixture'));
+});
+
+test('independent Kinopoisk Popular rank increases attention only for verified matches',()=>{
+  const base={type:'movie',poster_path:'/p',vote_average:8.2,
+    vote_count:1700,popularity:75,surs_hot_premiere_date:day(12),
+    surs_hot_original_date:day(12)};
+  const first={...base,id:301,surs_hot_trend_day:4,
+    surs_hot_trend_week:7,surs_hot_kinopoisk_popularity_rank:1};
+  const second={...base,id:302,surs_hot_trend_day:4,
+    surs_hot_trend_week:7};
+  const a=hot.attentionFor(first,[first,second]);
+  const b=hot.attentionFor(second,[first,second]);
+  assert.ok(a.score>b.score);
+  assert.ok(a.external_bonus>0&&a.external_bonus<=.16);
+  assert.equal(a.external_rank,1);
+  assert.equal(a.cross_confirmed,true);
+  assert.equal(b.external_bonus,0);
+  assert.equal(b.external_rank,null);
+  assert.equal(b.score,b.tmdb_score);
+  assert.equal(hot.externalPopularity({...first,
+    surs_hot_kinopoisk_popularity_rank:0}).bonus,0);
+  assert.equal(hot.externalPopularity({...first,
+    surs_hot_kinopoisk_popularity_rank:900}).bonus,0);
+});
+test('new popularity source is optional, cached and never counted as film views',async()=>{
+  const NOW_DATE=new Date(NOW);
+  const smallFixture=Array.from({length:12},(_,i)=>({
+    id:2000+i,type:'movie',poster_path:'/p',vote_average:8.3,
+    vote_count:1500,popularity:100-i,genre_ids:[18],
+    release_date:day(15),title:'Candidate '+i}));
+  let collectionCalls=0;
+  const transport=async(url,headers={})=>{
+    const u=new URL(url),pathname=u.pathname;
+    if(pathname.endsWith('/collections')){
+      collectionCalls++;
+      assert.equal(headers['X-API-KEY'],'kp-test');
+      return {total:3,totalPages:1,items:[
+        {kinopoiskId:30001},{kinopoiskId:30002},{kinopoiskId:30003}]};
+    }
+    if(url.startsWith('https://kinopoiskapiunofficial.tech/')){
+      if(pathname.endsWith('/30001'))return {imdbId:'tt1002000',
+        kinopoiskId:30001,ratingKinopoisk:8.3,
+        ratingKinopoiskVoteCount:9000};
+      if(pathname.endsWith('/30002'))return {imdbId:'tt1002001',
+        kinopoiskId:30002,ratingKinopoisk:8.3,
+        ratingKinopoiskVoteCount:9000};
+      return {items:[{imdbId:u.searchParams.get('imdbId'),
+        kinopoiskId:u.searchParams.get('imdbId')==='tt1002000'?30001:
+          u.searchParams.get('imdbId')==='tt1002001'?30002:30003}]};
+    }
+    if(pathname.includes('/trending/')||pathname.includes('/discover/'))
+      return {results:smallFixture};
+    if(pathname.includes('/movie/')){
+      const id=Number(pathname.split('/').pop());
+      return {id,imdb_id:'tt'+String(id+1000000),title:'Candidate '+(id-2000),
+        release_date:day(15),poster_path:'/p',
+        production_countries:[{iso_3166_1:'US'}],
+        release_dates:{results:[{iso_3166_1:'US',
+          release_dates:[{type:3,release_date:day(15)}]}]},
+        genres:[{id:18}],vote_average:8.3,vote_count:1500,popularity:100};
+    }
+    return null;
+  };
+  const first=await hot.build({now:NOW_DATE,tmdbToken:'test',
+    kinopoiskKey:'kp-test',transport,history:{snapshots:[]},detailLimit:24});
+  assert.equal(first.feed.algorithm,'hot-discovery-4.5');
+  assert.equal(first.feed.sources.kinopoisk_popularity,true);
+  assert.equal(first.feed.diagnostics.kp_popularity_calls,1);
+  assert.ok(first.feed.diagnostics.kp_popularity_matched>0);
+  assert.ok(first.feed.diagnostics.external_demand.selected_matching>0);
+  assert.equal(first.feed.diagnostics.external_demand.not_stream_count,true);
+  assert.equal(collectionCalls,1);
+  const second=await hot.build({now:NOW_DATE,tmdbToken:'test',
+    kinopoiskKey:'kp-test',transport,history:{snapshots:[]},
+    kpCache:first.kpCache,detailLimit:24});
+  assert.equal(collectionCalls,1);
+  assert.equal(second.feed.diagnostics.kp_popularity_calls,0);
+  assert.equal(second.feed.diagnostics.kp_popularity_cache_hit,true);
+  assert.equal(second.feed.diagnostics.external_demand.available,true);
+  assert.equal(second.feed.diagnostics.external_demand.selected_matching,
+    first.feed.diagnostics.external_demand.selected_matching);
 });

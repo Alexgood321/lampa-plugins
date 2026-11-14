@@ -1,4 +1,4 @@
-# SURS Hot Discovery 4.4: подтверждённые рейтинги и интерес
+# SURS Hot Discovery 4.5: рейтинги качества и подтверждённая популярность
 
 Hot Discovery is the primary American films-and-TV discovery shelf in SURS Pro. Its job is a short, fresh, interesting **what to watch next** collection, not a list of the highest lifetime ratings. Existing Lampa clients accept its unchanged JSON schema 1.
 
@@ -27,6 +27,21 @@ The following are **methodological references**, not hidden API integrations or 
 Missing optional keys are not fatal. The feed explicitly reports `sources.mdblist=false`, `sources.kinopoisk=false` and zero usable ratings where appropriate. Do not describe it as "three-source verified" until diagnostics confirm all three.
 
 
+## New in 4.5: verified external demand, no fabricated views
+
+The Kinopoisk Unofficial API documents `GET /api/v2.2/films/collections?type=TOP_POPULAR_ALL&page=N`. Its public collection is an **ordered popularity list**, not a count of streams, visits or searches. We fetch a maximum of **3 pages × 20 IDs** once per UTC day using the existing `KINOPOISK_API_KEY`. IDs are matched *only* against previously verified Kinopoisk film IDs from the exact IMDb-ID lookup.
+
+- Persist a small daily `popular` section in the existing `data/hot-discovery-kp-cache.json` (no extra secrets, no separate API account). Cache freshness: up to 36 hours; stale results give no bonus.
+- Candidate present in the top-60 gets a normalized rank strength. When the candidate **also** has a real TMDB daily or weekly Trending rank, the maximum incremental attention bonus is `0.16 × rankStrength`. Without TMDB Trending, the maximum is `0.10 × rankStrength`, not a two-source confirmation.
+- A missing title, failed response, missing KP rating, or expired list gets zero additional bonus, **not a penalty**. This prevents inflating Russian-market popularity assumptions for new/obscure US premieres.
+- The original 45% attention/35% cross-source quality/15% measured momentum/5% freshness model remains intact. The Kinopoisk signal is **inside** attention, not an extra fifth bucket and does not double-count freshness.
+- The public feed includes per-card `surs_hot_kinopoisk_popularity_rank`, `surs_hot_external_demand_bonus`, `surs_hot_cross_source_interest` and diagnostics `external_demand`. Clients continue to accept schema 1.
+- The Kinopoisk Unofficial collection may lag Kinopoisk's first-party `/lists/movies/popular/` page. We state its provenance explicitly and do not claim they are identical.
+
+**Not integrated:** Filmix and HDrezka have no verified stable public demand API, and copying their page counters would risk interpreting uncertain site metrics as real streams. Trakt's current API policy prohibits redistributing a community dataset to power another product's ranking. JustWatch requires authorized API access. Those are future integrations only after verifying permitted, reliable data access.
+
+Reference: https://kinopoiskapiunofficial.tech/documentation/api/ (TOP_POPULAR_ALL), https://developer.trakt.tv/docs/api-use-policy
+
 ## Discovery
 
 Up to 260 detailed records, selected in round-robin lanes rather than only the top TMDB Trending titles. Sources include day/week Trending, 0–60-day release discovery (both newest and popular), US first digital release and verified TV returning seasons; then older 550-day discovery lanes. Always check US involvement, excluded genres, poster and real release dates. A reissue does not reset the film's effective age; a new verified season does reset the season age, but **not** its status as a returning show. No future episodes/specials are counted as a season premiere.
@@ -41,11 +56,11 @@ Up to 260 detailed records, selected in round-robin lanes rather than only the t
 
 The source-quality measure is a floor and quality ranking input, **not** the main definition of what's hot.
 
-## Ranking model: 4.4
+## Ranking model: 4.5
 
 Compute the following independently:
 
-- **Attention**: normalized TMDB day/week Trending ranks and within-media-type popularity percentile. Long-running high-rated series without current trends receive little attention credit.
+- **Attention**: normalized TMDB day/week Trending ranks and within-media-type popularity percentile, with a small evidence-backed external Kinopoisk Popular rank bonus when a verified exact-ID match exists. Long-running high-rated series without current trends receive little attention credit.
 - **Quality**: Bayesian-adjusted TMDB, IMDb and KP with vote-count priors (140, 300, 180 respectively) and normalized weights (32/36/32 among available ratings). Missing sources do not become a zero rating. Critic ratings are retained in source metadata but **not** treated as a fourth mandatory vote.
 - **Consensus bonus**: only for sufficiently sampled HIGH ratings (at least 7.2/10) that agree. Three sources within 0.75 points: +0.38 quality points; two sources within 0.6: +0.16. Three agreeing low ratings (6/10) get no bonus. New seasons never inherit a consensus bonus from lifetime whole-show ratings. A large disagreement receives no bonus and is labeled `disputed` (not automatically discarded).
 
