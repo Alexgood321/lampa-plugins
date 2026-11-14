@@ -153,3 +153,36 @@ test('expired TMDB cache triggers fresh detail retrieval rather than stale reuse
   assert.equal(later.feed.diagnostics.tmdb_detail_cache_hits,0);
   assert.equal(later.feed.diagnostics.tmdb_detail_cache_misses,12);
 });
+
+test('KP transport retry observer charges each actual HTTP attempt',async()=>{
+  const old=global.fetch;
+  let fetches=0,attempts=0;
+  try {
+    global.fetch=async()=>{
+      fetches++;
+      if(fetches===1)return {ok:false,status:503};
+      return {ok:true,json:async()=>({verified:true})};
+    };
+    const result=await hot.requestJSON('https://example.test/endpoint',
+      {},null,()=>{attempts++;});
+    assert.deepEqual(result,{verified:true});
+    assert.equal(fetches,2);
+    assert.equal(attempts,2);
+  }finally{global.fetch=old;}
+});
+test('KP budget rejection prevents opening uncharged retry attempts',async()=>{
+  const old=global.fetch;
+  let fetches=0,attempts=0;
+  try {
+    global.fetch=async()=>{fetches++;return {ok:false,status:503};};
+    const b=budget.dailyBudget(null,NOW,{daily:2,run:2});
+    await assert.rejects(hot.requestJSON('https://example.test/endpoint',
+      {},null,()=>{
+        attempts++;
+        if(!b.charge())throw Error('KP request budget exhausted');
+      }),/budget exhausted/);
+    assert.equal(fetches,2);
+    assert.equal(attempts,3);
+    assert.equal(b.used,2);
+  }finally{global.fetch=old;}
+});
