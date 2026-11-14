@@ -1,3 +1,31 @@
+# SURS Hot Discovery 4.7: source-aware, demand-first ranking
+
+## Scope and verification
+
+4.7 replaces the **25-point discontinuous release-age tiers** with smooth freshness, while retaining the published schema-1 card contract and all verified 4.6 API sources. The old model remains recoverable through Git history. This is a change to recommendation ordering, not a claim of measured user satisfaction.
+
+### 4.7.1 — correctness
+- A verified **first US release date** takes precedence over a 1–2-day foreign/original-date discrepancy for US premiere age. If the only recorded US event is a very late digital listing more than 45 days after the original release, use the earlier original date rather than reset age. Store original, US and digital dates separately.
+- A growth observation is classified as `rising`, `flat`, `falling` or `unknown`. Three-plus days of history confirm **measurement**, not positive growth. Flat, falling and unknown readings earn no positive growth signal.
+- `surs_hot_score` is the actual pre-curation model score; `surs_hot_rank` is the editorial order. Small bounded diversity penalties are recorded separately as `surs_hot_editorial_penalty` and never subtracted from public score.
+
+### 4.7.2 — scoring
+- Treat TMDB Trending day and week as two correlated observations of **one provider**, not two independent sources. Independent Kinopoisk Popular and verified Kinopoisk movement remain bounded within their existing bonus cap.
+- Compute a smooth age factor `exp(-days/145)` with no arbitrary 60/61 or 120/121 cliff. Keep the 45/35/15/5 demand/quality/positive momentum/freshness **baseline** and the documented 55/40/0/5 fallback without a confirmed multi-day momentum observation.
+- For titles aged over 180 days require verifiable current audience activity, and for titles older than 365 days stronger combined evidence or a significant new rise. These are **eligibility evidence requirements**, not hard 180-day exclusions or implicit points penalties.
+- Returning-season and breakout diversity constraints are soft bounded penalties to editorial position, not rigid quotas or hidden score changes. An exceptional title may legitimately overcome them.
+
+### 4.7.3 — more complete retrieval and audit
+- Keep the established first **260** round-robin detail candidates. Inspect up to **60 more** previously overlooked candidates using an additional ranked, movie/TV-balanced pass. All candidates pass the same US, premiere, metadata and quality checks.
+- Record verified digital US release metadata; `digital_date_unconfirmed` means **no verified digital date** in TMDB, not that streaming is unavailable.
+- Recalculate three candidate-weight variants from the **same already-verified candidate set** (baseline 45/35/15/5; demand 50/30/15/5; fresh 45/30/15/10) and log their top-10 composition, mean age and cross-platform confirmations. This is a descriptive comparison, **not** an independent measure of ranking correctness.
+- Preserve offline fallback, capped KP calls, separately sourced KP daily history, stable homepage settings, 40-item max and per-day publishing. Run a real API dry-run in the PR CI without pushing data.
+
+### Remaining limits
+No real playback metrics, click-through rates or user feedback are ingested. TMDB demand remains a proxy for user activity. Confirmed digital-release dates do not guarantee availability in a third-party player. KPI improvements should only be claimed after observing user behavior or independent relevance labels.
+
+---
+
 # SURS Hot Discovery 4.6: подтверждённая динамика интереса
 
 ## New in 4.6: Kinopoisk rank and rating-count momentum
