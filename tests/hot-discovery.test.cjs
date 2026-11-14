@@ -94,9 +94,9 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.5');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.6');
   assert.equal(result.feed.diagnostics.ranking_model,
-    'attention-quality-consensus-v3-ru-demand');
+    'attention-quality-consensus-v4-ru-momentum');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,60);
@@ -484,7 +484,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',
     mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
     transport,history:{snapshots:[]},detailLimit:80});
-  assert.equal(result.feed.algorithm,'hot-discovery-4.5');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.6');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
@@ -572,7 +572,9 @@ test('new popularity source is optional, cached and never counted as film views'
   };
   const first=await hot.build({now:NOW_DATE,tmdbToken:'test',
     kinopoiskKey:'kp-test',transport,history:{snapshots:[]},detailLimit:24});
-  assert.equal(first.feed.algorithm,'hot-discovery-4.5');
+  assert.equal(first.feed.algorithm,'hot-discovery-4.6');
+  assert.equal(first.kpCache.popular_history.length,1);
+  assert.equal(first.kpCache.rating_history.length,1);
   assert.equal(first.feed.sources.kinopoisk_popularity,true);
   assert.equal(first.feed.diagnostics.kp_popularity_calls,1);
   assert.ok(first.feed.diagnostics.kp_popularity_matched>0);
@@ -588,4 +590,11 @@ test('new popularity source is optional, cached and never counted as film views'
   assert.equal(second.feed.diagnostics.external_demand.available,true);
   assert.equal(second.feed.diagnostics.external_demand.selected_matching,
     first.feed.diagnostics.external_demand.selected_matching);
+  const nextDay=await hot.build({now:new Date(NOW_DATE.getTime()+86400000),
+    tmdbToken:'test',kinopoiskKey:'kp-test',transport,
+    history:{snapshots:[]},kpCache:second.kpCache,detailLimit:24});
+  assert.equal(nextDay.kpCache.popular_history.length,2);
+  assert.ok(nextDay.feed.diagnostics.kp_vote_refresh_calls>=1);
+  assert.ok(nextDay.feed.diagnostics.kp_calls<=45);
+  assert.ok(nextDay.feed.diagnostics.comparison);
 });

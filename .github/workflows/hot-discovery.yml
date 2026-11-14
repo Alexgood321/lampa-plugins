@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - scripts/hot-discovery.cjs
+      - scripts/kp-demand-history.cjs
       - .github/workflows/hot-discovery.yml
   schedule:
     - cron: '17 */3 * * *'
@@ -33,7 +34,8 @@ jobs:
       - name: Validate builder offline
         run: |
           node --check scripts/hot-discovery.cjs
-          node --test tests/hot-discovery.test.cjs
+          node --check scripts/kp-demand-history.cjs
+          node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs
       - name: Fetch and rank
         id: compute
         env:
