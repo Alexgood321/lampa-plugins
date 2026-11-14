@@ -1680,6 +1680,36 @@
       "imdbId": "tt35966184",
       "checked_at": "2026-11-14",
       "kp": null
+    },
+    "tt26576161": {
+      "imdbId": "tt26576161",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 7,
+        "votes": 6997,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5450125
+      },
+      "imdb": {
+        "value": 7.5,
+        "votes": 32896,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt15232564": {
+      "imdbId": "tt15232564",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 7.6,
+        "votes": 36238,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 4530902
+      },
+      "imdb": {
+        "value": 7.3,
+        "votes": 14561,
+        "via": "kinopoisk_unofficial"
+      }
     }
   },
   "popular": {

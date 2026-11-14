@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "algorithm": "hot-discovery-4.5",
-  "generated_at": "2026-11-14T10:08:44.383Z",
+  "generated_at": "2026-11-14T10:35:42.045Z",
   "candidate_total": 163,
-  "eligible": 43,
-  "selected": 38,
+  "eligible": 44,
+  "selected": 39,
   "candidates": [
     {
       "id": 247718,
@@ -61,7 +61,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6058297
       },
-      "attention": 0.61,
+      "attention": 0.621,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -72,7 +72,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 90.879,
+      "base_score": 91.001,
       "rejection": null,
       "selected_rank": 2
     },
@@ -197,7 +197,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 4760854
       },
-      "attention": 0.519,
+      "attention": 0.542,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -208,7 +208,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 88.677,
+      "base_score": 88.93,
       "rejection": null,
       "selected_rank": 6
     },
@@ -258,7 +258,7 @@
       "tmdb_votes": 31,
       "imdb": null,
       "kp": null,
-      "attention": 0.635,
+      "attention": 0.636,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -269,7 +269,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 87.052,
+      "base_score": 87.063,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -319,7 +319,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7149768
       },
-      "attention": 0.363,
+      "attention": 0.362,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -330,7 +330,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 86.994,
+      "base_score": 86.983,
       "rejection": null,
       "selected_rank": 7
     },
@@ -345,7 +345,7 @@
       "tmdb_votes": 44,
       "imdb": null,
       "kp": null,
-      "attention": 0.548,
+      "attention": 0.547,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -356,7 +356,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 86.401,
+      "base_score": 86.39,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -481,7 +481,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6712328
       },
-      "attention": 0.258,
+      "attention": 0.254,
       "external_popularity_rank": 19,
       "external_bonus": 0.0434,
       "cross_source_interest": true,
@@ -492,35 +492,9 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 84.631,
+      "base_score": 84.587,
       "rejection": null,
       "selected_rank": 8
-    },
-    {
-      "id": 249565,
-      "type": "tv",
-      "title": "Хорошая дочь",
-      "kind": "series",
-      "premiere": "2026-11-12",
-      "age": 2,
-      "tmdb": 8.636,
-      "tmdb_votes": 11,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.523,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.795,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 84.614,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
     },
     {
       "id": 1416,
@@ -577,7 +551,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 4396199
       },
-      "attention": 0.184,
+      "attention": 0.185,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -588,7 +562,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.417,
+      "base_score": 84.428,
       "rejection": null,
       "selected_rank": 13
     },
@@ -603,7 +577,7 @@
       "tmdb_votes": 46,
       "imdb": null,
       "kp": null,
-      "attention": 0.452,
+      "attention": 0.453,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -614,7 +588,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.385,
+      "base_score": 84.396,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -651,6 +625,32 @@
       },
       "base_score": 84.364,
       "rejection": "season_rating_unconfirmed",
+      "selected_rank": null
+    },
+    {
+      "id": 249565,
+      "type": "tv",
+      "title": "Хорошая дочь",
+      "kind": "series",
+      "premiere": "2026-11-12",
+      "age": 2,
+      "tmdb": 8.636,
+      "tmdb_votes": 11,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.497,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.795,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 84.264,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -699,7 +699,7 @@
       "tmdb_votes": 7,
       "imdb": null,
       "kp": null,
-      "attention": 0.517,
+      "attention": 0.515,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -710,7 +710,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.162,
+      "base_score": 84.135,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -734,7 +734,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1101328
       },
-      "attention": 0.2,
+      "attention": 0.201,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -745,7 +745,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 84.098,
+      "base_score": 84.109,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
     },
@@ -769,7 +769,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7865896
       },
-      "attention": 0.106,
+      "attention": 0.108,
       "external_popularity_rank": 46,
       "external_bonus": 0.0063,
       "cross_source_interest": false,
@@ -780,7 +780,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 83.669,
+      "base_score": 83.691,
       "rejection": null,
       "selected_rank": 9
     },
@@ -795,7 +795,7 @@
       "tmdb_votes": 13,
       "imdb": null,
       "kp": null,
-      "attention": 0.358,
+      "attention": 0.357,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -806,7 +806,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 83.65,
+      "base_score": 83.638,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -865,7 +865,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1343910
       },
-      "attention": 0.16,
+      "attention": 0.161,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -876,7 +876,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 83.179,
+      "base_score": 83.19,
       "rejection": null,
       "selected_rank": 10
     },
@@ -900,7 +900,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5244917
       },
-      "attention": 0.145,
+      "attention": 0.146,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -911,35 +911,9 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 83.103,
+      "base_score": 83.114,
       "rejection": null,
       "selected_rank": 14
-    },
-    {
-      "id": 1543469,
-      "type": "movie",
-      "title": "Хартленд",
-      "kind": "digital",
-      "premiere": "2026-11-13",
-      "age": 1,
-      "tmdb": 6.708,
-      "tmdb_votes": 12,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.431,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.655,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 82.905,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
     },
     {
       "id": 62650,
@@ -961,7 +935,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 913425
       },
-      "attention": 0.179,
+      "attention": 0.18,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -972,7 +946,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.833,
+      "base_score": 82.844,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
     },
@@ -987,7 +961,7 @@
       "tmdb_votes": 11,
       "imdb": null,
       "kp": null,
-      "attention": 0.298,
+      "attention": 0.294,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -998,7 +972,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.795,
+      "base_score": 82.751,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1022,7 +996,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 11095481
       },
-      "attention": 0.17,
+      "attention": 0.168,
       "external_popularity_rank": 6,
       "external_bonus": 0.0527,
       "cross_source_interest": false,
@@ -1033,33 +1007,7 @@
         "bonus": 0.16,
         "level": "pair_high"
       },
-      "base_score": 82.767,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1559980,
-      "type": "movie",
-      "title": "Евангелие от Рождества Христова",
-      "kind": "digital",
-      "premiere": "2026-11-11",
-      "age": 3,
-      "tmdb": 7.462,
-      "tmdb_votes": 13,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.251,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.719,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 82.642,
+      "base_score": 82.744,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1083,7 +1031,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1138889
       },
-      "attention": 0.189,
+      "attention": 0.19,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1094,9 +1042,35 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.619,
+      "base_score": 82.63,
       "rejection": null,
       "selected_rank": 21
+    },
+    {
+      "id": 1559980,
+      "type": "movie",
+      "title": "Евангелие от Рождества Христова",
+      "kind": "digital",
+      "premiere": "2026-11-11",
+      "age": 3,
+      "tmdb": 7.462,
+      "tmdb_votes": 13,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.247,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.719,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.598,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 1153576,
@@ -1131,6 +1105,32 @@
       },
       "base_score": 82.55,
       "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 1286656,
+      "type": "movie",
+      "title": "Рокки — это я",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 8,
+      "tmdb": 8.833,
+      "tmdb_votes": 21,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.219,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.935,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 82.202,
+      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1169,32 +1169,6 @@
       "selected_rank": null
     },
     {
-      "id": 1286656,
-      "type": "movie",
-      "title": "Рокки — это я",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 8,
-      "tmdb": 8.833,
-      "tmdb_votes": 21,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.211,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.935,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 82.114,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
       "id": 1483525,
       "type": "movie",
       "title": "Что, если любовь",
@@ -1205,7 +1179,7 @@
       "tmdb_votes": 72,
       "imdb": null,
       "kp": null,
-      "attention": 0.309,
+      "attention": 0.307,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1216,7 +1190,33 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 82.071,
+      "base_score": 82.049,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
+      "id": 1543469,
+      "type": "movie",
+      "title": "Хартленд",
+      "kind": "digital",
+      "premiere": "2026-11-13",
+      "age": 1,
+      "tmdb": 6.708,
+      "tmdb_votes": 12,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.36,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.655,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 81.948,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1236,7 +1236,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5089523
       },
-      "attention": 0.116,
+      "attention": 0.117,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1247,7 +1247,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 81.808,
+      "base_score": 81.819,
       "rejection": "season_rating_unconfirmed",
       "selected_rank": null
     },
@@ -1271,7 +1271,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7400696
       },
-      "attention": 0.357,
+      "attention": 0.355,
       "external_popularity_rank": 42,
       "external_bonus": 0.0136,
       "cross_source_interest": true,
@@ -1282,34 +1282,8 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 81.754,
+      "base_score": 81.732,
       "rejection": "buzz_not_confirmed",
-      "selected_rank": null
-    },
-    {
-      "id": 1570488,
-      "type": "movie",
-      "title": "Идеальное Рождество для собаки",
-      "kind": "digital",
-      "premiere": "2026-11-04",
-      "age": 10,
-      "tmdb": 7.176,
-      "tmdb_votes": 54,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.193,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.796,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 81.32,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1332,7 +1306,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 9168581
       },
-      "attention": 0.121,
+      "attention": 0.122,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1343,7 +1317,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 81.313,
+      "base_score": 81.324,
       "rejection": null,
       "selected_rank": 15
     },
@@ -1358,7 +1332,7 @@
       "tmdb_votes": 127,
       "imdb": null,
       "kp": null,
-      "attention": 0.129,
+      "attention": 0.13,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1369,9 +1343,35 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 81.279,
+      "base_score": 81.29,
       "rejection": null,
       "selected_rank": 22
+    },
+    {
+      "id": 1570488,
+      "type": "movie",
+      "title": "Идеальное Рождество для собаки",
+      "kind": "digital",
+      "premiere": "2026-11-04",
+      "age": 10,
+      "tmdb": 7.176,
+      "tmdb_votes": 54,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.189,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.796,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 81.276,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
     },
     {
       "id": 1813355,
@@ -1419,7 +1419,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8251367
       },
-      "attention": 0.163,
+      "attention": 0.164,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1430,7 +1430,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 81.231,
+      "base_score": 81.242,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1454,7 +1454,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5511685
       },
-      "attention": 0.15,
+      "attention": 0.151,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1465,7 +1465,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.992,
+      "base_score": 81.003,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1480,7 +1480,7 @@
       "tmdb_votes": 30,
       "imdb": null,
       "kp": null,
-      "attention": 0.238,
+      "attention": 0.236,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1491,7 +1491,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.839,
+      "base_score": 80.817,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1527,6 +1527,32 @@
       "selected_rank": null
     },
     {
+      "id": 1669915,
+      "type": "movie",
+      "title": "Ангел и негодяй",
+      "kind": "theatrical",
+      "premiere": "2026-10-09",
+      "age": 37,
+      "tmdb": 8.813,
+      "tmdb_votes": 16,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.131,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.872,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 80.517,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 1283515,
       "type": "movie",
       "title": "Тайный дневник Верити",
@@ -1546,7 +1572,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6789621
       },
-      "attention": 0.283,
+      "attention": 0.277,
       "external_popularity_rank": 14,
       "external_bonus": 0.0546,
       "cross_source_interest": true,
@@ -1557,34 +1583,8 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 80.568,
+      "base_score": 80.501,
       "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1669915,
-      "type": "movie",
-      "title": "Ангел и негодяй",
-      "kind": "theatrical",
-      "premiere": "2026-10-09",
-      "age": 37,
-      "tmdb": 8.7,
-      "tmdb_votes": 15,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.133,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.848,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 80.439,
-      "rejection": "insufficient_votes",
       "selected_rank": null
     },
     {
@@ -1607,7 +1607,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1040427
       },
-      "attention": 0.124,
+      "attention": 0.125,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1618,33 +1618,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.384,
-      "rejection": "insufficient_votes",
-      "selected_rank": null
-    },
-    {
-      "id": 1697911,
-      "type": "movie",
-      "title": "Drummer Boy",
-      "kind": "theatrical",
-      "premiere": "2026-11-06",
-      "age": 9,
-      "tmdb": 7.8,
-      "tmdb_votes": 5,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.129,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.69,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 80.163,
+      "base_score": 80.395,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1675,6 +1649,32 @@
       "selected_rank": null
     },
     {
+      "id": 1697911,
+      "type": "movie",
+      "title": "Drummer Boy",
+      "kind": "theatrical",
+      "premiere": "2026-11-06",
+      "age": 9,
+      "tmdb": 7.8,
+      "tmdb_votes": 5,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.127,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 6.69,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 80.141,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 289560,
       "type": "tv",
       "title": "ЦРУ",
@@ -1690,7 +1690,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 11054388
       },
-      "attention": 0.137,
+      "attention": 0.138,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1701,7 +1701,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 80.048,
+      "base_score": 80.059,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1716,7 +1716,7 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.064,
+      "attention": 0.065,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1727,7 +1727,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.969,
+      "base_score": 79.98,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1747,7 +1747,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6601550
       },
-      "attention": 0.155,
+      "attention": 0.154,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1758,7 +1758,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 79.865,
+      "base_score": 79.854,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1773,7 +1773,7 @@
       "tmdb_votes": 255,
       "imdb": null,
       "kp": null,
-      "attention": 0.105,
+      "attention": 0.107,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1784,7 +1784,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.601,
+      "base_score": 79.623,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -1799,7 +1799,7 @@
       "tmdb_votes": 18,
       "imdb": null,
       "kp": null,
-      "attention": 0.145,
+      "attention": 0.147,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1810,7 +1810,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.548,
+      "base_score": 79.57,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1825,7 +1825,7 @@
       "tmdb_votes": 51,
       "imdb": null,
       "kp": null,
-      "attention": 0.087,
+      "attention": 0.086,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1836,7 +1836,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.52,
+      "base_score": 79.509,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1851,7 +1851,7 @@
       "tmdb_votes": 45,
       "imdb": null,
       "kp": null,
-      "attention": 0.095,
+      "attention": 0.094,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1862,7 +1862,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.287,
+      "base_score": 79.276,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1877,7 +1877,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.068,
+      "attention": 0.065,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1888,7 +1888,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.196,
+      "base_score": 79.163,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1912,7 +1912,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8368127
       },
-      "attention": 0.134,
+      "attention": 0.135,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1923,7 +1923,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.074,
+      "base_score": 79.085,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1947,7 +1947,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7077069
       },
-      "attention": 0.113,
+      "attention": 0.115,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1958,7 +1958,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 79.06,
+      "base_score": 79.082,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -1973,7 +1973,7 @@
       "tmdb_votes": 64,
       "imdb": null,
       "kp": null,
-      "attention": 0.102,
+      "attention": 0.1,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -1984,7 +1984,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.963,
+      "base_score": 78.941,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -1999,7 +1999,7 @@
       "tmdb_votes": 17,
       "imdb": null,
       "kp": null,
-      "attention": 0.079,
+      "attention": 0.078,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2010,7 +2010,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.887,
+      "base_score": 78.876,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2025,7 +2025,7 @@
       "tmdb_votes": 26,
       "imdb": null,
       "kp": null,
-      "attention": 0.097,
+      "attention": 0.096,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2036,7 +2036,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.76,
+      "base_score": 78.749,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2103,7 +2103,7 @@
       "tmdb_votes": 16,
       "imdb": null,
       "kp": null,
-      "attention": 0.047,
+      "attention": 0.044,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2114,7 +2114,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.702,
+      "base_score": 78.668,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2129,7 +2129,7 @@
       "tmdb_votes": 58,
       "imdb": null,
       "kp": null,
-      "attention": 0.125,
+      "attention": 0.123,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2140,7 +2140,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.625,
+      "base_score": 78.603,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2155,7 +2155,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.045,
+      "attention": 0.046,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2166,7 +2166,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.558,
+      "base_score": 78.569,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2181,7 +2181,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.063,
+      "attention": 0.06,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2192,7 +2192,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.557,
+      "base_score": 78.524,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2207,7 +2207,7 @@
       "tmdb_votes": 36,
       "imdb": null,
       "kp": null,
-      "attention": 0.106,
+      "attention": 0.104,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2218,7 +2218,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.417,
+      "base_score": 78.395,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2242,7 +2242,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8042172
       },
-      "attention": 0.111,
+      "attention": 0.112,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2253,7 +2253,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.379,
+      "base_score": 78.393,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2268,7 +2268,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.032,
+      "attention": 0.029,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2279,7 +2279,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.285,
+      "base_score": 78.252,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2294,7 +2294,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.024,
+      "attention": 0.021,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2305,7 +2305,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.265,
+      "base_score": 78.232,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2320,7 +2320,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.034,
+      "attention": 0.031,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2331,7 +2331,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.246,
+      "base_score": 78.213,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2346,7 +2346,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.045,
+      "attention": 0.042,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2357,7 +2357,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.211,
+      "base_score": 78.178,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2381,7 +2381,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12898669
       },
-      "attention": 0.084,
+      "attention": 0.083,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2392,7 +2392,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 78.158,
+      "base_score": 78.147,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2407,7 +2407,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.011,
+      "attention": 0.01,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2418,33 +2418,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.117,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 340671,
-      "type": "tv",
-      "title": "Offside Love",
-      "kind": "series",
-      "premiere": "2026-11-01",
-      "age": 13,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.026,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 78.076,
+      "base_score": 78.106,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2459,7 +2433,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.011,
+      "attention": 0.012,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2470,7 +2444,33 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.049,
+      "base_score": 78.06,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 340671,
+      "type": "tv",
+      "title": "Offside Love",
+      "kind": "series",
+      "premiere": "2026-11-01",
+      "age": 13,
+      "tmdb": 0,
+      "tmdb_votes": 0,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.023,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 0,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 78.043,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2481,32 +2481,6 @@
       "kind": "series",
       "premiere": "2026-11-03",
       "age": 11,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.021,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 78.044,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 341038,
-      "type": "tv",
-      "title": "Love Beyond Palace Walls",
-      "kind": "series",
-      "premiere": "2026-11-04",
-      "age": 10,
       "tmdb": 0,
       "tmdb_votes": 0,
       "imdb": null,
@@ -2522,17 +2496,17 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 78.031,
+      "base_score": 78.011,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
     {
-      "id": 340664,
+      "id": 341038,
       "type": "tv",
-      "title": "My Rival Turned Into My Cat",
+      "title": "Love Beyond Palace Walls",
       "kind": "series",
-      "premiere": "2026-11-01",
-      "age": 13,
+      "premiere": "2026-11-04",
+      "age": 10,
       "tmdb": 0,
       "tmdb_votes": 0,
       "imdb": null,
@@ -2548,7 +2522,33 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.97,
+      "base_score": 78.009,
+      "rejection": "quality_below_floor",
+      "selected_rank": null
+    },
+    {
+      "id": 340664,
+      "type": "tv",
+      "title": "My Rival Turned Into My Cat",
+      "kind": "series",
+      "premiere": "2026-11-01",
+      "age": 13,
+      "tmdb": 0,
+      "tmdb_votes": 0,
+      "imdb": null,
+      "kp": null,
+      "attention": 0.013,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 0,
+      "agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "base_score": 77.937,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2575,32 +2575,6 @@
         "level": "unconfirmed"
       },
       "base_score": 77.911,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 340657,
-      "type": "tv",
-      "title": "The Fighter Who Refused to Kneel",
-      "kind": "series",
-      "premiere": "2026-11-01",
-      "age": 13,
-      "tmdb": 0,
-      "tmdb_votes": 0,
-      "imdb": null,
-      "kp": null,
-      "attention": 0.013,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 0,
-      "agreement": {
-        "sources": 0,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "base_score": 77.893,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2667,7 +2641,7 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.053,
+      "attention": 0.049,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2678,7 +2652,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.801,
+      "base_score": 77.747,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2693,7 +2667,7 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.057,
+      "attention": 0.058,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2704,7 +2678,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.687,
+      "base_score": 77.701,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2719,7 +2693,7 @@
       "tmdb_votes": 2,
       "imdb": null,
       "kp": null,
-      "attention": 0.042,
+      "attention": 0.039,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2730,7 +2704,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.345,
+      "base_score": 77.304,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2745,7 +2719,7 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.03,
+      "attention": 0.031,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2756,7 +2730,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 77.283,
+      "base_score": 77.296,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -2771,7 +2745,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.05,
+      "attention": 0.047,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2782,7 +2756,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.858,
+      "base_score": 76.817,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2797,7 +2771,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.039,
+      "attention": 0.036,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2808,7 +2782,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.73,
+      "base_score": 76.69,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2823,7 +2797,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.037,
+      "attention": 0.034,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2834,7 +2808,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.724,
+      "base_score": 76.683,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -2849,7 +2823,7 @@
       "tmdb_votes": 1,
       "imdb": null,
       "kp": null,
-      "attention": 0.029,
+      "attention": 0.026,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -2860,7 +2834,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 76.595,
+      "base_score": 76.555,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3106,7 +3080,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5253825
       },
-      "attention": 0.177,
+      "attention": 0.178,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3117,7 +3091,7 @@
         "bonus": 0.16,
         "level": "pair_high"
       },
-      "base_score": 59.428,
+      "base_score": 59.439,
       "rejection": null,
       "selected_rank": 17
     },
@@ -3202,7 +3176,7 @@
       "tmdb_votes": 94,
       "imdb": null,
       "kp": null,
-      "attention": 0.061,
+      "attention": 0.057,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3213,7 +3187,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 57.364,
+      "base_score": 57.32,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3237,7 +3211,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7178187
       },
-      "attention": 0.179,
+      "attention": 0.177,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3248,7 +3222,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 56.951,
+      "base_score": 56.929,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3272,7 +3246,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5610132
       },
-      "attention": 0.301,
+      "attention": 0.302,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3283,7 +3257,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 56.25,
+      "base_score": 56.261,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3307,7 +3281,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 8549783
       },
-      "attention": 0.201,
+      "attention": 0.2,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3318,7 +3292,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 56.003,
+      "base_score": 55.992,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3333,7 +3307,7 @@
       "tmdb_votes": 98,
       "imdb": null,
       "kp": null,
-      "attention": 0.213,
+      "attention": 0.214,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3344,7 +3318,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 55.728,
+      "base_score": 55.739,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -3355,8 +3329,8 @@
       "kind": "series",
       "premiere": "2026-07-23",
       "age": 114,
-      "tmdb": 8.219,
-      "tmdb_votes": 253,
+      "tmdb": 8.191,
+      "tmdb_votes": 254,
       "imdb": {
         "value": 6.9,
         "votes": 15320,
@@ -3368,18 +3342,18 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5310825
       },
-      "attention": 0.082,
+      "attention": 0.081,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
-      "quality": 7.231,
+      "quality": 7.226,
       "agreement": {
         "sources": 3,
-        "spread": 1.319,
+        "spread": 1.291,
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 55.482,
+      "base_score": 55.508,
       "rejection": null,
       "selected_rank": 18
     },
@@ -3403,7 +3377,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6548088
       },
-      "attention": 0.152,
+      "attention": 0.15,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3414,7 +3388,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 55.415,
+      "base_score": 55.393,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3429,7 +3403,7 @@
       "tmdb_votes": 96,
       "imdb": null,
       "kp": null,
-      "attention": 0.205,
+      "attention": 0.204,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3440,7 +3414,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 55.213,
+      "base_score": 55.202,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3464,7 +3438,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7104903
       },
-      "attention": 0.17,
+      "attention": 0.169,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3475,7 +3449,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 55.174,
+      "base_score": 55.163,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -3499,7 +3473,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5582050
       },
-      "attention": 0.174,
+      "attention": 0.173,
       "external_popularity_rank": 60,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3510,7 +3484,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 54.709,
+      "base_score": 54.698,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3525,7 +3499,7 @@
       "tmdb_votes": 5,
       "imdb": null,
       "kp": null,
-      "attention": 0.163,
+      "attention": 0.162,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3536,42 +3510,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 54.423,
-      "rejection": "quality_below_floor",
-      "selected_rank": null
-    },
-    {
-      "id": 1380417,
-      "type": "movie",
-      "title": "Любой ценой",
-      "kind": "digital",
-      "premiere": "2026-10-20",
-      "age": 73,
-      "tmdb": 6.6,
-      "tmdb_votes": 108,
-      "imdb": {
-        "value": 6.5,
-        "votes": 8732,
-        "via": "kinopoisk_unofficial"
-      },
-      "kp": {
-        "value": 6.2,
-        "votes": 2661,
-        "via": "kinopoisk_unofficial",
-        "kinopoisk_id": 6955070
-      },
-      "attention": 0.104,
-      "external_popularity_rank": null,
-      "external_bonus": 0,
-      "cross_source_interest": false,
-      "quality": 6.456,
-      "agreement": {
-        "sources": 3,
-        "spread": 0.4,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "base_score": 54.27,
+      "base_score": 54.412,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3595,7 +3534,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5287148
       },
-      "attention": 0.216,
+      "attention": 0.266,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3606,7 +3545,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 53.487,
+      "base_score": 54.161,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -3700,7 +3639,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1142153
       },
-      "attention": 0.218,
+      "attention": 0.219,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3711,7 +3650,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 36.575,
+      "base_score": 36.586,
       "rejection": null,
       "selected_rank": 27
     },
@@ -3735,7 +3674,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 10355286
       },
-      "attention": 0.395,
+      "attention": 0.403,
       "external_popularity_rank": 22,
       "external_bonus": 0.038,
       "cross_source_interest": true,
@@ -3746,7 +3685,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 36.385,
+      "base_score": 36.473,
       "rejection": null,
       "selected_rank": 26
     },
@@ -3805,7 +3744,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5281617
       },
-      "attention": 0.103,
+      "attention": 0.104,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3816,7 +3755,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 35.478,
+      "base_score": 35.489,
       "rejection": null,
       "selected_rank": 28
     },
@@ -3840,7 +3779,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7275308
       },
-      "attention": 0.132,
+      "attention": 0.133,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3851,7 +3790,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 35.283,
+      "base_score": 35.294,
       "rejection": null,
       "selected_rank": 29
     },
@@ -3875,7 +3814,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 11804709
       },
-      "attention": 0.139,
+      "attention": 0.141,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3886,7 +3825,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 34.765,
+      "base_score": 34.787,
       "rejection": null,
       "selected_rank": 30
     },
@@ -3910,7 +3849,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6555657
       },
-      "attention": 0.118,
+      "attention": 0.12,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3921,7 +3860,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 34.466,
+      "base_score": 34.488,
       "rejection": null,
       "selected_rank": 33
     },
@@ -3945,7 +3884,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12245586
       },
-      "attention": 0.072,
+      "attention": 0.073,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -3956,7 +3895,7 @@
         "bonus": 0.38,
         "level": "triple_high"
       },
-      "base_score": 34.417,
+      "base_score": 34.428,
       "rejection": null,
       "selected_rank": 31
     },
@@ -4015,7 +3954,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5437614
       },
-      "attention": 0.091,
+      "attention": 0.088,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4026,7 +3965,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 33.897,
+      "base_score": 33.864,
       "rejection": null,
       "selected_rank": 32
     },
@@ -4050,7 +3989,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 915196
       },
-      "attention": 0.197,
+      "attention": 0.198,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4061,7 +4000,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 33.782,
+      "base_score": 33.793,
       "rejection": null,
       "selected_rank": null
     },
@@ -4085,7 +4024,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6589776
       },
-      "attention": 0.176,
+      "attention": 0.177,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4096,7 +4035,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 33.46,
+      "base_score": 33.474,
       "rejection": null,
       "selected_rank": null
     },
@@ -4120,7 +4059,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1316601
       },
-      "attention": 0.166,
+      "attention": 0.167,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4131,7 +4070,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 33.089,
+      "base_score": 33.1,
       "rejection": null,
       "selected_rank": null
     },
@@ -4155,7 +4094,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5698586
       },
-      "attention": 0.092,
+      "attention": 0.091,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4166,7 +4105,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 32.784,
+      "base_score": 32.773,
       "rejection": null,
       "selected_rank": 36
     },
@@ -4190,7 +4129,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 12465988
       },
-      "attention": 0.076,
+      "attention": 0.077,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4201,7 +4140,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 32.707,
+      "base_score": 32.718,
       "rejection": null,
       "selected_rank": 35
     },
@@ -4216,7 +4155,7 @@
       "tmdb_votes": 91,
       "imdb": null,
       "kp": null,
-      "attention": 0.168,
+      "attention": 0.169,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4227,7 +4166,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 32.285,
+      "base_score": 32.296,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4302,6 +4241,41 @@
       "selected_rank": null
     },
     {
+      "id": 131142,
+      "type": "tv",
+      "title": "История любви",
+      "kind": "series",
+      "premiere": "2026-02-12",
+      "age": 275,
+      "tmdb": 8.2,
+      "tmdb_votes": 70,
+      "imdb": {
+        "value": 7.3,
+        "votes": 14561,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7.6,
+        "votes": 36238,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 4530902
+      },
+      "attention": 0.07,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.507,
+      "agreement": {
+        "sources": 2,
+        "spread": 0.3,
+        "bonus": 0.16,
+        "level": "pair_high"
+      },
+      "base_score": 31.424,
+      "rejection": "insufficient_votes",
+      "selected_rank": null
+    },
+    {
       "id": 316830,
       "type": "tv",
       "title": "В поисках Персефоны",
@@ -4321,7 +4295,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5457981
       },
-      "attention": 0.074,
+      "attention": 0.073,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4332,7 +4306,7 @@
         "bonus": 0.16,
         "level": "pair_high"
       },
-      "base_score": 31.423,
+      "base_score": 31.412,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4352,7 +4326,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 11884129
       },
-      "attention": 0.066,
+      "attention": 0.063,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4363,7 +4337,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 30.979,
+      "base_score": 30.946,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4387,7 +4361,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5301021
       },
-      "attention": 0.144,
+      "attention": 0.142,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4398,7 +4372,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 30.284,
+      "base_score": 30.262,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4439,7 +4413,7 @@
       "tmdb_votes": 45,
       "imdb": null,
       "kp": null,
-      "attention": 0.061,
+      "attention": 0.062,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4450,7 +4424,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.824,
+      "base_score": 29.835,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4465,7 +4439,7 @@
       "tmdb_votes": 47,
       "imdb": null,
       "kp": null,
-      "attention": 0.053,
+      "attention": 0.054,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4476,7 +4450,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.767,
+      "base_score": 29.778,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4500,7 +4474,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 11297614
       },
-      "attention": 0.071,
+      "attention": 0.068,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4511,7 +4485,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 29.651,
+      "base_score": 29.618,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4535,7 +4509,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 6601431
       },
-      "attention": 0.068,
+      "attention": 0.069,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4546,7 +4520,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 29.47,
+      "base_score": 29.481,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4561,7 +4535,7 @@
       "tmdb_votes": 11,
       "imdb": null,
       "kp": null,
-      "attention": 0.171,
+      "attention": 0.172,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4572,7 +4546,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.264,
+      "base_score": 29.275,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4613,7 +4587,7 @@
       "tmdb_votes": 17,
       "imdb": null,
       "kp": null,
-      "attention": 0.193,
+      "attention": 0.192,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4624,7 +4598,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 29.133,
+      "base_score": 29.122,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4665,7 +4639,7 @@
       "tmdb_votes": 10,
       "imdb": null,
       "kp": null,
-      "attention": 0.049,
+      "attention": 0.05,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4676,7 +4650,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 28.492,
+      "base_score": 28.503,
       "rejection": "insufficient_votes",
       "selected_rank": null
     },
@@ -4700,7 +4674,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 7373640
       },
-      "attention": 0.159,
+      "attention": 0.158,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4711,7 +4685,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 27.423,
+      "base_score": 27.409,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4726,7 +4700,7 @@
       "tmdb_votes": 0,
       "imdb": null,
       "kp": null,
-      "attention": 0.034,
+      "attention": 0.035,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4737,7 +4711,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 25.463,
+      "base_score": 25.477,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4761,7 +4735,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 4910542
       },
-      "attention": 0.158,
+      "attention": 0.159,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4772,7 +4746,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 9.034,
+      "base_score": 9.045,
       "rejection": null,
       "selected_rank": 37
     },
@@ -4847,6 +4821,41 @@
       "selected_rank": null
     },
     {
+      "id": 219760,
+      "type": "tv",
+      "title": "Список смертников: Тёмный волк",
+      "kind": "series",
+      "premiere": "2025-08-27",
+      "age": 444,
+      "tmdb": 7.692,
+      "tmdb_votes": 312,
+      "imdb": {
+        "value": 7.5,
+        "votes": 32896,
+        "via": "kinopoisk_unofficial"
+      },
+      "kp": {
+        "value": 7,
+        "votes": 6997,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5450125
+      },
+      "attention": 0.099,
+      "external_popularity_rank": null,
+      "external_bonus": 0,
+      "cross_source_interest": false,
+      "quality": 7.293,
+      "agreement": {
+        "sources": 3,
+        "spread": 0.692,
+        "bonus": 0,
+        "level": "mixed"
+      },
+      "base_score": 6.322,
+      "rejection": null,
+      "selected_rank": 38
+    },
+    {
       "id": 249039,
       "type": "tv",
       "title": "Черный кролик",
@@ -4866,7 +4875,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5212130
       },
-      "attention": 0.126,
+      "attention": 0.128,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4877,7 +4886,7 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 5.972,
+      "base_score": 5.994,
       "rejection": "buzz_not_confirmed",
       "selected_rank": null
     },
@@ -4901,7 +4910,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 5965208
       },
-      "attention": 0.058,
+      "attention": 0.055,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4912,9 +4921,9 @@
         "bonus": 0,
         "level": "mixed"
       },
-      "base_score": 5.659,
+      "base_score": 5.626,
       "rejection": null,
-      "selected_rank": 38
+      "selected_rank": 39
     },
     {
       "id": 755898,
@@ -4936,7 +4945,7 @@
         "via": "kinopoisk_unofficial",
         "kinopoisk_id": 1448630
       },
-      "attention": 0.189,
+      "attention": 0.188,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4947,7 +4956,7 @@
         "bonus": 0,
         "level": "disputed"
       },
-      "base_score": 4.505,
+      "base_score": 4.494,
       "rejection": "quality_below_floor",
       "selected_rank": null
     },
@@ -4962,7 +4971,7 @@
       "tmdb_votes": 10,
       "imdb": null,
       "kp": null,
-      "attention": 0.055,
+      "attention": 0.052,
       "external_popularity_rank": null,
       "external_bonus": 0,
       "cross_source_interest": false,
@@ -4973,7 +4982,7 @@
         "spread": null,
         "level": "unconfirmed"
       },
-      "base_score": 3.878,
+      "base_score": 3.845,
       "rejection": "insufficient_votes",
       "selected_rank": null
     }
