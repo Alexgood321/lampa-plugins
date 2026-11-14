@@ -1,3 +1,29 @@
+# Hot Discovery 4.13: bounded prioritization of CURRENT demand in top-20
+
+## Why not a forced hot-title quota?
+
+4.12 had 16/20 top positions with some current-interest evidence. Four older returning TV series had good long-running averages but no TMDB Trending, KP Top-60, verified emerging signals or positive measured momentum. Just below the top-20, two one-rating seasons were trending only at rank 40/day and 36/week. Blindly forcing 20/20 interest would substitute weakly rated candidates for independently rated content.
+
+## Conservative editorial choice
+
+Only for choosing positions 1–20, allow a **bounded soft adjustment** when the candidate has explicitly documented `surs_hot_interest_evidence.current_interest_observed === false`:
+- Release age <=30d: no penalty because a new launch may not yet have entered Trending.
+- 31–60d: half the configured penalty.
+- Older than 60d: full penalty, capped at 6.
+- If evidence information is missing rather than explicitly negative, never infer a missing interest signal.
+
+The active candidate editorial adjustment is **4 points maximum**. This is separate from the 4.12 50/30/15/5 demand formula, from previously bounded diversity penalties and from the published `surs_hot_score`. The public score is never rewritten; `surs_hot_editorial_interest_penalty` and `surs_hot_editorial_diversity_penalty` show why the position differs from pure score order. Neither penalty applies as a permanent exclusion, and the shelf still need not contain 40 titles.
+
+## Controlled release gate
+
+`diagnostics.editorial_interest_comparison` compares the exact same eligible candidates with no preference (0), light (2), balanced (4) and strong (6) interest penalties. It tracks top-20 confirmed proxy interest, provider coverage, top-10 overlap and rank movement relative to the prior published ordering. The production candidate strength is 4 only if a live prepublish dry run confirms no loss of top-20 interest coverage, at least eight shared top-10 cards and no score corruption.
+
+**Limit:** Observed TMDB/KP interest is a proxy and cannot establish play counts, click-through rate or user satisfaction. The objective is internal editorial consistency for a specifically named *Hot Discovery* shelf, not an externally validated relevance improvement.
+
+Revert the squash merge to restore the 4.12 selection. Previous feed JSON remains recoverable from Git.
+
+---
+
 # Hot Discovery 4.12: current-interest evidence for one-rating titles
 
 ## Problem
