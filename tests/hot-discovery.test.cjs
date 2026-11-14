@@ -484,7 +484,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',
     mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
     transport,history:{snapshots:[]},detailLimit:80});
-  assert.equal(result.feed.algorithm,'hot-discovery-4.4');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.5');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
