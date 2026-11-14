@@ -15,6 +15,7 @@ on:
       - scripts/hot-source-budget.cjs
       - scripts/hot-feed-integrity.cjs
       - scripts/hot-evidence-gate.cjs
+      - scripts/hot-editorial-interest.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -34,6 +35,7 @@ on:
       - scripts/hot-source-budget.cjs
       - scripts/hot-feed-integrity.cjs
       - scripts/hot-evidence-gate.cjs
+      - scripts/hot-editorial-interest.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -55,7 +57,8 @@ jobs:
       - run: node --check scripts/hot-source-budget.cjs
       - run: node --check scripts/hot-feed-integrity.cjs
       - run: node --check scripts/hot-evidence-gate.cjs
-      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs tests/hot-kp-pacing.test.cjs tests/hot-feed-integrity.test.cjs tests/hot-evidence-gate.test.cjs
+      - run: node --check scripts/hot-editorial-interest.cjs
+      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs tests/hot-kp-pacing.test.cjs tests/hot-feed-integrity.test.cjs tests/hot-evidence-gate.test.cjs tests/hot-editorial-interest.test.cjs
       - run: node scripts/build-surs.cjs --check
       - run: node --check surs-editor.js
       - run: node --check surs.js
@@ -68,7 +71,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.12 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 4.13 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (startsWith(github.head_ref, 'feat/hot-discovery-') || startsWith(github.head_ref, 'fix/hot-discovery-'))
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -89,7 +92,7 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.12')throw Error('New 4.6 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-4.13')throw Error('New 4.6 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
@@ -146,6 +149,23 @@ jobs:
           if(c.top10_retained<8)
             throw Error('Unexpected top-10 regression; inspect candidates');
           console.log('INTEREST_EVIDENCE:',JSON.stringify(selectionEvidence));
+          const editorial=after.diagnostics.editorial_interest_comparison;
+          if(!editorial||!editorial.variants?.zero||
+            !editorial.variants?.light||!editorial.variants?.balanced||
+            !editorial.variants?.strong||
+            editorial.candidate_count<after.items.length)
+            throw Error('Missing same-candidate editorial ablation');
+          if(editorial.variants.balanced.top20_observed_interest<
+            editorial.variants.zero.top20_observed_interest)
+            throw Error('Interest-based curation lowered the observed-interest top-20');
+          if(editorial.variants.balanced.top10_overlap_control<8)
+            throw Error('Interest preference disrupted top-10 composition');
+          if(after.items.some(x=>
+            Math.abs((x.surs_hot_editorial_penalty||0)-
+              ((x.surs_hot_editorial_diversity_penalty||0)+
+                (x.surs_hot_editorial_interest_penalty||0)))>.011))
+            throw Error('Editorial penalty accounting inconsistent');
+          console.log('EDITORIAL_ABLATION:',JSON.stringify(editorial));
           const evidence=after.diagnostics.external_demand;
           console.log('BEFORE:',before.algorithm,before.items.length,'items');
           console.log('AFTER:',after.algorithm,after.items.length,'items');
@@ -174,7 +194,7 @@ jobs:
           if(after.items.some(x=>x.surs_hot_attention_sources>2))
             throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.12 real dry-run (no publishing)\n'+
+            '### Hot 4.13 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+
