@@ -155,11 +155,19 @@ jobs:
             !editorial.variants?.strong||
             editorial.candidate_count<after.items.length)
             throw Error('Missing same-candidate editorial ablation');
-          if(editorial.variants.balanced.top20_observed_interest<
-            editorial.variants.zero.top20_observed_interest)
-            throw Error('Interest-based curation lowered the observed-interest top-20');
-          if(editorial.variants.balanced.top10_overlap_control<8)
+          const choice=editorial.selection,control=editorial.variants.zero;
+          const active=editorial.variants[choice?.name];
+          if(!choice||!active||
+            choice.strength!==after.diagnostics.editorial_interest_strength||
+            active.top20_observed_interest!==
+              after.diagnostics.interest_evidence.top20_interest_evidenced)
+            throw Error('Active editorial variant differs from documented ablation');
+          if(active.top10_overlap_control<9)
             throw Error('Interest preference disrupted top-10 composition');
+          if(choice.strength>0&&(
+            active.top20_observed_interest<=control.top20_observed_interest||
+            active.top20_three_ratings<control.top20_three_ratings-1))
+            throw Error('Activated preference without safe demand evidence lift');
           if(after.items.some(x=>
             Math.abs((x.surs_hot_editorial_penalty||0)-
               ((x.surs_hot_editorial_diversity_penalty||0)+
