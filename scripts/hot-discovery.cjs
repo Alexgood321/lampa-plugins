@@ -301,6 +301,10 @@ function verifySeason(c,details,now) {
   return true;
 }
 function growthFor(c,history,now) {
+  if(c.surs_hot_current_popularity_observed===false){
+    return {score:.5,measured:false,periods:{},
+      status:'unknown',confirmed:false,signal:0};
+  }
   const snapshots=(history&&history.snapshots||[]).slice()
     .sort((a,b)=>b.date.localeCompare(a.date));
   const key=identity(c),current=number(c.popularity),votes=number(c.vote_count),
@@ -438,6 +442,18 @@ function scoreCandidates(candidates,history,now,previous,model='baseline') {
     c.surs_hot_quality=quality.score;
     c.surs_hot_confidence=quality.confidence;
     c.surs_hot_coverage=quality.source_count;
+    const evidenceSources=['tmdb','imdb','kp'].filter(source=>{
+      if(source==='tmdb')return stableRating({
+        value:c.vote_average,votes:c.vote_count},100);
+      return stableRating(c.surs_hot_ratings?.[source],
+        source==='imdb'?250:100);
+    });
+    c.surs_hot_rating_evidence={
+      sources:evidenceSources,source_count:evidenceSources.length,
+      level:evidenceSources.length===3?'three_source':
+        evidenceSources.length===2?'two_source':'single_source',
+      missing:['imdb','kp'].filter(x=>!evidenceSources.includes(x))
+    };
     c.surs_hot_quality_base=quality.base_score;
     c.surs_hot_rating_agreement=quality.agreement;
     c.surs_hot_adjusted_ratings=quality.adjusted_ratings;
@@ -542,6 +558,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   const nowDate=new Date(now),tmdbMemo=sourceBudget.memo(tmdbCache),
     stats={tmdb_calls:0,tmdb_failures:0,tmdb_detail_cache_hits:0,
     tmdb_detail_cache_misses:0,tmdb_season_cache_hits:0,tmdb_season_cache_misses:0,
+    tmdb_cached_popularity_unobserved:0,tmdb_cached_vote_count_unobserved:0,
     mdblist_calls:0,
     mdblist_failures:0,kp_calls:0,kp_failures:0,kp_matched:0,
     kp_search_calls:0,kp_detail_calls:0,kp_cache_hits:0,
@@ -650,14 +667,15 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     const prior=sourceBudget.cached(tmdbMemo,memoKey,nowDate,
       sourceBudget.TMDB_DETAIL_TTL_HOURS);
     let data;
+    let currentPopularityObserved=true,currentVotesObserved=true;
     if(prior){
       stats.tmdb_detail_cache_hits++;
-      // Discovery/Trending responses supply fresher dynamic metrics. Static
-      // metadata is reused only within the bounded TTL.
-      data={...prior,
-        popularity:Math.max(number(prior.popularity),number(raw.popularity)),
-        vote_count:number(raw.vote_count)>0?number(raw.vote_count):prior.vote_count,
-        vote_average:number(raw.vote_count)>0?number(raw.vote_average):prior.vote_average};
+      const fresh=sourceBudget.overlayFreshSignals(prior,raw);
+      data=fresh.data;
+      currentPopularityObserved=fresh.current_popularity;
+      currentVotesObserved=fresh.current_votes;
+      if(!currentPopularityObserved)stats.tmdb_cached_popularity_unobserved++;
+      if(!currentVotesObserved)stats.tmdb_cached_vote_count_unobserved++;
     }else{
       stats.tmdb_detail_cache_misses++;
       const extra=type==='movie'?'release_dates,external_ids':'external_ids';
@@ -672,6 +690,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     const age=daysSince(p.date,nowDate);
     if(age<0||age>550)return null;
     const card=toCard(raw,data,type,p);
+    card.surs_hot_current_popularity_observed=currentPopularityObserved;
+    card.surs_hot_current_vote_count_observed=currentVotesObserved;
     card.surs_hot_discovery_pass=secondPassKeys.has(key)?2:1;
     return card;
   });
@@ -928,6 +948,42 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
   stats.second_pass_eligible=eligibleForVariants.filter(c=>
     c.surs_hot_discovery_pass===2).length;
   stats.second_pass_selected=items.filter(c=>c.surs_hot_discovery_pass===2).length;
+  // Distinguish genuinely absent data from API coverage failures without
+  // claiming that missing IMDb/KP ratings are poor quality.
+  const missingRatings={missing_imdb:0,missing_kp:0,missing_both:0,
+    unavailable_imdb_source:!mdblistKey,unverified_kinopoisk_id:0,
+    kp_unrated_or_not_found:0,kp_not_checked_or_stale:0,
+    no_valid_imdb_id:0};
+  for(const c of items) {
+    const foundImdb=stableRating(c.surs_hot_ratings?.imdb,250);
+    const foundKp=stableRating(c.surs_hot_ratings?.kp,100);
+    if(!foundImdb)missingRatings.missing_imdb++;
+    if(!foundKp)missingRatings.missing_kp++;
+    if(!foundImdb&&!foundKp)missingRatings.missing_both++;
+    const imdbId=c.surs_hot_imdb_id;
+    if(!/^tt\\d{6,12}$/.test(String(imdbId||''))){
+      missingRatings.no_valid_imdb_id++;
+      continue;
+    }
+    if(!foundKp){
+      const entry=kpEntries[imdbId];
+      if(!entry||!validKpEntry(entry,imdbId))
+        missingRatings.kp_not_checked_or_stale++;
+      else if(!entry.kp)missingRatings.kp_unrated_or_not_found++;
+      else missingRatings.unverified_kinopoisk_id++;
+    }
+  }
+  const ratingConfidence={
+    selected:items.length,
+    high:items.filter(c=>c.surs_hot_rating_evidence?.level==='three_source').length,
+    medium:items.filter(c=>c.surs_hot_rating_evidence?.level==='two_source').length,
+    limited:items.filter(c=>c.surs_hot_rating_evidence?.level==='single_source').length,
+    top10_high:items.slice(0,10).filter(c=>
+      c.surs_hot_rating_evidence?.level==='three_source').length,
+    top20_high:items.slice(0,20).filter(c=>
+      c.surs_hot_rating_evidence?.level==='three_source').length,
+    ...missingRatings
+  };
   const rejections={};
   for(const c of candidates){
     const reason=eligibilityReason(c,nowDate);
@@ -945,7 +1001,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.8',
+  const audit={schema:1,algorithm:'hot-discovery-4.9',
     generated_at:nowDate.toISOString(),candidate_total:candidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:candidates.slice().sort((a,b)=>
@@ -972,14 +1028,15 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.8',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.9',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
     items,diagnostics:{...stats,selected:items.length,
       quality_floor:QUALITY_FLOOR,min_votes:MIN_VOTES,
       primary_window_days:RECENT_DAYS,selected_by_recency:recencyCounts,
-      ranking_model:'source-aware-demand-first-v4.8-cached',
+      ranking_model:'source-aware-demand-first-v4.9-verifiable',
+      rating_evidence:ratingConfidence,
       active_model:'demand',
       comparison,model_comparison:modelComparison,
       external_demand:{
