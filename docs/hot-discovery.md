@@ -1,3 +1,19 @@
+# Hot Discovery 4.10: paced KP evidence acquisition
+
+The 4.9 data generator executes every three hours and could make 45 KP API calls per run, exhausting its 210-request daily safety budget long before the end of the UTC day. The new cumulative eight-slot allocation reserves the day's requests for later runs: first UTC 00:00–02:59 slot allows up to 26 requests, next up to a cumulative 52, and so on to 210 by 21:00. Unused earlier allocations roll forward, and manual reruns in the same slot cannot spend the next slot's allowance. Every HTTP attempt and retry remains counted.
+
+Before deciding which fresh ratings to request, the engine now applies valid exact-ID KP/IMDb ratings and verified KP popularity ranks from the existing cache to candidates. This gives the higher priority to titles that have already demonstrated demand rather than sorting the initial preview on TMDB alone.
+
+Expired positive KP entries refresh through their already verified Kinopoisk ID in one detail call; IMDb ID and KP ID MUST BOTH match, otherwise the fallback exact-IMDb search applies. A valid detail can also carry the actual IMDb rating. Missing KP search results are cached more conservatively: currently trending or very recent titles may be rechecked the next UTC day, medium age misses after 2 days, older untrending misses after 4 days. Missing ratings remain unknown, never zero or fabricated.
+
+The active demand-first formula, rating thresholds, selection mechanics, 40-item maximum, TMDB/IMDb/KP sources and schema-1 client contract remain unchanged. New diagnostics include slot and cumulative quota, cache-enriched preview count, verified direct-ID refreshes, and deferred requests. A separate set of integration tests proves direct and mismatched-ID behavior. No device-side telemetry or playback metrics are claimed.
+
+## Validation
+
+Run all existing tests and new KP pacing tests, including the live API GitHub Actions dry-run twice; inspect changed top-40 and any drops in ratings coverage. The deployment retains the last valid JSON if validation fails. The release can be rolled back to the 4.9 builder through Git history.
+
+---
+
 # Hot Discovery 4.9: observable demand and rating evidence
 
 The 4.8 verified TMDB metadata cache could accidentally retain an older, higher `popularity` using `Math.max(prior.popularity, current.popularity)`. This **inflated or froze observed TMDB demand** when a title declined between 3-hour generator runs.
