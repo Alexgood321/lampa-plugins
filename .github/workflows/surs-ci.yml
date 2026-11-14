@@ -99,6 +99,27 @@ jobs:
           console.log('TOP40_COMPARISON:',JSON.stringify(c));
           console.log('KP_EVIDENCE:',JSON.stringify(evidence));
           console.log('TOP10:',JSON.stringify(after.diagnostics.top10));
+          const key=x=>x.type+':'+x.id;
+          const oldIds=new Set(before.items.map(key));
+          const newIds=new Set(after.items.map(key));
+          console.log('NEW_CARDS:',JSON.stringify(after.items.filter(x=>
+            !oldIds.has(key(x))).map(x=>({rank:x.surs_hot_rank,
+            title:x.title,age:x.surs_hot_rank_age,score:x.surs_hot_score}))));
+          console.log('REMOVED_CARDS:',JSON.stringify(before.items.filter(x=>
+            !newIds.has(key(x))).map(x=>({rank:x.surs_hot_rank,
+            title:x.title,age:x.surs_hot_rank_age}))));
+          console.log('TOP20_CARDS:',JSON.stringify(after.items.slice(0,20).map(x=>({
+            rank:x.surs_hot_rank,title:x.title,kind:x.surs_hot_premiere_kind,
+            score:x.surs_hot_score,age:x.surs_hot_rank_age,
+            trend_day:x.surs_hot_trend_day,trend_week:x.surs_hot_trend_week,
+            kp_rank:x.surs_hot_kinopoisk_popularity_rank,
+            growth_status:x.surs_hot_growth_status
+          }))));
+          if(after.items.some(x=>Math.abs(x.surs_hot_score-
+            Math.round(x.surs_hot_base_score*100)/100)>.011))
+            throw Error('Published scores must never be altered by curation');
+          if(after.items.some(x=>x.surs_hot_attention_sources>2))
+            throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
             '### Hot 4.7 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
