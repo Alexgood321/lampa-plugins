@@ -1715,6 +1715,266 @@
       "imdbId": "tt29256561",
       "checked_at": "2026-11-14",
       "kp": null
+    },
+    "tt34771210": {
+      "imdbId": "tt34771210",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 7,
+        "votes": 32150,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 9349321
+      },
+      "imdb": {
+        "value": 7.1,
+        "votes": 70198,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt22526100": {
+      "imdbId": "tt22526100",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt31450459": {
+      "imdbId": "tt31450459",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 7.4,
+        "votes": 2241,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5463546
+      },
+      "imdb": {
+        "value": 7.3,
+        "votes": 14238,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt36983905": {
+      "imdbId": "tt36983905",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 6.8,
+        "votes": 49351,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 8005532
+      },
+      "imdb": {
+        "value": 6.2,
+        "votes": 14959,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt6262770": {
+      "imdbId": "tt6262770",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt32588798": {
+      "imdbId": "tt32588798",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 6.1,
+        "votes": 6614,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6426123
+      },
+      "imdb": {
+        "value": 6,
+        "votes": 19326,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt32268691": {
+      "imdbId": "tt32268691",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 5.5,
+        "votes": 18961,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5595288
+      },
+      "imdb": {
+        "value": 5.4,
+        "votes": 8844,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt8814476": {
+      "imdbId": "tt8814476",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 5.6,
+        "votes": 23482,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 1184898
+      },
+      "imdb": null
+    },
+    "tt38672588": {
+      "imdbId": "tt38672588",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt31049299": {
+      "imdbId": "tt31049299",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt46665146": {
+      "imdbId": "tt46665146",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt31179962": {
+      "imdbId": "tt31179962",
+      "checked_at": "2026-11-14",
+      "kp": null,
+      "imdb": null
+    },
+    "tt37510326": {
+      "imdbId": "tt37510326",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 6.2,
+        "votes": 230,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 8883816
+      },
+      "imdb": null
+    },
+    "tt36482679": {
+      "imdbId": "tt36482679",
+      "checked_at": "2026-11-14",
+      "kp": null,
+      "imdb": {
+        "value": 7.3,
+        "votes": 183,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt43655467": {
+      "imdbId": "tt43655467",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt34384900": {
+      "imdbId": "tt34384900",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt14371256": {
+      "imdbId": "tt14371256",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 6.3,
+        "votes": 369,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5450043
+      },
+      "imdb": null
+    },
+    "tt14129116": {
+      "imdbId": "tt14129116",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt34374553": {
+      "imdbId": "tt34374553",
+      "checked_at": "2026-11-14",
+      "kp": null,
+      "imdb": null
+    },
+    "tt42588704": {
+      "imdbId": "tt42588704",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt37063558": {
+      "imdbId": "tt37063558",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 6.7,
+        "votes": 1479,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 11464269
+      },
+      "imdb": {
+        "value": 7,
+        "votes": 646,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt36210894": {
+      "imdbId": "tt36210894",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt34675596": {
+      "imdbId": "tt34675596",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 6.6,
+        "votes": 14803,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 6576642
+      },
+      "imdb": {
+        "value": 6.7,
+        "votes": 26338,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt34385184": {
+      "imdbId": "tt34385184",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt31145438": {
+      "imdbId": "tt31145438",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt8599532": {
+      "imdbId": "tt8599532",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 7.2,
+        "votes": 34527,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5591410
+      },
+      "imdb": {
+        "value": 7.5,
+        "votes": 36070,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt36303968": {
+      "imdbId": "tt36303968",
+      "checked_at": "2026-11-14",
+      "kp": {
+        "value": 7.4,
+        "votes": 9222,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 12946659
+      },
+      "imdb": {
+        "value": 7.8,
+        "votes": 35136,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt34866681": {
+      "imdbId": "tt34866681",
+      "checked_at": "2026-11-14",
+      "kp": null
+    },
+    "tt35618070": {
+      "imdbId": "tt35618070",
+      "checked_at": "2026-11-14",
+      "kp": null
     }
   },
   "popular": {
@@ -2261,6 +2521,54 @@
         {
           "id": 1382256,
           "votes": 280283
+        },
+        {
+          "id": 9349321,
+          "votes": 32150
+        },
+        {
+          "id": 6426123,
+          "votes": 6614
+        },
+        {
+          "id": 12946659,
+          "votes": 9222
+        },
+        {
+          "id": 5463546,
+          "votes": 2241
+        },
+        {
+          "id": 8883816,
+          "votes": 230
+        },
+        {
+          "id": 8005532,
+          "votes": 49351
+        },
+        {
+          "id": 6576642,
+          "votes": 14803
+        },
+        {
+          "id": 5595288,
+          "votes": 18961
+        },
+        {
+          "id": 11464269,
+          "votes": 1479
+        },
+        {
+          "id": 5591410,
+          "votes": 34527
+        },
+        {
+          "id": 5450043,
+          "votes": 369
+        },
+        {
+          "id": 1184898,
+          "votes": 23482
         }
       ]
     }
