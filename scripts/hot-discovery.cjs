@@ -1089,4 +1089,4 @@ if(require.main===module)main().catch(e=>{console.error(e.message);process.exitC
 module.exports={eligibleUS,moviePremiere,tvPremiere,discoveryJobs,qualityFor,growthFor,
   scoreCandidates,recencyTier,attentionFor,curatedSelection,eligibilityReason,
   verifySeason,nextHistory,validateFeed,build,parseMdb,parseKinopoisk,
-  qualityAgreement,matchedKpSearchRow,externalPopularity,daysSince};
+  qualityAgreement,matchedKpSearchRow,externalPopularity,daysSince,requestJSON};
