@@ -31,6 +31,10 @@ function summarize(items,previous,baseline){
     top10_overlap_control:top.filter(x=>control.includes(x)).length,
     top20_observed_interest:top20.filter(x=>
       x.surs_hot_interest_evidence?.current_interest_observed===true).length,
+    top20_strong_interest:top20.filter(x=>
+      x.surs_hot_interest_evidence?.current_interest_strong===true).length,
+    top20_extended_only:top20.filter(x=>
+      x.surs_hot_interest_evidence?.current_interest_confidence==='extended').length,
     top20_trending:top20.filter(x=>
       x.surs_hot_interest_evidence?.tmdb_trending===true).length,
     top20_independent_kp:top20.filter(x=>
@@ -73,4 +77,28 @@ function selectVariant(comparison){
   }
   return {name:'zero',strength:0,reason:'no_safe_observed_gain',uplift:0};
 }
-module.exports={interestPenalty,summarize,compare,selectVariant};
+// Compare the 4.13 observation windows (TMDB 1-40, KP 1-60) with the
+// extended windows on the SAME verified source responses. New weak chart
+// ranks are useful only if they improve coverage without crowding out the
+// established strong evidence or rating-provider reliability.
+function compareExpansion(control,expanded,previous){
+  const baseline=summarize(control,previous,control);
+  const candidate=summarize(expanded,previous,control);
+  const refuse=reason=>({selection:{name:'control',reason,uplift:0},
+    control:baseline,expanded:candidate});
+  if(candidate.top20_observed_interest<=baseline.top20_observed_interest)
+    return refuse('no_measured_interest_gain');
+  if(candidate.top20_strong_interest<baseline.top20_strong_interest)
+    return refuse('strong_evidence_displaced');
+  if(candidate.top20_three_ratings<baseline.top20_three_ratings-1)
+    return refuse('rating_evidence_regression');
+  if(candidate.top10_overlap_control<9)
+    return refuse('top10_disruption');
+  if(candidate.mean_shared_rank_move>baseline.mean_shared_rank_move+1.5||
+    candidate.max_shared_rank_move>baseline.max_shared_rank_move+4)
+    return refuse('rank_instability');
+  return {selection:{name:'expanded',reason:'measured_interest_coverage_gain',
+    uplift:candidate.top20_observed_interest-baseline.top20_observed_interest},
+    control:baseline,expanded:candidate};
+}
+module.exports={interestPenalty,summarize,compare,selectVariant,compareExpansion};

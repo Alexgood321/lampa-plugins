@@ -12,11 +12,13 @@ function evidence(card){
   const age=Number(card?.surs_hot_rank_age);
   const votes=Number(card?.vote_count)||0;
   const percentile=Number(card?.surs_hot_attention_pop_percentile)||0;
-  const day=clampRank(card?.surs_hot_trend_day,40);
-  const week=clampRank(card?.surs_hot_trend_week,40);
-  const kp=clampRank(card?.surs_hot_kinopoisk_popularity_rank,60);
+  const day=clampRank(card?.surs_hot_trend_day,60);
+  const week=clampRank(card?.surs_hot_trend_week,60);
+  const kp=clampRank(card?.surs_hot_kinopoisk_popularity_rank,100);
   const trending=!!(day||week);
   const independent=!!kp;
+  const strongTrending=!!((day&&day<=40)||(week&&week<=40));
+  const strongKp=!!(kp&&kp<=60);
   // Non-trending new launches may still be emerging within the discovery
   // pool. Require both recent release and substantial verified TMDB votes.
   const emerging=Number.isFinite(age)&&age>=0&&age<=30&&
@@ -25,20 +27,28 @@ function evidence(card){
   const rising=card?.surs_hot_growth_status==='rising'&&
     Number(card?.surs_hot_growth_signal)>=.12&&
     votes>=500&&percentile>=.65&&Number.isFinite(age)&&age<=120;
+  const strong=strongTrending||strongKp||emerging||rising;
   const current=trending||independent||emerging||rising;
   const singleSource=ratings<2;
   const reasons=[
-    ...(trending?['tmdb_trending']:[]),
-    ...(independent?['kinopoisk_top60']:[]),
+    ...(strongTrending?['tmdb_trending']:[]),
+    ...(trending&&!strongTrending?['tmdb_trending_41_60']:[]),
+    ...(strongKp?['kinopoisk_top60']:[]),
+    ...(independent&&!strongKp?['kinopoisk_top61_100']:[]),
     ...(emerging?['recent_emerging']:[]),
     ...(rising?['measured_positive_growth']:[])
   ];
   return {
     rating_sources:Math.min(3,Math.max(1,Math.round(ratings))),
-    tmdb_trending:trending,kinopoisk_top60:independent,
+    tmdb_trending:strongTrending,kinopoisk_top60:strongKp,
+    tmdb_trending_extended:trending&&!strongTrending,
+    kinopoisk_top100_extended:independent&&!strongKp,
     recent_emerging:emerging,measured_positive_growth:rising,
-    current_interest_observed:current,
-    one_source_eligible:!singleSource||current,
+    current_interest_observed:current,current_interest_strong:strong,
+    current_interest_confidence:strong?'strong':current?'extended':'none',
+    // Weak chart positions may corroborate a well-rated title, but are not
+    // enough to admit a title with just one rating provider.
+    one_source_eligible:!singleSource||strong,
     interest_evidence:reasons
   };
 }
@@ -51,7 +61,9 @@ function diagnostic(items,allCandidates){
     single_source_selected:0,single_source_with_interest:0,
     one_source_held:0,top20_interest_evidenced:0,
     all_selected_interest_evidenced:0,
+    top20_interest_strong:0,top20_interest_extended_only:0,
     interest_signals:{tmdb_trending:0,kinopoisk_top60:0,
+      tmdb_trending_extended:0,kinopoisk_top100_extended:0,
       recent_emerging:0,measured_positive_growth:0}};
   for(const x of allCandidates||[]){
     if(eligibilityReason(x))stats.one_source_held++;
@@ -66,6 +78,9 @@ function diagnostic(items,allCandidates){
       stats.all_selected_interest_evidenced++;
       if(i<20)stats.top20_interest_evidenced++;
     }
+    if(i<20&&e.current_interest_strong)stats.top20_interest_strong++;
+    if(i<20&&e.current_interest_confidence==='extended')
+      stats.top20_interest_extended_only++;
     for(const key of Object.keys(stats.interest_signals)){
       if(e[key])stats.interest_signals[key]++;
     }

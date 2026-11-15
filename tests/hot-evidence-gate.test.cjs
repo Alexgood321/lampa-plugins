@@ -39,6 +39,29 @@ test('one-rating titles retain admission when current TMDB Trending verifies int
   }
 });
 
+test('4.14 chart extensions are identified as weaker demand, not admission for one-rating titles',()=>{
+  const tmdb=card(60,{day:55,source_count:3});
+  const kp=card(61,{kp:87,source_count:3});
+  for(const c of [tmdb,kp]){
+    const e=evidence.evidence(c);
+    assert.equal(e.current_interest_observed,true);
+    assert.equal(e.current_interest_strong,false);
+    assert.equal(e.current_interest_confidence,'extended');
+    assert.equal(evidence.eligibilityReason(c),null);
+    assert.equal(evidence.eligibilityReason({...c,
+      surs_hot_rating_evidence:{source_count:1}}),
+      'single_source_interest_unconfirmed');
+  }
+  assert.deepEqual(evidence.evidence(tmdb).interest_evidence,
+    ['tmdb_trending_41_60']);
+  assert.deepEqual(evidence.evidence(kp).interest_evidence,
+    ['kinopoisk_top61_100']);
+  assert.equal(evidence.evidence(card(62,{day:61,kp:101,source_count:3}))
+    .current_interest_observed,false);
+  assert.equal(evidence.evidence(card(63,{week:40,source_count:1}))
+    .current_interest_strong,true);
+});
+
 test('cross-source ratings are not penalized for missing Trending or KP popular rank',()=>{
   for(const sources of [2,3]){
     const verified=card(3,{source_count:sources});

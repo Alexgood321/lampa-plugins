@@ -17,6 +17,8 @@ const candidate=(id,{age=85,score=30,interest=false,
   surs_hot_model_scores:{demand:score,baseline:score,fresh:score},
   surs_hot_base_score:score,
   surs_hot_interest_evidence:{current_interest_observed:interest,
+    current_interest_strong:interest,
+    current_interest_confidence:interest?'strong':'none',
     tmdb_trending:interest,kinopoisk_top60:false},
   surs_hot_rating_evidence:{source_count:sources}
 });
@@ -129,4 +131,41 @@ test('selector refuses interest gains that sacrifice independent rating evidence
     top10_overlap_control:7};
   const stats={zero:base,light:unsafe,balanced:unstable,strong:unsafe};
   assert.equal(editorial.selectVariant({variants:stats}).strength,0);
+});
+
+test('4.14 accepts stronger coverage evidence only when the established strong signals remain',()=>{
+  const control=Array.from({length:23},(_,i)=>candidate(700+i,{
+    interest:i<16,score:90-i,sources:3}));
+  const expanded=structuredClone(control);
+  expanded[18].surs_hot_interest_evidence={
+    current_interest_observed:true,current_interest_strong:false,
+    current_interest_confidence:'extended',tmdb_trending_extended:true};
+  const good=editorial.compareExpansion(control,expanded,control);
+  assert.equal(good.selection.name,'expanded');
+  assert.equal(good.selection.uplift,1);
+  assert.equal(good.control.top20_strong_interest,16);
+  assert.equal(good.expanded.top20_strong_interest,16);
+  assert.equal(good.expanded.top20_extended_only,1);
+  const displaced=structuredClone(expanded);
+  displaced[0].surs_hot_interest_evidence.current_interest_strong=false;
+  displaced[0].surs_hot_interest_evidence.current_interest_confidence='extended';
+  const unsafe=editorial.compareExpansion(control,displaced,control);
+  assert.equal(unsafe.selection.name,'control');
+  assert.equal(unsafe.selection.reason,'strong_evidence_displaced');
+  assert.equal(editorial.compareExpansion(control,control,control).selection.name,
+    'control');
+});
+
+test('4.14 refuses a weak-interest gain when it costs two triple-rated cards',()=>{
+  const control=Array.from({length:22},(_,i)=>candidate(900+i,{
+    interest:i<16,score:80-i,sources:3}));
+  const expanded=structuredClone(control);
+  expanded[17].surs_hot_interest_evidence={
+    current_interest_observed:true,current_interest_strong:false,
+    current_interest_confidence:'extended'};
+  expanded[18].surs_hot_rating_evidence.source_count=2;
+  expanded[19].surs_hot_rating_evidence.source_count=2;
+  const ablation=editorial.compareExpansion(control,expanded,control);
+  assert.equal(ablation.selection.name,'control');
+  assert.equal(ablation.selection.reason,'rating_evidence_regression');
 });

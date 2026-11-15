@@ -1,3 +1,26 @@
+# Hot Discovery 4.14: verified expanded demand coverage, with a 4.13 control
+
+## Scope
+
+4.13 already observes TMDB Trending positions 1–40 and Kinopoisk Unofficial Popular positions 1–60. It also retains dated TMDB/KP trend histories. The next 20 positions in each chart can reveal legitimate but weaker *current* activity that was previously unobserved. They do not demonstrate actual stream counts, clicks, or better subjective relevance. We must not treat broader detection as independently measured user satisfaction.
+
+4.14 adds TMDB Trending page 3 for both movie/TV daily/weekly charts (four additional TMDB list calls per generation), and Kinopoisk Popular pages 4–5 (maximum two additional KP calls per UTC day after a complete 4.13 top-60 cache, or five on a fresh day). Only exact Kinopoisk ID matches from verified IMDb-ID-derived records are used. The existing 210 attempted-request UTC-day budget, 45-call per-run limit, pacing and outage protections remain intact. The stored collection now records `pages_fetched` and `complete`; a same-day old top-60 can be continued without redownloading its first three pages. When the provider ends a list early, the last successfully fetched page and completeness are recorded honestly. Missing pages retain the previous verified cache and never become empty chart ranks.
+
+Extended ranks 41–60 (TMDB) and 61–100 (KP) have `current_interest_confidence: "extended"`; the prior windows, verified momentum and emerging-release requirements have `"strong"`. A single rating provider still requires **strong** current evidence before admission. For an existing multi-rated title, an actual extended-chart position counts as weaker observed current interest but not as a fabricated second rating source. KP ranks beyond 60 receive **zero extra Hot Score bonus**, preserving the earlier score calibration and its monotonic rank boundary. TMDB day/week charts remain correlated observations of **one** provider. Verified regular episodes aired within the last 14 days are disclosed as release activity, explicitly **not** measured demand.
+
+## In-memory control and publication gate
+
+Use the same verified provider responses and candidates to rank two arms:
+
+- **Control:** old TMDB top-40 and KP top-60 windows, with the already established 4.13 adaptive editorial preference.
+- **Expanded:** TMDB top-60 and KP top-100, with the same adaptive preference and the same quality, source and age rules.
+
+Activate the expanded order only if at least one more top-20 card has a real current-activity observation, the top-20 count of strong evidence does not drop, no more than one three-rating title is lost, at least 9 of the original top 10 survive, and rank movement remains bounded. Otherwise keep the 4.13-control order. Every run reports both arms, their counts, the chosen one and a concrete reason. The public Hot Score formula (50/30/15/5, with its documented unmeasured-growth fallback) and schema 1 remain unchanged. No arbitrary 18/20 or 20/20 quota is introduced.
+
+If the extended positions merely classify an existing top-20 title more completely without changing the order, this is an **evidence-coverage improvement only**, not proof that the recommendations themselves became more appealing. Compare title identities and rank positions separately. The production action publishes only a verified source-consistent feed; the PR action runs a live dry-run without publication. Roll back through Git history if source or recommendation quality regresses.
+
+---
+
 # Hot Discovery 4.13: bounded prioritization of CURRENT demand in top-20
 
 ## Why not a forced hot-title quota?
