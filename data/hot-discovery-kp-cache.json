@@ -1361,7 +1361,7 @@
     },
     "tt21952924": {
       "imdbId": "tt21952924",
-      "checked_at": "2026-11-13",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt32375763": {
@@ -1372,7 +1372,7 @@
     },
     "tt49041091": {
       "imdbId": "tt49041091",
-      "checked_at": "2026-11-13",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt10970762": {
@@ -1856,7 +1856,7 @@
     },
     "tt43655467": {
       "imdbId": "tt43655467",
-      "checked_at": "2026-11-14",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt34384900": {
@@ -1888,7 +1888,7 @@
     },
     "tt42588704": {
       "imdbId": "tt42588704",
-      "checked_at": "2026-11-14",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt37063558": {
@@ -2106,6 +2106,129 @@
         "votes": 26961,
         "via": "kinopoisk_unofficial"
       }
+    },
+    "tt5622316": {
+      "imdbId": "tt5622316",
+      "checked_at": "2026-11-15",
+      "kp": {
+        "value": 9,
+        "votes": 20061,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 1228882
+      },
+      "imdb": {
+        "value": 9.2,
+        "votes": 51182,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt13875494": {
+      "imdbId": "tt13875494",
+      "checked_at": "2026-11-15",
+      "kp": {
+        "value": 6.8,
+        "votes": 6934,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 5139215
+      },
+      "imdb": {
+        "value": 7.2,
+        "votes": 32179,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt11379026": {
+      "imdbId": "tt11379026",
+      "checked_at": "2026-11-15",
+      "kp": {
+        "value": 8.3,
+        "votes": 168982,
+        "via": "kinopoisk_unofficial",
+        "kinopoisk_id": 1350067
+      },
+      "imdb": {
+        "value": 7.9,
+        "votes": 54004,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt13652154": {
+      "imdbId": "tt13652154",
+      "checked_at": "2026-11-15",
+      "kp": null,
+      "imdb": {
+        "value": 8.1,
+        "votes": 84,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt43622757": {
+      "imdbId": "tt43622757",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt41814550": {
+      "imdbId": "tt41814550",
+      "checked_at": "2026-11-15",
+      "kp": null,
+      "imdb": {
+        "value": 7,
+        "votes": 817,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt34385689": {
+      "imdbId": "tt34385689",
+      "checked_at": "2026-11-15",
+      "kp": null,
+      "imdb": null
+    },
+    "tt30051064": {
+      "imdbId": "tt30051064",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt33078239": {
+      "imdbId": "tt33078239",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt38058097": {
+      "imdbId": "tt38058097",
+      "checked_at": "2026-11-15",
+      "kp": null,
+      "imdb": null
+    },
+    "tt39219651": {
+      "imdbId": "tt39219651",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt35673115": {
+      "imdbId": "tt35673115",
+      "checked_at": "2026-11-15",
+      "kp": null,
+      "imdb": null
+    },
+    "tt42220724": {
+      "imdbId": "tt42220724",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt33081352": {
+      "imdbId": "tt33081352",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt39469996": {
+      "imdbId": "tt39469996",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt31841438": {
+      "imdbId": "tt31841438",
+      "checked_at": "2026-11-15",
+      "kp": null
     }
   },
   "popular": {
@@ -3188,13 +3311,25 @@
         {
           "id": 88124,
           "votes": 23933
+        },
+        {
+          "id": 1228882,
+          "votes": 20061
+        },
+        {
+          "id": 1350067,
+          "votes": 168982
+        },
+        {
+          "id": 5139215,
+          "votes": 6934
         }
       ]
     }
   ],
   "daily_budget": {
     "date": "2026-11-15",
-    "used": 76,
+    "used": 104,
     "limit": 210
   }
 }
