@@ -12,6 +12,8 @@ This shelf is **new, currently interesting US movies and series worth checking**
 4. **Digital release is not assumed.** Each US film records its observed distribution status: verified digital or theatrical with unconfirmed digital date. For the latter, curation applies a small visible 3-point sorting adjustment, recorded separately from the published numeric Hot Score. This does NOT assert a film is digitally streamable just because its theatrical release is recent.
 5. **Rating confidence is source-aware.** For films with genuinely available independent vote communities, confidence is based on the count and votes of available rating providers rather than treating low TMDB voting volume as inherently unreliable. Missing evidence remains unknown, not negative.
 
+New-release stability is also bounded: an under-voted title already in the prior top 20 may remain provisional for **at most its first 21 days**, only when it **still appears in a current verified TMDB Trending window**, with >=50 TMDB votes and adequate quality. This avoids losing a promising debut due to daily chart jitter without inventing interest. An untrending title is never retained by this rule.
+
 All prior source-health guards, freshness eligibility, provider ID checks, Kinopoisk API 210/day budget, same-candidate chart ablations, and JSON schema 1 remain in force. `surs_hot_score` remains the original transparent score. The feed adds `surs_hot_external_rating_exception`, `surs_hot_independent_demand_floor`, `surs_hot_availability`, `surs_hot_editorial_distribution_penalty` and `diagnostics.recommendation_v5`.
 
 ## Validation and deployment
