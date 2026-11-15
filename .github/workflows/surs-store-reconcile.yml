@@ -1,0 +1,36 @@
+name: Verify and reconcile SURS My Store catalog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/surs-store-reconcile.cjs
+      - .github/workflows/surs-store-reconcile.yml
+  schedule:
+    - cron: '32 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: surs-store-reconcile-main
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/surs-store-reconcile.test.cjs
+      - name: Verify first-party plugin pins and reconcile SURS
+        env:
+          STORE_DISPATCH_TOKEN: ${{ secrets.STORE_DISPATCH_TOKEN }}
+        run: node scripts/surs-store-reconcile.cjs
