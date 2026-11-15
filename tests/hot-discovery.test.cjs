@@ -96,9 +96,9 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.15');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.16');
   assert.equal(result.feed.diagnostics.ranking_model,
-    'source-aware-demand-first-v4.15-freshness-gated');
+    'source-aware-demand-first-v4.16-bounded-coverage');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,90);
@@ -180,11 +180,13 @@ test('quality and vote evidence gate excludes inflated TMDB scores',()=>{
   ],{snapshots:[]},NOW,null);
   assert.deepEqual(new Set(selected.map(x=>x.id)),new Set([3,4]));
 });
-test('early IMDb-backed premiere may pass a narrow evidence exception',()=>{
+test('early strong-chart premiere may pass provisionally, IMDb adds independent rating confirmation',()=>{
   const card={id:5,type:'movie',poster_path:'/p',vote_average:9,
     vote_count:70,popularity:100,surs_hot_premiere_date:day(10),
     surs_hot_trend_day:9};
-  assert.equal(hot.scoreCandidates([{...card}],{snapshots:[]},NOW,null).length,0);
+  const provisional=hot.scoreCandidates([{...card}],{snapshots:[]},NOW,null);
+  assert.equal(provisional.length,1);
+  assert.equal(provisional[0].surs_hot_fresh_provisional,true);
   const backed={...card,surs_hot_ratings:{imdb:{value:8.8,votes:5000}}};
   const selected=hot.scoreCandidates([backed],{snapshots:[]},NOW,null);
   assert.equal(selected.length,1);
@@ -382,7 +384,7 @@ test('a stale 200-day movie cannot be rescued by high ratings or trending',()=>{
     {snapshots:[]},NOW,null);
   assert.deepEqual(recovered.map(x=>x.id),[400]);
 });
-test('Hot 4.15 gates 30/60/90-day premieres on observed interest and measured rising demand',()=>{
+test('Hot 4.16 gates 30/60/90-day premieres on observed interest and measured rising demand',()=>{
   const make=(id,age,trend=false)=>({id,type:'movie',poster_path:'/p',
     vote_average:8.5,vote_count:3500,popularity:300,
     surs_hot_premiere_date:day(age),surs_hot_original_date:day(age),
@@ -404,7 +406,64 @@ test('Hot 4.15 gates 30/60/90-day premieres on observed interest and measured ri
   assert.equal(hot.eligibilityReason(old,NOW,true),'hot_premiere_older_than_90d');
   assert.equal(rising.surs_hot_interest_evidence.measured_positive_growth,true);
 });
-test('Hot 4.15 accepts a verified new digital release but not an old re-release',()=>{
+test('Hot 4.16 admits strong-chart fresh premieres with 35–99 TMDB votes but rejects thin evidence',()=>{
+  const base={type:'movie',poster_path:'/p',vote_average:7.7,
+    popularity:90,surs_hot_premiere_date:day(3),
+    surs_hot_original_date:day(3),surs_hot_trend_day:5,
+    surs_hot_trend_week:8};
+  const good={...base,id:701,vote_count:55};
+  const tooFew={...base,id:702,vote_count:20};
+  const noChart={...base,id:703,vote_count:55,
+    surs_hot_trend_day:null,surs_hot_trend_week:null};
+  const weak={...base,id:704,vote_count:55,vote_average:6.1};
+  const selected=hot.scoreCandidates([good,tooFew,noChart,weak],
+    {snapshots:[]},NOW,null,'demand',true);
+  assert.deepEqual(selected.map(x=>x.id),[701]);
+  assert.equal(selected[0].surs_hot_fresh_provisional,true);
+  assert.equal(hot.eligibilityReason(tooFew,NOW,true),'insufficient_votes');
+  assert.equal(hot.eligibilityReason(noChart,NOW,true),'insufficient_votes');
+});
+test('Hot 4.16 admits a verified active second-month season only with strong independent ratings',()=>{
+  const base={type:'tv',id:801,poster_path:'/p',vote_average:8.5,
+    vote_count:2500,popularity:90,surs_hot_premiere_kind:'season',
+    surs_hot_season_verified:true,surs_hot_regular_episode_last14d:true,
+    surs_hot_premiere_date:day(40),surs_hot_original_date:day(800),
+    surs_hot_ratings:{imdb:{value:8.3,votes:7000},
+      kp:{value:8.4,votes:5000}}};
+  const selected=hot.scoreCandidates([base],{snapshots:[]},NOW,null,'demand',true);
+  assert.equal(selected.length,1);
+  assert.equal(selected[0].surs_hot_active_season_secondary,true);
+  assert.equal(selected[0].surs_hot_season_rating,undefined);
+  const missingEpisode={...base,id:802,surs_hot_regular_episode_last14d:false};
+  const stale={...base,id:803,surs_hot_premiere_date:day(95)};
+  const noIndependent={...base,id:804,surs_hot_ratings:{}};
+  assert.deepEqual(hot.scoreCandidates([missingEpisode,stale,noIndependent],
+    {snapshots:[]},NOW,null,'demand',true),[]);
+  assert.equal(hot.eligibilityReason(stale,NOW,true),'hot_premiere_older_than_90d');
+});
+test('Hot 4.16 caps provisional and secondary slots without capping verified releases',()=>{
+  const cards=[
+    ...Array.from({length:14},(_,i)=>({id:900+i,type:'movie',
+      poster_path:'/p',vote_average:8.5,vote_count:1800,popularity:160-i,
+      surs_hot_premiere_date:day(5),surs_hot_original_date:day(5),
+      surs_hot_trend_week:12})),
+    ...Array.from({length:12},(_,i)=>({id:1000+i,type:'movie',
+      poster_path:'/p',vote_average:7.8,vote_count:70,popularity:190-i,
+      surs_hot_trend_day:4,surs_hot_trend_week:5,
+      surs_hot_premiere_date:day(3),surs_hot_original_date:day(3)})),
+    ...Array.from({length:12},(_,i)=>({id:1100+i,type:'tv',
+      poster_path:'/p',vote_average:8.6,vote_count:2400,popularity:130-i,
+      surs_hot_premiere_kind:'season',surs_hot_season_verified:true,
+      surs_hot_regular_episode_last14d:true,
+      surs_hot_premiere_date:day(42),surs_hot_original_date:day(800),
+      surs_hot_ratings:{imdb:{value:8.4,votes:4000},
+        kp:{value:8.3,votes:6000}}}))];
+  const selected=hot.scoreCandidates(cards,{snapshots:[]},NOW,null,'demand',true);
+  assert.equal(selected.filter(x=>x.surs_hot_fresh_provisional).length,6);
+  assert.equal(selected.filter(x=>x.surs_hot_active_season_secondary).length,5);
+  assert.equal(selected.length,25);
+});
+test('Hot 4.16 accepts a verified new digital release but not an old re-release',()=>{
   const original=detail(888,215);
   original.release_dates.results=[{iso_3166_1:'US',release_dates:[
     {type:3,release_date:day(215)+'T00:00:00Z'},
@@ -531,7 +590,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',
     mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
     transport,history:{snapshots:[]},detailLimit:80});
-  assert.equal(result.feed.algorithm,'hot-discovery-4.15');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.16');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
@@ -619,7 +678,7 @@ test('new popularity source is optional, cached and never counted as film views'
   };
   const first=await hot.build({now:NOW_DATE,tmdbToken:'test',
     kinopoiskKey:'kp-test',transport,history:{snapshots:[]},detailLimit:24});
-  assert.equal(first.feed.algorithm,'hot-discovery-4.15');
+  assert.equal(first.feed.algorithm,'hot-discovery-4.16');
   assert.equal(first.kpCache.popular_history.length,1);
   assert.equal(first.kpCache.rating_history.length,1);
   assert.equal(first.feed.sources.kinopoisk_popularity,true);
