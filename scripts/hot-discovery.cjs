@@ -533,8 +533,11 @@ function scoreCandidates(candidates,history,now,previous,model='baseline',requir
     c.surs_hot_confidence=quality.confidence;
     c.surs_hot_coverage=quality.source_count;
     const evidenceSources=['tmdb','imdb','kp'].filter(source=>{
+      // Provisional premieres still have a real TMDB rating source, just
+      // fewer votes; count its provenance while retaining the stricter
+      // Bayesian confidence and eligibility checks elsewhere.
       if(source==='tmdb')return stableRating({
-        value:c.vote_average,votes:c.vote_count},100);
+        value:c.vote_average,votes:c.vote_count},35);
       return stableRating(c.surs_hot_ratings?.[source],
         source==='imdb'?250:100);
     });
