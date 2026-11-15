@@ -20,7 +20,8 @@ const trackedSources = [
   'scripts/hot-source-budget.cjs',
   'scripts/hot-feed-integrity.cjs',
   'scripts/hot-evidence-gate.cjs',
-  'scripts/hot-editorial-interest.cjs'
+  'scripts/hot-editorial-interest.cjs',
+  'scripts/hot-recommendation-5-0.cjs'
 ];
 
 function fingerprint(directory = root) {
