@@ -69,6 +69,7 @@ jobs:
           node scripts/auto-release-surs-hot.cjs
           node scripts/build-surs.cjs --check
           node --check surs.js
+          node tests/surs-smoke.cjs >/dev/null
       - name: Publish only validated data
         id: publish
         if: steps.compute.outputs.status == 'generated'
@@ -109,7 +110,7 @@ jobs:
             for file in "${changed[@]}"; do
               cp "$temp/$(basename "$file")" "$file"
             done
-            node -e "const fs=require('fs');for(const p of process.argv.slice(1))JSON.parse(fs.readFileSync(p,'utf8'))" "${changed[@]}"
+            node -e "const fs=require('fs');for(const p of process.argv.slice(1))if(p.endsWith('.json'))JSON.parse(fs.readFileSync(p,'utf8'))" "${changed[@]}"
             git add -- "${changed[@]}"
             if git diff --cached --quiet; then
               pushed=1
