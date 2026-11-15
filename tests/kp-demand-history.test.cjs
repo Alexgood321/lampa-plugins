@@ -41,6 +41,20 @@ test('KP rank deltas require two real dated top observations',()=>{
   },.5,true),0);
 });
 
+test('4.14 preserves observed top-100 ranks without inventing rank 101 for absence',()=>{
+  const ranks=kp.snapshots([
+    {date:date(7),entries:[{id:42,rank:96},{id:44,rank:101}]},
+    {date:date(0),entries:[{id:42,rank:75}]}
+  ],NOW,'rank');
+  assert.equal(ranks[0].entries.length,1);
+  assert.equal(ranks[0].entries[0].rank,96);
+  const m=kp.momentum({surs_hot_ratings:{kp:{kinopoisk_id:42}}},
+    ranks,[],NOW,NOW.toISOString());
+  assert.equal(m.rank_deltas['7d'].delta,21);
+  assert.deepEqual(kp.momentum({surs_hot_ratings:{kp:{kinopoisk_id:44}}},
+    ranks,[],NOW,NOW.toISOString()).rank_deltas,{});
+});
+
 test('KP vote growth uses exact independently dated observations',()=>{
   const card={surs_hot_ratings:{kp:{kinopoisk_id:42,votes:999999}}};
   const rows=kp.snapshots([

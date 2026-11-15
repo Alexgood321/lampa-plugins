@@ -25,7 +25,7 @@ function snapshots(rows,now,key,legacy=null) {
     for(const entry of entries){
       const id=Number(entry?.id),value=Number(entry?.[key]);
       if(!Number.isSafeInteger(id)||id<1||!Number.isSafeInteger(value)||
-        value<1||(key==='rank'&&value>60)||seen.has(id))continue;
+        value<1||(key==='rank'&&value>100)||seen.has(id))continue;
       seen.add(id);valid.push({id,[key]:value});
     }
     if(valid.length&&(!unique.has(observed)||overwrite))

@@ -155,3 +155,41 @@ test('pre-ranked current KP cache is used before deciding whom to enrich',async(
   assert.equal(card.surs_hot_kinopoisk_popularity_rank,1);
   assert.equal(card.surs_hot_ratings.kp.kinopoisk_id,99007);
 });
+
+test('4.14 upgrades an already fetched top-60 using exactly pages 4 and 5',async()=>{
+  const f=fixture();
+  f.kpCache.popular.entries=Array.from({length:60},(_,i)=>({
+    id:i===2?99001:900000+i,rank:i+1}));
+  const secondId='tt'+String(1000000+4011);
+  f.kpCache.entries[secondId]={imdbId:secondId,checked_at:day(0),
+    kp:{value:8.5,votes:5000,kinopoisk_id:99007},
+    imdb:{value:8.4,votes:6000}};
+  const pages=[];
+  const transport=async(url,headers)=>{
+    if(url.includes('/collections?')){
+      const page=Number(new URL(url).searchParams.get('page'));
+      pages.push(page);
+      assert.equal(headers['X-API-KEY'],'kp-fixture');
+      return {items:Array.from({length:20},(_,i)=>({
+        kinopoiskId:page===4&&i===4?99007:900000+page*100+i
+      }))};
+    }
+    return f.transport(url,headers);
+  };
+  const first=await hot.build({now:NOW,tmdbToken:'tmdb-fixture',
+    kinopoiskKey:'kp-fixture',kpCache:f.kpCache,transport,
+    history:{snapshots:[]},detailLimit:30});
+  assert.deepEqual(pages,[4,5]);
+  assert.equal(first.feed.diagnostics.kp_popularity_calls,2);
+  assert.equal(first.kpCache.popular.pages_fetched,5);
+  assert.equal(first.kpCache.popular.complete,true);
+  assert.equal(first.kpCache.popular.entries.length,100);
+  assert.equal(first.kpCache.popular.entries.find(x=>x.id===99007).rank,65);
+  assert.equal(first.feed.diagnostics.signal_expansion_selected,'control');
+  assert.ok(first.feed.diagnostics.kp_daily_used<=210);
+  const again=await hot.build({now:NOW,tmdbToken:'tmdb-fixture',
+    kinopoiskKey:'kp-fixture',kpCache:first.kpCache,transport,
+    history:{snapshots:[]},detailLimit:30});
+  assert.deepEqual(pages,[4,5]);
+  assert.equal(again.feed.diagnostics.kp_popularity_calls,0);
+});

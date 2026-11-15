@@ -60,6 +60,8 @@ test('Discovery includes low-vote films, Trending, digital and season searches',
   assert.ok(jobs.some(x=>x.channel==='digital'&&x.url.includes('with_release_type=4')));
   assert.ok(jobs.some(x=>x.channel==='season'));
   assert.ok(jobs.some(x=>x.channel==='trending_week'&&x.type==='movie'));
+  assert.equal(jobs.filter(x=>x.channel.startsWith('trending_')).length,12);
+  assert.ok(jobs.some(x=>x.url==='trending/tv/day?page=3'));
   assert.ok(jobs.some(x=>x.channel==='discover_primary_release_date.desc'&&
     !x.url.includes('vote_count.gte')));
 });
@@ -94,9 +96,9 @@ test('Mocked complete pipeline publishes US movies/TV as normalized Lampa cards'
     history:{snapshots:[]},detailLimit:80});
   assert.equal(result.feed.items.length,36);
   assert.equal(result.feed.mode,'primary');
-  assert.equal(result.feed.algorithm,'hot-discovery-4.13');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.14');
   assert.equal(result.feed.diagnostics.ranking_model,
-    'source-aware-demand-first-v4.13-editorial');
+    'source-aware-demand-first-v4.14-evidence-expansion');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.equal(result.feed.diagnostics.primary_window_days,60);
@@ -203,6 +205,8 @@ test('new season is verified by actually aired regular episodes, not summary',()
   assert.equal(c.surs_hot_premiere_date,day(45));
   assert.equal(c.surs_hot_season_rating.votes,45);
   assert.equal(c.surs_hot_episodes_released,2);
+  assert.equal(c.surs_hot_last_regular_episode_date,day(5));
+  assert.equal(c.surs_hot_regular_episode_last14d,true);
 });
 test('long-running series only enters on a verified recent season',()=>{
   const card={type:'tv',id:777,poster_path:'/p',popularity:200,
@@ -485,7 +489,7 @@ test('full pipeline combines verified KP and IMDb scores and audits all candidat
   const result=await hot.build({now:NOW,tmdbToken:'sample-token',
     mdblistKey:'mdb-fixture',kinopoiskKey:'kp-fixture',
     transport,history:{snapshots:[]},detailLimit:80});
-  assert.equal(result.feed.algorithm,'hot-discovery-4.13');
+  assert.equal(result.feed.algorithm,'hot-discovery-4.14');
   assert.equal(result.audit.candidate_total,36);
   assert.equal(result.audit.candidates.length,36);
   assert.ok(result.feed.diagnostics.kp_calls>0);
@@ -573,7 +577,7 @@ test('new popularity source is optional, cached and never counted as film views'
   };
   const first=await hot.build({now:NOW_DATE,tmdbToken:'test',
     kinopoiskKey:'kp-test',transport,history:{snapshots:[]},detailLimit:24});
-  assert.equal(first.feed.algorithm,'hot-discovery-4.13');
+  assert.equal(first.feed.algorithm,'hot-discovery-4.14');
   assert.equal(first.kpCache.popular_history.length,1);
   assert.equal(first.kpCache.rating_history.length,1);
   assert.equal(first.feed.sources.kinopoisk_popularity,true);
