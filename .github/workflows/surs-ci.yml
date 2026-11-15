@@ -78,7 +78,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.15 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 4.16 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (startsWith(github.head_ref, 'feat/hot-discovery-') || startsWith(github.head_ref, 'fix/hot-discovery-'))
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -99,7 +99,7 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.15')throw Error('New Hot 4.15 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-4.16')throw Error('New Hot 4.16 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
@@ -167,8 +167,25 @@ jobs:
                 Date.parse(x.surs_hot_premiere_date+'T00:00:00Z'))/86400000);
               return age>90||(age>60&&
                 !x.surs_hot_interest_evidence?.measured_positive_growth)||
-                (age>30&&!x.surs_hot_interest_evidence?.current_interest_observed);
-            }))throw Error('Hot 4.15 admission gate permitted an old or unsupported title');
+                (age>30&&!x.surs_hot_interest_evidence?.current_interest_observed&&
+                  !x.surs_hot_active_season_secondary);
+            }))throw Error('Hot 4.16 admission gate permitted an old or unsupported title');
+          const provisional=after.items.filter(x=>x.surs_hot_fresh_provisional);
+          const secondary=after.items.filter(x=>x.surs_hot_active_season_secondary);
+          if(provisional.length>6||secondary.length>5||
+            secondary.some(x=>x.surs_hot_age>60||x.surs_hot_age<=30||
+              !x.surs_hot_regular_episode_last14d||
+              x.surs_hot_rating_evidence?.source_count<3||
+              x.surs_hot_quality<7.75||x.vote_count<800)||
+            provisional.some(x=>x.surs_hot_age>30||x.vote_count>=100||
+              x.vote_count<35||x.surs_hot_quality<6.75||
+              !x.surs_hot_interest_evidence?.current_interest_strong))
+            throw Error('Hot 4.16 bounded-coverage validation failed');
+          if(after.items.length<Math.min(20,Math.max(12,before.items.length)))
+            throw Error('Hot 4.16 reduced verified coverage');
+          console.log('COVERAGE:',JSON.stringify({before:before.items.length,
+            after:after.items.length,provisional:provisional.length,
+            active_season_secondary:secondary.length}));
           console.log('INTEREST_EVIDENCE:',JSON.stringify(selectionEvidence));
           const editorial=after.diagnostics.editorial_interest_comparison;
           if(!editorial||!editorial.variants?.zero||
@@ -199,7 +216,7 @@ jobs:
           if(!expansion?.control||!expansion.expanded||
             !['control','expanded'].includes(expansion.selection?.name)||
             after.diagnostics.signal_expansion_selected!==expansion.selection.name)
-            throw Error('4.15 expanded-signal ablation missing or inconsistent');
+            throw Error('4.16 expanded-signal ablation missing or inconsistent');
           if(expansion.selection.name==='expanded'&&(
             expansion.expanded.top20_observed_interest<=
               expansion.control.top20_observed_interest||
@@ -208,10 +225,10 @@ jobs:
             expansion.expanded.top10_overlap_control<9||
             expansion.expanded.top20_three_ratings<
               expansion.control.top20_three_ratings-1))
-            throw Error('Unsafe 4.15 extended demand promotion');
+            throw Error('Unsafe 4.16 extended demand promotion');
           if(after.diagnostics.interest_evidence.top20_interest_evidenced!==
             expansion[expansion.selection.name].top20_observed_interest)
-            throw Error('Published evidence does not match the selected 4.15 arm');
+            throw Error('Published evidence does not match the selected 4.16 arm');
           if(after.diagnostics.kp_daily_used>210||
             after.diagnostics.kp_popularity_pages>5)
             throw Error('Expanded KP source exceeded the established budget');
@@ -244,7 +261,7 @@ jobs:
           if(after.items.some(x=>x.surs_hot_attention_sources>2))
             throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.15 real dry-run (no publishing)\n'+
+            '### Hot 4.16 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+
@@ -287,8 +304,10 @@ jobs:
           const again=JSON.parse(fs.readFileSync(
             process.env.RUNNER_TEMP+'/hot-discovery-repeat.json','utf8'));
           const a=first.diagnostics,b=again.diagnostics;
-          if(!b.tmdb_detail_cache_hits||b.tmdb_calls>=a.tmdb_calls)
-            throw Error('TMDB cache did not reduce repeated API calls');
+          // A prewarmed TMDB cache can make both passes use the same minimal
+          // number of network requests; equality is safe, regression is not.
+          if(!b.tmdb_detail_cache_hits||b.tmdb_calls>a.tmdb_calls)
+            throw Error('TMDB cache missing or repeated API calls increased');
           if(b.kp_daily_used>210||b.kp_calls>45||
             b.kp_daily_used>b.kp_pacing_ceiling)
             throw Error('Kinopoisk API budget exceeded');

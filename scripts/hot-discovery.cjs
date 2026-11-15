@@ -30,6 +30,11 @@ const MAX_HOT_AGE_DAYS = 90;
 // Interest-first curation: quality blocks weak releases but strong, verified
 // audience attention can rescue a mixed-review breakout.
 const BREAKOUT_QUALITY_FLOOR = 6.55;
+// Bounded release-led coverage: a very new title may have too few ratings
+// despite current chart evidence. Recently aired returning seasons may be
+// shown with strong cross-provider SERIES ratings, without calling those
+// ratings a new-season reception score or manufacturing audience demand.
+const MAX_FRESH_PROVISIONAL = 6, MAX_ACTIVE_SEASON_SECONDARY = 5;
 const TOP10_RETURNING_LIMIT = 3, TOP20_RETURNING_LIMIT = 6,
   TOP40_RETURNING_LIMIT = 12;
 const EXCLUDED = {movie:[16,99,10770],tv:[16,99,10763,10764,10766,10767]};
@@ -364,6 +369,28 @@ function growthFor(c,history,now) {
   const state=hot47.growthState(score,periods);
   return {score,measured:values.length>0,periods,...state};
 }
+function freshProvisional(c) {
+  const age=number(c.surs_hot_age),votes=number(c.vote_count);
+  if(age<0||age>FRESH_DAYS||votes<(age<=7?35:50)||votes>=MIN_VOTES||
+    number(c.surs_hot_quality)<6.75||number(c.vote_average)<7)return false;
+  const e=c.surs_hot_interest_evidence||{};
+  const day=number(c.surs_hot_trend_day),week=number(c.surs_hot_trend_week);
+  const strongChart=(day>=1&&day<=20)||(week>=1&&week<=20);
+  // A weak week-60 rank alone never admits an insufficiently rated title.
+  return e.current_interest_strong===true&&
+    (strongChart||e.kinopoisk_top60===true)&&
+    number(c.surs_hot_attention)>=.32;
+}
+function activeSeasonSecondary(c) {
+  return c.surs_hot_premiere_kind==='season'&&
+    number(c.surs_hot_age)>FRESH_DAYS&&
+    number(c.surs_hot_age)<=STANDARD_DAYS&&
+    c.surs_hot_season_verified===true&&
+    c.surs_hot_regular_episode_last14d===true&&
+    c.surs_hot_interest_evidence?.current_interest_observed!==true&&
+    number(c.surs_hot_rating_evidence?.source_count)>=3&&
+    number(c.surs_hot_quality)>=7.75&&number(c.vote_count)>=800;
+}
 function eligibilityReason(c,now,requireCurrentInterest=false) {
   if(!c.poster_path)return 'poster_missing';
   if(c.surs_hot_age<0||c.surs_hot_age>550)return 'premiere_outside_window';
@@ -380,7 +407,8 @@ function eligibilityReason(c,now,requireCurrentInterest=false) {
     c.surs_hot_interest_evidence?.measured_positive_growth!==true)
     return 'hot_61_90_without_positive_growth';
   if(requireCurrentInterest&&c.surs_hot_age>FRESH_DAYS&&
-    c.surs_hot_interest_evidence?.current_interest_observed!==true)
+    c.surs_hot_interest_evidence?.current_interest_observed!==true&&
+    !activeSeasonSecondary(c))
     return 'hot_31_60_without_current_interest';
   if(c.surs_hot_quality<BREAKOUT_QUALITY_FLOOR)return 'quality_below_floor';
   const votes=number(c.vote_count);
@@ -389,8 +417,9 @@ function eligibilityReason(c,now,requireCurrentInterest=false) {
     const external=imdb&&number(imdb.votes)>=1000&&number(imdb.value)>=7.7;
     const strongTrend=(c.surs_hot_trend_day&&c.surs_hot_trend_day<=20)||
       (c.surs_hot_trend_week&&c.surs_hot_trend_week<=20);
-    if(!(votes>=50&&c.surs_hot_age<=45&&c.surs_hot_quality>=7.6&&
-      external&&strongTrend))return 'insufficient_votes';
+    if(!freshProvisional(c)&&!(votes>=50&&c.surs_hot_age<=45&&
+      c.surs_hot_quality>=7.6&&external&&strongTrend))
+      return 'insufficient_votes';
   }
   if(c.surs_hot_quality<QUALITY_FLOOR) {
     // Below the normal quality bar: require strong simultaneous 24h and 7d
@@ -401,13 +430,14 @@ function eligibilityReason(c,now,requireCurrentInterest=false) {
     const sustained=day>=1&&day<=12&&week>=1&&week<=35&&pop>=.6;
     const rising=day>=1&&day<=8&&pop>=.75&&
       c.surs_hot_growth_measured&&c.surs_hot_growth>=.65;
-    if(!(votes>=MIN_VOTES&&c.surs_hot_rank_age<=60&&
-      (sustained||rising)))return 'buzz_not_confirmed';
+    if(!freshProvisional(c)&&!(votes>=MIN_VOTES&&
+      c.surs_hot_rank_age<=60&&(sustained||rising)))
+      return 'buzz_not_confirmed';
   }
   if(c.surs_hot_premiere_kind==='season'&&!c.surs_hot_season_rating) {
     const trending=(c.surs_hot_trend_day&&c.surs_hot_trend_day<=25)||
       (c.surs_hot_trend_week&&c.surs_hot_trend_week<=25);
-    if(!(c.surs_hot_age<=90&&votes>=500&&
+    if(!activeSeasonSecondary(c)&&!(c.surs_hot_age<=90&&votes>=500&&
       c.surs_hot_quality>=7.7&&trending))
       return 'season_rating_unconfirmed';
   }
@@ -459,19 +489,28 @@ function curatedSelection(candidates,previous,model='baseline',interestStrength=
   const previousRank=new Map((previous?.items||[])
     .map((c,i)=>[identity(c),i]));
   for(let position=1;position<=MAX_ITEMS&&remaining.length;position++){
-    remaining.sort((a,b)=>{
+    const provisionalCount=picked.filter(c=>c.surs_hot_fresh_provisional).length;
+    const secondaryCount=picked.filter(c=>c.surs_hot_active_season_secondary).length;
+    const available=remaining.filter(c=>
+      (!c.surs_hot_fresh_provisional||provisionalCount<MAX_FRESH_PROVISIONAL)&&
+      (!c.surs_hot_active_season_secondary||secondaryCount<MAX_ACTIVE_SEASON_SECONDARY));
+    if(!available.length)break;
+    available.sort((a,b)=>{
       const sa=number(a.surs_hot_model_scores?.[model]??a.surs_hot_base_score)-
         diversityPenalty(a,picked,position)-
-        editorialInterest.interestPenalty(a,position,interestStrength);
+        editorialInterest.interestPenalty(a,position,interestStrength)-
+        (a.surs_hot_active_season_secondary?9:a.surs_hot_fresh_provisional?2:0);
       const sb=number(b.surs_hot_model_scores?.[model]??b.surs_hot_base_score)-
         diversityPenalty(b,picked,position)-
-        editorialInterest.interestPenalty(b,position,interestStrength);
+        editorialInterest.interestPenalty(b,position,interestStrength)-
+        (b.surs_hot_active_season_secondary?9:b.surs_hot_fresh_provisional?2:0);
       if(Math.abs(sb-sa)>.000001)return sb-sa;
       const pa=previousRank.get(identity(a)),pb=previousRank.get(identity(b));
       if(pa!==undefined&&pb!==undefined&&pa!==pb)return pa-pb;
       return identity(a).localeCompare(identity(b));
     });
-    const winner=remaining.shift();
+    const winner=available[0];
+    remaining.splice(remaining.indexOf(winner),1);
     const varietyPenalty=diversityPenalty(winner,picked,position);
     const interestPenalty=editorialInterest.interestPenalty(
       winner,position,interestStrength);
@@ -494,8 +533,11 @@ function scoreCandidates(candidates,history,now,previous,model='baseline',requir
     c.surs_hot_confidence=quality.confidence;
     c.surs_hot_coverage=quality.source_count;
     const evidenceSources=['tmdb','imdb','kp'].filter(source=>{
+      // Provisional premieres still have a real TMDB rating source, just
+      // fewer votes; count its provenance while retaining the stricter
+      // Bayesian confidence and eligibility checks elsewhere.
       if(source==='tmdb')return stableRating({
-        value:c.vote_average,votes:c.vote_count},100);
+        value:c.vote_average,votes:c.vote_count},35);
       return stableRating(c.surs_hot_ratings?.[source],
         source==='imdb'?250:100);
     });
@@ -547,6 +589,8 @@ function scoreCandidates(candidates,history,now,previous,model='baseline',requir
       hot47.WEIGHTS[model]||hot47.WEIGHTS.baseline,growth.confirmed);
     c.surs_hot_base_score=c.surs_hot_model_scores[model]??c.surs_hot_model_scores.baseline;
     c.surs_hot_interest_evidence=evidenceGate.evidence(c);
+    c.surs_hot_fresh_provisional=freshProvisional(c);
+    c.surs_hot_active_season_secondary=activeSeasonSecondary(c);
   }
   return curatedSelection(candidates.filter(c=>!eligibilityReason(c,now,requireCurrentInterest)),previous,model,interestStrength);
 }
@@ -571,14 +615,17 @@ function validateFeed(feed,now) {
       daysSince(c.surs_hot_premiere_date,now)>550||
       !Number.isFinite(c.surs_hot_score)||seen.has(identity(c)))
       throw Error('Invalid item '+identity(c));
-    if(feed.algorithm==='hot-discovery-4.15'){
+    if(feed.algorithm==='hot-discovery-4.16'){
       const releaseAge=daysSince(c.surs_hot_premiere_date,now);
       if(releaseAge>MAX_HOT_AGE_DAYS||
         (releaseAge>STANDARD_DAYS&&
           c.surs_hot_interest_evidence?.measured_positive_growth!==true)||
         (releaseAge>FRESH_DAYS&&
-          c.surs_hot_interest_evidence?.current_interest_observed!==true))
-        throw Error('Unverified Hot 4.15 freshness '+identity(c));
+          c.surs_hot_interest_evidence?.current_interest_observed!==true&&
+          !activeSeasonSecondary(c)))
+        throw Error('Unverified Hot 4.16 freshness '+identity(c));
+      if(c.surs_hot_fresh_provisional&&!freshProvisional(c))
+        throw Error('Unverified Hot 4.16 provisional '+identity(c));
     }
     seen.add(identity(c));
   }
@@ -1194,7 +1241,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
     byKind[kindOf(c)]++;
     byTrack[c.surs_hot_track]=(byTrack[c.surs_hot_track]||0)+1;
   }
-  const audit={schema:1,algorithm:'hot-discovery-4.15',
+  const audit={schema:1,algorithm:'hot-discovery-4.16',
     generated_at:nowDate.toISOString(),candidate_total:activeCandidates.length,
     eligible:stats.eligible,selected:items.length,
     candidates:activeCandidates.slice().sort((a,b)=>
@@ -1211,6 +1258,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         discovery_pass:c.surs_hot_discovery_pass,
         model_scores:c.surs_hot_model_scores,
         interest_evidence:c.surs_hot_interest_evidence,
+        fresh_provisional:c.surs_hot_fresh_provisional,
+        active_season_secondary:c.surs_hot_active_season_secondary,
         editorial_interest_penalty:items.find(x=>
           identity(x)===identity(c))?.surs_hot_editorial_interest_penalty||0,
         external_popularity_rank:c.surs_hot_kinopoisk_popularity_rank||null,
@@ -1224,7 +1273,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         base_score:c.surs_hot_base_score,rejection:eligibilityReason(c,nowDate,true),
         selected_rank:items.find(x=>identity(x)===identity(c))?.surs_hot_rank||null
       }))};
-  const feed={schema:1,algorithm:'hot-discovery-4.15',mode:'primary',
+  const feed={schema:1,algorithm:'hot-discovery-4.16',mode:'primary',
     generated_at:nowDate.toISOString(),
      sources:{tmdb:true,mdblist:!!mdblistKey,kinopoisk:!!kinopoiskKey,
         kinopoisk_popularity:usePopular},
@@ -1235,7 +1284,11 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         hard_max_age_days:MAX_HOT_AGE_DAYS,verified_digital_and_seasons:true,
         requires_live_interest_after_days:FRESH_DAYS,
         requires_positive_growth_after_days:STANDARD_DAYS},
-      ranking_model:'source-aware-demand-first-v4.15-freshness-gated',
+      ranking_model:'source-aware-demand-first-v4.16-bounded-coverage',
+      coverage_limits:{fresh_provisional:MAX_FRESH_PROVISIONAL,
+        active_season_secondary:MAX_ACTIVE_SEASON_SECONDARY},
+      selected_fresh_provisional:items.filter(c=>c.surs_hot_fresh_provisional).length,
+      selected_active_season_secondary:items.filter(c=>c.surs_hot_active_season_secondary).length,
       interest_evidence:interestEvidence,
       signal_expansion_comparison:signalComparison,
       signal_expansion_selected:signalComparison.selection.name,
