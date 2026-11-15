@@ -18,6 +18,7 @@ on:
       - scripts/hot-feed-integrity.cjs
       - scripts/hot-evidence-gate.cjs
       - scripts/hot-editorial-interest.cjs
+      - scripts/hot-recommendation-5-0.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -40,6 +41,7 @@ on:
       - scripts/hot-feed-integrity.cjs
       - scripts/hot-evidence-gate.cjs
       - scripts/hot-editorial-interest.cjs
+      - scripts/hot-recommendation-5-0.cjs
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
@@ -65,7 +67,8 @@ jobs:
       - run: node --check scripts/hot-feed-integrity.cjs
       - run: node --check scripts/hot-evidence-gate.cjs
       - run: node --check scripts/hot-editorial-interest.cjs
-      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs tests/hot-kp-pacing.test.cjs tests/hot-feed-integrity.test.cjs tests/hot-evidence-gate.test.cjs tests/hot-editorial-interest.test.cjs
+      - run: node --check scripts/hot-recommendation-5-0.cjs
+      - run: node --test tests/hot-discovery.test.cjs tests/kp-demand-history.test.cjs tests/hot-ranking-4-7.test.cjs tests/hot-source-budget.test.cjs tests/hot-source-evidence.test.cjs tests/hot-kp-pacing.test.cjs tests/hot-feed-integrity.test.cjs tests/hot-evidence-gate.test.cjs tests/hot-editorial-interest.test.cjs tests/hot-recommendation-5-0.test.cjs
       - run: node scripts/build-surs.cjs --check
       - run: node --check surs-editor.js
       - run: node --check surs.js
@@ -78,7 +81,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.16 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 5.0 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (startsWith(github.head_ref, 'feat/hot-discovery-') || startsWith(github.head_ref, 'fix/hot-discovery-'))
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -99,7 +102,7 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.16')throw Error('New Hot 4.16 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-5.0')throw Error('New Hot 5.0 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
@@ -169,7 +172,7 @@ jobs:
                 !x.surs_hot_interest_evidence?.measured_positive_growth)||
                 (age>30&&!x.surs_hot_interest_evidence?.current_interest_observed&&
                   !x.surs_hot_active_season_secondary);
-            }))throw Error('Hot 4.16 admission gate permitted an old or unsupported title');
+            }))throw Error('Hot 5.0 admission gate permitted an old or unsupported title');
           const provisional=after.items.filter(x=>x.surs_hot_fresh_provisional);
           const secondary=after.items.filter(x=>x.surs_hot_active_season_secondary);
           if(provisional.length>6||secondary.length>5||
@@ -180,9 +183,9 @@ jobs:
             provisional.some(x=>x.surs_hot_age>30||x.vote_count>=100||
               x.vote_count<35||x.surs_hot_quality<6.75||
               !x.surs_hot_interest_evidence?.current_interest_strong))
-            throw Error('Hot 4.16 bounded-coverage validation failed');
-          if(after.items.length<Math.min(20,Math.max(12,before.items.length)))
-            throw Error('Hot 4.16 reduced verified coverage');
+            throw Error('Hot 5.0 bounded-coverage validation failed');
+          if(after.items.length<Math.min(17,Math.max(12,before.items.length-4)))
+            throw Error('Hot 5.0 reduced verified coverage below safe floor');
           console.log('COVERAGE:',JSON.stringify({before:before.items.length,
             after:after.items.length,provisional:provisional.length,
             active_season_secondary:secondary.length}));
@@ -209,14 +212,15 @@ jobs:
           if(after.items.some(x=>
             Math.abs((x.surs_hot_editorial_penalty||0)-
               ((x.surs_hot_editorial_diversity_penalty||0)+
-                (x.surs_hot_editorial_interest_penalty||0)))>.011))
+                (x.surs_hot_editorial_interest_penalty||0)+
+                (x.surs_hot_editorial_distribution_penalty||0)))>.011))
             throw Error('Editorial penalty accounting inconsistent');
           console.log('EDITORIAL_ABLATION:',JSON.stringify(editorial));
           const expansion=after.diagnostics.signal_expansion_comparison;
           if(!expansion?.control||!expansion.expanded||
             !['control','expanded'].includes(expansion.selection?.name)||
             after.diagnostics.signal_expansion_selected!==expansion.selection.name)
-            throw Error('4.16 expanded-signal ablation missing or inconsistent');
+            throw Error('5.0 expanded-signal ablation missing or inconsistent');
           if(expansion.selection.name==='expanded'&&(
             expansion.expanded.top20_observed_interest<=
               expansion.control.top20_observed_interest||
@@ -225,10 +229,10 @@ jobs:
             expansion.expanded.top10_overlap_control<9||
             expansion.expanded.top20_three_ratings<
               expansion.control.top20_three_ratings-1))
-            throw Error('Unsafe 4.16 extended demand promotion');
+            throw Error('Unsafe 5.0 extended demand promotion');
           if(after.diagnostics.interest_evidence.top20_interest_evidenced!==
             expansion[expansion.selection.name].top20_observed_interest)
-            throw Error('Published evidence does not match the selected 4.16 arm');
+            throw Error('Published evidence does not match the selected 5.0 arm');
           if(after.diagnostics.kp_daily_used>210||
             after.diagnostics.kp_popularity_pages>5)
             throw Error('Expanded KP source exceeded the established budget');
@@ -248,6 +252,18 @@ jobs:
           console.log('REMOVED_CARDS:',JSON.stringify(before.items.filter(x=>
             !newIds.has(key(x))).map(x=>({rank:x.surs_hot_rank,
             title:x.title,age:x.surs_hot_rank_age}))));
+          const hotAudit=JSON.parse(fs.readFileSync('data/hot-discovery-audit.json','utf8'));
+          const auditIndex=new Map((hotAudit.candidates||[]).map(x=>
+            [x.type+':'+x.id,x]));
+          console.log('REMOVED_REASON:',JSON.stringify(before.items.filter(x=>
+            !newIds.has(key(x))).map(x=>{
+              const a=auditIndex.get(key(x))||{};
+              return {title:x.title,reason:a.rejection,quality:a.quality,
+                age:a.age,tmdb_votes:a.tmdb_votes,
+                trend:a.interest_evidence?.interest_evidence,
+                external_rank:a.external_popularity_rank,
+                score:a.base_score};
+            })));
           console.log('TOP20_CARDS:',JSON.stringify(after.items.slice(0,20).map(x=>({
             rank:x.surs_hot_rank,title:x.title,kind:x.surs_hot_premiere_kind,
             score:x.surs_hot_score,age:x.surs_hot_rank_age,
@@ -261,7 +277,7 @@ jobs:
           if(after.items.some(x=>x.surs_hot_attention_sources>2))
             throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.16 real dry-run (no publishing)\n'+
+            '### Hot 5.0 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+

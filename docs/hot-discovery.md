@@ -1,3 +1,31 @@
+# Hot Discovery 5.0: independent-source relevance and watchability
+
+## Scope and editorial objective
+
+This shelf is **new, currently interesting US movies and series worth checking**, not a replica of evergreen provider charts, a Netflix-like playback ranking, or a popularity-only leaderboard. At least 12 verified titles are needed to publish; never fill up to 40 by weakening freshness. Newness remains <=90 days from the first valid release event, or verified season premiere. Beyond 30 days require observed current audience interest; beyond 60 days require observed positive momentum. A new episode alone is not current audience demand.
+
+## Correctness repairs
+
+1. **Independent ratings can rescue sparse TMDB votes.** A fresh <=60-day US film with >=35 TMDB votes may pass the old >=100 vote gate only when both externally sourced IMDb and Kinopoisk ratings are >=7.0 with >=1000 and >=500 votes respectively, KP is in the verified current Top-30, and combined Bayesian quality is >=7.15. IMDb/KP numeric scores come from different voting communities but may be transported through the same Kinopoisk Unofficial API. Without a verified top entry or with unavailable provider ratings, keep the old vote gate.
+2. **Independent chart attention is real but not a view count.** For a film without any current TMDB Trending appearance, a verified KP Top-20 rank supported by independently rated IMDb+KP evidence can provide a bounded source-balancing attention floor: ~0.70 at rank 1 to ~0.40 at rank 20. This avoids incorrectly treating the TMDB ecosystem as the only measure of worldwide interest. Do not combine this floor with an existing TMDB Trending score to double count.
+3. **No more release-only returning-series fillers.** New episodes and historical all-seasons ratings are not sufficient to admit a 31–60-day-old new season if no TMDB/KP popularity activity or measured current growth is observed. Episodes remain displayed as premiere evidence. There is no fabricated new-season view count.
+4. **Digital release is not assumed.** Each US film records its observed distribution status: verified digital or theatrical with unconfirmed digital date. For the latter, curation applies a small visible 3-point sorting adjustment, recorded separately from the published numeric Hot Score. This does NOT assert a film is digitally streamable just because its theatrical release is recent.
+5. **Rating confidence is source-aware.** For films with genuinely available independent vote communities, confidence is based on the count and votes of available rating providers rather than treating low TMDB voting volume as inherently unreliable. Missing evidence remains unknown, not negative.
+
+New-release stability is also bounded: an under-voted title already in the prior top 20 may remain provisional for **at most its first 21 days**, only when it **still appears in a current verified TMDB Trending window**, with >=50 TMDB votes and adequate quality. This avoids losing a promising debut due to daily chart jitter without inventing interest. An untrending title is never retained by this rule.
+
+All prior source-health guards, freshness eligibility, provider ID checks, Kinopoisk API 210/day budget, same-candidate chart ablations, and JSON schema 1 remain in force. `surs_hot_score` remains the original transparent score. The feed adds `surs_hot_external_rating_exception`, `surs_hot_independent_demand_floor`, `surs_hot_availability`, `surs_hot_editorial_distribution_penalty` and `diagnostics.recommendation_v5`.
+
+## Validation and deployment
+
+- Unit regressions for independently corroborated sparse-TMDB titles, lack of demand, low-quality/unknown signals, season-without-interest, distribution-status accounting and published scores.
+- GitHub PR CI runs with live TMDB and KP data and compares the current 4.16 feed with the same-date 5.0 feed. Prefer documented improvement in independent-source coverage and rejection of stale/unsupported titles over arbitrary 20/20 demand targets.
+- This is an **offline relevance improvement** based on public activity proxies. It is not proof of viewer preference, actual plays or outperforming Netflix/JustWatch. Requires later click/open feedback and multiple dated comparisons before any performance claim.
+- `auto-release-surs-hot.cjs` fingerprints the new ranking module. Successful publishing bumps SURS patch version, rotates the cache key, and reconciles My Store catalog; an every-three-hours data refresh alone does not bump the plugin version.
+- Rollback by reverting the squash merge and rerunning the publisher to regenerate the prior 4.16 selection, then release the restored SURS plugin via the existing pipeline.
+
+---
+
 # Hot Discovery 4.14: verified expanded demand coverage, with a 4.13 control
 
 ## Scope
