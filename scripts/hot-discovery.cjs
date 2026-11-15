@@ -383,12 +383,17 @@ function freshProvisional(c) {
   const sustainedEarly=age<=21&&votes>=50&&
     day>=1&&day<=40&&week>=1&&week<=40;
   const strongChart=(day>=1&&day<=20)||(week>=1&&week<=20);
-  // Two sustained, first-40 TMDB windows are weak but real evidence
-  // for a <=21-day launch with >=50 votes. Cap it as a provisional,
-  // never count day/week as two independent providers.
+  // Keep a <=21-day under-voted title already featured in the prior
+  // top-20 only if it STILL appears in an actual current TMDB chart.
+  // Grace is temporary stability, never fresh evidence or a fake trend.
+  const recentPreviouslyFeatured=age<=21&&votes>=50&&
+    c.surs_hot_previous_top20_grace===true&&
+    ((day>=1&&day<=40)||(week>=1&&week<=40));
   return e.current_interest_strong===true&&
-    (strongChart||sustainedEarly||e.kinopoisk_top60===true)&&
-    number(c.surs_hot_attention)>=(sustainedEarly?.27:.32);
+    (strongChart||sustainedEarly||recentPreviouslyFeatured||
+      e.kinopoisk_top60===true)&&
+    number(c.surs_hot_attention)>=
+      (recentPreviouslyFeatured?.22:sustainedEarly?.27:.32);
 }
 function activeSeasonSecondary(c) {
   return c.surs_hot_premiere_kind==='season'&&
@@ -604,6 +609,8 @@ function scoreCandidates(candidates,history,now,previous,model='baseline',requir
       hot47.WEIGHTS[model]||hot47.WEIGHTS.baseline,growth.confirmed);
     c.surs_hot_base_score=c.surs_hot_model_scores[model]??c.surs_hot_model_scores.baseline;
     c.surs_hot_interest_evidence=evidenceGate.evidence(c);
+    c.surs_hot_previous_top20_grace=!!(previous?.items||[]).slice(0,20)
+      .some(x=>identity(x)===identity(c));
     c.surs_hot_external_rating_exception=recommend50.externalRatingsPass(c);
     c.surs_hot_availability=recommend50.availability(c);
     c.surs_hot_fresh_provisional=freshProvisional(c);
