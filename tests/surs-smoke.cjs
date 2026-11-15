@@ -8,6 +8,9 @@ const vm = require('node:vm');
 const mainSource = fs.readFileSync(path.join(__dirname, '..', 'surs.js'), 'utf8');
 const editorSource = fs.readFileSync(path.join(__dirname, '..', 'surs-editor.js'), 'utf8');
 const readableSource = fs.readFileSync(path.join(__dirname, '..', 'build', 'surs.source.txt'), 'utf8');
+const currentVersion = mainSource.match(/\* Версия: (\d+\.\d+\.\d+)/)[1];
+const currentHotCacheKey = mainSource.match(/HOT_CACHE_KEY='(surs_hot_json_v\d+)'/)[1];
+const previousHotCacheKey = mainSource.match(/HOT_OLD_CACHE_KEY='(surs_hot_json_v\d+)'/)[1];
 const source = mainSource + '\n' + editorSource;
 new vm.Script(source, { filename: 'surs.js' });
 let passed = 0;
@@ -702,7 +705,7 @@ test('Hot Discovery 4.5 shows matched independent Russian popularity in diagnost
             rejections:{quality_below_floor:22,insufficient_votes:4}}};
     app.Lampa.Reguest.prototype.silent=function(url,ok){ok(feed);};
     app.getMain();
-    assert.equal(app.stored.get('surs_hot_json_v7').algorithm,'hot-discovery-4.5');
+    assert.equal(app.stored.get(currentHotCacheKey).algorithm,'hot-discovery-4.5');
     let menu=null;
     app.Lampa.Select={show:x=>{menu=x;}};
     app.window.LampaShelfManager.openHotDiagnostics();
@@ -736,16 +739,16 @@ test('Hot Discovery falls back to prior verified JSON versions on network error'
             surs_hot_score:70-i,surs_hot_premiere_date:day
         }))};
     const app=boot({saved:[{id:'hot_us_new',enabled:true}]});
-    app.stored.set('surs_hot_json_v1',old);
+    app.stored.set(previousHotCacheKey,old);
     let requests=0;
     app.Lampa.Reguest.prototype.silent=function(url,ok,fail){requests++;fail();};
     const rows=app.getMain();
     assert.equal(requests,1);
     assert.equal(rows[0].results.length,12);
     assert.equal(app.window.SURS_PERFORMANCE.hot_us.status,'cached');
-    assert.equal(app.stored.has('surs_hot_json_v7'),false);
+    assert.equal(app.stored.has(currentHotCacheKey),false);
 });
-test('SURS 4.0.9 bypasses the old v6 cache and fetches Hot Discovery 4.14 immediately',()=>{
+test('SURS algorithm upgrade bypasses the previous cache and fetches Hot Discovery 4.15 immediately',()=>{
     const day=new Date().toISOString().slice(0,10);
     const make=algorithm=>({schema:1,algorithm,generated_at:new Date().toISOString(),
         items:Array.from({length:12},(_,i)=>({
@@ -753,20 +756,20 @@ test('SURS 4.0.9 bypasses the old v6 cache and fetches Hot Discovery 4.14 immedi
             surs_hot_score:80-i,surs_hot_rank:i+1,surs_hot_premiere_date:day
         }))});
     const app=boot({saved:[{id:'hot_us_new',enabled:true}]});
-    app.stored.set('surs_hot_json_v6',make('hot-discovery-4.13'));
+    app.stored.set(previousHotCacheKey,make('hot-discovery-4.14'));
     app.stored.set('surs_fixed_shelves_v2',[
         {id:'hot_us_new',enabled:true},{id:'nav_buttons',enabled:false}
     ]);
     let requests=0;
     app.Lampa.Reguest.prototype.silent=(url,ok)=>{
-        requests++;ok(make('hot-discovery-4.14'));
+        requests++;ok(make('hot-discovery-4.15'));
     };
     const rows=app.getMain();
     assert.equal(requests,1);
     assert.equal(rows[0].results.length,12);
-    assert.equal(app.stored.get('surs_hot_json_v7').algorithm,'hot-discovery-4.14');
+    assert.equal(app.stored.get(currentHotCacheKey).algorithm,'hot-discovery-4.15');
     assert.equal(rows[0].results[0].id,8000);
-    assert.equal(app.stored.get('surs_hot_json_v6').algorithm,'hot-discovery-4.13');
+    assert.equal(app.stored.get(previousHotCacheKey).algorithm,'hot-discovery-4.14');
     assert.equal(app.stored.get('surs_fixed_shelves_v2')[1].enabled,false);
     assert.equal(app.window.SURS_PERFORMANCE.hot_us.status,'ready');
 });
@@ -778,7 +781,7 @@ test('Hot diagnostics recognize an already verified cache without a new network 
             id:9500+i,type:'movie',source:'tmdb',poster_path:'/p',
             surs_hot_premiere_date:day,surs_hot_score:80-i
         })),diagnostics:{selected:12,ranking_model:'attention-quality-consensus-v3-ru-demand'}};
-    app.stored.set('surs_hot_json_v7',old);
+    app.stored.set(currentHotCacheKey,old);
     let menu=null;
     app.Lampa.Select={show:x=>{menu=x;}};
     app.window.LampaShelfManager.openHotDiagnostics();
@@ -813,8 +816,8 @@ test('deferred editor exposes a constructible factory', () => {
 });
 test('compact source builds with preserved UI and smaller initial script', () => {
     assert.ok(mainSource.length < readableSource.length * 0.85);
-    assert.match(mainSource, /Версия: 4\.0\.9/);
-    assert.match(readableSource, /Версия: 4\.0\.9/);
+    assert.ok(mainSource.includes('Версия: ' + currentVersion));
+    assert.ok(readableSource.includes('Версия: ' + currentVersion));
     assert.match(mainSource, /surs-fixed-styles/);
     assert.doesNotMatch(mainSource, /function addEditorStyles\(/);
 });
@@ -1242,7 +1245,7 @@ test('US 8+ preview diagnostics distinguish sparse TMDB dataset from request fai
     assert.equal(metrics.timeout,false);
 });
 test('plugin syntax and version', () => {
-    assert.match(source, /Версия: 4\.0\.9/);
+    assert.ok(source.includes('Версия: ' + currentVersion));
 });
 test('factory default enables US premieres below navigation', () => {
     const app = boot();
@@ -1328,7 +1331,7 @@ test('reset immediately persists factory defaults and schedules screen refresh',
         { id: 'stream_netflix', enabled: true },
         { id: 'genre_action', enabled: true }
     ]});
-    assert.equal(app.window.LampaShelfManager.version, '4.0.9');
+    assert.equal(app.window.LampaShelfManager.version, currentVersion);
     const defaults = app.window.LampaShelfManager.resetDefaults();
     assert.equal(defaults.length, 26);
     assert.equal(defaults.filter(x => x.enabled).length, 10);
@@ -1503,7 +1506,7 @@ test('boot failure retries and sets ready only after source registration succeed
     assert.equal(app.window.plugin_surs_fixed_ready,true);
     assert.equal(app.window.plugin_surs_fixed_starting,false);
     assert.equal(app.components.length,1);
-    assert.equal(app.window.LampaShelfManager.version,'4.0.9');
+    assert.equal(app.window.LampaShelfManager.version,currentVersion);
 });
 test('startup waits if Lampa global is not defined', () => {
     const queued=[];

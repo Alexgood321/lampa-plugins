@@ -63,13 +63,21 @@ jobs:
           fi
           node scripts/hot-discovery.cjs
           echo "status=generated" >> "$GITHUB_OUTPUT"
+      - name: Prepare SURS plugin release if ranking implementation changed
+        if: steps.compute.outputs.status == 'generated'
+        run: |
+          node scripts/auto-release-surs-hot.cjs
+          node scripts/build-surs.cjs --check
+          node --check surs.js
+          node tests/surs-smoke.cjs >/dev/null
       - name: Publish only validated data
+        id: publish
         if: steps.compute.outputs.status == 'generated'
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          files=(data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json data/hot-discovery-tmdb-cache.json)
+          files=(data/hot-discovery.json data/hot-discovery-history.json data/hot-discovery-audit.json data/hot-discovery-kp-cache.json data/hot-discovery-tmdb-cache.json data/surs-hot-release.json build/surs.source.txt surs.js)
           temp="$(mktemp -d)"
           trap 'rm -rf "$temp"' EXIT
           changed=()
@@ -83,6 +91,9 @@ jobs:
           if [[ ${#changed[@]} -eq 0 ]]; then
             echo "No changes to publish" >> "$GITHUB_STEP_SUMMARY"
             exit 0
+          fi
+          if printf '%s\n' "${changed[@]}" | grep -qx 'surs.js'; then
+            echo "surs_released=true" >> "$GITHUB_OUTPUT"
           fi
           # Never resolve conflicts by force-pushing or rebasing generated JSON.
           # Re-apply only new generated files on the latest main in each attempt.
@@ -99,7 +110,7 @@ jobs:
             for file in "${changed[@]}"; do
               cp "$temp/$(basename "$file")" "$file"
             done
-            node -e "const fs=require('fs');for(const p of process.argv.slice(1))JSON.parse(fs.readFileSync(p,'utf8'))" "${changed[@]}"
+            node -e "const fs=require('fs');for(const p of process.argv.slice(1))if(p.endsWith('.json'))JSON.parse(fs.readFileSync(p,'utf8'))" "${changed[@]}"
             git add -- "${changed[@]}"
             if git diff --cached --quiet; then
               pushed=1
@@ -117,3 +128,21 @@ jobs:
           fi
           echo "Updated Hot Discovery; previous good feed preserved in Git history." >> "$GITHUB_STEP_SUMMARY"
           node -e "const a=require('./data/hot-discovery-audit.json');console.log('Candidates evaluated:',a.candidate_total,'Eligible:',a.eligible,'Selected:',a.selected)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Notify My Store of new SURS plugin version
+        if: steps.publish.outputs.surs_released == 'true'
+        env:
+          STORE_DISPATCH_TOKEN: ${{ secrets.STORE_DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$STORE_DISPATCH_TOKEN" ]]; then
+            echo "::error::STORE_DISPATCH_TOKEN is required for My Store release notifications"
+            exit 1
+          fi
+          payload=$(printf '{"event_type":"lampa-plugin-updated","client_payload":{"repository":"%s","sha":"%s"}}' "$GITHUB_REPOSITORY" "$GITHUB_SHA")
+          curl --fail-with-body --silent --show-error --retry 2 --retry-delay 5 \
+            -X POST \
+            -H "Authorization: Bearer $STORE_DISPATCH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d "$payload" \
+            "https://api.github.com/repos/Alexgood321/store/dispatches"
