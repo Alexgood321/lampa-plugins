@@ -148,3 +148,22 @@ test('a fresh under-voted series with BOTH trending horizons keeps its place as 
  assert.equal(hot.scoreCandidates([justOne],{snapshots:[]},NOW,
    null,'demand',true).length,0);
 });
+
+test('short stability grace retains a previously featured 17-day sparse-vote title only while still trending',()=>{
+  const base={id:1550,type:'tv',poster_path:'/x.jpg',genre_ids:[18],
+    vote_average:7.7,vote_count:55,popularity:80,
+    surs_hot_premiere_date:day(17),surs_hot_original_date:day(17),
+    surs_hot_premiere_kind:'series',surs_hot_trend_day:34};
+  const previous={items:[{type:'tv',id:1550}]};
+  const selected=hot.scoreCandidates([base],{snapshots:[]},NOW,previous,
+    'demand',true);
+  assert.equal(selected.length,1);
+  assert.equal(selected[0].surs_hot_previous_top20_grace,true);
+  assert.equal(selected[0].surs_hot_fresh_provisional,true);
+  const untrending={...base,surs_hot_trend_day:null,id:1550};
+  assert.equal(hot.scoreCandidates([untrending],{snapshots:[]},NOW,previous,
+    'demand',true).length,0);
+  const older={...base,surs_hot_premiere_date:day(22),id:1550};
+  assert.equal(hot.scoreCandidates([older],{snapshots:[]},NOW,previous,
+    'demand',true).length,0);
+});
