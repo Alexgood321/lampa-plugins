@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 4.0.10 (Hot Discovery 4.15 fresh data on upgrade)
+ * Версия: 4.0.11 (Hot Discovery 4.16 fresh data on upgrade)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1750,12 +1750,12 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
     var HOT_US_URL='https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json';
     // Invalidate only the Hot Discovery data cache on algorithm upgrades.
     // Keep older verified copies for offline fallback, never clear settings.
-    var HOT_CACHE_KEY='surs_hot_json_v8',HOT_OLD_CACHE_KEY='surs_hot_json_v7',
-        HOT_OLDER_CACHE_KEY='surs_hot_json_v6',
-        HOT_OLDER2_CACHE_KEY='surs_hot_json_v5',
-        HOT_OLDER3_CACHE_KEY='surs_hot_json_v4',
-        HOT_OLDER4_CACHE_KEY='surs_hot_json_v3',
-        HOT_OLDEST_CACHE_KEY='surs_hot_json_v2',HOT_MAX_AGE=7*86400000;
+    var HOT_CACHE_KEY='surs_hot_json_v9',HOT_OLD_CACHE_KEY='surs_hot_json_v8',
+        HOT_OLDER_CACHE_KEY='surs_hot_json_v7',
+        HOT_OLDER2_CACHE_KEY='surs_hot_json_v6',
+        HOT_OLDER3_CACHE_KEY='surs_hot_json_v5',
+        HOT_OLDER4_CACHE_KEY='surs_hot_json_v4',
+        HOT_OLDEST_CACHE_KEY='surs_hot_json_v3',HOT_MAX_AGE=7*86400000;
     var hotRequesting=false,hotCallbacks=[],hotLastTry=0;
     function hotValid(feed){
         if(!feed||feed.schema!==1||!Array.isArray(feed.items)||
@@ -3619,7 +3619,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.10';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.11';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -4130,7 +4130,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v4.0.10 (Hot Discovery 4.15) успешно инициализирован.');
+            console.log('SURS Pro v4.0.11 (Hot Discovery 4.16) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4161,7 +4161,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         getDefaultSectionShelves: getDefaultSectionShelves,
         hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
         openHotDiagnostics: openHotDiagnostics,
-        version: '4.0.10'
+        version: '4.0.11'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
