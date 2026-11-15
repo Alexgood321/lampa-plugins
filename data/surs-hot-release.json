@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "version": "4.0.11",
-  "algorithm": "hot-discovery-4.16",
-  "cache_version": 9,
-  "source_sha256": "1019d83f8ae42ff961741d907e60afdef574c06f4be07304e3f5c1f843be2e0d"
+  "version": "4.0.12",
+  "algorithm": "hot-discovery-5.0",
+  "cache_version": 10,
+  "source_sha256": "cb22fa378379ce461c2652ff594368a3629431661206432ac731b99777999b4d"
 }
