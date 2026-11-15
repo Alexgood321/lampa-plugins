@@ -17,13 +17,13 @@ test('Hot release keeps a stable code fingerprint across feed refreshes', () => 
 
 test('Hot release bumps patch, boot message, editor URL and cache only', () => {
   const previous = readVersion(source).version;
-  const result = bumpSource(source, 'hot-discovery-4.16');
+  const result = bumpSource(source, 'hot-discovery-5.0');
   const expected = previous.replace(/\d+$/, x => String(Number(x) + 1));
   assert.equal(result.version, expected);
   assert.equal(readVersion(result.source).version, expected);
-  assert.match(result.source, /Hot Discovery 4\.16 fresh data on upgrade/);
+  assert.match(result.source, /Hot Discovery 5\.0 fresh data on upgrade/);
   assert.ok(result.source.includes('console.log(\'SURS Pro v' + expected +
-    ' (Hot Discovery 4.16) успешно инициализирован.\');'));
+    ' (Hot Discovery 5.0) успешно инициализирован.\');'));
   assert.ok(result.source.includes("version: '" + expected + "'"));
   assert.ok(result.source.includes('surs-editor.js?v=' + expected));
   assert.match(result.source, new RegExp("HOT_CACHE_KEY='surs_hot_json_v" + result.cacheVersion + "'"));
