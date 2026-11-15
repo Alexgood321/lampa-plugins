@@ -252,6 +252,18 @@ jobs:
           console.log('REMOVED_CARDS:',JSON.stringify(before.items.filter(x=>
             !newIds.has(key(x))).map(x=>({rank:x.surs_hot_rank,
             title:x.title,age:x.surs_hot_rank_age}))));
+          const hotAudit=JSON.parse(fs.readFileSync('data/hot-discovery-audit.json','utf8'));
+          const auditIndex=new Map((hotAudit.candidates||[]).map(x=>
+            [x.type+':'+x.id,x]));
+          console.log('REMOVED_REASON:',JSON.stringify(before.items.filter(x=>
+            !newIds.has(key(x))).map(x=>{
+              const a=auditIndex.get(key(x))||{};
+              return {title:x.title,reason:a.rejection,quality:a.quality,
+                age:a.age,tmdb_votes:a.tmdb_votes,
+                trend:a.interest_evidence?.interest_evidence,
+                external_rank:a.external_popularity_rank,
+                score:a.base_score};
+            })));
           console.log('TOP20_CARDS:',JSON.stringify(after.items.slice(0,20).map(x=>({
             rank:x.surs_hot_rank,title:x.title,kind:x.surs_hot_premiere_kind,
             score:x.surs_hot_score,age:x.surs_hot_rank_age,
