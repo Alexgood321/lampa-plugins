@@ -1276,6 +1276,9 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
           identity(x)===identity(c))?.surs_hot_editorial_interest_penalty||0,
         external_popularity_rank:c.surs_hot_kinopoisk_popularity_rank||null,
         external_bonus:c.surs_hot_external_demand_bonus||0,
+        independent_demand_floor:c.surs_hot_independent_demand_floor||0,
+        external_rating_exception:!!c.surs_hot_external_rating_exception,
+        availability:c.surs_hot_availability||null,
         rank_deltas:c.surs_hot_kinopoisk_rank_deltas||{},
         vote_growth:c.surs_hot_kinopoisk_vote_growth||{},
         momentum_bonus:c.surs_hot_kinopoisk_momentum_bonus||0,
@@ -1312,6 +1315,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
       editorial_interest_selection_reason:editorialChoice.reason,
       editorial_interest_comparison:editorialComparison,
       rating_evidence:ratingConfidence,
+      recommendation_v5:recommend50.diagnostics(items,eligibleForVariants),
       active_model:'demand',
       comparison,model_comparison:modelComparison,
       external_demand:{
@@ -1324,6 +1328,7 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         selected_cross_confirmed:items.filter(c=>
           c.surs_hot_cross_source_interest).length,
         max_attention_bonus:.16,
+      independent_kp_attention_floor_active:true,
         momentum_rank_measured:items.filter(c=>
           Object.keys(c.surs_hot_kinopoisk_rank_deltas||{}).length>0).length,
         momentum_votes_measured:items.filter(c=>
