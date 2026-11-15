@@ -48,7 +48,9 @@ function availability(card){
     return card?.surs_hot_premiere_kind==='season'?
       'aired_new_season':'aired_new_series';
   return card?.surs_hot_digital_status==='verified_us_digital_date'?
-    'us_digital_release_verified':'theatrical_digital_unconfirmed';
+    'us_digital_release_verified':
+    card?.surs_hot_digital_status==='digital_date_unconfirmed'?
+      'theatrical_digital_unconfirmed':'availability_unknown';
 }
 function distributionPenalty(card){
   // Small, explicitly visible curation tie-breaker. A cinema premiere is
