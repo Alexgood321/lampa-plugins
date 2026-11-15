@@ -71,7 +71,7 @@ jobs:
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
       - run: node tests/num-series-smoke.cjs
-      - name: Real Hot 4.14 dry-run and current top-40 comparison (no publish)
+      - name: Real Hot 4.15 dry-run and current top-40 comparison (no publish)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (startsWith(github.head_ref, 'feat/hot-discovery-') || startsWith(github.head_ref, 'fix/hot-discovery-'))
         env:
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
@@ -92,7 +92,7 @@ jobs:
           const before=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+
             '/hot-discovery-before.json','utf8'));
           const after=JSON.parse(fs.readFileSync('data/hot-discovery.json','utf8'));
-          if(after.algorithm!=='hot-discovery-4.14')throw Error('New Hot 4.14 feed was not generated locally');
+          if(after.algorithm!=='hot-discovery-4.15')throw Error('New Hot 4.15 feed was not generated locally');
           const c=after.diagnostics.comparison;
           if(!c||c.previous_count!==before.items.length||
             c.new_count!==after.items.length)throw Error('Comparison is incomplete');
@@ -146,8 +146,22 @@ jobs:
             selectionEvidence.single_source_selected!==
               selectionEvidence.single_source_with_interest)
             throw Error('One-rating cold-title gate did not hold');
-          if(c.top10_retained<8)
-            throw Error('Unexpected top-10 regression; inspect candidates');
+          const oldFreshTop=before.items.slice(0,10).filter(x=>{
+            const days=Math.floor((Date.parse(after.generated_at)-
+              Date.parse(x.surs_hot_premiere_date+'T00:00:00Z'))/86400000);
+            return days>=0&&days<=90;
+          }).length;
+          if(c.top10_retained<Math.min(5,oldFreshTop))
+            throw Error('Unexpected loss of previously fresh top-10 titles');
+          const fresh=after.diagnostics.freshness_eligibility;
+          if(!fresh||fresh.hard_max_age_days!==90||
+            after.items.some(x=>{
+              const age=Math.floor((Date.parse(after.generated_at)-
+                Date.parse(x.surs_hot_premiere_date+'T00:00:00Z'))/86400000);
+              return age>90||(age>60&&
+                !x.surs_hot_interest_evidence?.measured_positive_growth)||
+                (age>30&&!x.surs_hot_interest_evidence?.current_interest_observed);
+            }))throw Error('Hot 4.15 admission gate permitted an old or unsupported title');
           console.log('INTEREST_EVIDENCE:',JSON.stringify(selectionEvidence));
           const editorial=after.diagnostics.editorial_interest_comparison;
           if(!editorial||!editorial.variants?.zero||
@@ -178,7 +192,7 @@ jobs:
           if(!expansion?.control||!expansion.expanded||
             !['control','expanded'].includes(expansion.selection?.name)||
             after.diagnostics.signal_expansion_selected!==expansion.selection.name)
-            throw Error('4.14 expanded-signal ablation missing or inconsistent');
+            throw Error('4.15 expanded-signal ablation missing or inconsistent');
           if(expansion.selection.name==='expanded'&&(
             expansion.expanded.top20_observed_interest<=
               expansion.control.top20_observed_interest||
@@ -187,10 +201,10 @@ jobs:
             expansion.expanded.top10_overlap_control<9||
             expansion.expanded.top20_three_ratings<
               expansion.control.top20_three_ratings-1))
-            throw Error('Unsafe 4.14 extended demand promotion');
+            throw Error('Unsafe 4.15 extended demand promotion');
           if(after.diagnostics.interest_evidence.top20_interest_evidenced!==
             expansion[expansion.selection.name].top20_observed_interest)
-            throw Error('Published evidence does not match the selected 4.14 arm');
+            throw Error('Published evidence does not match the selected 4.15 arm');
           if(after.diagnostics.kp_daily_used>210||
             after.diagnostics.kp_popularity_pages>5)
             throw Error('Expanded KP source exceeded the established budget');
@@ -223,7 +237,7 @@ jobs:
           if(after.items.some(x=>x.surs_hot_attention_sources>2))
             throw Error('TMDB day/week may not count as separate providers');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            '### Hot 4.14 real dry-run (no publishing)\n'+
+            '### Hot 4.15 real dry-run (no publishing)\n'+
             'Before: '+before.algorithm+' ('+before.items.length+')\n'+
             'After: '+after.algorithm+' ('+after.items.length+')\n'+
             'Top-40 retained: '+c.retained+', added: '+c.added+

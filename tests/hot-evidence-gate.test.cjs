@@ -6,7 +6,7 @@ const hot=require('../scripts/hot-discovery.cjs');
 
 const NOW=new Date('2026-11-14T18:00:00Z');
 const date=days=>new Date(NOW.getTime()-days*86400000).toISOString().slice(0,10);
-function card(id,{age=70,votes=1500,day=null,week=null,kp=null,
+function card(id,{age=20,votes=1500,day=null,week=null,kp=null,
   source_count=1,percentile=.4,status='flat',signal=0}={}){
   return {id,type:'movie',title:'Movie '+id,poster_path:'/a',
     surs_hot_premiere_date:date(age),surs_hot_original_date:date(age),
