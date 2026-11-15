@@ -423,7 +423,7 @@ test('Hot 4.16 admits strong-chart fresh premieres with 35–99 TMDB votes but r
   assert.equal(hot.eligibilityReason(tooFew,NOW,true),'insufficient_votes');
   assert.equal(hot.eligibilityReason(noChart,NOW,true),'insufficient_votes');
 });
-test('Hot 4.16 admits a verified active second-month season only with strong independent ratings',()=>{
+test('Hot 5.0 requires observed current demand for verified second-month seasons',()=>{
   const base={type:'tv',id:801,poster_path:'/p',vote_average:8.5,
     vote_count:2500,popularity:90,surs_hot_premiere_kind:'season',
     surs_hot_season_verified:true,surs_hot_regular_episode_last14d:true,
@@ -431,9 +431,11 @@ test('Hot 4.16 admits a verified active second-month season only with strong ind
     surs_hot_ratings:{imdb:{value:8.3,votes:7000},
       kp:{value:8.4,votes:5000}}};
   const selected=hot.scoreCandidates([base],{snapshots:[]},NOW,null,'demand',true);
-  assert.equal(selected.length,1);
-  assert.equal(selected[0].surs_hot_active_season_secondary,true);
-  assert.equal(selected[0].surs_hot_season_rating,undefined);
+  assert.equal(selected.length,0);
+  assert.equal(base.surs_hot_active_season_secondary,true);
+  assert.equal(hot.eligibilityReason(base,NOW,true),'hot_31_60_without_current_interest');
+  const trending={...base,id:805,surs_hot_trend_week:14};
+  assert.equal(hot.scoreCandidates([trending],{snapshots:[]},NOW,null,'demand',true).length,1);
   const missingEpisode={...base,id:802,surs_hot_regular_episode_last14d:false};
   const stale={...base,id:803,surs_hot_premiere_date:day(95)};
   const noIndependent={...base,id:804,surs_hot_ratings:{}};
@@ -441,7 +443,7 @@ test('Hot 4.16 admits a verified active second-month season only with strong ind
     {snapshots:[]},NOW,null,'demand',true),[]);
   assert.equal(hot.eligibilityReason(stale,NOW,true),'hot_premiere_older_than_90d');
 });
-test('Hot 4.16 caps provisional and secondary slots without capping verified releases',()=>{
+test('Hot 5.0 caps single-source provisionals and refuses cold returning fillers',()=>{
   const cards=[
     ...Array.from({length:14},(_,i)=>({id:900+i,type:'movie',
       poster_path:'/p',vote_average:8.5,vote_count:1800,popularity:160-i,
@@ -460,8 +462,8 @@ test('Hot 4.16 caps provisional and secondary slots without capping verified rel
         kp:{value:8.3,votes:6000}}}))];
   const selected=hot.scoreCandidates(cards,{snapshots:[]},NOW,null,'demand',true);
   assert.equal(selected.filter(x=>x.surs_hot_fresh_provisional).length,6);
-  assert.equal(selected.filter(x=>x.surs_hot_active_season_secondary).length,5);
-  assert.equal(selected.length,25);
+  assert.equal(selected.filter(x=>x.surs_hot_active_season_secondary).length,0);
+  assert.equal(selected.length,20);
 });
 test('Hot 4.16 accepts a verified new digital release but not an old re-release',()=>{
   const original=detail(888,215);
