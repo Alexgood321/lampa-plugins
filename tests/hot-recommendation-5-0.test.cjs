@@ -133,3 +133,18 @@ test('ranking diagnostics disclose rescued titles and unverified theatrical avai
  assert.equal(diag.theatrical_without_verified_digital,1);
  assert.equal(diag.interest_unobserved,0);
 });
+
+test('a fresh under-voted series with BOTH trending horizons keeps its place as provisional',()=>{
+ const fresh={id:1421,type:'tv',poster_path:'/p.jpg',genre_ids:[18],
+   vote_average:7.7,vote_count:55,popularity:260,
+   surs_hot_premiere_date:day(16),surs_hot_original_date:day(16),
+   surs_hot_premiere_kind:'series',
+   surs_hot_trend_day:25,surs_hot_trend_week:28};
+ const selected=hot.scoreCandidates([fresh],{snapshots:[]},NOW,
+   null,'demand',true);
+ assert.equal(selected.length,1);
+ assert.equal(selected[0].surs_hot_fresh_provisional,true);
+ const justOne={...fresh,id:1422,surs_hot_trend_week:null};
+ assert.equal(hot.scoreCandidates([justOne],{snapshots:[]},NOW,
+   null,'demand',true).length,0);
+});
