@@ -10,6 +10,7 @@ on:
       - build/surs.source.txt
       - scripts/build-surs.cjs
       - scripts/hot-discovery.cjs
+      - scripts/auto-release-surs-hot.cjs
       - scripts/kp-demand-history.cjs
       - scripts/hot-ranking-4-7.cjs
       - scripts/hot-source-budget.cjs
@@ -30,6 +31,7 @@ on:
       - build/surs.source.txt
       - scripts/build-surs.cjs
       - scripts/hot-discovery.cjs
+      - scripts/auto-release-surs-hot.cjs
       - scripts/kp-demand-history.cjs
       - scripts/hot-ranking-4-7.cjs
       - scripts/hot-source-budget.cjs
@@ -52,6 +54,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --check scripts/hot-discovery.cjs
+      - run: node --check scripts/auto-release-surs-hot.cjs
+      - run: node --test tests/surs-hot-release.test.cjs
       - run: node --check scripts/kp-demand-history.cjs
       - run: node --check scripts/hot-ranking-4-7.cjs
       - run: node --check scripts/hot-source-budget.cjs
