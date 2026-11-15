@@ -1598,27 +1598,27 @@
     },
     "tt50969350": {
       "imdbId": "tt50969350",
-      "checked_at": "2026-11-13",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt10643344": {
       "imdbId": "tt10643344",
-      "checked_at": "2026-11-13",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt50623990": {
       "imdbId": "tt50623990",
-      "checked_at": "2026-11-13",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt35318563": {
       "imdbId": "tt35318563",
-      "checked_at": "2026-11-13",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt3447523": {
       "imdbId": "tt3447523",
-      "checked_at": "2026-11-13",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt9378718": {
@@ -1668,7 +1668,7 @@
     },
     "tt37360247": {
       "imdbId": "tt37360247",
-      "checked_at": "2026-11-14",
+      "checked_at": "2026-11-15",
       "kp": null
     },
     "tt39365612": {
@@ -2314,6 +2314,106 @@
     },
     "tt49516484": {
       "imdbId": "tt49516484",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt27487379": {
+      "imdbId": "tt27487379",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt44566932": {
+      "imdbId": "tt44566932",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt14176748": {
+      "imdbId": "tt14176748",
+      "checked_at": "2026-11-15",
+      "kp": null,
+      "imdb": {
+        "value": 6.8,
+        "votes": 74,
+        "via": "kinopoisk_unofficial"
+      }
+    },
+    "tt10174226": {
+      "imdbId": "tt10174226",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt37179376": {
+      "imdbId": "tt37179376",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt51048599": {
+      "imdbId": "tt51048599",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt46660617": {
+      "imdbId": "tt46660617",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt36393353": {
+      "imdbId": "tt36393353",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt50204571": {
+      "imdbId": "tt50204571",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt39058975": {
+      "imdbId": "tt39058975",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt39397627": {
+      "imdbId": "tt39397627",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt35508555": {
+      "imdbId": "tt35508555",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt40768762": {
+      "imdbId": "tt40768762",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt44936693": {
+      "imdbId": "tt44936693",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt34720912": {
+      "imdbId": "tt34720912",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt43702986": {
+      "imdbId": "tt43702986",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt49931628": {
+      "imdbId": "tt49931628",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt44924456": {
+      "imdbId": "tt44924456",
+      "checked_at": "2026-11-15",
+      "kp": null
+    },
+    "tt49409203": {
+      "imdbId": "tt49409203",
       "checked_at": "2026-11-15",
       "kp": null
     }
@@ -3416,7 +3516,7 @@
   ],
   "daily_budget": {
     "date": "2026-11-15",
-    "used": 130,
+    "used": 156,
     "limit": 210
   }
 }
