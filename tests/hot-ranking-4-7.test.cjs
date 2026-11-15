@@ -61,32 +61,32 @@ test('new model measures demand, never assigns bonus to flat growth',()=>{
   assert.equal(flat,model.modelScore({...base,growth:0},weights,true));
 });
 
-test('recent low demand can be overtaken by 120-day strong confirmed demand',()=>{
+test('120-day demand cannot displace a genuinely recent movie',()=>{
   const recent={...base(11,20),popularity:10,vote_average:7.7};
   const old={...base(12,120),popularity:500,vote_average:8.3,
     surs_hot_trend_day:1,surs_hot_trend_week:2,
     surs_hot_kinopoisk_popularity_rank:2};
   const output=hot.scoreCandidates([recent,old],{snapshots:[]},NOW,null);
-  assert.deepEqual(output.map(x=>x.id),[12,11]);
+  assert.deepEqual(output.map(x=>x.id),[11]);
 });
 
-test('old release without live demand is withheld but active old release can return',()=>{
+test('old releases stay ineligible even if still trending',()=>{
   const stale={...base(21,210),popularity:140,vote_average:9};
   const active={...base(22,210),popularity:160,
     surs_hot_trend_day:4,surs_hot_trend_week:8};
   const out=hot.scoreCandidates([stale,active],{snapshots:[]},NOW,null);
-  assert.deepEqual(out.map(x=>x.id),[22]);
-  assert.equal(hot.eligibilityReason(stale,NOW),'old_no_current_interest');
+  assert.deepEqual(out.map(x=>x.id),[]);
+  assert.equal(hot.eligibilityReason(stale,NOW),'hot_premiere_older_than_90d');
 });
 
-test('365+ day release needs strong new breakout evidence',()=>{
+test('365+ day releases are not hot new premieres',()=>{
   const stale={...base(31,390),popularity:200};
   const tmdbOnly={...base(32,390),popularity:200,surs_hot_trend_day:2};
   const both={...base(33,390),popularity:200,
     surs_hot_trend_day:2,surs_hot_kinopoisk_popularity_rank:3};
   const out=hot.scoreCandidates([stale,tmdbOnly,both],
     {snapshots:[]},NOW,null);
-  assert.deepEqual(out.map(x=>x.id),[33]);
+  assert.deepEqual(out.map(x=>x.id),[]);
 });
 
 test('ranking score is not overwritten by editorial placement',()=>{
@@ -159,15 +159,14 @@ test('measured declining growth cannot masquerade as positive momentum',()=>{
   assert.equal(row.surs_hot_weights.growth,.15);
 });
 
-test('high-quality 200+ day KP top-60 title is eligible without fake freshness',()=>{
+test('high-quality 200+ day KP top-60 title is still too old for Hot',()=>{
   const title={...base(1810,244),popularity:180,
     surs_hot_kinopoisk_popularity_rank:41,
     surs_hot_ratings:{imdb:{value:8.7,votes:200000},
       kp:{value:8.5,votes:200000}}};
   const out=hot.scoreCandidates([title],{snapshots:[]},NOW,null);
-  assert.equal(out.length,1);
-  assert.equal(out[0].surs_hot_rank_age,244);
-  assert.equal(out[0].surs_hot_growth_signal,0);
+  assert.equal(out.length,0);
+  assert.equal(hot.eligibilityReason(title,NOW),'hot_premiere_older_than_90d');
   const weak={...base(1811,244),popularity:180,
     surs_hot_kinopoisk_popularity_rank:41,
     surs_hot_ratings:{imdb:{value:7.1,votes:200000},
