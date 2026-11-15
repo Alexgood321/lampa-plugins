@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 4.0.8 (Hot Discovery 4.5 independent popularity source)
+* Версия: 4.0.9 (Hot Discovery 4.14 fresh data on upgrade)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1748,10 +1748,13 @@ results: result.results.slice(0, 60)
 var HOT_US_ID='hot_us_new',HOT_US_TITLE='Горячие новинки США';
 var HOT_US_CATALOG_URL='surs_hot_us_new';
 var HOT_US_URL='https://raw.githubusercontent.com/Alexgood321/lampa-plugins/main/data/hot-discovery.json';
-var HOT_CACHE_KEY='surs_hot_json_v6',HOT_OLD_CACHE_KEY='surs_hot_json_v5',
-HOT_OLDER_CACHE_KEY='surs_hot_json_v4',
-HOT_OLDER2_CACHE_KEY='surs_hot_json_v3',
-HOT_OLDER3_CACHE_KEY='surs_hot_json_v2',
+
+
+var HOT_CACHE_KEY='surs_hot_json_v7',HOT_OLD_CACHE_KEY='surs_hot_json_v6',
+HOT_OLDER_CACHE_KEY='surs_hot_json_v5',
+HOT_OLDER2_CACHE_KEY='surs_hot_json_v4',
+HOT_OLDER3_CACHE_KEY='surs_hot_json_v3',
+HOT_OLDER4_CACHE_KEY='surs_hot_json_v2',
 HOT_OLDEST_CACHE_KEY='surs_hot_json_v1',HOT_MAX_AGE=7*86400000;
 var hotRequesting=false,hotCallbacks=[],hotLastTry=0;
 function hotValid(feed){
@@ -1783,10 +1786,12 @@ var recent=Lampa.Storage.get(HOT_OLD_CACHE_KEY,null),
 older=Lampa.Storage.get(HOT_OLDER_CACHE_KEY,null),
 older2=Lampa.Storage.get(HOT_OLDER2_CACHE_KEY,null),
 older3=Lampa.Storage.get(HOT_OLDER3_CACHE_KEY,null),
+older4=Lampa.Storage.get(HOT_OLDER4_CACHE_KEY,null),
 oldest=Lampa.Storage.get(HOT_OLDEST_CACHE_KEY,null);
 return hotValid(recent)?recent:
 hotValid(older)?older:hotValid(older2)?older2:
-hotValid(older3)?older3:hotValid(oldest)?oldest:null;
+hotValid(older3)?older3:hotValid(older4)?older4:
+hotValid(oldest)?oldest:null;
 }catch(e){return null;}
 }
 function hotRow(feed){
@@ -3614,7 +3619,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.8';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.9';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -4125,7 +4130,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v4.0.8 (Hot Discovery 4.5 interest) успешно инициализирован.');
+console.log('SURS Pro v4.0.9 (Hot Discovery 4.14) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4156,7 +4161,7 @@ return defaults;
 getDefaultSectionShelves: getDefaultSectionShelves,
 hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
 openHotDiagnostics: openHotDiagnostics,
-version: '4.0.8'
+version: '4.0.9'
 };
 
 
