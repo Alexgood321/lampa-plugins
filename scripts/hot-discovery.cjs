@@ -380,11 +380,15 @@ function freshProvisional(c) {
     number(c.surs_hot_quality)<6.75||number(c.vote_average)<7)return false;
   const e=c.surs_hot_interest_evidence||{};
   const day=number(c.surs_hot_trend_day),week=number(c.surs_hot_trend_week);
+  const sustainedEarly=age<=21&&votes>=50&&
+    day>=1&&day<=40&&week>=1&&week<=40;
   const strongChart=(day>=1&&day<=20)||(week>=1&&week<=20);
-  // A weak week-60 rank alone never admits an insufficiently rated title.
+  // Two sustained, first-40 TMDB windows are weak but real evidence
+  // for a <=21-day launch with >=50 votes. Cap it as a provisional,
+  // never count day/week as two independent providers.
   return e.current_interest_strong===true&&
-    (strongChart||e.kinopoisk_top60===true)&&
-    number(c.surs_hot_attention)>=.32;
+    (strongChart||sustainedEarly||e.kinopoisk_top60===true)&&
+    number(c.surs_hot_attention)>=(sustainedEarly?.27:.32);
 }
 function activeSeasonSecondary(c) {
   return c.surs_hot_premiere_kind==='season'&&
@@ -1262,6 +1266,8 @@ async function build({now=new Date(),tmdbToken,mdblistKey='',kinopoiskKey='',kpC
         id:c.id,type:c.type,title:c.title,kind:c.surs_hot_premiere_kind,
         premiere:c.surs_hot_premiere_date,age:c.surs_hot_rank_age,
         tmdb:c.vote_average,tmdb_votes:c.vote_count,
+        trend_day:c.surs_hot_trend_day||null,
+        trend_week:c.surs_hot_trend_week||null,
         imdb:c.surs_hot_ratings?.imdb||null,kp:c.surs_hot_ratings?.kp||null,
         attention:c.surs_hot_attention,
         growth_status:c.surs_hot_growth_status,
