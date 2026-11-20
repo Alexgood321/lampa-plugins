@@ -2,7 +2,7 @@
   "schema": 1,
   "algorithm": "hot-discovery-5.0",
   "mode": "primary",
-  "generated_at": "2026-11-19T02:37:50.703Z",
+  "generated_at": "2026-11-20T02:22:32.698Z",
   "sources": {
     "tmdb": true,
     "mdblist": false,
@@ -28,9 +28,9 @@
         28,
         14
       ],
-      "popularity": 490.2066,
-      "vote_average": 8.014,
-      "vote_count": 5117,
+      "popularity": 483.0522,
+      "vote_average": 8.019,
+      "vote_count": 5173,
       "surs_hot_premiere_date": "2026-11-17",
       "surs_hot_premiere_kind": "digital",
       "surs_hot_season": null,
@@ -67,7 +67,7 @@
         }
       },
       "surs_hot_kinopoisk_popularity_rank": 8,
-      "surs_hot_quality": 8.547,
+      "surs_hot_quality": 8.549,
       "surs_hot_confidence": 0.991,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
@@ -80,51 +80,51 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 8.167,
+      "surs_hot_quality_base": 8.169,
       "surs_hot_rating_agreement": {
         "sources": 3,
-        "spread": 0.386,
+        "spread": 0.381,
         "bonus": 0.38,
         "level": "triple_high"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 7.978,
+        "tmdb": 7.983,
         "imdb": 8.396,
         "kp": 8.099
       },
-      "surs_hot_heat": 0.943,
-      "surs_hot_attention": 0.943,
-      "surs_hot_attention_tmdb": 0.868,
+      "surs_hot_heat": 0.945,
+      "surs_hot_attention": 0.945,
+      "surs_hot_attention_tmdb": 0.871,
       "surs_hot_external_demand_bonus": 0.0745,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": true,
-      "surs_hot_attention_pop_percentile": 0.988,
+      "surs_hot_attention_pop_percentile": 1,
       "surs_hot_attention_day": 0.8423,
       "surs_hot_attention_week": 0.8423,
       "surs_hot_attention_sources": 2,
-      "surs_hot_growth": 0.62,
+      "surs_hot_growth": 0.618,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
-        "1d": 0.592,
-        "3d": 0.627,
-        "7d": 0.64
+        "1d": 0.578,
+        "3d": 0.637,
+        "7d": 0.639
       },
       "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.297,
+      "surs_hot_growth_signal": 0.2904,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 2,
-      "surs_hot_rank_age": 125,
+      "surs_hot_age": 3,
+      "surs_hot_rank_age": 126,
       "surs_hot_rank_date": "2026-07-17",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": false,
       "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.4223,
+      "surs_hot_freshness": 0.4194,
       "surs_hot_model_scores": {
-        "baseline": 75.839,
-        "demand": 76.72,
-        "fresh": 74.117
+        "baseline": 75.84,
+        "demand": 76.728,
+        "fresh": 74.1
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -132,7 +132,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 76.72,
+      "surs_hot_base_score": 76.728,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
         "tmdb_trending": true,
@@ -157,8 +157,8 @@
       "surs_hot_active_season_secondary": false,
       "surs_hot_kinopoisk_rank_deltas": {
         "1d": {
-          "delta": -5,
-          "from": 3,
+          "delta": 0,
+          "from": 8,
           "to": 8,
           "days": 1
         },
@@ -176,12 +176,19 @@
           "from": 399163,
           "to": 399163,
           "days": 1
+        },
+        "3d": {
+          "delta": 0,
+          "rate": 0,
+          "from": 399163,
+          "to": 399163,
+          "days": 3
         }
       },
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
-      "surs_hot_kinopoisk_votes_as_of": "2026-11-19",
-      "surs_hot_score": 76.72,
-      "surs_hot_demand_score": 76.72,
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 76.73,
+      "surs_hot_demand_score": 76.73,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
@@ -206,9 +213,9 @@
         28,
         12
       ],
-      "popularity": 328.2605,
-      "vote_average": 8.462,
-      "vote_count": 6954,
+      "popularity": 314.3051,
+      "vote_average": 8.457,
+      "vote_count": 6980,
       "surs_hot_premiere_date": "2026-10-06",
       "surs_hot_premiere_kind": "digital",
       "surs_hot_season": null,
@@ -223,7 +230,7 @@
         "discover_vote_average.desc"
       ],
       "surs_hot_trend_day": 7,
-      "surs_hot_trend_week": 10,
+      "surs_hot_trend_week": 5,
       "surs_hot_imdb_id": "tt22084616",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
@@ -242,7 +249,7 @@
         }
       },
       "surs_hot_kinopoisk_popularity_rank": 15,
-      "surs_hot_quality": 8.448,
+      "surs_hot_quality": 8.446,
       "surs_hot_confidence": 0.993,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
@@ -255,51 +262,51 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 8.068,
+      "surs_hot_quality_base": 8.066,
       "surs_hot_rating_agreement": {
         "sources": 3,
-        "spread": 0.562,
+        "spread": 0.557,
         "bonus": 0.38,
         "level": "triple_high"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 8.426,
+        "tmdb": 8.421,
         "imdb": 7.899,
         "kp": 7.9
       },
-      "surs_hot_heat": 0.646,
-      "surs_hot_attention": 0.646,
-      "surs_hot_attention_tmdb": 0.594,
+      "surs_hot_heat": 0.702,
+      "surs_hot_attention": 0.702,
+      "surs_hot_attention_tmdb": 0.65,
       "surs_hot_external_demand_bonus": 0.0521,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": true,
-      "surs_hot_attention_pop_percentile": 0.951,
+      "surs_hot_attention_pop_percentile": 0.956,
       "surs_hot_attention_day": 0.5268,
-      "surs_hot_attention_week": 0.4543,
+      "surs_hot_attention_week": 0.5923,
       "surs_hot_attention_sources": 2,
-      "surs_hot_growth": 0.577,
+      "surs_hot_growth": 0.578,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
         "1d": 0.53,
-        "3d": 0.595,
-        "7d": 0.607
+        "3d": 0.597,
+        "7d": 0.606
       },
       "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.1551,
+      "surs_hot_growth_signal": 0.1584,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 44,
-      "surs_hot_rank_age": 111,
+      "surs_hot_age": 45,
+      "surs_hot_rank_age": 112,
       "surs_hot_rank_date": "2026-07-31",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 1,
       "surs_hot_provisional": false,
       "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.4651,
+      "surs_hot_freshness": 0.4619,
       "surs_hot_model_scores": {
-        "baseline": 59.322,
-        "demand": 58.895,
-        "fresh": 57.99
+        "baseline": 61.851,
+        "demand": 61.707,
+        "fresh": 60.506
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -307,7 +314,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 58.895,
+      "surs_hot_base_score": 61.707,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
         "tmdb_trending": true,
@@ -333,8 +340,8 @@
       "surs_hot_active_season_secondary": false,
       "surs_hot_kinopoisk_rank_deltas": {
         "1d": {
-          "delta": -4,
-          "from": 11,
+          "delta": 0,
+          "from": 15,
           "to": 15,
           "days": 1
         },
@@ -354,10 +361,10 @@
           "days": 1
         }
       },
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
       "surs_hot_kinopoisk_votes_as_of": "2026-11-19",
-      "surs_hot_score": 58.9,
-      "surs_hot_demand_score": 58.9,
+      "surs_hot_score": 61.71,
+      "surs_hot_demand_score": 61.71,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
@@ -385,9 +392,9 @@
       "origin_country": [
         "US"
       ],
-      "popularity": 104.7496,
-      "vote_average": 8.86,
-      "vote_count": 1073,
+      "popularity": 113.9662,
+      "vote_average": 8.857,
+      "vote_count": 1077,
       "surs_hot_premiere_date": "2026-11-15",
       "surs_hot_premiere_kind": "season",
       "surs_hot_season": 6,
@@ -402,7 +409,7 @@
         "trending_week",
         "season"
       ],
-      "surs_hot_trend_day": 10,
+      "surs_hot_trend_day": 25,
       "surs_hot_trend_week": 10,
       "surs_hot_imdb_id": "tt5622316",
       "surs_hot_current_popularity_observed": true,
@@ -412,7 +419,20 @@
       "surs_hot_episodes_released": 3,
       "surs_hot_last_regular_episode_date": "2026-11-15",
       "surs_hot_regular_episode_last14d": true,
-      "surs_hot_quality": 8.714,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 9,
+          "votes": 20061,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 1228882
+        },
+        "imdb": {
+          "value": 9.2,
+          "votes": 51182,
+          "via": "kinopoisk_unofficial"
+        }
+      },
+      "surs_hot_quality": 8.713,
       "surs_hot_confidence": 0.958,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
@@ -425,7 +445,7 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 8.934,
+      "surs_hot_quality_base": 8.933,
       "surs_hot_rating_agreement": {
         "sources": 3,
         "bonus": 0,
@@ -433,42 +453,42 @@
         "level": "unconfirmed"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 8.605,
+        "tmdb": 8.603,
         "imdb": 9.185,
         "kp": 8.979
       },
-      "surs_hot_heat": 0.522,
-      "surs_hot_attention": 0.522,
-      "surs_hot_attention_tmdb": 0.522,
+      "surs_hot_heat": 0.498,
+      "surs_hot_attention": 0.498,
+      "surs_hot_attention_tmdb": 0.498,
       "surs_hot_external_demand_bonus": 0,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.831,
-      "surs_hot_attention_day": 0.4543,
+      "surs_hot_attention_pop_percentile": 0.832,
+      "surs_hot_attention_day": 0.2586,
       "surs_hot_attention_week": 0.4543,
       "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.561,
+      "surs_hot_growth": 0.546,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
-        "1d": 0.519,
-        "3d": 0.602
+        "1d": 0.5,
+        "3d": 0.591
       },
-      "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.1023,
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 4,
-      "surs_hot_rank_age": 4,
+      "surs_hot_age": 5,
+      "surs_hot_rank_age": 5,
       "surs_hot_rank_date": "2026-11-15",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": true,
       "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.9728,
+      "surs_hot_freshness": 0.9661,
       "surs_hot_model_scores": {
-        "baseline": 58.814,
-        "demand": 57.291,
-        "fresh": 59.545
+        "baseline": 56.153,
+        "demand": 54.513,
+        "fresh": 56.853
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -476,7 +496,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 57.291,
+      "surs_hot_base_score": 54.513,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
         "tmdb_trending": true,
@@ -499,198 +519,17 @@
       "surs_hot_availability": "aired_new_season",
       "surs_hot_fresh_provisional": false,
       "surs_hot_active_season_secondary": false,
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 9,
-          "votes": 20061,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 1228882
-        },
-        "imdb": {
-          "value": 9.2,
-          "votes": 51182,
-          "via": "kinopoisk_unofficial"
-        }
-      },
       "surs_hot_kinopoisk_rank_deltas": {},
       "surs_hot_kinopoisk_vote_growth": {},
       "surs_hot_kinopoisk_rank_as_of": null,
       "surs_hot_kinopoisk_votes_as_of": "2026-11-19",
-      "surs_hot_score": 57.29,
-      "surs_hot_demand_score": 57.29,
+      "surs_hot_score": 54.51,
+      "surs_hot_demand_score": 54.51,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 0,
       "surs_hot_rank": 3
-    },
-    {
-      "id": 213375,
-      "source": "tmdb",
-      "type": "tv",
-      "media_type": "tv",
-      "title": "Квест Вижна",
-      "name": "Квест Вижна",
-      "original_title": "",
-      "original_name": "VisionQuest",
-      "first_air_date": "2026-10-13",
-      "poster_path": "/vlSjG3mbCfC8je9FmYmMQm1jWyZ.jpg",
-      "backdrop_path": "/uoXXbN2PrOxH6UKyP7kYwmGpAAP.jpg",
-      "overview": "После возвращения Вижна к жизни его существование оказывается под вопросом: он больше не тот, кем был раньше. Его тело восстановлено, однако воспоминания и личность изменились, из-за чего он пытается понять, кто он теперь. В поисках своего прошлого Вижн сталкивается с новыми угрозами и постепенно оказывается втянут в события, связанные с его происхождением и наследием. Ему предстоит разобраться в собственных воспоминаниях, определить, кем он хочет быть, и решить, способен ли он вновь стать героем.",
-      "genre_ids": [
-        10765,
-        18
-      ],
-      "origin_country": [
-        "US"
-      ],
-      "popularity": 256.4807,
-      "vote_average": 8.259,
-      "vote_count": 539,
-      "surs_hot_premiere_date": "2026-10-13",
-      "surs_hot_premiere_kind": "series",
-      "surs_hot_season": null,
-      "surs_hot_original_date": "2026-10-13",
-      "surs_hot_digital_date": null,
-      "surs_hot_first_us_release_date": null,
-      "surs_hot_digital_status": null,
-      "surs_hot_discovery": [
-        "recent_popularity.desc",
-        "fresh_season",
-        "recent_season",
-        "trending_day",
-        "trending_week",
-        "discover_popularity.desc",
-        "discover_vote_average.desc",
-        "season"
-      ],
-      "surs_hot_trend_day": 5,
-      "surs_hot_trend_week": 2,
-      "surs_hot_imdb_id": "tt23112594",
-      "surs_hot_current_popularity_observed": true,
-      "surs_hot_current_vote_count_observed": true,
-      "surs_hot_discovery_pass": 1,
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 7,
-          "votes": 3952,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 5158783
-        }
-      },
-      "surs_hot_kinopoisk_popularity_rank": 55,
-      "surs_hot_quality": 7.456,
-      "surs_hot_confidence": 0.875,
-      "surs_hot_coverage": 2,
-      "surs_hot_rating_evidence": {
-        "sources": [
-          "tmdb",
-          "kp"
-        ],
-        "source_count": 2,
-        "level": "two_source",
-        "missing": [
-          "imdb"
-        ]
-      },
-      "surs_hot_quality_base": 7.456,
-      "surs_hot_rating_agreement": {
-        "sources": 2,
-        "spread": 1.259,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "surs_hot_adjusted_ratings": {
-        "tmdb": 7.927,
-        "kp": 6.985
-      },
-      "surs_hot_heat": 0.769,
-      "surs_hot_attention": 0.769,
-      "surs_hot_attention_tmdb": 0.765,
-      "surs_hot_external_demand_bonus": 0.0037,
-      "surs_hot_independent_demand_floor": 0,
-      "surs_hot_kinopoisk_momentum_bonus": 0.0004,
-      "surs_hot_cross_source_interest": true,
-      "surs_hot_attention_pop_percentile": 0.944,
-      "surs_hot_attention_day": 0.5923,
-      "surs_hot_attention_week": 0.75,
-      "surs_hot_attention_sources": 2,
-      "surs_hot_growth": 0.533,
-      "surs_hot_growth_measured": true,
-      "surs_hot_growth_periods": {
-        "1d": 0.5,
-        "3d": 0.56,
-        "7d": 0.539
-      },
-      "surs_hot_growth_status": "flat",
-      "surs_hot_growth_signal": 0,
-      "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 37,
-      "surs_hot_rank_age": 37,
-      "surs_hot_rank_date": "2026-10-13",
-      "surs_hot_age_source_verified": true,
-      "surs_hot_recency_tier": 1,
-      "surs_hot_provisional": false,
-      "surs_hot_track": "qualified",
-      "surs_hot_freshness": 0.7748,
-      "surs_hot_model_scores": {
-        "baseline": 51.679,
-        "demand": 53.638,
-        "fresh": 53.667
-      },
-      "surs_hot_weights": {
-        "attention": 0.5,
-        "quality": 0.3,
-        "growth": 0.15,
-        "freshness": 0.05
-      },
-      "surs_hot_base_score": 53.638,
-      "surs_hot_interest_evidence": {
-        "rating_sources": 2,
-        "tmdb_trending": true,
-        "kinopoisk_top60": true,
-        "tmdb_trending_extended": false,
-        "kinopoisk_top100_extended": false,
-        "recent_emerging": false,
-        "measured_positive_growth": false,
-        "current_interest_observed": true,
-        "current_interest_strong": true,
-        "current_interest_confidence": "strong",
-        "one_source_eligible": true,
-        "interest_evidence": [
-          "tmdb_trending",
-          "kinopoisk_top60"
-        ]
-      },
-      "surs_hot_previous_top20_grace": true,
-      "surs_hot_external_rating_exception": false,
-      "surs_hot_availability": "aired_new_series",
-      "surs_hot_fresh_provisional": false,
-      "surs_hot_active_season_secondary": false,
-      "surs_hot_kinopoisk_rank_deltas": {
-        "1d": {
-          "delta": 14,
-          "from": 69,
-          "to": 55,
-          "days": 1
-        },
-        "3d": {
-          "delta": 14,
-          "from": 69,
-          "to": 55,
-          "days": 3
-        }
-      },
-      "surs_hot_kinopoisk_vote_growth": {},
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
-      "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 53.64,
-      "surs_hot_demand_score": 53.64,
-      "surs_hot_editorial_penalty": 0,
-      "surs_hot_editorial_diversity_penalty": 0,
-      "surs_hot_editorial_interest_penalty": 0,
-      "surs_hot_editorial_distribution_penalty": 0,
-      "surs_hot_rank": 4
     },
     {
       "id": 291507,
@@ -712,9 +551,9 @@
       "origin_country": [
         "US"
       ],
-      "popularity": 206.6655,
-      "vote_average": 7.9,
-      "vote_count": 83,
+      "popularity": 198.9137,
+      "vote_average": 7.935,
+      "vote_count": 93,
       "surs_hot_premiere_date": "2026-11-11",
       "surs_hot_premiere_kind": "series",
       "surs_hot_season": null,
@@ -736,14 +575,14 @@
         "discover_vote_average.desc",
         "season"
       ],
-      "surs_hot_trend_day": 3,
-      "surs_hot_trend_week": 3,
+      "surs_hot_trend_day": 4,
+      "surs_hot_trend_week": 2,
       "surs_hot_imdb_id": "tt8014982",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
       "surs_hot_discovery_pass": 1,
-      "surs_hot_quality": 7.115,
-      "surs_hot_confidence": 0.372,
+      "surs_hot_quality": 7.163,
+      "surs_hot_confidence": 0.399,
       "surs_hot_coverage": 1,
       "surs_hot_rating_evidence": {
         "sources": [
@@ -756,7 +595,7 @@
           "kp"
         ]
       },
-      "surs_hot_quality_base": 7.115,
+      "surs_hot_quality_base": 7.163,
       "surs_hot_rating_agreement": {
         "sources": 0,
         "bonus": 0,
@@ -764,41 +603,41 @@
         "level": "unconfirmed"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 7.115
+        "tmdb": 7.163
       },
-      "surs_hot_heat": 0.725,
-      "surs_hot_attention": 0.725,
-      "surs_hot_attention_tmdb": 0.725,
+      "surs_hot_heat": 0.766,
+      "surs_hot_attention": 0.766,
+      "surs_hot_attention_tmdb": 0.766,
       "surs_hot_external_demand_bonus": 0,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.911,
-      "surs_hot_attention_day": 0.6845,
-      "surs_hot_attention_week": 0.6845,
+      "surs_hot_attention_pop_percentile": 0.916,
+      "surs_hot_attention_day": 0.6338,
+      "surs_hot_attention_week": 0.75,
       "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.667,
+      "surs_hot_growth": 0.628,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
-        "1d": 0.5,
-        "3d": 0.638,
-        "7d": 0.862
+        "1d": 0.519,
+        "3d": 0.598,
+        "7d": 0.768
       },
       "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.4521,
+      "surs_hot_growth_signal": 0.3234,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 8,
-      "surs_hot_rank_age": 8,
+      "surs_hot_age": 9,
+      "surs_hot_rank_age": 9,
       "surs_hot_rank_date": "2026-11-11",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": true,
       "surs_hot_track": "breakout",
-      "surs_hot_freshness": 0.9463,
+      "surs_hot_freshness": 0.9398,
       "surs_hot_model_scores": {
-        "baseline": 53.076,
-        "demand": 55.424,
-        "fresh": 56.53
+        "baseline": 53.558,
+        "demand": 56.025,
+        "fresh": 56.894
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -806,7 +645,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 55.424,
+      "surs_hot_base_score": 56.025,
       "surs_hot_interest_evidence": {
         "rating_sources": 1,
         "tmdb_trending": true,
@@ -832,12 +671,153 @@
       "surs_hot_kinopoisk_vote_growth": {},
       "surs_hot_kinopoisk_rank_as_of": null,
       "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 55.42,
-      "surs_hot_demand_score": 55.42,
+      "surs_hot_score": 56.03,
+      "surs_hot_demand_score": 56.03,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 0,
+      "surs_hot_rank": 4
+    },
+    {
+      "id": 1300968,
+      "source": "tmdb",
+      "type": "movie",
+      "media_type": "movie",
+      "title": "Голодные игры: Рассвет жатвы",
+      "name": "Голодные игры: Рассвет жатвы",
+      "original_title": "The Hunger Games: Sunrise on the Reaping",
+      "original_name": "",
+      "release_date": "2026-11-18",
+      "poster_path": "/tD4kBIthK1NFxesGT5Pj42fM5u5.jpg",
+      "backdrop_path": "/aqFZcr2dxSZ2UwWSo1WC6C0rwDf.jpg",
+      "overview": "Молодой Хеймитч Эбернети из 12-го дистрикта участвует в легендарных 50-х Голодных играх. Но шансов уцелеть у него немного — в последний раз трибут из его района побеждал на играх сорок лет назад.",
+      "genre_ids": [
+        878,
+        28,
+        12
+      ],
+      "popularity": 172.8994,
+      "vote_average": 7.44,
+      "vote_count": 58,
+      "surs_hot_premiere_date": "2026-11-20",
+      "surs_hot_premiere_kind": "theatrical",
+      "surs_hot_season": null,
+      "surs_hot_original_date": "2026-11-18",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": "2026-11-20",
+      "surs_hot_digital_status": "digital_date_unconfirmed",
+      "surs_hot_discovery": [
+        "fresh_primary_release_date.desc",
+        "fresh_popularity.desc",
+        "recent_primary_release_date.desc",
+        "recent_popularity.desc",
+        "trending_day",
+        "trending_week",
+        "discover_primary_release_date.desc",
+        "discover_popularity.desc"
+      ],
+      "surs_hot_trend_day": 2,
+      "surs_hot_trend_week": 2,
+      "surs_hot_imdb_id": "tt32558705",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_quality": 6.881,
+      "surs_hot_confidence": 0.293,
+      "surs_hot_coverage": 1,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb"
+        ],
+        "source_count": 1,
+        "level": "single_source",
+        "missing": [
+          "imdb",
+          "kp"
+        ]
+      },
+      "surs_hot_quality_base": 6.881,
+      "surs_hot_rating_agreement": {
+        "sources": 0,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 6.881
+      },
+      "surs_hot_heat": 0.781,
+      "surs_hot_attention": 0.781,
+      "surs_hot_attention_tmdb": 0.781,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": false,
+      "surs_hot_attention_pop_percentile": 0.923,
+      "surs_hot_attention_day": 0.75,
+      "surs_hot_attention_week": 0.75,
+      "surs_hot_attention_sources": 1,
+      "surs_hot_growth": 0.56,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.56
+      },
+      "surs_hot_growth_status": "unknown",
+      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_confirmed": false,
+      "surs_hot_age": 0,
+      "surs_hot_rank_age": 0,
+      "surs_hot_rank_date": "2026-11-20",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 0,
+      "surs_hot_provisional": true,
+      "surs_hot_track": "breakout",
+      "surs_hot_freshness": 1,
+      "surs_hot_model_scores": {
+        "baseline": 54.826,
+        "demand": 57.873,
+        "fresh": 59.175
+      },
+      "surs_hot_weights": {
+        "attention": 0.6,
+        "quality": 0.35,
+        "growth": 0,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 57.873,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 1,
+        "tmdb_trending": true,
+        "kinopoisk_top60": false,
+        "tmdb_trending_extended": false,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": false,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": true,
+        "current_interest_confidence": "strong",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending"
+        ]
+      },
+      "surs_hot_previous_top20_grace": false,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "theatrical_digital_unconfirmed",
+      "surs_hot_fresh_provisional": true,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_ratings": {},
+      "surs_hot_kinopoisk_rank_deltas": {},
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": null,
+      "surs_hot_kinopoisk_votes_as_of": null,
+      "surs_hot_score": 57.87,
+      "surs_hot_demand_score": 57.87,
+      "surs_hot_editorial_penalty": 3,
+      "surs_hot_editorial_diversity_penalty": 0,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 3,
       "surs_hot_rank": 5
     },
     {
@@ -861,9 +841,9 @@
       "origin_country": [
         "US"
       ],
-      "popularity": 92.2978,
-      "vote_average": 8.546,
-      "vote_count": 767,
+      "popularity": 87.5873,
+      "vote_average": 8.5,
+      "vote_count": 769,
       "surs_hot_premiere_date": "2026-11-01",
       "surs_hot_premiere_kind": "season",
       "surs_hot_season": 2,
@@ -874,13 +854,14 @@
       "surs_hot_discovery": [
         "fresh_season",
         "recent_season",
+        "trending_day",
         "trending_week",
         "discover_popularity.desc",
         "discover_vote_average.desc",
         "season"
       ],
-      "surs_hot_trend_day": null,
-      "surs_hot_trend_week": 6,
+      "surs_hot_trend_day": 15,
+      "surs_hot_trend_week": 8,
       "surs_hot_imdb_id": "tt33043892",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
@@ -890,26 +871,13 @@
       "surs_hot_last_regular_episode_date": "2026-11-15",
       "surs_hot_regular_episode_last14d": true,
       "surs_hot_season_rating": {
-        "value": 7.895,
+        "value": 7.879,
         "votes": 86,
         "episodes_rated": 3,
         "episodes_released": 3
       },
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 8.5,
-          "votes": 38948,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 6058297
-        },
-        "imdb": {
-          "value": 9,
-          "votes": 165385,
-          "via": "kinopoisk_unofficial"
-        }
-      },
-      "surs_hot_quality": 8.37,
-      "surs_hot_confidence": 0.948,
+      "surs_hot_quality": 8.356,
+      "surs_hot_confidence": 0.949,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
         "sources": [
@@ -921,7 +889,7 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 8.597,
+      "surs_hot_quality_base": 8.585,
       "surs_hot_rating_agreement": {
         "sources": 3,
         "bonus": 0,
@@ -929,43 +897,43 @@
         "level": "unconfirmed"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 8.253,
+        "tmdb": 8.215,
         "imdb": 8.996,
         "kp": 8.491
       },
-      "surs_hot_heat": 0.532,
-      "surs_hot_attention": 0.532,
-      "surs_hot_attention_tmdb": 0.532,
+      "surs_hot_heat": 0.535,
+      "surs_hot_attention": 0.535,
+      "surs_hot_attention_tmdb": 0.535,
       "surs_hot_external_demand_bonus": 0,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.798,
-      "surs_hot_attention_day": 0,
-      "surs_hot_attention_week": 0.5572,
+      "surs_hot_attention_pop_percentile": 0.782,
+      "surs_hot_attention_day": 0.3691,
+      "surs_hot_attention_week": 0.5,
       "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.538,
+      "surs_hot_growth": 0.537,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
         "1d": 0.5,
-        "3d": 0.534,
-        "7d": 0.58
+        "3d": 0.531,
+        "7d": 0.581
       },
       "surs_hot_growth_status": "flat",
       "surs_hot_growth_signal": 0,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 18,
-      "surs_hot_rank_age": 18,
+      "surs_hot_age": 19,
+      "surs_hot_rank_age": 19,
       "surs_hot_rank_date": "2026-11-01",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": false,
       "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.8833,
+      "surs_hot_freshness": 0.8772,
       "surs_hot_model_scores": {
-        "baseline": 52.981,
-        "demand": 52.124,
-        "fresh": 53.88
+        "baseline": 52.911,
+        "demand": 52.093,
+        "fresh": 53.804
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -973,7 +941,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 52.124,
+      "surs_hot_base_score": 52.093,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
         "tmdb_trending": true,
@@ -996,17 +964,198 @@
       "surs_hot_availability": "aired_new_season",
       "surs_hot_fresh_provisional": false,
       "surs_hot_active_season_secondary": false,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 8.5,
+          "votes": 38948,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 6058297
+        },
+        "imdb": {
+          "value": 9,
+          "votes": 165385,
+          "via": "kinopoisk_unofficial"
+        }
+      },
       "surs_hot_kinopoisk_rank_deltas": {},
       "surs_hot_kinopoisk_vote_growth": {},
       "surs_hot_kinopoisk_rank_as_of": null,
-      "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 52.12,
-      "surs_hot_demand_score": 52.12,
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 52.09,
+      "surs_hot_demand_score": 52.09,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 0,
       "surs_hot_rank": 6
+    },
+    {
+      "id": 213375,
+      "source": "tmdb",
+      "type": "tv",
+      "media_type": "tv",
+      "title": "Квест Вижна",
+      "name": "Квест Вижна",
+      "original_title": "",
+      "original_name": "VisionQuest",
+      "first_air_date": "2026-10-13",
+      "poster_path": "/vlSjG3mbCfC8je9FmYmMQm1jWyZ.jpg",
+      "backdrop_path": "/uoXXbN2PrOxH6UKyP7kYwmGpAAP.jpg",
+      "overview": "После возвращения Вижна к жизни его существование оказывается под вопросом: он больше не тот, кем был раньше. Его тело восстановлено, однако воспоминания и личность изменились, из-за чего он пытается понять, кто он теперь. В поисках своего прошлого Вижн сталкивается с новыми угрозами и постепенно оказывается втянут в события, связанные с его происхождением и наследием. Ему предстоит разобраться в собственных воспоминаниях, определить, кем он хочет быть, и решить, способен ли он вновь стать героем.",
+      "genre_ids": [
+        10765,
+        18
+      ],
+      "origin_country": [
+        "US"
+      ],
+      "popularity": 179.2351,
+      "vote_average": 8.249,
+      "vote_count": 548,
+      "surs_hot_premiere_date": "2026-10-13",
+      "surs_hot_premiere_kind": "series",
+      "surs_hot_season": null,
+      "surs_hot_original_date": "2026-10-13",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": null,
+      "surs_hot_digital_status": null,
+      "surs_hot_discovery": [
+        "recent_popularity.desc",
+        "fresh_season",
+        "recent_season",
+        "trending_day",
+        "trending_week",
+        "discover_popularity.desc",
+        "discover_vote_average.desc",
+        "season"
+      ],
+      "surs_hot_trend_day": 9,
+      "surs_hot_trend_week": 3,
+      "surs_hot_imdb_id": "tt23112594",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_quality": 7.454,
+      "surs_hot_confidence": 0.876,
+      "surs_hot_coverage": 2,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb",
+          "kp"
+        ],
+        "source_count": 2,
+        "level": "two_source",
+        "missing": [
+          "imdb"
+        ]
+      },
+      "surs_hot_quality_base": 7.454,
+      "surs_hot_rating_agreement": {
+        "sources": 2,
+        "spread": 1.249,
+        "bonus": 0,
+        "level": "mixed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 7.924,
+        "kp": 6.985
+      },
+      "surs_hot_heat": 0.703,
+      "surs_hot_attention": 0.703,
+      "surs_hot_attention_tmdb": 0.699,
+      "surs_hot_external_demand_bonus": 0.0037,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0.0004,
+      "surs_hot_cross_source_interest": true,
+      "surs_hot_attention_pop_percentile": 0.908,
+      "surs_hot_attention_day": 0.476,
+      "surs_hot_attention_week": 0.6845,
+      "surs_hot_attention_sources": 2,
+      "surs_hot_growth": 0.491,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.488,
+        "3d": 0.497,
+        "7d": 0.489
+      },
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 38,
+      "surs_hot_rank_age": 38,
+      "surs_hot_rank_date": "2026-10-13",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 1,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "qualified",
+      "surs_hot_freshness": 0.7695,
+      "surs_hot_model_scores": {
+        "baseline": 48.657,
+        "demand": 50.29,
+        "fresh": 50.623
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 50.29,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 2,
+        "tmdb_trending": true,
+        "kinopoisk_top60": true,
+        "tmdb_trending_extended": false,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": false,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": true,
+        "current_interest_confidence": "strong",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending",
+          "kinopoisk_top60"
+        ]
+      },
+      "surs_hot_previous_top20_grace": true,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "aired_new_series",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 7,
+          "votes": 3952,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 5158783
+        }
+      },
+      "surs_hot_kinopoisk_popularity_rank": 55,
+      "surs_hot_kinopoisk_rank_deltas": {
+        "1d": {
+          "delta": 0,
+          "from": 55,
+          "to": 55,
+          "days": 1
+        },
+        "3d": {
+          "delta": 14,
+          "from": 69,
+          "to": 55,
+          "days": 3
+        }
+      },
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 50.29,
+      "surs_hot_demand_score": 50.29,
+      "surs_hot_editorial_penalty": 0,
+      "surs_hot_editorial_diversity_penalty": 0,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 0,
+      "surs_hot_rank": 7
     },
     {
       "id": 1263337,
@@ -1025,9 +1174,9 @@
         12,
         53
       ],
-      "popularity": 507.5043,
-      "vote_average": 7.724,
-      "vote_count": 1001,
+      "popularity": 469.9037,
+      "vote_average": 7.76,
+      "vote_count": 1040,
       "surs_hot_premiere_date": "2026-11-10",
       "surs_hot_premiere_kind": "digital",
       "surs_hot_season": null,
@@ -1042,8 +1191,8 @@
         "discover_popularity.desc",
         "discover_vote_average.desc"
       ],
-      "surs_hot_trend_day": 14,
-      "surs_hot_trend_week": 9,
+      "surs_hot_trend_day": 16,
+      "surs_hot_trend_week": 11,
       "surs_hot_imdb_id": "tt7526136",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
@@ -1062,8 +1211,8 @@
         }
       },
       "surs_hot_kinopoisk_popularity_rank": 13,
-      "surs_hot_quality": 7.823,
-      "surs_hot_confidence": 0.941,
+      "surs_hot_quality": 7.835,
+      "surs_hot_confidence": 0.942,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
         "sources": [
@@ -1075,51 +1224,51 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 7.443,
+      "surs_hot_quality_base": 7.455,
       "surs_hot_rating_agreement": {
         "sources": 3,
-        "spread": 0.424,
+        "spread": 0.46,
         "bonus": 0.38,
         "level": "triple_high"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 7.592,
+        "tmdb": 7.628,
         "imdb": 7.279,
         "kp": 7.479
       },
-      "surs_hot_heat": 0.616,
-      "surs_hot_attention": 0.616,
-      "surs_hot_attention_tmdb": 0.559,
+      "surs_hot_heat": 0.582,
+      "surs_hot_attention": 0.582,
+      "surs_hot_attention_tmdb": 0.525,
       "surs_hot_external_demand_bonus": 0.0573,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": true,
-      "surs_hot_attention_pop_percentile": 1,
-      "surs_hot_attention_day": 0.3838,
-      "surs_hot_attention_week": 0.476,
+      "surs_hot_attention_pop_percentile": 0.989,
+      "surs_hot_attention_day": 0.3553,
+      "surs_hot_attention_week": 0.4345,
       "surs_hot_attention_sources": 2,
-      "surs_hot_growth": 0.576,
+      "surs_hot_growth": 0.572,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
-        "1d": 0.53,
+        "1d": 0.538,
         "3d": 0.59,
-        "7d": 0.607
+        "7d": 0.589
       },
       "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.1518,
+      "surs_hot_growth_signal": 0.1386,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 9,
-      "surs_hot_rank_age": 55,
+      "surs_hot_age": 10,
+      "surs_hot_rank_age": 56,
       "surs_hot_rank_date": "2026-09-25",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": false,
       "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.6843,
+      "surs_hot_freshness": 0.6796,
       "surs_hot_model_scores": {
-        "baseline": 51.206,
-        "demand": 51.745,
-        "fresh": 52.086
+        "baseline": 49.604,
+        "demand": 49.952,
+        "fresh": 50.44
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -1127,7 +1276,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 51.745,
+      "surs_hot_base_score": 49.952,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
         "tmdb_trending": true,
@@ -1153,8 +1302,8 @@
       "surs_hot_active_season_secondary": false,
       "surs_hot_kinopoisk_rank_deltas": {
         "1d": {
-          "delta": -8,
-          "from": 5,
+          "delta": 0,
+          "from": 13,
           "to": 13,
           "days": 1
         },
@@ -1174,15 +1323,15 @@
           "days": 1
         }
       },
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
       "surs_hot_kinopoisk_votes_as_of": "2026-11-19",
-      "surs_hot_score": 51.75,
-      "surs_hot_demand_score": 51.75,
+      "surs_hot_score": 49.95,
+      "surs_hot_demand_score": 49.95,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 0,
-      "surs_hot_rank": 7
+      "surs_hot_rank": 8
     },
     {
       "id": 1423191,
@@ -1202,9 +1351,9 @@
         878,
         12
       ],
-      "popularity": 400.9661,
-      "vote_average": 7.528,
-      "vote_count": 2346,
+      "popularity": 359.0935,
+      "vote_average": 7.532,
+      "vote_count": 2390,
       "surs_hot_premiere_date": "2026-11-03",
       "surs_hot_premiere_kind": "digital",
       "surs_hot_season": null,
@@ -1219,7 +1368,7 @@
         "discover_popularity.desc"
       ],
       "surs_hot_trend_day": 13,
-      "surs_hot_trend_week": 8,
+      "surs_hot_trend_week": 9,
       "surs_hot_imdb_id": "tt35538033",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
@@ -1238,7 +1387,7 @@
         }
       },
       "surs_hot_kinopoisk_popularity_rank": 9,
-      "surs_hot_quality": 7.74,
+      "surs_hot_quality": 7.742,
       "surs_hot_confidence": 0.981,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
@@ -1251,51 +1400,51 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 7.36,
+      "surs_hot_quality_base": 7.362,
       "surs_hot_rating_agreement": {
         "sources": 3,
-        "spread": 0.328,
+        "spread": 0.332,
         "bonus": 0.38,
         "level": "triple_high"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 7.479,
+        "tmdb": 7.483,
         "imdb": 7.399,
         "kp": 7.199
       },
-      "surs_hot_heat": 0.641,
-      "surs_hot_attention": 0.641,
-      "surs_hot_attention_tmdb": 0.571,
+      "surs_hot_heat": 0.625,
+      "surs_hot_attention": 0.625,
+      "surs_hot_attention_tmdb": 0.555,
       "surs_hot_external_demand_bonus": 0.0704,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": true,
-      "surs_hot_attention_pop_percentile": 0.963,
+      "surs_hot_attention_pop_percentile": 0.967,
       "surs_hot_attention_day": 0.3995,
-      "surs_hot_attention_week": 0.5,
+      "surs_hot_attention_week": 0.476,
       "surs_hot_attention_sources": 2,
-      "surs_hot_growth": 0.541,
+      "surs_hot_growth": 0.548,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
-        "1d": 0.519,
-        "3d": 0.573,
-        "7d": 0.532
+        "1d": 0.544,
+        "3d": 0.577,
+        "7d": 0.522
       },
       "surs_hot_growth_status": "flat",
       "surs_hot_growth_signal": 0,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 16,
-      "surs_hot_rank_age": 62,
+      "surs_hot_age": 17,
+      "surs_hot_rank_age": 63,
       "surs_hot_rank_date": "2026-09-18",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": false,
       "surs_hot_track": "qualified",
-      "surs_hot_freshness": 0.6521,
+      "surs_hot_freshness": 0.6476,
       "surs_hot_model_scores": {
-        "baseline": 48.856,
-        "demand": 49.668,
-        "fresh": 49.723
+        "baseline": 48.138,
+        "demand": 48.867,
+        "fresh": 48.98
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -1303,7 +1452,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 49.668,
+      "surs_hot_base_score": 48.867,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
         "tmdb_trending": true,
@@ -1328,8 +1477,8 @@
       "surs_hot_active_season_secondary": false,
       "surs_hot_kinopoisk_rank_deltas": {
         "1d": {
-          "delta": -5,
-          "from": 4,
+          "delta": 0,
+          "from": 9,
           "to": 9,
           "days": 1
         },
@@ -1347,17 +1496,189 @@
           "from": 85527,
           "to": 85527,
           "days": 1
+        },
+        "3d": {
+          "delta": 0,
+          "rate": 0,
+          "from": 85527,
+          "to": 85527,
+          "days": 3
         }
       },
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
-      "surs_hot_kinopoisk_votes_as_of": "2026-11-19",
-      "surs_hot_score": 49.67,
-      "surs_hot_demand_score": 49.67,
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 48.87,
+      "surs_hot_demand_score": 48.87,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 0,
-      "surs_hot_rank": 8
+      "surs_hot_rank": 9
+    },
+    {
+      "id": 153312,
+      "source": "tmdb",
+      "type": "tv",
+      "media_type": "tv",
+      "title": "Король Талсы",
+      "name": "Король Талсы",
+      "original_title": "",
+      "original_name": "Tulsa King",
+      "first_air_date": "2022-11-13",
+      "poster_path": "/sDpI1EBsock7mqmpbCoIwwmjXdI.jpg",
+      "backdrop_path": "/mNHRGO1gFpR2CYZdANe72kcKq7G.jpg",
+      "overview": "Мафиози Дуайт «Генерал» Манфреди вышел на свободу после 25-летней отсидки и оказался в совсем другом мире. В родном Нью-Йорке Генералу уже не рады и отправляют гангстера в Талсу, штат Оклахома. Но надеявшиеся там его похоронить просчитались — Манфреди постепенно собирает вокруг себя новую команду, которая поможет ему сколотить новую криминальную империю с нуля.",
+      "genre_ids": [
+        80,
+        18,
+        35
+      ],
+      "origin_country": [
+        "US"
+      ],
+      "popularity": 242.3391,
+      "vote_average": 8.322,
+      "vote_count": 2968,
+      "surs_hot_premiere_date": "2026-10-16",
+      "surs_hot_premiere_kind": "season",
+      "surs_hot_season": 4,
+      "surs_hot_original_date": "2022-11-13",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": null,
+      "surs_hot_digital_status": null,
+      "surs_hot_discovery": [
+        "fresh_season",
+        "recent_season",
+        "trending_week",
+        "season"
+      ],
+      "surs_hot_trend_day": null,
+      "surs_hot_trend_week": 20,
+      "surs_hot_imdb_id": "tt16358384",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_season_verified": true,
+      "surs_hot_episodes_released": 6,
+      "surs_hot_last_regular_episode_date": "2026-11-20",
+      "surs_hot_regular_episode_last14d": true,
+      "surs_hot_season_rating": {
+        "value": 8.311,
+        "votes": 98,
+        "episodes_rated": 5,
+        "episodes_released": 6
+      },
+      "surs_hot_quality": 8.051,
+      "surs_hot_confidence": 0.984,
+      "surs_hot_coverage": 3,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb",
+          "imdb",
+          "kp"
+        ],
+        "source_count": 3,
+        "level": "three_source",
+        "missing": []
+      },
+      "surs_hot_quality_base": 7.913,
+      "surs_hot_rating_agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 8.247,
+        "imdb": 7.897,
+        "kp": 7.598
+      },
+      "surs_hot_heat": 0.384,
+      "surs_hot_attention": 0.384,
+      "surs_hot_attention_tmdb": 0.384,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": false,
+      "surs_hot_attention_pop_percentile": 0.941,
+      "surs_hot_attention_day": 0,
+      "surs_hot_attention_week": 0.3072,
+      "surs_hot_attention_sources": 1,
+      "surs_hot_growth": 0.55,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.496,
+        "3d": 0.548,
+        "7d": 0.605
+      },
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 35,
+      "surs_hot_rank_age": 35,
+      "surs_hot_rank_date": "2026-10-16",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 1,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "critically_strong",
+      "surs_hot_freshness": 0.7855,
+      "surs_hot_model_scores": {
+        "baseline": 41.845,
+        "demand": 40.817,
+        "fresh": 42.824
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 40.817,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 3,
+        "tmdb_trending": true,
+        "kinopoisk_top60": false,
+        "tmdb_trending_extended": false,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": false,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": true,
+        "current_interest_confidence": "strong",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending"
+        ]
+      },
+      "surs_hot_previous_top20_grace": true,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "aired_new_season",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 7.6,
+          "votes": 89763,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 4760854
+        },
+        "imdb": {
+          "value": 7.9,
+          "votes": 124250,
+          "via": "kinopoisk_unofficial"
+        }
+      },
+      "surs_hot_kinopoisk_rank_deltas": {},
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": null,
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 40.82,
+      "surs_hot_demand_score": 40.82,
+      "surs_hot_editorial_penalty": 0,
+      "surs_hot_editorial_diversity_penalty": 0,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 0,
+      "surs_hot_rank": 10
     },
     {
       "id": 1567605,
@@ -1376,9 +1697,9 @@
         14,
         35
       ],
-      "popularity": 137.3574,
-      "vote_average": 7.5,
-      "vote_count": 111,
+      "popularity": 137.5158,
+      "vote_average": 7.617,
+      "vote_count": 120,
       "surs_hot_premiere_date": "2026-11-13",
       "surs_hot_premiere_kind": "theatrical",
       "surs_hot_season": null,
@@ -1393,14 +1714,14 @@
         "trending_week",
         "discover_popularity.desc"
       ],
-      "surs_hot_trend_day": 11,
-      "surs_hot_trend_week": 6,
+      "surs_hot_trend_day": 12,
+      "surs_hot_trend_week": 7,
       "surs_hot_imdb_id": "tt38773219",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
       "surs_hot_discovery_pass": 1,
-      "surs_hot_quality": 7.026,
-      "surs_hot_confidence": 0.442,
+      "surs_hot_quality": 7.096,
+      "surs_hot_confidence": 0.462,
       "surs_hot_coverage": 1,
       "surs_hot_rating_evidence": {
         "sources": [
@@ -1413,7 +1734,7 @@
           "kp"
         ]
       },
-      "surs_hot_quality_base": 7.026,
+      "surs_hot_quality_base": 7.096,
       "surs_hot_rating_agreement": {
         "sources": 1,
         "bonus": 0,
@@ -1421,41 +1742,41 @@
         "level": "unconfirmed"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 7.026
+        "tmdb": 7.096
       },
-      "surs_hot_heat": 0.604,
-      "surs_hot_attention": 0.604,
-      "surs_hot_attention_tmdb": 0.604,
+      "surs_hot_heat": 0.581,
+      "surs_hot_attention": 0.581,
+      "surs_hot_attention_tmdb": 0.581,
       "surs_hot_external_demand_bonus": 0,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": false,
       "surs_hot_attention_pop_percentile": 0.901,
-      "surs_hot_attention_day": 0.4345,
-      "surs_hot_attention_week": 0.5572,
+      "surs_hot_attention_day": 0.4163,
+      "surs_hot_attention_week": 0.5268,
       "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.635,
+      "surs_hot_growth": 0.608,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
-        "1d": 0.538,
-        "3d": 0.61,
-        "7d": 0.757
+        "1d": 0.5,
+        "3d": 0.609,
+        "7d": 0.714
       },
       "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.3465,
+      "surs_hot_growth_signal": 0.2574,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 6,
-      "surs_hot_rank_age": 6,
+      "surs_hot_age": 7,
+      "surs_hot_rank_age": 7,
       "surs_hot_rank_date": "2026-11-13",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": false,
       "surs_hot_track": "breakout",
-      "surs_hot_freshness": 0.9595,
+      "surs_hot_freshness": 0.9529,
       "surs_hot_model_scores": {
-        "baseline": 45,
-        "demand": 46.902,
-        "fresh": 48.68
+        "baseline": 43.47,
+        "demand": 45.133,
+        "fresh": 46.992
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -1463,7 +1784,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 46.902,
+      "surs_hot_base_score": 45.133,
       "surs_hot_interest_evidence": {
         "rating_sources": 1,
         "tmdb_trending": true,
@@ -1490,331 +1811,10 @@
       "surs_hot_kinopoisk_vote_growth": {},
       "surs_hot_kinopoisk_rank_as_of": null,
       "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 46.9,
-      "surs_hot_demand_score": 46.9,
+      "surs_hot_score": 45.13,
+      "surs_hot_demand_score": 45.13,
       "surs_hot_editorial_penalty": 3,
       "surs_hot_editorial_diversity_penalty": 0,
-      "surs_hot_editorial_interest_penalty": 0,
-      "surs_hot_editorial_distribution_penalty": 3,
-      "surs_hot_rank": 9
-    },
-    {
-      "id": 153312,
-      "source": "tmdb",
-      "type": "tv",
-      "media_type": "tv",
-      "title": "Король Талсы",
-      "name": "Король Талсы",
-      "original_title": "",
-      "original_name": "Tulsa King",
-      "first_air_date": "2022-11-13",
-      "poster_path": "/sDpI1EBsock7mqmpbCoIwwmjXdI.jpg",
-      "backdrop_path": "/mNHRGO1gFpR2CYZdANe72kcKq7G.jpg",
-      "overview": "Мафиози Дуайт «Генерал» Манфреди вышел на свободу после 25-летней отсидки и оказался в совсем другом мире. В родном Нью-Йорке Генералу уже не рады и отправляют гангстера в Талсу, штат Оклахома. Но надеявшиеся там его похоронить просчитались — Манфреди постепенно собирает вокруг себя новую команду, которая поможет ему сколотить новую криминальную империю с нуля.",
-      "genre_ids": [
-        80,
-        18,
-        35
-      ],
-      "origin_country": [
-        "US"
-      ],
-      "popularity": 253.5325,
-      "vote_average": 8.321,
-      "vote_count": 2966,
-      "surs_hot_premiere_date": "2026-10-16",
-      "surs_hot_premiere_kind": "season",
-      "surs_hot_season": 4,
-      "surs_hot_original_date": "2022-11-13",
-      "surs_hot_digital_date": null,
-      "surs_hot_first_us_release_date": null,
-      "surs_hot_digital_status": null,
-      "surs_hot_discovery": [
-        "fresh_season",
-        "recent_season",
-        "trending_day",
-        "trending_week",
-        "season"
-      ],
-      "surs_hot_trend_day": 38,
-      "surs_hot_trend_week": 20,
-      "surs_hot_imdb_id": "tt16358384",
-      "surs_hot_current_popularity_observed": true,
-      "surs_hot_current_vote_count_observed": true,
-      "surs_hot_discovery_pass": 1,
-      "surs_hot_season_verified": true,
-      "surs_hot_episodes_released": 5,
-      "surs_hot_last_regular_episode_date": "2026-11-13",
-      "surs_hot_regular_episode_last14d": true,
-      "surs_hot_season_rating": {
-        "value": 8.34,
-        "votes": 95,
-        "episodes_rated": 5,
-        "episodes_released": 5
-      },
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 7.6,
-          "votes": 89763,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 4760854
-        },
-        "imdb": {
-          "value": 7.9,
-          "votes": 124250,
-          "via": "kinopoisk_unofficial"
-        }
-      },
-      "surs_hot_quality": 8.059,
-      "surs_hot_confidence": 0.984,
-      "surs_hot_coverage": 3,
-      "surs_hot_rating_evidence": {
-        "sources": [
-          "tmdb",
-          "imdb",
-          "kp"
-        ],
-        "source_count": 3,
-        "level": "three_source",
-        "missing": []
-      },
-      "surs_hot_quality_base": 7.913,
-      "surs_hot_rating_agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "surs_hot_adjusted_ratings": {
-        "tmdb": 8.246,
-        "imdb": 7.897,
-        "kp": 7.598
-      },
-      "surs_hot_heat": 0.403,
-      "surs_hot_attention": 0.403,
-      "surs_hot_attention_tmdb": 0.403,
-      "surs_hot_external_demand_bonus": 0,
-      "surs_hot_independent_demand_floor": 0,
-      "surs_hot_kinopoisk_momentum_bonus": 0,
-      "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.935,
-      "surs_hot_attention_day": 0.1663,
-      "surs_hot_attention_week": 0.3072,
-      "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.559,
-      "surs_hot_growth_measured": true,
-      "surs_hot_growth_periods": {
-        "1d": 0.5,
-        "3d": 0.559,
-        "7d": 0.617
-      },
-      "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.0957,
-      "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 34,
-      "surs_hot_rank_age": 34,
-      "surs_hot_rank_date": "2026-10-16",
-      "surs_hot_age_source_verified": true,
-      "surs_hot_recency_tier": 1,
-      "surs_hot_provisional": false,
-      "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.791,
-      "surs_hot_model_scores": {
-        "baseline": 44.263,
-        "demand": 43.315,
-        "fresh": 45.255
-      },
-      "surs_hot_weights": {
-        "attention": 0.5,
-        "quality": 0.3,
-        "growth": 0.15,
-        "freshness": 0.05
-      },
-      "surs_hot_base_score": 43.315,
-      "surs_hot_interest_evidence": {
-        "rating_sources": 3,
-        "tmdb_trending": true,
-        "kinopoisk_top60": false,
-        "tmdb_trending_extended": false,
-        "kinopoisk_top100_extended": false,
-        "recent_emerging": false,
-        "measured_positive_growth": false,
-        "current_interest_observed": true,
-        "current_interest_strong": true,
-        "current_interest_confidence": "strong",
-        "one_source_eligible": true,
-        "interest_evidence": [
-          "tmdb_trending"
-        ]
-      },
-      "surs_hot_previous_top20_grace": true,
-      "surs_hot_external_rating_exception": false,
-      "surs_hot_availability": "aired_new_season",
-      "surs_hot_fresh_provisional": false,
-      "surs_hot_active_season_secondary": false,
-      "surs_hot_kinopoisk_rank_deltas": {},
-      "surs_hot_kinopoisk_vote_growth": {},
-      "surs_hot_kinopoisk_rank_as_of": null,
-      "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 43.32,
-      "surs_hot_demand_score": 43.32,
-      "surs_hot_editorial_penalty": 0,
-      "surs_hot_editorial_diversity_penalty": 0,
-      "surs_hot_editorial_interest_penalty": 0,
-      "surs_hot_editorial_distribution_penalty": 0,
-      "surs_hot_rank": 10
-    },
-    {
-      "id": 891621,
-      "source": "tmdb",
-      "type": "movie",
-      "media_type": "movie",
-      "title": "Дикая лошадь номер девять",
-      "name": "Дикая лошадь номер девять",
-      "original_title": "Wild Horse Nine",
-      "original_name": "",
-      "release_date": "2026-10-30",
-      "poster_path": "/vuhv7VzbOQp0tsYxNxrTADpyn6J.jpg",
-      "backdrop_path": "/3uLA0ujne91bkzFStZICCYeqhnt.jpg",
-      "overview": "В 1973-ем году, агенты ЦРУ - Крис и Ли отправляются в опасную миссию из Сантьяго на остров Пасхи в Чили.",
-      "genre_ids": [
-        35,
-        80,
-        53
-      ],
-      "popularity": 67.7602,
-      "vote_average": 7.927,
-      "vote_count": 262,
-      "surs_hot_premiere_date": "2026-11-06",
-      "surs_hot_premiere_kind": "theatrical",
-      "surs_hot_season": null,
-      "surs_hot_original_date": "2026-10-30",
-      "surs_hot_digital_date": null,
-      "surs_hot_first_us_release_date": "2026-11-06",
-      "surs_hot_digital_status": "digital_date_unconfirmed",
-      "surs_hot_discovery": [
-        "fresh_popularity.desc",
-        "recent_popularity.desc",
-        "trending_day",
-        "trending_week",
-        "discover_popularity.desc",
-        "discover_vote_average.desc"
-      ],
-      "surs_hot_trend_day": 24,
-      "surs_hot_trend_week": 30,
-      "surs_hot_imdb_id": "tt15799564",
-      "surs_hot_current_popularity_observed": true,
-      "surs_hot_current_vote_count_observed": true,
-      "surs_hot_discovery_pass": 1,
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 7.9,
-          "votes": 239,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 7149768
-        },
-        "imdb": {
-          "value": 8.1,
-          "votes": 10638,
-          "via": "kinopoisk_unofficial"
-        }
-      },
-      "surs_hot_quality": 8.032,
-      "surs_hot_confidence": 0.741,
-      "surs_hot_coverage": 3,
-      "surs_hot_rating_evidence": {
-        "sources": [
-          "tmdb",
-          "imdb",
-          "kp"
-        ],
-        "source_count": 3,
-        "level": "three_source",
-        "missing": []
-      },
-      "surs_hot_quality_base": 7.652,
-      "surs_hot_rating_agreement": {
-        "sources": 3,
-        "spread": 0.2,
-        "bonus": 0.38,
-        "level": "triple_high"
-      },
-      "surs_hot_adjusted_ratings": {
-        "tmdb": 7.482,
-        "imdb": 8.06,
-        "kp": 7.363
-      },
-      "surs_hot_heat": 0.342,
-      "surs_hot_attention": 0.342,
-      "surs_hot_attention_tmdb": 0.342,
-      "surs_hot_external_demand_bonus": 0,
-      "surs_hot_independent_demand_floor": 0,
-      "surs_hot_kinopoisk_momentum_bonus": 0,
-      "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.716,
-      "surs_hot_attention_day": 0.2675,
-      "surs_hot_attention_week": 0.2186,
-      "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.592,
-      "surs_hot_growth_measured": true,
-      "surs_hot_growth_periods": {
-        "1d": 0.56,
-        "3d": 0.604,
-        "7d": 0.612
-      },
-      "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.2046,
-      "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 13,
-      "surs_hot_rank_age": 13,
-      "surs_hot_rank_date": "2026-11-06",
-      "surs_hot_age_source_verified": true,
-      "surs_hot_recency_tier": 0,
-      "surs_hot_provisional": false,
-      "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.9142,
-      "surs_hot_model_scores": {
-        "baseline": 43.43,
-        "demand": 42.226,
-        "fresh": 45.087
-      },
-      "surs_hot_weights": {
-        "attention": 0.5,
-        "quality": 0.3,
-        "growth": 0.15,
-        "freshness": 0.05
-      },
-      "surs_hot_base_score": 42.226,
-      "surs_hot_interest_evidence": {
-        "rating_sources": 3,
-        "tmdb_trending": true,
-        "kinopoisk_top60": false,
-        "tmdb_trending_extended": false,
-        "kinopoisk_top100_extended": false,
-        "recent_emerging": false,
-        "measured_positive_growth": false,
-        "current_interest_observed": true,
-        "current_interest_strong": true,
-        "current_interest_confidence": "strong",
-        "one_source_eligible": true,
-        "interest_evidence": [
-          "tmdb_trending"
-        ]
-      },
-      "surs_hot_previous_top20_grace": true,
-      "surs_hot_external_rating_exception": false,
-      "surs_hot_availability": "theatrical_digital_unconfirmed",
-      "surs_hot_fresh_provisional": false,
-      "surs_hot_active_season_secondary": false,
-      "surs_hot_kinopoisk_popularity_rank": null,
-      "surs_hot_kinopoisk_rank_deltas": {},
-      "surs_hot_kinopoisk_vote_growth": {},
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
-      "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 42.23,
-      "surs_hot_demand_score": 42.23,
-      "surs_hot_editorial_penalty": 3.6,
-      "surs_hot_editorial_diversity_penalty": 0.6,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 3,
       "surs_hot_rank": 11
@@ -1840,9 +1840,9 @@
       "origin_country": [
         "US"
       ],
-      "popularity": 2171.671,
-      "vote_average": 8.077,
-      "vote_count": 6311,
+      "popularity": 2091.0314,
+      "vote_average": 8.1,
+      "vote_count": 6313,
       "surs_hot_premiere_date": "2026-09-24",
       "surs_hot_premiere_kind": "season",
       "surs_hot_season": 13,
@@ -1853,10 +1853,12 @@
       "surs_hot_discovery": [
         "fresh_season",
         "recent_season",
+        "trending_day",
+        "trending_week",
         "season"
       ],
-      "surs_hot_trend_day": null,
-      "surs_hot_trend_week": null,
+      "surs_hot_trend_day": 43,
+      "surs_hot_trend_week": 27,
       "surs_hot_imdb_id": "tt1844624",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
@@ -1871,6 +1873,94 @@
         "episodes_rated": 13,
         "episodes_released": 13
       },
+      "surs_hot_quality": 7.744,
+      "surs_hot_confidence": 0.993,
+      "surs_hot_coverage": 3,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb",
+          "imdb",
+          "kp"
+        ],
+        "source_count": 3,
+        "level": "three_source",
+        "missing": []
+      },
+      "surs_hot_quality_base": 7.953,
+      "surs_hot_rating_agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 8.069,
+        "imdb": 7.899,
+        "kp": 7.899
+      },
+      "surs_hot_heat": 0.364,
+      "surs_hot_attention": 0.364,
+      "surs_hot_attention_tmdb": 0.364,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": false,
+      "surs_hot_attention_pop_percentile": 0.992,
+      "surs_hot_attention_day": 0.1389,
+      "surs_hot_attention_week": 0.2417,
+      "surs_hot_attention_sources": 1,
+      "surs_hot_growth": 0.612,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.511,
+        "3d": 0.538,
+        "7d": 0.788
+      },
+      "surs_hot_growth_status": "rising",
+      "surs_hot_growth_signal": 0.2706,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 57,
+      "surs_hot_rank_age": 57,
+      "surs_hot_rank_date": "2026-09-24",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 1,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "qualified",
+      "surs_hot_freshness": 0.675,
+      "surs_hot_model_scores": {
+        "baseline": 40.614,
+        "demand": 40.034,
+        "fresh": 41.589
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 40.034,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 3,
+        "tmdb_trending": true,
+        "kinopoisk_top60": false,
+        "tmdb_trending_extended": false,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": false,
+        "measured_positive_growth": true,
+        "current_interest_observed": true,
+        "current_interest_strong": true,
+        "current_interest_confidence": "strong",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending",
+          "measured_positive_growth"
+        ]
+      },
+      "surs_hot_previous_top20_grace": true,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "aired_new_season",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
       "surs_hot_ratings": {
         "kp": {
           "value": 7.9,
@@ -1884,99 +1974,12 @@
           "via": "kinopoisk_unofficial"
         }
       },
-      "surs_hot_quality": 7.74,
-      "surs_hot_confidence": 0.993,
-      "surs_hot_coverage": 3,
-      "surs_hot_rating_evidence": {
-        "sources": [
-          "tmdb",
-          "imdb",
-          "kp"
-        ],
-        "source_count": 3,
-        "level": "three_source",
-        "missing": []
-      },
-      "surs_hot_quality_base": 7.946,
-      "surs_hot_rating_agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "surs_hot_adjusted_ratings": {
-        "tmdb": 8.046,
-        "imdb": 7.899,
-        "kp": 7.899
-      },
-      "surs_hot_heat": 0.25,
-      "surs_hot_attention": 0.25,
-      "surs_hot_attention_tmdb": 0.25,
-      "surs_hot_external_demand_bonus": 0,
-      "surs_hot_independent_demand_floor": 0,
-      "surs_hot_kinopoisk_momentum_bonus": 0,
-      "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 1,
-      "surs_hot_attention_day": 0,
-      "surs_hot_attention_week": 0,
-      "surs_hot_attention_sources": 0,
-      "surs_hot_growth": 0.698,
-      "surs_hot_growth_measured": true,
-      "surs_hot_growth_periods": {
-        "1d": 0.557,
-        "3d": 0.593,
-        "7d": 0.944
-      },
-      "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.5544,
-      "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 56,
-      "surs_hot_rank_age": 56,
-      "surs_hot_rank_date": "2026-09-24",
-      "surs_hot_age_source_verified": true,
-      "surs_hot_recency_tier": 1,
-      "surs_hot_provisional": false,
-      "surs_hot_track": "qualified",
-      "surs_hot_freshness": 0.6796,
-      "surs_hot_model_scores": {
-        "baseline": 39.714,
-        "demand": 38.571,
-        "fresh": 40.719
-      },
-      "surs_hot_weights": {
-        "attention": 0.5,
-        "quality": 0.3,
-        "growth": 0.15,
-        "freshness": 0.05
-      },
-      "surs_hot_base_score": 38.571,
-      "surs_hot_interest_evidence": {
-        "rating_sources": 3,
-        "tmdb_trending": false,
-        "kinopoisk_top60": false,
-        "tmdb_trending_extended": false,
-        "kinopoisk_top100_extended": false,
-        "recent_emerging": false,
-        "measured_positive_growth": true,
-        "current_interest_observed": true,
-        "current_interest_strong": true,
-        "current_interest_confidence": "strong",
-        "one_source_eligible": true,
-        "interest_evidence": [
-          "measured_positive_growth"
-        ]
-      },
-      "surs_hot_previous_top20_grace": true,
-      "surs_hot_external_rating_exception": false,
-      "surs_hot_availability": "aired_new_season",
-      "surs_hot_fresh_provisional": false,
-      "surs_hot_active_season_secondary": false,
       "surs_hot_kinopoisk_rank_deltas": {},
       "surs_hot_kinopoisk_vote_growth": {},
       "surs_hot_kinopoisk_rank_as_of": null,
-      "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 38.57,
-      "surs_hot_demand_score": 38.57,
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 40.03,
+      "surs_hot_demand_score": 40.03,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
@@ -1984,61 +1987,49 @@
       "surs_hot_rank": 12
     },
     {
-      "id": 1195803,
+      "id": 891621,
       "source": "tmdb",
       "type": "movie",
       "media_type": "movie",
-      "title": "Плетёный муж",
-      "name": "Плетёный муж",
-      "original_title": "Wicker",
+      "title": "Дикая лошадь номер девять",
+      "name": "Дикая лошадь номер девять",
+      "original_title": "Wild Horse Nine",
       "original_name": "",
-      "release_date": "2026-10-21",
-      "poster_path": "/ej29DO6sC6IsxQLtYPj4ZxfwCQP.jpg",
-      "backdrop_path": "/xVh1ypMoVkMf5IB7y3hnRplJ14c.jpg",
-      "overview": "Одинокая рыбачка, живущая на окраине небольшой прибрежной деревни, всю жизнь терпит насмешки от своих соседей. Однажды, устав от одиночества, она обращается к местному корзинщику и заказывает себе мужа, сплетённого из лозы. Её неожиданная привязанность к причудливому творению пробуждает ревность и угрожает порядкам деревни.",
+      "release_date": "2026-10-30",
+      "poster_path": "/vuhv7VzbOQp0tsYxNxrTADpyn6J.jpg",
+      "backdrop_path": "/3uLA0ujne91bkzFStZICCYeqhnt.jpg",
+      "overview": "В 1973-ем году, агенты ЦРУ - Крис и Ли отправляются в опасную миссию из Сантьяго на остров Пасхи в Чили.",
       "genre_ids": [
-        10749,
-        14,
-        35
+        35,
+        80,
+        53
       ],
-      "popularity": 53.8619,
-      "vote_average": 7.472,
-      "vote_count": 54,
-      "surs_hot_premiere_date": "2026-10-23",
+      "popularity": 75.1792,
+      "vote_average": 7.9,
+      "vote_count": 265,
+      "surs_hot_premiere_date": "2026-11-06",
       "surs_hot_premiere_kind": "theatrical",
       "surs_hot_season": null,
-      "surs_hot_original_date": "2026-10-21",
+      "surs_hot_original_date": "2026-10-30",
       "surs_hot_digital_date": null,
-      "surs_hot_first_us_release_date": "2026-10-23",
+      "surs_hot_first_us_release_date": "2026-11-06",
       "surs_hot_digital_status": "digital_date_unconfirmed",
       "surs_hot_discovery": [
         "fresh_popularity.desc",
         "recent_popularity.desc",
+        "trending_day",
         "trending_week",
-        "discover_popularity.desc"
+        "discover_popularity.desc",
+        "discover_vote_average.desc"
       ],
-      "surs_hot_trend_day": null,
-      "surs_hot_trend_week": null,
-      "surs_hot_imdb_id": "tt29611136",
+      "surs_hot_trend_day": 39,
+      "surs_hot_trend_week": 30,
+      "surs_hot_imdb_id": "tt15799564",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
       "surs_hot_discovery_pass": 1,
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 7.7,
-          "votes": 5400,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 11095481
-        },
-        "imdb": {
-          "value": 7.4,
-          "votes": 7175,
-          "via": "kinopoisk_unofficial"
-        }
-      },
-      "surs_hot_kinopoisk_popularity_rank": 12,
-      "surs_hot_quality": 7.468,
-      "surs_hot_confidence": 0.744,
+      "surs_hot_quality": 8.028,
+      "surs_hot_confidence": 0.742,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
         "sources": [
@@ -2050,51 +2041,51 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 7.308,
+      "surs_hot_quality_base": 7.648,
       "surs_hot_rating_agreement": {
-        "sources": 2,
-        "spread": 0.3,
-        "bonus": 0.16,
-        "level": "pair_high"
+        "sources": 3,
+        "spread": 0.2,
+        "bonus": 0.38,
+        "level": "triple_high"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 6.879,
-        "imdb": 7.37,
-        "kp": 7.666
+        "tmdb": 7.468,
+        "imdb": 8.06,
+        "kp": 7.363
       },
-      "surs_hot_heat": 0.524,
-      "surs_hot_attention": 0.524,
-      "surs_hot_attention_tmdb": 0.151,
-      "surs_hot_external_demand_bonus": 0.0376,
-      "surs_hot_independent_demand_floor": 0.524,
+      "surs_hot_heat": 0.309,
+      "surs_hot_attention": 0.309,
+      "surs_hot_attention_tmdb": 0.309,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
-      "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.605,
-      "surs_hot_attention_day": 0,
-      "surs_hot_attention_week": 0,
-      "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.542,
+      "surs_hot_cross_source_interest": true,
+      "surs_hot_attention_pop_percentile": 0.758,
+      "surs_hot_attention_day": 0.1606,
+      "surs_hot_attention_week": 0.2186,
+      "surs_hot_attention_sources": 2,
+      "surs_hot_growth": 0.594,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
         "1d": 0.5,
-        "3d": 0.562,
-        "7d": 0.563
+        "3d": 0.638,
+        "7d": 0.643
       },
-      "surs_hot_growth_status": "flat",
-      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_status": "rising",
+      "surs_hot_growth_signal": 0.2112,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 27,
-      "surs_hot_rank_age": 27,
-      "surs_hot_rank_date": "2026-10-23",
+      "surs_hot_age": 14,
+      "surs_hot_rank_age": 14,
+      "surs_hot_rank_date": "2026-11-06",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
-      "surs_hot_provisional": true,
-      "surs_hot_track": "qualified",
-      "surs_hot_freshness": 0.8301,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "critically_strong",
+      "surs_hot_freshness": 0.908,
       "surs_hot_model_scores": {
-        "baseline": 41.081,
-        "demand": 41.793,
-        "fresh": 43.324
+        "baseline": 41.963,
+        "demand": 40.601,
+        "fresh": 43.596
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -2102,13 +2093,13 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 41.793,
+      "surs_hot_base_score": 40.601,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
-        "tmdb_trending": false,
-        "kinopoisk_top60": true,
+        "tmdb_trending": true,
+        "kinopoisk_top60": false,
         "tmdb_trending_extended": false,
-        "kinopoisk_top100_extended": false,
+        "kinopoisk_top100_extended": true,
         "recent_emerging": false,
         "measured_positive_growth": false,
         "current_interest_observed": true,
@@ -2116,41 +2107,42 @@
         "current_interest_confidence": "strong",
         "one_source_eligible": true,
         "interest_evidence": [
-          "kinopoisk_top60"
+          "tmdb_trending",
+          "kinopoisk_top61_100"
         ]
       },
       "surs_hot_previous_top20_grace": true,
-      "surs_hot_external_rating_exception": true,
+      "surs_hot_external_rating_exception": false,
       "surs_hot_availability": "theatrical_digital_unconfirmed",
-      "surs_hot_fresh_provisional": true,
+      "surs_hot_fresh_provisional": false,
       "surs_hot_active_season_secondary": false,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 7.9,
+          "votes": 239,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 7149768
+        },
+        "imdb": {
+          "value": 8.1,
+          "votes": 10638,
+          "via": "kinopoisk_unofficial"
+        }
+      },
+      "surs_hot_kinopoisk_popularity_rank": 93,
       "surs_hot_kinopoisk_rank_deltas": {
         "1d": {
-          "delta": -6,
-          "from": 6,
-          "to": 12,
-          "days": 1
-        },
-        "3d": {
-          "delta": -6,
-          "from": 6,
-          "to": 12,
-          "days": 3
-        }
-      },
-      "surs_hot_kinopoisk_vote_growth": {
-        "1d": {
           "delta": 0,
-          "rate": 0,
-          "from": 5400,
-          "to": 5400,
+          "from": 93,
+          "to": 93,
           "days": 1
         }
       },
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
-      "surs_hot_kinopoisk_votes_as_of": "2026-11-19",
-      "surs_hot_score": 41.79,
-      "surs_hot_demand_score": 41.79,
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 40.6,
+      "surs_hot_demand_score": 40.6,
       "surs_hot_editorial_penalty": 3.6,
       "surs_hot_editorial_diversity_penalty": 0.6,
       "surs_hot_editorial_interest_penalty": 0,
@@ -2175,9 +2167,9 @@
         53,
         878
       ],
-      "popularity": 74.4631,
-      "vote_average": 7.4,
-      "vote_count": 456,
+      "popularity": 80.0254,
+      "vote_average": 7.396,
+      "vote_count": 460,
       "surs_hot_premiere_date": "2026-10-23",
       "surs_hot_premiere_kind": "theatrical",
       "surs_hot_season": null,
@@ -2190,7 +2182,7 @@
         "trending_day",
         "discover_popularity.desc"
       ],
-      "surs_hot_trend_day": 20,
+      "surs_hot_trend_day": 24,
       "surs_hot_trend_week": null,
       "surs_hot_imdb_id": "tt34890576",
       "surs_hot_current_popularity_observed": true,
@@ -2210,7 +2202,7 @@
         }
       },
       "surs_hot_kinopoisk_popularity_rank": 50,
-      "surs_hot_quality": 7.753,
+      "surs_hot_quality": 7.752,
       "surs_hot_confidence": 0.916,
       "surs_hot_coverage": 3,
       "surs_hot_rating_evidence": {
@@ -2223,51 +2215,51 @@
         "level": "three_source",
         "missing": []
       },
-      "surs_hot_quality_base": 7.373,
+      "surs_hot_quality_base": 7.372,
       "surs_hot_rating_agreement": {
         "sources": 3,
-        "spread": 0.1,
+        "spread": 0.104,
         "bonus": 0.38,
         "level": "triple_high"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 7.224,
+        "tmdb": 7.222,
         "imdb": 7.495,
         "kp": 7.384
       },
-      "surs_hot_heat": 0.354,
-      "surs_hot_attention": 0.354,
-      "surs_hot_attention_tmdb": 0.347,
+      "surs_hot_heat": 0.334,
+      "surs_hot_attention": 0.334,
+      "surs_hot_attention_tmdb": 0.327,
       "surs_hot_external_demand_bonus": 0.007,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": true,
-      "surs_hot_attention_pop_percentile": 0.741,
-      "surs_hot_attention_day": 0.3072,
+      "surs_hot_attention_pop_percentile": 0.78,
+      "surs_hot_attention_day": 0.2675,
       "surs_hot_attention_week": 0,
       "surs_hot_attention_sources": 2,
-      "surs_hot_growth": 0.549,
+      "surs_hot_growth": 0.568,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
         "1d": 0.5,
-        "3d": 0.576,
-        "7d": 0.571
+        "3d": 0.603,
+        "7d": 0.6
       },
-      "surs_hot_growth_status": "flat",
-      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_status": "rising",
+      "surs_hot_growth_signal": 0.1254,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 27,
-      "surs_hot_rank_age": 27,
+      "surs_hot_age": 28,
+      "surs_hot_rank_age": 28,
       "surs_hot_rank_date": "2026-10-23",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": false,
       "surs_hot_track": "qualified",
-      "surs_hot_freshness": 0.8301,
+      "surs_hot_freshness": 0.8244,
       "surs_hot_model_scores": {
-        "baseline": 36.993,
-        "demand": 36.347,
-        "fresh": 38.727
+        "baseline": 37.933,
+        "demand": 37.189,
+        "fresh": 39.641
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -2275,7 +2267,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 36.347,
+      "surs_hot_base_score": 37.189,
       "surs_hot_interest_evidence": {
         "rating_sources": 3,
         "tmdb_trending": true,
@@ -2300,8 +2292,8 @@
       "surs_hot_active_season_secondary": false,
       "surs_hot_kinopoisk_rank_deltas": {
         "1d": {
-          "delta": -31,
-          "from": 19,
+          "delta": 0,
+          "from": 50,
           "to": 50,
           "days": 1
         },
@@ -2321,15 +2313,834 @@
           "days": 3
         }
       },
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
       "surs_hot_kinopoisk_votes_as_of": "2026-11-18",
-      "surs_hot_score": 36.35,
-      "surs_hot_demand_score": 36.35,
+      "surs_hot_score": 37.19,
+      "surs_hot_demand_score": 37.19,
       "surs_hot_editorial_penalty": 3.6,
       "surs_hot_editorial_diversity_penalty": 0.6,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 3,
       "surs_hot_rank": 14
+    },
+    {
+      "id": 290856,
+      "source": "tmdb",
+      "type": "tv",
+      "media_type": "tv",
+      "title": "Йеллоустоун: Маршалы",
+      "name": "Йеллоустоун: Маршалы",
+      "original_title": "",
+      "original_name": "Marshals",
+      "first_air_date": "2026-03-01",
+      "poster_path": "/faJYIqgKoMDqDhdlvKYkbthkN5B.jpg",
+      "backdrop_path": "/yGJGwt7DdIWTUXuahLfhcH1gi7G.jpg",
+      "overview": "Кейси Даттон, бывший «морской котик», решает оставить ранчо Йеллоустоун и начать службу в рядах маршалов США. Его военная закалка и ковбойская выдержка оказываются незаменимыми в бескрайних просторах Монтаны, где закон часто проверяется на прочность суровой реальностью. Каждая операция напоминает Кейси о цене службы, а психологическое давление лишь усиливает внутренний конфликт.",
+      "genre_ids": [
+        18,
+        80,
+        10759
+      ],
+      "origin_country": [
+        "US"
+      ],
+      "popularity": 82.7336,
+      "vote_average": 8,
+      "vote_count": 441,
+      "surs_hot_premiere_date": "2026-10-04",
+      "surs_hot_premiere_kind": "season",
+      "surs_hot_season": 2,
+      "surs_hot_original_date": "2026-03-01",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": null,
+      "surs_hot_digital_status": null,
+      "surs_hot_discovery": [
+        "fresh_season",
+        "recent_season",
+        "trending_week",
+        "discover_popularity.desc",
+        "discover_vote_average.desc"
+      ],
+      "surs_hot_trend_day": null,
+      "surs_hot_trend_week": 32,
+      "surs_hot_imdb_id": "tt36849871",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_season_verified": true,
+      "surs_hot_episodes_released": 6,
+      "surs_hot_last_regular_episode_date": "2026-11-15",
+      "surs_hot_regular_episode_last14d": true,
+      "surs_hot_season_rating": {
+        "value": 8.547,
+        "votes": 49,
+        "episodes_rated": 6,
+        "episodes_released": 6
+      },
+      "surs_hot_quality": 7.876,
+      "surs_hot_confidence": 0.759,
+      "surs_hot_coverage": 1,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb"
+        ],
+        "source_count": 1,
+        "level": "single_source",
+        "missing": [
+          "imdb",
+          "kp"
+        ]
+      },
+      "surs_hot_quality_base": 7.675,
+      "surs_hot_rating_agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 7.675
+      },
+      "surs_hot_heat": 0.28,
+      "surs_hot_attention": 0.28,
+      "surs_hot_attention_tmdb": 0.28,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": false,
+      "surs_hot_attention_pop_percentile": 0.765,
+      "surs_hot_attention_day": 0,
+      "surs_hot_attention_week": 0.2043,
+      "surs_hot_attention_sources": 1,
+      "surs_hot_growth": 0.534,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.5,
+        "3d": 0.531,
+        "7d": 0.572
+      },
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 47,
+      "surs_hot_rank_age": 47,
+      "surs_hot_rank_date": "2026-10-04",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 1,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "critically_strong",
+      "surs_hot_freshness": 0.7232,
+      "surs_hot_model_scores": {
+        "baseline": 34.666,
+        "demand": 33.43,
+        "fresh": 35.646
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 33.43,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 1,
+        "tmdb_trending": true,
+        "kinopoisk_top60": false,
+        "tmdb_trending_extended": false,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": false,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": true,
+        "current_interest_confidence": "strong",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending"
+        ]
+      },
+      "surs_hot_previous_top20_grace": false,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "aired_new_season",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_kinopoisk_rank_deltas": {},
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": null,
+      "surs_hot_kinopoisk_votes_as_of": null,
+      "surs_hot_score": 33.43,
+      "surs_hot_demand_score": 33.43,
+      "surs_hot_editorial_penalty": 0,
+      "surs_hot_editorial_diversity_penalty": 0,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 0,
+      "surs_hot_rank": 15
+    },
+    {
+      "id": 58841,
+      "source": "tmdb",
+      "type": "tv",
+      "media_type": "tv",
+      "title": "Полиция Чикаго",
+      "name": "Полиция Чикаго",
+      "original_title": "",
+      "original_name": "Chicago P.D.",
+      "first_air_date": "2014-01-08",
+      "poster_path": "/nMSL6PGiHOKefKWfS2UFV7mOIX4.jpg",
+      "backdrop_path": "/18KSsDgcGQds7yOMC6MVRTbVJwt.jpg",
+      "overview": "Сериал о полиции Чикаго повествует нам о будничной жизни этой структуры. Там работают замечательные, бравые и смелые парни, но каждый из них имеет свой, порой нелёгкий, характер, ведь в такую структуру идут люди, сильные морально. В сериале есть несколько остросюжетных линий. Основная - это общение двух групп полицейских между собой. Они имеют различную степень власти и разную квалификацию, но постоянно должны решать вопросы вместе, иначе работа не будет выполнена. Второстепенные линии - раскрытие характеров героев-полицейских, а также уголовные дела, раскрытием которых они занимаются с упорством и по совести.",
+      "genre_ids": [
+        80,
+        18
+      ],
+      "origin_country": [
+        "US"
+      ],
+      "popularity": 117.3327,
+      "vote_average": 8.42,
+      "vote_count": 2656,
+      "surs_hot_premiere_date": "2026-10-07",
+      "surs_hot_premiere_kind": "season",
+      "surs_hot_season": 14,
+      "surs_hot_original_date": "2014-01-08",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": null,
+      "surs_hot_digital_status": null,
+      "surs_hot_discovery": [
+        "fresh_season",
+        "recent_season",
+        "trending_day",
+        "season"
+      ],
+      "surs_hot_trend_day": 53,
+      "surs_hot_trend_week": null,
+      "surs_hot_imdb_id": "tt2805096",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_season_verified": true,
+      "surs_hot_episodes_released": 7,
+      "surs_hot_last_regular_episode_date": "2026-11-18",
+      "surs_hot_regular_episode_last14d": true,
+      "surs_hot_season_rating": {
+        "value": 8.27,
+        "votes": 40,
+        "episodes_rated": 6,
+        "episodes_released": 7
+      },
+      "surs_hot_quality": 8.108,
+      "surs_hot_confidence": 0.976,
+      "surs_hot_coverage": 3,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb",
+          "imdb",
+          "kp"
+        ],
+        "source_count": 3,
+        "level": "three_source",
+        "missing": []
+      },
+      "surs_hot_quality_base": 8.068,
+      "surs_hot_rating_agreement": {
+        "sources": 3,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 8.331,
+        "imdb": 8.092,
+        "kp": 7.778
+      },
+      "surs_hot_heat": 0.216,
+      "surs_hot_attention": 0.216,
+      "surs_hot_attention_tmdb": 0.216,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": false,
+      "surs_hot_attention_pop_percentile": 0.84,
+      "surs_hot_attention_day": 0.0923,
+      "surs_hot_attention_week": 0,
+      "surs_hot_attention_sources": 1,
+      "surs_hot_growth": 0.513,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.5,
+        "3d": 0.513,
+        "7d": 0.525
+      },
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 44,
+      "surs_hot_rank_age": 44,
+      "surs_hot_rank_date": "2026-10-07",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 1,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "critically_strong",
+      "surs_hot_freshness": 0.7383,
+      "surs_hot_model_scores": {
+        "baseline": 34.762,
+        "demand": 32.792,
+        "fresh": 35.403
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 32.792,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 3,
+        "tmdb_trending": false,
+        "kinopoisk_top60": false,
+        "tmdb_trending_extended": true,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": false,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": false,
+        "current_interest_confidence": "extended",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending_41_60"
+        ]
+      },
+      "surs_hot_previous_top20_grace": false,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "aired_new_season",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 7.8,
+          "votes": 9281,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 763776
+        },
+        "imdb": {
+          "value": 8.1,
+          "votes": 52000,
+          "via": "kinopoisk_unofficial"
+        }
+      },
+      "surs_hot_kinopoisk_rank_deltas": {},
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": null,
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 32.79,
+      "surs_hot_demand_score": 32.79,
+      "surs_hot_editorial_penalty": 0,
+      "surs_hot_editorial_diversity_penalty": 0,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 0,
+      "surs_hot_rank": 16
+    },
+    {
+      "id": 1195803,
+      "source": "tmdb",
+      "type": "movie",
+      "media_type": "movie",
+      "title": "Плетёный муж",
+      "name": "Плетёный муж",
+      "original_title": "Wicker",
+      "original_name": "",
+      "release_date": "2026-10-21",
+      "poster_path": "/ej29DO6sC6IsxQLtYPj4ZxfwCQP.jpg",
+      "backdrop_path": "/xVh1ypMoVkMf5IB7y3hnRplJ14c.jpg",
+      "overview": "Одинокая рыбачка, живущая на окраине небольшой прибрежной деревни, всю жизнь терпит насмешки от своих соседей. Однажды, устав от одиночества, она обращается к местному корзинщику и заказывает себе мужа, сплетённого из лозы. Её неожиданная привязанность к причудливому творению пробуждает ревность и угрожает порядкам деревни.",
+      "genre_ids": [
+        10749,
+        14,
+        35
+      ],
+      "popularity": 61.4763,
+      "vote_average": 7.472,
+      "vote_count": 55,
+      "surs_hot_premiere_date": "2026-10-23",
+      "surs_hot_premiere_kind": "theatrical",
+      "surs_hot_season": null,
+      "surs_hot_original_date": "2026-10-21",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": "2026-10-23",
+      "surs_hot_digital_status": "digital_date_unconfirmed",
+      "surs_hot_discovery": [
+        "fresh_popularity.desc",
+        "recent_popularity.desc",
+        "trending_day",
+        "trending_week",
+        "discover_popularity.desc"
+      ],
+      "surs_hot_trend_day": 53,
+      "surs_hot_trend_week": 44,
+      "surs_hot_imdb_id": "tt29611136",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 7.7,
+          "votes": 5400,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 11095481
+        },
+        "imdb": {
+          "value": 7.4,
+          "votes": 7175,
+          "via": "kinopoisk_unofficial"
+        }
+      },
+      "surs_hot_kinopoisk_popularity_rank": 12,
+      "surs_hot_quality": 7.469,
+      "surs_hot_confidence": 0.745,
+      "surs_hot_coverage": 3,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb",
+          "imdb",
+          "kp"
+        ],
+        "source_count": 3,
+        "level": "three_source",
+        "missing": []
+      },
+      "surs_hot_quality_base": 7.309,
+      "surs_hot_rating_agreement": {
+        "sources": 2,
+        "spread": 0.3,
+        "bonus": 0.16,
+        "level": "pair_high"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 6.882,
+        "imdb": 7.37,
+        "kp": 7.666
+      },
+      "surs_hot_heat": 0.293,
+      "surs_hot_attention": 0.293,
+      "surs_hot_attention_tmdb": 0.233,
+      "surs_hot_external_demand_bonus": 0.0602,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": true,
+      "surs_hot_attention_pop_percentile": 0.714,
+      "surs_hot_attention_day": 0.0923,
+      "surs_hot_attention_week": 0.1338,
+      "surs_hot_attention_sources": 2,
+      "surs_hot_growth": 0.563,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.509,
+        "3d": 0.593,
+        "7d": 0.588
+      },
+      "surs_hot_growth_status": "rising",
+      "surs_hot_growth_signal": 0.1089,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 28,
+      "surs_hot_rank_age": 28,
+      "surs_hot_rank_date": "2026-10-23",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 0,
+      "surs_hot_provisional": true,
+      "surs_hot_track": "qualified",
+      "surs_hot_freshness": 0.8244,
+      "surs_hot_model_scores": {
+        "baseline": 32.303,
+        "demand": 31.859,
+        "fresh": 34.516
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 31.859,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 3,
+        "tmdb_trending": false,
+        "kinopoisk_top60": true,
+        "tmdb_trending_extended": true,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": false,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": true,
+        "current_interest_confidence": "strong",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending_41_60",
+          "kinopoisk_top60"
+        ]
+      },
+      "surs_hot_previous_top20_grace": true,
+      "surs_hot_external_rating_exception": true,
+      "surs_hot_availability": "theatrical_digital_unconfirmed",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_kinopoisk_rank_deltas": {
+        "1d": {
+          "delta": 0,
+          "from": 12,
+          "to": 12,
+          "days": 1
+        },
+        "3d": {
+          "delta": -6,
+          "from": 6,
+          "to": 12,
+          "days": 3
+        }
+      },
+      "surs_hot_kinopoisk_vote_growth": {
+        "1d": {
+          "delta": 0,
+          "rate": 0,
+          "from": 5400,
+          "to": 5400,
+          "days": 1
+        },
+        "3d": {
+          "delta": 0,
+          "rate": 0,
+          "from": 5400,
+          "to": 5400,
+          "days": 3
+        }
+      },
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 31.86,
+      "surs_hot_demand_score": 31.86,
+      "surs_hot_editorial_penalty": 3,
+      "surs_hot_editorial_diversity_penalty": 0,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 3,
+      "surs_hot_rank": 17
+    },
+    {
+      "id": 288673,
+      "source": "tmdb",
+      "type": "tv",
+      "media_type": "tv",
+      "title": "Кэрри",
+      "name": "Кэрри",
+      "original_title": "",
+      "original_name": "Carrie",
+      "first_air_date": "2026-10-07",
+      "poster_path": "/eCmD73ny4jG29BVBily2LzPT6I7.jpg",
+      "backdrop_path": "/9yCJtipMeDe8uAdSJKvw8BnYfRz.jpg",
+      "overview": "Кэрри Уайт - застенчивая и замкнутая девушка, выросшая под строгим контролем своей глубоко религиозной матери Маргарет. После травмы Кэрри впервые сталкивается с жестокими правилами школьной жизни, где насмешки, унижения и травля становятся частью её повседневности. Когда издевательства над ней выходят за пределы школы и превращаются в публичный скандал в социальных сетях, девушка обнаруживает в себе пугающую способность управлять предметами силой мысли.",
+      "genre_ids": [
+        9648,
+        18,
+        10765
+      ],
+      "origin_country": [
+        "CA",
+        "US"
+      ],
+      "popularity": 38.3459,
+      "vote_average": 8.244,
+      "vote_count": 610,
+      "surs_hot_premiere_date": "2026-10-07",
+      "surs_hot_premiere_kind": "series",
+      "surs_hot_season": null,
+      "surs_hot_original_date": "2026-10-07",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": null,
+      "surs_hot_digital_status": null,
+      "surs_hot_discovery": [
+        "recent_popularity.desc",
+        "trending_day",
+        "trending_week",
+        "discover_popularity.desc",
+        "discover_vote_average.desc"
+      ],
+      "surs_hot_trend_day": 46,
+      "surs_hot_trend_week": 47,
+      "surs_hot_imdb_id": "tt11540908",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_quality": 7.715,
+      "surs_hot_confidence": 0.936,
+      "surs_hot_coverage": 3,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb",
+          "imdb",
+          "kp"
+        ],
+        "source_count": 3,
+        "level": "three_source",
+        "missing": []
+      },
+      "surs_hot_quality_base": 7.715,
+      "surs_hot_rating_agreement": {
+        "sources": 3,
+        "spread": 0.844,
+        "bonus": 0,
+        "level": "mixed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 7.946,
+        "imdb": 7.795,
+        "kp": 7.394
+      },
+      "surs_hot_heat": 0.221,
+      "surs_hot_attention": 0.221,
+      "surs_hot_attention_tmdb": 0.221,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": true,
+      "surs_hot_attention_pop_percentile": 0.664,
+      "surs_hot_attention_day": 0.1239,
+      "surs_hot_attention_week": 0.1191,
+      "surs_hot_attention_sources": 2,
+      "surs_hot_growth": 0.513,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.5,
+        "3d": 0.521,
+        "7d": 0.519
+      },
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 44,
+      "surs_hot_rank_age": 44,
+      "surs_hot_rank_date": "2026-10-07",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 1,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "qualified",
+      "surs_hot_freshness": 0.7383,
+      "surs_hot_model_scores": {
+        "baseline": 30.074,
+        "demand": 28.831,
+        "fresh": 31.417
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 28.831,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 3,
+        "tmdb_trending": false,
+        "kinopoisk_top60": false,
+        "tmdb_trending_extended": true,
+        "kinopoisk_top100_extended": true,
+        "recent_emerging": false,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": false,
+        "current_interest_confidence": "extended",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "tmdb_trending_41_60",
+          "kinopoisk_top61_100"
+        ]
+      },
+      "surs_hot_previous_top20_grace": true,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "aired_new_series",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_ratings": {
+        "kp": {
+          "value": 7.4,
+          "votes": 23227,
+          "via": "kinopoisk_unofficial",
+          "kinopoisk_id": 1343910
+        },
+        "imdb": {
+          "value": 7.8,
+          "votes": 65407,
+          "via": "kinopoisk_unofficial"
+        }
+      },
+      "surs_hot_kinopoisk_popularity_rank": 86,
+      "surs_hot_kinopoisk_rank_deltas": {
+        "1d": {
+          "delta": 0,
+          "from": 86,
+          "to": 86,
+          "days": 1
+        },
+        "3d": {
+          "delta": -21,
+          "from": 65,
+          "to": 86,
+          "days": 3
+        }
+      },
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": "2026-11-20",
+      "surs_hot_kinopoisk_votes_as_of": "2026-11-20",
+      "surs_hot_score": 28.83,
+      "surs_hot_demand_score": 28.83,
+      "surs_hot_editorial_penalty": 0,
+      "surs_hot_editorial_diversity_penalty": 0,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 0,
+      "surs_hot_rank": 18
+    },
+    {
+      "id": 120911,
+      "source": "tmdb",
+      "type": "tv",
+      "media_type": "tv",
+      "title": "Список смертников",
+      "name": "Список смертников",
+      "original_title": "",
+      "original_name": "The Terminal List",
+      "first_air_date": "2022-06-30",
+      "poster_path": "/cPLfYOulYQzRhZKc53FvCmoQdS4.jpg",
+      "backdrop_path": "/2qS2LGqsAyT1NEDeIj24Hp2IR10.jpg",
+      "overview": "Лейтенант-коммандер Джеймс Рис идёт по следу таинственных сил, стоявших за убийством всех бойцов его отряда, желая отомстить за их смерть. Освободившись от командной структуры армии, Рис применяет уроки, усвоенные за 20 лет военной службы, чтобы найти и уничтожить людей, ответственных за смерть его бойцов.",
+      "genre_ids": [
+        10759,
+        18
+      ],
+      "origin_country": [
+        "US"
+      ],
+      "popularity": 81.6261,
+      "vote_average": 7.992,
+      "vote_count": 1353,
+      "surs_hot_premiere_date": "2026-10-21",
+      "surs_hot_premiere_kind": "season",
+      "surs_hot_season": 2,
+      "surs_hot_original_date": "2022-06-30",
+      "surs_hot_digital_date": null,
+      "surs_hot_first_us_release_date": null,
+      "surs_hot_digital_status": null,
+      "surs_hot_discovery": [
+        "fresh_season",
+        "recent_season"
+      ],
+      "surs_hot_trend_day": null,
+      "surs_hot_trend_week": null,
+      "surs_hot_imdb_id": "tt11743610",
+      "surs_hot_current_popularity_observed": true,
+      "surs_hot_current_vote_count_observed": true,
+      "surs_hot_discovery_pass": 1,
+      "surs_hot_season_verified": true,
+      "surs_hot_episodes_released": 8,
+      "surs_hot_last_regular_episode_date": "2026-10-21",
+      "surs_hot_regular_episode_last14d": false,
+      "surs_hot_season_rating": {
+        "value": 8.16,
+        "votes": 149,
+        "episodes_rated": 8,
+        "episodes_released": 8
+      },
+      "surs_hot_quality": 7.989,
+      "surs_hot_confidence": 0.906,
+      "surs_hot_coverage": 1,
+      "surs_hot_rating_evidence": {
+        "sources": [
+          "tmdb"
+        ],
+        "source_count": 1,
+        "level": "single_source",
+        "missing": [
+          "imdb",
+          "kp"
+        ]
+      },
+      "surs_hot_quality_base": 7.866,
+      "surs_hot_rating_agreement": {
+        "sources": 1,
+        "bonus": 0,
+        "spread": null,
+        "level": "unconfirmed"
+      },
+      "surs_hot_adjusted_ratings": {
+        "tmdb": 7.866
+      },
+      "surs_hot_heat": 0.189,
+      "surs_hot_attention": 0.189,
+      "surs_hot_attention_tmdb": 0.189,
+      "surs_hot_external_demand_bonus": 0,
+      "surs_hot_independent_demand_floor": 0,
+      "surs_hot_kinopoisk_momentum_bonus": 0,
+      "surs_hot_cross_source_interest": false,
+      "surs_hot_attention_pop_percentile": 0.756,
+      "surs_hot_attention_day": 0,
+      "surs_hot_attention_week": 0,
+      "surs_hot_attention_sources": 0,
+      "surs_hot_growth": 0.51,
+      "surs_hot_growth_measured": true,
+      "surs_hot_growth_periods": {
+        "1d": 0.5,
+        "3d": 0.519,
+        "7d": 0.511
+      },
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
+      "surs_hot_growth_confirmed": true,
+      "surs_hot_age": 30,
+      "surs_hot_rank_age": 30,
+      "surs_hot_rank_date": "2026-10-21",
+      "surs_hot_age_source_verified": true,
+      "surs_hot_recency_tier": 0,
+      "surs_hot_provisional": false,
+      "surs_hot_track": "critically_strong",
+      "surs_hot_freshness": 0.8131,
+      "surs_hot_model_scores": {
+        "baseline": 32.433,
+        "demand": 30.54,
+        "fresh": 33.661
+      },
+      "surs_hot_weights": {
+        "attention": 0.5,
+        "quality": 0.3,
+        "growth": 0.15,
+        "freshness": 0.05
+      },
+      "surs_hot_base_score": 30.54,
+      "surs_hot_interest_evidence": {
+        "rating_sources": 1,
+        "tmdb_trending": false,
+        "kinopoisk_top60": false,
+        "tmdb_trending_extended": false,
+        "kinopoisk_top100_extended": false,
+        "recent_emerging": true,
+        "measured_positive_growth": false,
+        "current_interest_observed": true,
+        "current_interest_strong": true,
+        "current_interest_confidence": "strong",
+        "one_source_eligible": true,
+        "interest_evidence": [
+          "recent_emerging"
+        ]
+      },
+      "surs_hot_previous_top20_grace": true,
+      "surs_hot_external_rating_exception": false,
+      "surs_hot_availability": "aired_new_season",
+      "surs_hot_fresh_provisional": false,
+      "surs_hot_active_season_secondary": false,
+      "surs_hot_kinopoisk_rank_deltas": {},
+      "surs_hot_kinopoisk_vote_growth": {},
+      "surs_hot_kinopoisk_rank_as_of": null,
+      "surs_hot_kinopoisk_votes_as_of": null,
+      "surs_hot_score": 30.54,
+      "surs_hot_demand_score": 30.54,
+      "surs_hot_editorial_penalty": 2,
+      "surs_hot_editorial_diversity_penalty": 2,
+      "surs_hot_editorial_interest_penalty": 0,
+      "surs_hot_editorial_distribution_penalty": 0,
+      "surs_hot_rank": 19
     },
     {
       "id": 292741,
@@ -2352,9 +3163,9 @@
       "origin_country": [
         "US"
       ],
-      "popularity": 72.8848,
-      "vote_average": 7.583,
-      "vote_count": 60,
+      "popularity": 70.2705,
+      "vote_average": 7.629,
+      "vote_count": 62,
       "surs_hot_premiere_date": "2026-10-29",
       "surs_hot_premiere_kind": "series",
       "surs_hot_season": null,
@@ -2363,7 +3174,6 @@
       "surs_hot_first_us_release_date": null,
       "surs_hot_digital_status": null,
       "surs_hot_discovery": [
-        "fresh_first_air_date.desc",
         "fresh_popularity.desc",
         "recent_first_air_date.desc",
         "recent_popularity.desc",
@@ -2371,18 +3181,17 @@
         "recent_season",
         "trending_day",
         "trending_week",
-        "discover_first_air_date.desc",
         "discover_popularity.desc",
         "discover_vote_average.desc"
       ],
-      "surs_hot_trend_day": 25,
-      "surs_hot_trend_week": 14,
+      "surs_hot_trend_day": 54,
+      "surs_hot_trend_week": 18,
       "surs_hot_imdb_id": "tt26598805",
       "surs_hot_current_popularity_observed": true,
       "surs_hot_current_vote_count_observed": true,
       "surs_hot_discovery_pass": 1,
-      "surs_hot_quality": 6.93,
-      "surs_hot_confidence": 0.3,
+      "surs_hot_quality": 6.95,
+      "surs_hot_confidence": 0.307,
       "surs_hot_coverage": 1,
       "surs_hot_rating_evidence": {
         "sources": [
@@ -2395,7 +3204,7 @@
           "kp"
         ]
       },
-      "surs_hot_quality_base": 6.93,
+      "surs_hot_quality_base": 6.95,
       "surs_hot_rating_agreement": {
         "sources": 0,
         "bonus": 0,
@@ -2403,41 +3212,41 @@
         "level": "unconfirmed"
       },
       "surs_hot_adjusted_ratings": {
-        "tmdb": 6.93
+        "tmdb": 6.95
       },
-      "surs_hot_heat": 0.429,
-      "surs_hot_attention": 0.429,
-      "surs_hot_attention_tmdb": 0.429,
+      "surs_hot_heat": 0.366,
+      "surs_hot_attention": 0.366,
+      "surs_hot_attention_tmdb": 0.366,
       "surs_hot_external_demand_bonus": 0,
       "surs_hot_independent_demand_floor": 0,
       "surs_hot_kinopoisk_momentum_bonus": 0,
       "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.718,
-      "surs_hot_attention_day": 0.2586,
-      "surs_hot_attention_week": 0.3838,
+      "surs_hot_attention_pop_percentile": 0.697,
+      "surs_hot_attention_day": 0.0881,
+      "surs_hot_attention_week": 0.33,
       "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.555,
+      "surs_hot_growth": 0.544,
       "surs_hot_growth_measured": true,
       "surs_hot_growth_periods": {
         "1d": 0.5,
-        "3d": 0.573,
-        "7d": 0.591
+        "3d": 0.545,
+        "7d": 0.588
       },
-      "surs_hot_growth_status": "rising",
-      "surs_hot_growth_signal": 0.0825,
+      "surs_hot_growth_status": "flat",
+      "surs_hot_growth_signal": 0,
       "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 21,
-      "surs_hot_rank_age": 21,
+      "surs_hot_age": 22,
+      "surs_hot_rank_age": 22,
       "surs_hot_rank_date": "2026-10-29",
       "surs_hot_age_source_verified": true,
       "surs_hot_recency_tier": 0,
       "surs_hot_provisional": true,
       "surs_hot_track": "breakout",
-      "surs_hot_freshness": 0.8652,
+      "surs_hot_freshness": 0.8592,
       "surs_hot_model_scores": {
-        "baseline": 31.493,
-        "demand": 32.692,
-        "fresh": 34.873
+        "baseline": 27.641,
+        "demand": 28.489,
+        "fresh": 30.955
       },
       "surs_hot_weights": {
         "attention": 0.5,
@@ -2445,7 +3254,7 @@
         "growth": 0.15,
         "freshness": 0.05
       },
-      "surs_hot_base_score": 32.692,
+      "surs_hot_base_score": 28.489,
       "surs_hot_interest_evidence": {
         "rating_sources": 1,
         "tmdb_trending": true,
@@ -2471,406 +3280,72 @@
       "surs_hot_kinopoisk_vote_growth": {},
       "surs_hot_kinopoisk_rank_as_of": null,
       "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 32.69,
-      "surs_hot_demand_score": 32.69,
+      "surs_hot_score": 28.49,
+      "surs_hot_demand_score": 28.49,
       "surs_hot_editorial_penalty": 0,
       "surs_hot_editorial_diversity_penalty": 0,
       "surs_hot_editorial_interest_penalty": 0,
       "surs_hot_editorial_distribution_penalty": 0,
-      "surs_hot_rank": 15
-    },
-    {
-      "id": 288673,
-      "source": "tmdb",
-      "type": "tv",
-      "media_type": "tv",
-      "title": "Кэрри",
-      "name": "Кэрри",
-      "original_title": "",
-      "original_name": "Carrie",
-      "first_air_date": "2026-10-07",
-      "poster_path": "/eCmD73ny4jG29BVBily2LzPT6I7.jpg",
-      "backdrop_path": "/9yCJtipMeDe8uAdSJKvw8BnYfRz.jpg",
-      "overview": "Кэрри Уайт - застенчивая и замкнутая девушка, выросшая под строгим контролем своей глубоко религиозной матери Маргарет. После травмы Кэрри впервые сталкивается с жестокими правилами школьной жизни, где насмешки, унижения и травля становятся частью её повседневности. Когда издевательства над ней выходят за пределы школы и превращаются в публичный скандал в социальных сетях, девушка обнаруживает в себе пугающую способность управлять предметами силой мысли.",
-      "genre_ids": [
-        9648,
-        18,
-        10765
-      ],
-      "origin_country": [
-        "CA",
-        "US"
-      ],
-      "popularity": 42.2559,
-      "vote_average": 8.245,
-      "vote_count": 609,
-      "surs_hot_premiere_date": "2026-10-07",
-      "surs_hot_premiere_kind": "series",
-      "surs_hot_season": null,
-      "surs_hot_original_date": "2026-10-07",
-      "surs_hot_digital_date": null,
-      "surs_hot_first_us_release_date": null,
-      "surs_hot_digital_status": null,
-      "surs_hot_discovery": [
-        "recent_popularity.desc",
-        "trending_day",
-        "trending_week",
-        "discover_popularity.desc",
-        "discover_vote_average.desc"
-      ],
-      "surs_hot_trend_day": null,
-      "surs_hot_trend_week": 33,
-      "surs_hot_imdb_id": "tt11540908",
-      "surs_hot_current_popularity_observed": true,
-      "surs_hot_current_vote_count_observed": true,
-      "surs_hot_discovery_pass": 1,
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 7.4,
-          "votes": 23227,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 1343910
-        },
-        "imdb": {
-          "value": 7.8,
-          "votes": 65407,
-          "via": "kinopoisk_unofficial"
-        }
-      },
-      "surs_hot_kinopoisk_popularity_rank": null,
-      "surs_hot_quality": 7.715,
-      "surs_hot_confidence": 0.936,
-      "surs_hot_coverage": 3,
-      "surs_hot_rating_evidence": {
-        "sources": [
-          "tmdb",
-          "imdb",
-          "kp"
-        ],
-        "source_count": 3,
-        "level": "three_source",
-        "missing": []
-      },
-      "surs_hot_quality_base": 7.715,
-      "surs_hot_rating_agreement": {
-        "sources": 3,
-        "spread": 0.845,
-        "bonus": 0,
-        "level": "mixed"
-      },
-      "surs_hot_adjusted_ratings": {
-        "tmdb": 7.947,
-        "imdb": 7.795,
-        "kp": 7.394
-      },
-      "surs_hot_heat": 0.257,
-      "surs_hot_attention": 0.257,
-      "surs_hot_attention_tmdb": 0.257,
-      "surs_hot_external_demand_bonus": 0,
-      "surs_hot_independent_demand_floor": 0,
-      "surs_hot_kinopoisk_momentum_bonus": 0,
-      "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.661,
-      "surs_hot_attention_day": 0,
-      "surs_hot_attention_week": 0.1975,
-      "surs_hot_attention_sources": 1,
-      "surs_hot_growth": 0.53,
-      "surs_hot_growth_measured": true,
-      "surs_hot_growth_periods": {
-        "1d": 0.519,
-        "3d": 0.537,
-        "7d": 0.533
-      },
-      "surs_hot_growth_status": "flat",
-      "surs_hot_growth_signal": 0,
-      "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 43,
-      "surs_hot_rank_age": 43,
-      "surs_hot_rank_date": "2026-10-07",
-      "surs_hot_age_source_verified": true,
-      "surs_hot_recency_tier": 1,
-      "surs_hot_provisional": false,
-      "surs_hot_track": "qualified",
-      "surs_hot_freshness": 0.7434,
-      "surs_hot_model_scores": {
-        "baseline": 31.719,
-        "demand": 30.656,
-        "fresh": 33.088
-      },
-      "surs_hot_weights": {
-        "attention": 0.5,
-        "quality": 0.3,
-        "growth": 0.15,
-        "freshness": 0.05
-      },
-      "surs_hot_base_score": 30.656,
-      "surs_hot_interest_evidence": {
-        "rating_sources": 3,
-        "tmdb_trending": true,
-        "kinopoisk_top60": false,
-        "tmdb_trending_extended": false,
-        "kinopoisk_top100_extended": false,
-        "recent_emerging": false,
-        "measured_positive_growth": false,
-        "current_interest_observed": true,
-        "current_interest_strong": true,
-        "current_interest_confidence": "strong",
-        "one_source_eligible": true,
-        "interest_evidence": [
-          "tmdb_trending"
-        ]
-      },
-      "surs_hot_previous_top20_grace": false,
-      "surs_hot_external_rating_exception": false,
-      "surs_hot_availability": "aired_new_series",
-      "surs_hot_fresh_provisional": false,
-      "surs_hot_active_season_secondary": false,
-      "surs_hot_kinopoisk_rank_deltas": {
-        "1d": {
-          "delta": -21,
-          "from": 65,
-          "to": 86,
-          "days": 1
-        },
-        "3d": {
-          "delta": -21,
-          "from": 65,
-          "to": 86,
-          "days": 3
-        }
-      },
-      "surs_hot_kinopoisk_vote_growth": {},
-      "surs_hot_kinopoisk_rank_as_of": "2026-11-19",
-      "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 30.66,
-      "surs_hot_demand_score": 30.66,
-      "surs_hot_editorial_penalty": 0,
-      "surs_hot_editorial_diversity_penalty": 0,
-      "surs_hot_editorial_interest_penalty": 0,
-      "surs_hot_editorial_distribution_penalty": 0,
-      "surs_hot_rank": 16
-    },
-    {
-      "id": 120911,
-      "source": "tmdb",
-      "type": "tv",
-      "media_type": "tv",
-      "title": "Список смертников",
-      "name": "Список смертников",
-      "original_title": "",
-      "original_name": "The Terminal List",
-      "first_air_date": "2022-06-30",
-      "poster_path": "/cPLfYOulYQzRhZKc53FvCmoQdS4.jpg",
-      "backdrop_path": "/2qS2LGqsAyT1NEDeIj24Hp2IR10.jpg",
-      "overview": "Лейтенант-коммандер Джеймс Рис идёт по следу таинственных сил, стоявших за убийством всех бойцов его отряда, желая отомстить за их смерть. Освободившись от командной структуры армии, Рис применяет уроки, усвоенные за 20 лет военной службы, чтобы найти и уничтожить людей, ответственных за смерть его бойцов.",
-      "genre_ids": [
-        10759,
-        18
-      ],
-      "origin_country": [
-        "US"
-      ],
-      "popularity": 87.2099,
-      "vote_average": 7.991,
-      "vote_count": 1351,
-      "surs_hot_premiere_date": "2026-10-21",
-      "surs_hot_premiere_kind": "season",
-      "surs_hot_season": 2,
-      "surs_hot_original_date": "2022-06-30",
-      "surs_hot_digital_date": null,
-      "surs_hot_first_us_release_date": null,
-      "surs_hot_digital_status": null,
-      "surs_hot_discovery": [
-        "fresh_season",
-        "recent_season",
-        "season"
-      ],
-      "surs_hot_trend_day": null,
-      "surs_hot_trend_week": null,
-      "surs_hot_imdb_id": "tt11743610",
-      "surs_hot_current_popularity_observed": true,
-      "surs_hot_current_vote_count_observed": true,
-      "surs_hot_discovery_pass": 1,
-      "surs_hot_season_verified": true,
-      "surs_hot_episodes_released": 8,
-      "surs_hot_last_regular_episode_date": "2026-10-21",
-      "surs_hot_regular_episode_last14d": false,
-      "surs_hot_season_rating": {
-        "value": 8.176,
-        "votes": 147,
-        "episodes_rated": 8,
-        "episodes_released": 8
-      },
-      "surs_hot_ratings": {
-        "kp": {
-          "value": 7.4,
-          "votes": 23232,
-          "via": "kinopoisk_unofficial",
-          "kinopoisk_id": 4396199
-        },
-        "imdb": {
-          "value": 7.9,
-          "votes": 136486,
-          "via": "kinopoisk_unofficial"
-        }
-      },
-      "surs_hot_quality": 7.913,
-      "surs_hot_confidence": 0.967,
-      "surs_hot_coverage": 3,
-      "surs_hot_rating_evidence": {
-        "sources": [
-          "tmdb",
-          "imdb",
-          "kp"
-        ],
-        "source_count": 3,
-        "level": "three_source",
-        "missing": []
-      },
-      "surs_hot_quality_base": 7.726,
-      "surs_hot_rating_agreement": {
-        "sources": 3,
-        "bonus": 0,
-        "spread": null,
-        "level": "unconfirmed"
-      },
-      "surs_hot_adjusted_ratings": {
-        "tmdb": 7.865,
-        "imdb": 7.897,
-        "kp": 7.394
-      },
-      "surs_hot_heat": 0.194,
-      "surs_hot_attention": 0.194,
-      "surs_hot_attention_tmdb": 0.194,
-      "surs_hot_external_demand_bonus": 0,
-      "surs_hot_independent_demand_floor": 0,
-      "surs_hot_kinopoisk_momentum_bonus": 0,
-      "surs_hot_cross_source_interest": false,
-      "surs_hot_attention_pop_percentile": 0.774,
-      "surs_hot_attention_day": 0,
-      "surs_hot_attention_week": 0,
-      "surs_hot_attention_sources": 0,
-      "surs_hot_growth": 0.51,
-      "surs_hot_growth_measured": true,
-      "surs_hot_growth_periods": {
-        "1d": 0.5,
-        "3d": 0.515,
-        "7d": 0.514
-      },
-      "surs_hot_growth_status": "flat",
-      "surs_hot_growth_signal": 0,
-      "surs_hot_growth_confirmed": true,
-      "surs_hot_age": 29,
-      "surs_hot_rank_age": 29,
-      "surs_hot_rank_date": "2026-10-21",
-      "surs_hot_age_source_verified": true,
-      "surs_hot_recency_tier": 0,
-      "surs_hot_provisional": false,
-      "surs_hot_track": "critically_strong",
-      "surs_hot_freshness": 0.8187,
-      "surs_hot_model_scores": {
-        "baseline": 31.736,
-        "demand": 30.004,
-        "fresh": 33.128
-      },
-      "surs_hot_weights": {
-        "attention": 0.5,
-        "quality": 0.3,
-        "growth": 0.15,
-        "freshness": 0.05
-      },
-      "surs_hot_base_score": 30.004,
-      "surs_hot_interest_evidence": {
-        "rating_sources": 3,
-        "tmdb_trending": false,
-        "kinopoisk_top60": false,
-        "tmdb_trending_extended": false,
-        "kinopoisk_top100_extended": false,
-        "recent_emerging": true,
-        "measured_positive_growth": false,
-        "current_interest_observed": true,
-        "current_interest_strong": true,
-        "current_interest_confidence": "strong",
-        "one_source_eligible": true,
-        "interest_evidence": [
-          "recent_emerging"
-        ]
-      },
-      "surs_hot_previous_top20_grace": true,
-      "surs_hot_external_rating_exception": false,
-      "surs_hot_availability": "aired_new_season",
-      "surs_hot_fresh_provisional": false,
-      "surs_hot_active_season_secondary": false,
-      "surs_hot_kinopoisk_rank_deltas": {},
-      "surs_hot_kinopoisk_vote_growth": {},
-      "surs_hot_kinopoisk_rank_as_of": null,
-      "surs_hot_kinopoisk_votes_as_of": null,
-      "surs_hot_score": 30,
-      "surs_hot_demand_score": 30,
-      "surs_hot_editorial_penalty": 0,
-      "surs_hot_editorial_diversity_penalty": 0,
-      "surs_hot_editorial_interest_penalty": 0,
-      "surs_hot_editorial_distribution_penalty": 0,
-      "surs_hot_rank": 17
+      "surs_hot_rank": 20
     }
   ],
   "diagnostics": {
-    "tmdb_calls": 378,
+    "tmdb_calls": 390,
     "tmdb_failures": 0,
-    "tmdb_detail_cache_hits": 20,
-    "tmdb_detail_cache_misses": 300,
-    "tmdb_season_cache_hits": 34,
+    "tmdb_detail_cache_hits": 8,
+    "tmdb_detail_cache_misses": 312,
+    "tmdb_season_cache_hits": 33,
     "tmdb_season_cache_misses": 0,
     "tmdb_cached_popularity_unobserved": 0,
     "tmdb_cached_vote_count_unobserved": 0,
     "mdblist_calls": 0,
     "mdblist_failures": 0,
-    "kp_calls": 26,
+    "kp_calls": 22,
     "kp_failures": 0,
-    "kp_matched": 62,
-    "kp_search_calls": 7,
-    "kp_detail_calls": 4,
-    "kp_cache_hits": 72,
-    "kp_search_empty": 3,
-    "kp_detail_unrated": 4,
-    "kp_no_imdb": 41,
+    "kp_matched": 36,
+    "kp_search_calls": 3,
+    "kp_detail_calls": 2,
+    "kp_cache_hits": 47,
+    "kp_search_empty": 1,
+    "kp_detail_unrated": 2,
+    "kp_no_imdb": 47,
     "kp_popularity_calls": 5,
     "kp_popularity_failures": 0,
     "kp_popularity_cache_hit": false,
-    "kp_popularity_matched": 21,
-    "kp_vote_refresh_calls": 8,
+    "kp_popularity_matched": 16,
+    "kp_vote_refresh_calls": 4,
     "kp_vote_refresh_failures": 0,
-    "kp_votes_recorded": 10,
+    "kp_votes_recorded": 12,
     "season_calls": 0,
     "discovered": 573,
-    "us_verified": 207,
-    "eligible": 17,
+    "us_verified": 212,
+    "eligible": 20,
     "first_pass_details": 260,
     "second_pass_details": 60,
-    "second_pass_verified": 44,
+    "second_pass_verified": 42,
     "fresh_first_pass_details": 177,
     "kp_daily_carried": 0,
     "kp_pacing_slot": 0,
     "kp_pacing_ceiling": 26,
     "kp_pacing_run_allowance": 26,
-    "kp_preview_ranked_from_cache": 18,
-    "kp_preview_ratings_from_cache": 66,
-    "kp_known_id_refresh_calls": 2,
-    "kp_known_id_refresh_matches": 2,
-    "kp_rating_budget_deferred": 85,
-    "kp_daily_used": 26,
-    "kp_pacing_unused": 0,
-    "kp_daily_remaining": 184,
-    "kp_run_remaining": 0,
+    "kp_preview_ranked_from_cache": 13,
+    "kp_preview_ratings_from_cache": 35,
+    "kp_known_id_refresh_calls": 8,
+    "kp_known_id_refresh_matches": 8,
+    "kp_rating_budget_deferred": 107,
+    "kp_daily_used": 22,
+    "kp_pacing_unused": 4,
+    "kp_daily_remaining": 188,
+    "kp_run_remaining": 4,
     "second_pass_eligible": 0,
     "second_pass_selected": 0,
-    "selected": 17,
+    "selected": 20,
     "quality_floor": 7.2,
     "min_votes": 100,
     "primary_window_days": 90,
     "selected_by_recency": {
-      "0-30": 12,
-      "31-60": 5,
+      "0-30": 13,
+      "31-60": 7,
       "61-90": 0,
       "91+": 0
     },
@@ -2890,41 +3365,41 @@
     "selected_fresh_provisional": 3,
     "selected_active_season_secondary": 0,
     "interest_evidence": {
-      "selected": 17,
-      "single_source_selected": 3,
-      "single_source_with_interest": 3,
+      "selected": 20,
+      "single_source_selected": 6,
+      "single_source_with_interest": 6,
       "one_source_held": 0,
-      "top20_interest_evidenced": 17,
-      "all_selected_interest_evidenced": 17,
-      "top20_interest_strong": 17,
-      "top20_interest_extended_only": 0,
+      "top20_interest_evidenced": 20,
+      "all_selected_interest_evidenced": 20,
+      "top20_interest_strong": 18,
+      "top20_interest_extended_only": 2,
       "interest_signals": {
-        "tmdb_trending": 14,
+        "tmdb_trending": 16,
         "kinopoisk_top60": 7,
-        "tmdb_trending_extended": 0,
-        "kinopoisk_top100_extended": 0,
+        "tmdb_trending_extended": 3,
+        "kinopoisk_top100_extended": 2,
         "recent_emerging": 3,
         "measured_positive_growth": 3
       }
     },
     "signal_expansion_comparison": {
       "selection": {
-        "name": "control",
-        "reason": "rank_instability",
-        "uplift": 0
+        "name": "expanded",
+        "reason": "measured_interest_coverage_gain",
+        "uplift": 2
       },
       "control": {
-        "selected": 17,
+        "selected": 18,
         "top10_overlap_previous": 9,
         "top10_overlap_control": 10,
-        "top20_observed_interest": 17,
-        "top20_strong_interest": 17,
+        "top20_observed_interest": 18,
+        "top20_strong_interest": 18,
         "top20_extended_only": 0,
-        "top20_trending": 14,
+        "top20_trending": 16,
         "top20_independent_kp": 7,
-        "top20_one_rating": 3,
-        "top20_three_ratings": 13,
-        "mean_shared_rank_move": 1.31,
+        "top20_one_rating": 6,
+        "top20_three_ratings": 11,
+        "mean_shared_rank_move": 0.94,
         "max_shared_rank_move": 3,
         "interest_penalties": 0
       },
@@ -2933,84 +3408,84 @@
         "top10_overlap_previous": 9,
         "top10_overlap_control": 10,
         "top20_observed_interest": 20,
-        "top20_strong_interest": 17,
-        "top20_extended_only": 3,
-        "top20_trending": 14,
+        "top20_strong_interest": 18,
+        "top20_extended_only": 2,
+        "top20_trending": 16,
         "top20_independent_kp": 7,
-        "top20_one_rating": 3,
-        "top20_three_ratings": 16,
-        "mean_shared_rank_move": 1.71,
-        "max_shared_rank_move": 8,
+        "top20_one_rating": 6,
+        "top20_three_ratings": 13,
+        "mean_shared_rank_move": 1.35,
+        "max_shared_rank_move": 5,
         "interest_penalties": 0
       }
     },
-    "signal_expansion_selected": "control",
+    "signal_expansion_selected": "expanded",
     "tmdb_trending_pages": 3,
     "kp_popularity_pages": 5,
-    "top20_recent_regular_episodes": 3,
+    "top20_recent_regular_episodes": 5,
     "editorial_interest_strength": 0,
     "editorial_interest_selection_reason": "no_safe_observed_gain",
     "editorial_interest_comparison": {
-      "candidate_count": 17,
+      "candidate_count": 20,
       "variants": {
         "zero": {
-          "selected": 17,
+          "selected": 20,
           "top10_overlap_previous": 9,
           "top10_overlap_control": 10,
-          "top20_observed_interest": 17,
-          "top20_strong_interest": 17,
-          "top20_extended_only": 0,
-          "top20_trending": 14,
+          "top20_observed_interest": 20,
+          "top20_strong_interest": 18,
+          "top20_extended_only": 2,
+          "top20_trending": 16,
           "top20_independent_kp": 7,
-          "top20_one_rating": 3,
+          "top20_one_rating": 6,
           "top20_three_ratings": 13,
-          "mean_shared_rank_move": 1.31,
-          "max_shared_rank_move": 3,
+          "mean_shared_rank_move": 1.35,
+          "max_shared_rank_move": 5,
           "interest_penalties": 0
         },
         "light": {
-          "selected": 17,
+          "selected": 20,
           "top10_overlap_previous": 9,
           "top10_overlap_control": 10,
-          "top20_observed_interest": 17,
-          "top20_strong_interest": 17,
-          "top20_extended_only": 0,
-          "top20_trending": 14,
+          "top20_observed_interest": 20,
+          "top20_strong_interest": 18,
+          "top20_extended_only": 2,
+          "top20_trending": 16,
           "top20_independent_kp": 7,
-          "top20_one_rating": 3,
+          "top20_one_rating": 6,
           "top20_three_ratings": 13,
-          "mean_shared_rank_move": 1.31,
-          "max_shared_rank_move": 3,
+          "mean_shared_rank_move": 1.35,
+          "max_shared_rank_move": 5,
           "interest_penalties": 0
         },
         "balanced": {
-          "selected": 17,
+          "selected": 20,
           "top10_overlap_previous": 9,
           "top10_overlap_control": 10,
-          "top20_observed_interest": 17,
-          "top20_strong_interest": 17,
-          "top20_extended_only": 0,
-          "top20_trending": 14,
+          "top20_observed_interest": 20,
+          "top20_strong_interest": 18,
+          "top20_extended_only": 2,
+          "top20_trending": 16,
           "top20_independent_kp": 7,
-          "top20_one_rating": 3,
+          "top20_one_rating": 6,
           "top20_three_ratings": 13,
-          "mean_shared_rank_move": 1.31,
-          "max_shared_rank_move": 3,
+          "mean_shared_rank_move": 1.35,
+          "max_shared_rank_move": 5,
           "interest_penalties": 0
         },
         "strong": {
-          "selected": 17,
+          "selected": 20,
           "top10_overlap_previous": 9,
           "top10_overlap_control": 10,
-          "top20_observed_interest": 17,
-          "top20_strong_interest": 17,
-          "top20_extended_only": 0,
-          "top20_trending": 14,
+          "top20_observed_interest": 20,
+          "top20_strong_interest": 18,
+          "top20_extended_only": 2,
+          "top20_trending": 16,
           "top20_independent_kp": 7,
-          "top20_one_rating": 3,
+          "top20_one_rating": 6,
           "top20_three_ratings": 13,
-          "mean_shared_rank_move": 1.31,
-          "max_shared_rank_move": 3,
+          "mean_shared_rank_move": 1.35,
+          "max_shared_rank_move": 5,
           "interest_penalties": 0
         }
       },
@@ -3023,82 +3498,40 @@
       }
     },
     "rating_evidence": {
-      "selected": 17,
+      "selected": 20,
       "high": 13,
       "medium": 1,
-      "limited": 3,
+      "limited": 6,
       "top10_high": 7,
       "top20_high": 13,
-      "missing_imdb": 4,
-      "missing_kp": 3,
-      "missing_both": 3,
+      "missing_imdb": 7,
+      "missing_kp": 6,
+      "missing_both": 6,
       "unavailable_imdb_source": true,
       "unverified_kinopoisk_id": 0,
       "kp_unrated_or_not_found": 3,
-      "kp_not_checked_or_stale": 0,
+      "kp_not_checked_or_stale": 3,
       "no_valid_imdb_id": 0
     },
     "recommendation_v5": {
-      "ranked": 17,
+      "ranked": 20,
       "external_ratings_recovered": 5,
       "external_ratings_recovered_top10": 4,
       "independent_kp_chart_top10": 4,
       "interest_unobserved": 0,
-      "theatrical_without_verified_digital": 4,
+      "theatrical_without_verified_digital": 5,
       "eligible_without_current_interest": 0
     },
     "active_model": "demand",
     "comparison": {
-      "previous_count": 18,
-      "new_count": 17,
-      "retained": 16,
-      "added": 1,
-      "removed": 2,
+      "previous_count": 17,
+      "new_count": 20,
+      "retained": 17,
+      "added": 3,
+      "removed": 0,
       "top10_retained": 9,
-      "largest_rank_change": 3,
+      "largest_rank_change": 5,
       "top10_before": [
-        {
-          "id": "movie:1368337",
-          "title": "Одиссея"
-        },
-        {
-          "id": "tv:85077",
-          "title": "Избранные"
-        },
-        {
-          "id": "tv:247718",
-          "title": "Гангстерленд"
-        },
-        {
-          "id": "movie:969681",
-          "title": "Человек-паук: Новый день"
-        },
-        {
-          "id": "tv:291507",
-          "title": "Тело"
-        },
-        {
-          "id": "tv:213375",
-          "title": "Квест Вижна"
-        },
-        {
-          "id": "tv:259909",
-          "title": "Декстер: Воскрешение"
-        },
-        {
-          "id": "movie:1263337",
-          "title": "Сердце зверя"
-        },
-        {
-          "id": "movie:1423191",
-          "title": "Обитель зла"
-        },
-        {
-          "id": "movie:1567605",
-          "title": "Скрудж"
-        }
-      ],
-      "top10_after": [
         {
           "id": "movie:1368337",
           "title": "Одиссея"
@@ -3139,10 +3572,52 @@
           "id": "tv:153312",
           "title": "Король Талсы"
         }
+      ],
+      "top10_after": [
+        {
+          "id": "movie:1368337",
+          "title": "Одиссея"
+        },
+        {
+          "id": "movie:969681",
+          "title": "Человек-паук: Новый день"
+        },
+        {
+          "id": "tv:85077",
+          "title": "Избранные"
+        },
+        {
+          "id": "tv:291507",
+          "title": "Тело"
+        },
+        {
+          "id": "movie:1300968",
+          "title": "Голодные игры: Рассвет жатвы"
+        },
+        {
+          "id": "tv:259909",
+          "title": "Декстер: Воскрешение"
+        },
+        {
+          "id": "tv:213375",
+          "title": "Квест Вижна"
+        },
+        {
+          "id": "movie:1263337",
+          "title": "Сердце зверя"
+        },
+        {
+          "id": "movie:1423191",
+          "title": "Обитель зла"
+        },
+        {
+          "id": "tv:153312",
+          "title": "Король Талсы"
+        }
       ]
     },
     "model_comparison": {
-      "candidate_count": 17,
+      "candidate_count": 20,
       "models": {
         "baseline": {
           "top10": [
@@ -3150,15 +3625,15 @@
             "movie:969681",
             "tv:85077",
             "tv:259909",
-            "tv:213375",
-            "movie:1263337",
             "tv:291507",
+            "movie:1300968",
+            "movie:1263337",
+            "tv:213375",
             "movie:1423191",
-            "tv:153312",
-            "movie:1567605"
+            "tv:153312"
           ],
           "top10_overlap_baseline": 10,
-          "top10_mean_age": 46,
+          "top10_mean_age": 46.3,
           "top10_tmdb_trending": 10,
           "top10_kp_popular": 5,
           "top10_both": 5
@@ -3168,16 +3643,16 @@
             "movie:1368337",
             "movie:969681",
             "tv:85077",
-            "tv:213375",
             "tv:291507",
+            "movie:1300968",
             "tv:259909",
+            "tv:213375",
             "movie:1263337",
             "movie:1423191",
-            "movie:1567605",
             "tv:153312"
           ],
           "top10_overlap_baseline": 10,
-          "top10_mean_age": 46,
+          "top10_mean_age": 46.3,
           "top10_tmdb_trending": 10,
           "top10_kp_popular": 5,
           "top10_both": 5
@@ -3185,18 +3660,18 @@
         "fresh": {
           "top10": [
             "movie:1368337",
-            "tv:85077",
             "movie:969681",
+            "tv:85077",
             "tv:291507",
+            "movie:1300968",
             "tv:259909",
             "tv:213375",
             "movie:1263337",
             "movie:1423191",
-            "movie:1567605",
             "tv:153312"
           ],
           "top10_overlap_baseline": 10,
-          "top10_mean_age": 46,
+          "top10_mean_age": 46.3,
           "top10_tmdb_trending": 10,
           "top10_kp_popular": 5,
           "top10_both": 5
@@ -3206,14 +3681,14 @@
     },
     "external_demand": {
       "source": "kinopoisk_unofficial_TOP_POPULAR_ALL",
-      "refreshed_at": "2026-11-19T02:37:50.703Z",
+      "refreshed_at": "2026-11-20T02:22:32.698Z",
       "available": true,
-      "compared_candidates": 21,
-      "selected_matching": 7,
-      "selected_cross_confirmed": 6,
+      "compared_candidates": 16,
+      "selected_matching": 9,
+      "selected_cross_confirmed": 9,
       "max_attention_bonus": 0.16,
       "independent_kp_attention_floor_active": true,
-      "momentum_rank_measured": 8,
+      "momentum_rank_measured": 9,
       "momentum_votes_measured": 6,
       "momentum_positive": 1,
       "history_dates": [
@@ -3222,7 +3697,8 @@
         "2026-11-16",
         "2026-11-17",
         "2026-11-18",
-        "2026-11-19"
+        "2026-11-19",
+        "2026-11-20"
       ],
       "rating_history_dates": [
         "2026-11-14",
@@ -3230,7 +3706,8 @@
         "2026-11-16",
         "2026-11-17",
         "2026-11-18",
-        "2026-11-19"
+        "2026-11-19",
+        "2026-11-20"
       ],
       "not_stream_count": true
     },
@@ -3247,45 +3724,45 @@
       "growth": 0
     },
     "rating_coverage": {
-      "tmdb": 17,
+      "tmdb": 20,
       "imdb": 13,
       "kinopoisk": 14,
       "triple": 12,
       "triple_agreement": 6,
       "double_agreement": 1,
-      "growth_confirmed": 17
+      "growth_confirmed": 19
     },
     "selected_by_kind": {
-      "movie": 8,
+      "movie": 9,
       "new_tv": 4,
-      "returning_tv": 5
+      "returning_tv": 7
     },
     "selected_by_track": {
       "qualified": 6,
-      "critically_strong": 8,
-      "breakout": 3
+      "critically_strong": 10,
+      "breakout": 4
     },
     "returning_top10": 3,
-    "returning_top20": 5,
+    "returning_top20": 7,
     "breakouts_top10": 2,
     "rejections": {
-      "buzz_not_confirmed": 4,
-      "quality_below_floor": 75,
-      "hot_31_60_without_current_interest": 41,
-      "insufficient_votes": 39,
-      "hot_61_90_without_positive_growth": 6,
-      "hot_premiere_older_than_90d": 23,
-      "season_rating_unconfirmed": 2
+      "quality_below_floor": 79,
+      "buzz_not_confirmed": 6,
+      "insufficient_votes": 42,
+      "hot_31_60_without_current_interest": 30,
+      "season_rating_unconfirmed": 2,
+      "hot_61_90_without_positive_growth": 8,
+      "hot_premiere_older_than_90d": 25
     },
-    "provisional": 4,
-    "measured_growth": 17,
-    "positive_growth": 10,
+    "provisional": 5,
+    "measured_growth": 20,
+    "positive_growth": 9,
     "falling_growth": 0,
-    "flat_growth": 7,
-    "unknown_growth": 0,
+    "flat_growth": 10,
+    "unknown_growth": 1,
     "digital_status": {
       "verified": 4,
-      "unknown": 4
+      "unknown": 5
     },
     "top10": [
       {
@@ -3294,9 +3771,9 @@
         "title": "Одиссея",
         "premiere": "2026-11-17",
         "kind": "digital",
-        "score": 76.72,
-        "quality": 8.547,
-        "heat": 0.943
+        "score": 76.73,
+        "quality": 8.549,
+        "heat": 0.945
       },
       {
         "id": 969681,
@@ -3304,9 +3781,9 @@
         "title": "Человек-паук: Новый день",
         "premiere": "2026-10-06",
         "kind": "digital",
-        "score": 58.9,
-        "quality": 8.448,
-        "heat": 0.646
+        "score": 61.71,
+        "quality": 8.446,
+        "heat": 0.702
       },
       {
         "id": 85077,
@@ -3314,19 +3791,9 @@
         "title": "Избранные",
         "premiere": "2026-11-15",
         "kind": "season",
-        "score": 57.29,
-        "quality": 8.714,
-        "heat": 0.522
-      },
-      {
-        "id": 213375,
-        "type": "tv",
-        "title": "Квест Вижна",
-        "premiere": "2026-10-13",
-        "kind": "series",
-        "score": 53.64,
-        "quality": 7.456,
-        "heat": 0.769
+        "score": 54.51,
+        "quality": 8.713,
+        "heat": 0.498
       },
       {
         "id": 291507,
@@ -3334,9 +3801,19 @@
         "title": "Тело",
         "premiere": "2026-11-11",
         "kind": "series",
-        "score": 55.42,
-        "quality": 7.115,
-        "heat": 0.725
+        "score": 56.03,
+        "quality": 7.163,
+        "heat": 0.766
+      },
+      {
+        "id": 1300968,
+        "type": "movie",
+        "title": "Голодные игры: Рассвет жатвы",
+        "premiere": "2026-11-20",
+        "kind": "theatrical",
+        "score": 57.87,
+        "quality": 6.881,
+        "heat": 0.781
       },
       {
         "id": 259909,
@@ -3344,9 +3821,19 @@
         "title": "Декстер: Воскрешение",
         "premiere": "2026-11-01",
         "kind": "season",
-        "score": 52.12,
-        "quality": 8.37,
-        "heat": 0.532
+        "score": 52.09,
+        "quality": 8.356,
+        "heat": 0.535
+      },
+      {
+        "id": 213375,
+        "type": "tv",
+        "title": "Квест Вижна",
+        "premiere": "2026-10-13",
+        "kind": "series",
+        "score": 50.29,
+        "quality": 7.454,
+        "heat": 0.703
       },
       {
         "id": 1263337,
@@ -3354,9 +3841,9 @@
         "title": "Сердце зверя",
         "premiere": "2026-11-10",
         "kind": "digital",
-        "score": 51.75,
-        "quality": 7.823,
-        "heat": 0.616
+        "score": 49.95,
+        "quality": 7.835,
+        "heat": 0.582
       },
       {
         "id": 1423191,
@@ -3364,19 +3851,9 @@
         "title": "Обитель зла",
         "premiere": "2026-11-03",
         "kind": "digital",
-        "score": 49.67,
-        "quality": 7.74,
-        "heat": 0.641
-      },
-      {
-        "id": 1567605,
-        "type": "movie",
-        "title": "Скрудж",
-        "premiere": "2026-11-13",
-        "kind": "theatrical",
-        "score": 46.9,
-        "quality": 7.026,
-        "heat": 0.604
+        "score": 48.87,
+        "quality": 7.742,
+        "heat": 0.625
       },
       {
         "id": 153312,
@@ -3384,9 +3861,9 @@
         "title": "Король Талсы",
         "premiere": "2026-10-16",
         "kind": "season",
-        "score": 43.32,
-        "quality": 8.059,
-        "heat": 0.403
+        "score": 40.82,
+        "quality": 8.051,
+        "heat": 0.384
       }
     ],
     "feed_integrity": {
@@ -3395,15 +3872,15 @@
       "errors": [],
       "warnings": [],
       "drift": {
-        "prior_count": 18,
-        "current_count": 17,
-        "retained": 16,
-        "added": 1,
-        "removed": 2,
+        "prior_count": 17,
+        "current_count": 20,
+        "retained": 17,
+        "added": 3,
+        "removed": 0,
         "top10_overlap": 9,
-        "top20_overlap": 16,
-        "largest_shared_rank_move": 3,
-        "mean_shared_rank_move": 1.31,
+        "top20_overlap": 17,
+        "largest_shared_rank_move": 5,
+        "mean_shared_rank_move": 1.35,
         "prev_top10_tmdb_trending": 10,
         "current_top10_tmdb_trending": 10,
         "large_churn": false,
@@ -3415,7 +3892,7 @@
             "page": 1,
             "reported": true,
             "valid": true,
-            "items": 20
+            "items": 19
           },
           "movie:week": {
             "page": 1,
