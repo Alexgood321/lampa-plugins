@@ -138,6 +138,38 @@ test('cold boot repairs only a mismatched TMDB main and never other screens', ()
     full.timers.find(x=>x.ms===650).fn();
     assert.equal(full.navigations.length,0);
 });
+test('selected SURS home survives last-page restore and a stale main URL', () => {
+    const last = boot({saved:[{id:'nav_buttons',enabled:true}]});
+    last.stored.set('start_page','last');
+    last.Lampa.Activity.active = () => ({component:'main',source:'tmdb'});
+    last.timers.find(x=>x.ms===650).fn();
+    const restore = last.timers.find(x=>x.ms===80);
+    assert.ok(restore,'last-page restore must schedule SURS home activation');
+    restore.fn();
+    assert.equal(last.navigations.length,1);
+    assert.equal(last.navigations[0].source,'SURS');
+
+    const oldMainLink = boot({saved:[{id:'nav_buttons',enabled:true}]});
+    oldMainLink.window.start_deep_link = {component:'main',source:'tmdb'};
+    oldMainLink.Lampa.Activity.active = () => ({component:'main',source:'tmdb'});
+    oldMainLink.timers.find(x=>x.ms===650).fn();
+    const restoreLink=oldMainLink.timers.find(x=>x.ms===80);
+    assert.ok(restoreLink,'stale main-page URL must not suppress selected SURS source');
+    restoreLink.fn();
+    assert.equal(oldMainLink.navigations[0].source,'SURS');
+
+    const trueDeepLink = boot();
+    trueDeepLink.window.start_deep_link = {component:'full',source:'tmdb'};
+    trueDeepLink.Lampa.Activity.active = () => ({component:'full',source:'tmdb'});
+    trueDeepLink.timers.find(x=>x.ms===650).fn();
+    assert.equal(trueDeepLink.navigations.length,0,'film deep link must remain intact');
+
+    const otherSource=boot();
+    otherSource.stored.set('source','KP');
+    otherSource.Lampa.Activity.active=()=>({component:'main',source:'tmdb'});
+    otherSource.timers.find(x=>x.ms===650).fn();
+    assert.equal(otherSource.navigations.length,0,'do not override a non-SURS source');
+});
 test('discovered shelf storage batching preserves latest metadata and writes once', () => {
     const app = boot();
     const write = app.Lampa.Storage.set;
