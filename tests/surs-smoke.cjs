@@ -234,7 +234,7 @@ test('explicit SURS activation in settings updates source without resetting cust
     route.fn();
     assert.equal(app.navigations.at(-1).source,'SURS');
     assert.equal(app.stored.get('surs_fixed_shelves_v2'),saved);
-    assert.deepEqual(app.rows().map(x=>x.id),['nav_buttons','hot_us_new']);
+    assert.deepEqual(Array.from(app.rows(),x=>x.id),['nav_buttons','hot_us_new']);
 });
 test('cold boot repairs only a mismatched TMDB main and never other screens', () => {
     const app = boot({saved:[{id:'nav_buttons',enabled:true}]});
