@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 4.0.13 (Hot Discovery 5.0 fresh data on upgrade)
+* Версия: 4.0.14 (Hot Discovery 5.0 fresh data on upgrade)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1079,7 +1079,7 @@ return result;
 var buttonActions = {
 surs_main: function() {
 Lampa.Activity.push({
-source: Lampa.Storage.get('source'),
+source: 'SURS',
 title: Lampa.Lang.translate('title_main'),
 component: 'main',
 page: 1
@@ -3619,7 +3619,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.13';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.14';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3910,15 +3910,64 @@ from: active.source, to: 'SURS', at: Date.now()
 refreshSursHome('MAIN');
 } catch(err) { console.warn('[SURS] Cold boot recovery failed:', err); }
 }
+
+
+
+function handleSursHomeMenuAction(event) {
+if (!event || event.type !== 'action' || event.action !== 'main' ||
+!window.plugin_surs_fixed_ready) return;
+var active = Lampa.Activity && Lampa.Activity.active &&
+Lampa.Activity.active();
+var selected = Lampa.Storage && Lampa.Storage.get ?
+Lampa.Storage.get('source') : '';
+var onSurs = active && active.component === 'main' &&
+(active.source === 'SURS' || active.source === 'SURS NEW' ||
+active.source === 'SURS RUS');
+if (selected !== 'SURS' && !onSurs) return;
+if (selected !== 'SURS' && onSurs && Lampa.Storage &&
+typeof Lampa.Storage.set === 'function')
+Lampa.Storage.set('source', 'SURS');
+if (typeof event.abort === 'function') event.abort();
+try {
+var destination = {
+source: 'SURS', title: 'Главная',
+component: 'main', page: 1
+};
+if (active && active.component === 'main' &&
+typeof Lampa.Activity.replace === 'function')
+Lampa.Activity.replace(destination);
+else if (Lampa.Activity && typeof Lampa.Activity.push === 'function')
+Lampa.Activity.push(destination);
+window.SURS_PERFORMANCE.native_home_redirects =
+(window.SURS_PERFORMANCE.native_home_redirects || 0) + 1;
+} catch (error) {
+console.error('[SURS] Cannot open SURS from native Home:', error);
+}
+}
+
 function scheduleSursBootRecovery() {
 sursBootRecoveryStarted = Date.now();
 if (!sursBootRecoveryBound) {
 sursBootRecoveryBound = true;
 if (Lampa.Listener && Lampa.Listener.follow) {
 Lampa.Listener.follow('activity', function(e) {
-if (e && e.type === 'start' && !sursBootRecoveryDone)
-setTimeout(ensureSursActiveOnBoot, 0);
+if (!e || e.type !== 'start' || e.component !== 'main')
+return;
+
+setTimeout(function() {
+if (!sursBootRecoveryDone)
+ensureSursActiveOnBoot();
+else if (window.plugin_surs_fixed_ready &&
+Lampa.Storage && Lampa.Storage.get('source') === 'SURS') {
+var active = Lampa.Activity && Lampa.Activity.active &&
+Lampa.Activity.active();
+if (active && active.component === 'main' &&
+(active.source === 'tmdb' || active.source === 'surs_mod'))
+refreshSursHome('MAIN');
+}
+}, 0);
 });
+Lampa.Listener.follow('menu', handleSursHomeMenuAction);
 }
 }
 setTimeout(ensureSursActiveOnBoot, 0);
@@ -4129,7 +4178,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v4.0.13 (Hot Discovery 5.0) успешно инициализирован.');
+console.log('SURS Pro v4.0.14 (Hot Discovery 5.0) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4160,7 +4209,7 @@ return defaults;
 getDefaultSectionShelves: getDefaultSectionShelves,
 hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
 openHotDiagnostics: openHotDiagnostics,
-version: '4.0.13'
+version: '4.0.14'
 };
 
 
