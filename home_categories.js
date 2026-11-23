@@ -1,6 +1,6 @@
 /**
  * Lampa Plugin: Home Categories Pro (Скрытие и настройка порядка категорий)
- * Version: 2.0.2
+ * Version: 2.0.3
  * Author: Lampa Community & Alexgood321
  * Standard: Полное соответствие официальной документации Lampa (docs/ru)
  * Features:
@@ -228,17 +228,27 @@
     function updateDOM() {
         var scanStarted = Date.now();
         HC_PERF.scans++;
+        // Reordering rows creates childList mutations. Do not observe our own work.
+        var resumeObserver = Boolean(domObserver && document.body);
+        if (resumeObserver) domObserver.disconnect();
         try {
             var lines = document.querySelectorAll('.items-line');
             if (!lines || !lines.length) return;
 
-            var scrollBody = null;
-            var visibleLines = [];
+            var groups = [];
             var order = getSavedOrder();
             var ranks = Object.create(null);
             for (var k = 0; k < order.length; k++) ranks[order[k]] = k;
             function rankFor(category) {
                 return Object.prototype.hasOwnProperty.call(ranks, category) ? ranks[category] : 999;
+            }
+            function groupFor(parent) {
+                for (var g = 0; g < groups.length; g++) {
+                    if (groups[g].parent === parent) return groups[g];
+                }
+                var group = {parent: parent, rows: []};
+                groups.push(group);
+                return group;
             }
 
             for (var i = 0; i < lines.length; i++) {
@@ -247,47 +257,49 @@
                 var title = (titleEl ? titleEl.textContent : '').trim();
                 if (!title) continue;
 
-                var catId = identifyCategory({ title: title });
-
-                if (isCategoryHidden(catId)) {
+                var catId = identifyCategory({title: title});
+                var hidden = isCategoryHidden(catId);
+                if (hidden) {
                     if (line.getAttribute('data-hc-hidden') !== 'true') {
                         line.setAttribute('data-hc-hidden', 'true');
                         line.style.setProperty('display', 'none', 'important');
                     }
-                } else {
-                    if (line.getAttribute('data-hc-hidden') === 'true') {
-                        line.removeAttribute('data-hc-hidden');
-                        line.style.display = '';
-                    }
+                } else if (line.getAttribute('data-hc-hidden') === 'true') {
+                    line.removeAttribute('data-hc-hidden');
+                    line.style.display = '';
+                }
 
-                    if (!scrollBody && line.parentNode) {
-                        scrollBody = line.parentNode;
-                    }
-
-                    visibleLines.push({
-                        el: line,
-                        rank: rankFor(catId)
+                // Rows from separate Lampa activities must never change parents.
+                if (line.parentNode && !hidden) {
+                    groupFor(line.parentNode).rows.push({
+                        el: line, rank: rankFor(catId), original: i
                     });
                 }
             }
 
-            // Перестановка полок в DOM в соответствии с выбранным порядком
-            if (scrollBody && visibleLines.length > 1) {
-                visibleLines.sort(function (a, b) {
-                    return a.rank - b.rank;
+            groups.forEach(function (group) {
+                if (group.rows.length < 2) return;
+                var current = group.rows.map(function (row) { return row.el; });
+                var desired = group.rows.slice().sort(function (left, right) {
+                    return left.rank - right.rank || left.original - right.original;
                 });
-
-                for (var j = 0; j < visibleLines.length; j++) {
-                    if (scrollBody.children[j] !== visibleLines[j].el) {
-                        scrollBody.appendChild(visibleLines[j].el);
-                    }
+                for (var j = 0; j < desired.length; j++) {
+                    var node = desired[j].el;
+                    if (current[j] === node) continue;
+                    group.parent.insertBefore(node, current[j]);
+                    var oldPosition = current.indexOf(node);
+                    current.splice(oldPosition, 1);
+                    current.splice(j, 0, node);
                 }
-            }
+            });
 
             syncControllerItems(rankFor);
         } catch (e) {
             console.error('HomeCategories: updateDOM error', e);
         } finally {
+            if (resumeObserver) {
+                domObserver.observe(document.body, {childList: true, subtree: true});
+            }
             var elapsed = Date.now() - scanStarted;
             HC_PERF.total_ms += elapsed;
             if (elapsed > HC_PERF.max_ms) HC_PERF.max_ms = elapsed;
@@ -297,29 +309,43 @@
     /**
      * Синхронизация пульта ТВ (D-pad)
      */
+    // Retain hidden controller items so turning a shelf back on restores D-pad focus.
+    var controllerItemsState = typeof WeakMap === 'function' ? new WeakMap() : null;
     function syncControllerItems(rankFor) {
         rankFor = rankFor || getCategoryRank;
         try {
             var active = Lampa.Activity && Lampa.Activity.active ? Lampa.Activity.active() : null;
             if (!active || !active.activity) return;
-
             var comp = active.activity;
             if (!Array.isArray(comp.items) || !comp.items.length) return;
 
-            var visible = comp.items.filter(function (item) {
+            var state = controllerItemsState && controllerItemsState.get(comp);
+            if (!state || state.visible !== comp.items) {
+                state = {source: comp.items.slice(), visible: null};
+                if (controllerItemsState) controllerItemsState.set(comp, state);
+            } else {
+                // Include rows appended by Lampa after the initial render.
+                comp.items.forEach(function (item) {
+                    if (state.source.indexOf(item) < 0) state.source.push(item);
+                });
+            }
+            var visible = state.source.filter(function (item) {
                 var el = item.render ? item.render(true) : null;
-                if (el && el.getAttribute && el.getAttribute('data-hc-hidden') === 'true') {
+                if (el && el.getAttribute && el.getAttribute('data-hc-hidden') === 'true')
                     return false;
-                }
-                var catId = identifyCategory(item);
-                return !isCategoryHidden(catId);
+                return !isCategoryHidden(identifyCategory(item));
             });
-
-            visible.sort(function (a, b) {
-                return rankFor(identifyCategory(a)) - rankFor(identifyCategory(b));
+            visible.sort(function (left, right) {
+                return rankFor(identifyCategory(left)) - rankFor(identifyCategory(right));
             });
-
+            // Do not replace an unchanged list and disturb controller focus.
+            if (visible.length === comp.items.length &&
+                visible.every(function (item, index) {return comp.items[index] === item;})) {
+                state.visible = comp.items;
+                return;
+            }
             comp.items = visible;
+            state.visible = visible;
             if (comp.items.length > 0) {
                 comp.active = Math.max(0, Math.min(comp.active || 0, comp.items.length - 1));
             }
@@ -958,7 +984,7 @@
         HC_PERF.ready_ms = Date.now() - PERF_START;
         window.__AlexgoodPluginRuntime = window.__AlexgoodPluginRuntime || {};
         window.__AlexgoodPluginRuntime['alexgood321/lampa-plugins/home_categories.js'] = {
-            version:'2.0.2', ready:true, started_at:Date.now()
+            version:'2.0.3', ready:true, started_at:Date.now()
         };
         console.log('HomeCategories: Plugin v2.0.2 (event-driven) initialized!');
     }
