@@ -32,6 +32,7 @@ const context = {
             remove(name,fn){assert.equal(active.get(name),fn);active.delete(name);removed++;}
         }
     },
+    CACHE_KEY:'kp_rating_pro_cache_v1', BUDGET_KEY:'kp_rating_pro_budget_v1',
     cache: {}, budget:null, started:false, stateByNode:new WeakMap(),
     io:null, mo:null, scheduledScan:false, scanRoots:[],
     scanTimer:null, pumpTimer:null, sourceTimer:null, saveTimer:null,
