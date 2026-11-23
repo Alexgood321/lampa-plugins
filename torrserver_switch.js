@@ -1,13 +1,13 @@
 /**
  * TorrServer Switch Pro
- * Version: 2.1.2
+ * Version: 2.1.3
  * Author: Alexgood321
  * Native Lampa settings, two-server health monitoring, guarded AUTO failover.
  */
 (function (window, document) {
     'use strict';
 
-    var VERSION = '2.1.2';
+    var VERSION = '2.1.3';
     var ID = 'alexgood321_torrserver_switch';
     var COMP = 'alexgood321_torrserver_switch_settings';
     var SINGLETON = '__alexgood321TorrServerSwitch';
@@ -151,7 +151,8 @@
     }
     function setPresentationPhase(value) {
         presentationPhase=value==='ping'?'ping':'server';
-        if (button) button.attr('data-phase',presentationPhase);
+        if (button && button.attr('data-phase') !== presentationPhase)
+            button.attr('data-phase',presentationPhase);
     }
     function focusPausesPresentation() {
         if (!yes('pause_focus') || !button) return false;
@@ -175,7 +176,8 @@
         presentationTimer = null;
         if (!active || !button || !enabled() || !yes('header') ||
             displayMode() !== 'alternate') return;
-        if ((document && document.hidden) || focusPausesPresentation()) {
+        if (document && document.hidden) return; // Wake only on visibilitychange.
+        if (focusPausesPresentation()) {
             presentationTimer=setTimeout(presentationTick,350);
             return;
         }
@@ -227,7 +229,8 @@
             '. Нажмите для переключения');
         button.attr('aria-label',button.attr('title'));
         if (present!==lastPresentationMode) restartPresentation();
-        else button.attr('data-phase',presentationPhase);
+        else if (button.attr('data-phase') !== presentationPhase)
+            button.attr('data-phase',presentationPhase);
     }
     function refresh() {
         refreshHeader();
@@ -748,6 +751,14 @@
             else configChanged();
         }
     }
+    function onVisibilityChange() {
+        if (!active || !initialized) return;
+        if (document.hidden) stopPresentation();
+        else if (button && enabled() && yes('header')) schedulePresentation();
+    }
+    function onSettingsOpen(event) {
+        if (active && event && event.name===COMP) refreshSettings();
+    }
     function init() {
         if (!active || initialized || !hasLampa()) return false;
         initialized=true;
@@ -755,10 +766,9 @@
         if (Lampa.Storage.listener && Lampa.Storage.listener.follow)
             Lampa.Storage.listener.follow('change',storageChanged);
         if (Lampa.Settings && Lampa.Settings.listener && Lampa.Settings.listener.follow)
-            Lampa.Settings.listener.follow('open',function (event) {
-                if (active && event && event.name===COMP) refreshSettings();
-            });
+            Lampa.Settings.listener.follow('open',onSettingsOpen);
         if (window.addEventListener) window.addEventListener('focus',onFocus);
+        if (document.addEventListener) document.addEventListener('visibilitychange',onVisibilityChange);
         mountHeader();
         refresh();
         if (enabled() && yes('monitor')) schedule(250);
@@ -793,6 +803,13 @@
             stopPresentation();
             abortAll();
             if (window.removeEventListener) window.removeEventListener('focus',onFocus);
+            if (document.removeEventListener) document.removeEventListener('visibilitychange',onVisibilityChange);
+            if (window.Lampa && Lampa.Storage && Lampa.Storage.listener &&
+                typeof Lampa.Storage.listener.remove==='function')
+                Lampa.Storage.listener.remove('change',storageChanged);
+            if (window.Lampa && Lampa.Settings && Lampa.Settings.listener &&
+                typeof Lampa.Settings.listener.remove==='function')
+                Lampa.Settings.listener.remove('open',onSettingsOpen);
             if (button) {button.remove();button=null;}
             markHeaderLayout(false);
             try {if (window.Lampa && Lampa.SettingsApi && Lampa.SettingsApi.removeComponent)
