@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 4.0.15 (Hot Discovery 5.0 fresh data on upgrade)
+* Версия: 4.0.16 (Hot Discovery 5.0 fresh data on upgrade)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -1591,7 +1591,7 @@ title: shelfScopeTitle(name), component: 'main',
 source: profile ? profile.source : 'SURS', page: 1
 };
 if (Lampa.Activity && typeof Lampa.Activity.replace === 'function') {
-Lampa.Activity.replace(activity);
+Lampa.Activity.replace(activity, true);
 } else if (Lampa.Activity && typeof Lampa.Activity.push === 'function') {
 Lampa.Activity.push(activity);
 }
@@ -3619,7 +3619,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.15';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.16';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3941,6 +3941,12 @@ window.SURS_PERFORMANCE.source_change_listener_bound = true;
 return true;
 }
 
+
+
+function isNativeFallbackHomeSource(value) {
+return value == null || value === '' || value === 'tmdb' || value === 'surs_mod';
+}
+
 var sursBootRecoveryDone = false, sursBootRecoveryBound = false;
 var sursBootRecoveryStarted = 0;
 function ensureSursActiveOnBoot() {
@@ -3957,7 +3963,7 @@ if (active.source === 'SURS' || active.source === 'SURS NEW' || active.source ==
 sursBootRecoveryDone = true;
 return;
 }
-if (active.source !== 'tmdb' && active.source !== 'surs_mod') {
+if (!isNativeFallbackHomeSource(active.source)) {
 sursBootRecoveryDone = true;
 return;
 }
@@ -4026,7 +4032,7 @@ Lampa.Storage && Lampa.Storage.get('source') === 'SURS') {
 var active = Lampa.Activity && Lampa.Activity.active &&
 Lampa.Activity.active();
 if (active && active.component === 'main' &&
-(active.source === 'tmdb' || active.source === 'surs_mod'))
+isNativeFallbackHomeSource(active.source))
 refreshSursHome('MAIN');
 }
 }, 0);
@@ -4088,6 +4094,22 @@ Lampa.SettingsApi.addComponent({
 component: 'surs',
 name: 'SURS: Главный экран',
 icon: '<svg height="24" width="24" viewBox="0 0 24 24" fill="#ffffff"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>'
+});
+
+
+
+Lampa.SettingsApi.addParam({
+component: 'surs',
+param: { name: 'surs_activate_main', type: 'button' },
+field: {
+name: 'Открыть главную SURS',
+description: 'Выбрать SURS как источник и открыть настроенные полки'
+},
+onChange: function() {
+var selected = Lampa.Storage.get('source');
+if (selected !== 'SURS') Lampa.Storage.set('source', 'SURS');
+else refreshSursHome('MAIN');
+}
 });
 
 Lampa.SettingsApi.addParam({
@@ -4252,7 +4274,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v4.0.15 (Hot Discovery 5.0) успешно инициализирован.');
+console.log('SURS Pro v4.0.16 (Hot Discovery 5.0) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4283,7 +4305,7 @@ return defaults;
 getDefaultSectionShelves: getDefaultSectionShelves,
 hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
 openHotDiagnostics: openHotDiagnostics,
-version: '4.0.15'
+version: '4.0.16'
 };
 
 
