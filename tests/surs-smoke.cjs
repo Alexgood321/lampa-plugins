@@ -30,6 +30,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
     const components = [];
     const navigations = [];
     const listeners = {};
+    const storageListeners = {};
     const window = { appready: true, matchMedia: () => ({matches: coarse}), navigator: {maxTouchPoints: touchPoints} };
     const Lampa = {
         Reguest: function () {},
@@ -55,7 +56,17 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
         Storage: {
             get: (key, fallback) => stored.has(key) ? stored.get(key) : fallback,
             field: key => stored.has(key) ? stored.get(key) : true,
-            set: (key, value) => stored.set(key, value)
+            listener: { follow: (name, fn) => (storageListeners[name] || (storageListeners[name]=[])).push(fn) },
+            set: (key, value) => {
+                const previous = stored.get(key);
+                stored.set(key, value);
+                if (previous !== value) (storageListeners.change || []).forEach(fn =>
+                    fn({name:key, value, previous}));
+            }
+        },
+        Params: {
+            values: {source: {tmdb:'TMDB', cub:'CUB', KP:'KP'}},
+            select(name, options) { this.values[name] = options; }
         },
         SettingsApi: {
             addComponent: component => components.push(component),
@@ -116,6 +127,59 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
 
 
 
+test('native source picker lists all SURS screens without removing existing providers', () => {
+    const app = boot();
+    const available = app.Lampa.Params.values.source;
+    assert.equal(available.tmdb, 'TMDB');
+    assert.equal(available.cub, 'CUB');
+    assert.equal(available.KP, 'KP');
+    assert.equal(available.SURS, 'SURS');
+    assert.equal(available['SURS NEW'], 'SURS NEW');
+    assert.equal(available['SURS RUS'], 'SURS RUS');
+    assert.equal(app.window.SURS_PERFORMANCE.source_options_registered, true);
+    assert.equal(app.window.SURS_PERFORMANCE.source_change_listener_bound, true);
+});
+test('native source switch from TMDB activates SURS on the current main', () => {
+    const app=boot();
+    app.Lampa.Activity.active=()=>({component:'main',source:'tmdb'});
+    app.Lampa.Storage.set('source','KP');
+    assert.equal(app.timers.filter(x=>x.ms===40).length,0);
+    app.Lampa.Storage.set('source','SURS');
+    const route=app.timers.find(x=>x.ms===40);
+    assert.ok(route, 'SURS selection must schedule a source-aware main navigation');
+    route.fn();
+    assert.equal(app.navigations.length,1);
+    assert.equal(app.navigations[0].component,'main');
+    assert.equal(app.navigations[0].source,'SURS');
+    assert.equal(app.window.SURS_PERFORMANCE.source_selection_redirects,1);
+});
+test('source change supports World and Russia without replacing explicit third-party choices', () => {
+    const app=boot();
+    app.Lampa.Activity.active=()=>({component:'main',source:'SURS'});
+    app.Lampa.Storage.set('source','SURS NEW');
+    app.timers.find(x=>x.ms===40).fn();
+    assert.equal(app.navigations.at(-1).source,'SURS NEW');
+    app.Lampa.Storage.set('source','SURS RUS');
+    app.timers.filter(x=>x.ms===40).at(-1).fn();
+    assert.equal(app.navigations.at(-1).source,'SURS RUS');
+    const count=app.navigations.length;
+    app.Lampa.Storage.set('source','KP');
+    assert.equal(app.navigations.length,count);
+    const pending=app.timers.filter(x=>x.ms===40).at(-1);
+    pending.fn();
+    assert.equal(app.navigations.length,count, 'delayed SURS navigation must not hijack KP');
+});
+test('source picker opens SURS from other screens, but never reacts to unrelated storage keys', () => {
+    const app=boot();
+    app.Lampa.Activity.active=()=>({component:'full',source:'tmdb'});
+    const before=app.timers.length;
+    app.Lampa.Storage.set('theme','dark');
+    assert.equal(app.timers.length,before);
+    app.Lampa.Storage.set('source','SURS NEW');
+    app.timers.filter(x=>x.ms===40).at(-1).fn();
+    assert.equal(app.navigations.length,1);
+    assert.equal(app.navigations[0].source,'SURS NEW');
+});
 test('cold boot repairs only a mismatched TMDB main and never other screens', () => {
     const app = boot({saved:[{id:'nav_buttons',enabled:true}]});
     app.Lampa.Activity.active = () => ({component:'main',source:'tmdb'});
