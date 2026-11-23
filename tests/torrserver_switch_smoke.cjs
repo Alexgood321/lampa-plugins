@@ -4,7 +4,7 @@ const vm = require('vm');
 const assert = require('node:assert/strict');
 
 const original = fs.readFileSync(require('node:path').join(__dirname,'..','torrserver_switch.js'),'utf8');
-assert.match(original, /Version: 2\.1\.3/);
+assert.match(original, /Version: 2\.1\.4/);
 const keys={torrserver_use_link:'one',torrserver_url:'http://primary:8090',
     torrserver_url_two:'http://secondary:8090'};
 const callbacks={};
@@ -16,6 +16,7 @@ let playerOpened=false;
 let timeOffset=0;
 class MockDate extends Date {static now(){return Date.now()+timeOffset;}}
 let button=null;
+let header=null;
 
 class JQ {
     constructor() {this.length=1;this.events={};this.attrs={};this.classes=[];this.children={};this.removed=false;}
@@ -77,7 +78,7 @@ const Lampa={
         update(){}
     },
     Head:{
-        render:()=>new JQ(),
+        render:()=>header || (header=new JQ()),
         addElement:(item,handler)=>{button=item;item.events['hover:enter']=handler;return item;}
     },
     Player:{opened:()=>playerOpened},
@@ -119,7 +120,7 @@ const context={
 context.window.document=context.document;
 vm.runInNewContext(original,context);
 const plugin=context.window.__alexgood321TorrServerSwitch;
-assert.equal(plugin.version,'2.1.3');
+assert.equal(plugin.version,'2.1.4');
 assert.ok(sections.alexgood321_torrserver_switch_settings);
 assert.ok(params.alexgood321_torrserver_switch_settings.length>=20);
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='torrserver_url' && p.param.type==='input'));
@@ -127,12 +128,16 @@ assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='alex_tss_mode' && p.param.type==='select'));
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='alex_tss_header' && p.param.type==='trigger'));
 assert.ok(button);
+assert.ok(header.find('.head__body').hasClass('alex-ts-header-present'),'TS presence class applies while button is mounted');
 const style=context.document.head.style.textContent;
 assert.match(style,/alex-ts-switch-face\{display:flex!important;position:absolute!important;top:0;right:0;bottom:0;left:0;inset:0/,'absolute full-size faces required including older WebView fallback');
 assert.match(style,/max-width:480px/,'compact fallback for wide pill layout on small screens');
 assert.match(style,/alex-ts-switch-ping\{opacity:0;transform:translate3d\(0,105%,0\)/,'offscreen ping frame');
 assert.match(style,/data-phase="ping"] .alex-ts-switch-server/,'server hidden during ping');
 assert.match(style,/max-width:640px/,'small viewport title protection');
+assert.match(style,/body\.true--mobile \.head__body\.alex-ts-header-present \.head__title\{/,'mobile title spacer only while TS is mounted');
+assert.match(style,/display:block!important;flex:1 1 0%!important;min-width:0!important;visibility:hidden!important;margin-right:auto!important/,'native mobile header flex spacer pushes actions to the right');
+assert.doesNotMatch(style,/\.head__title\{display:none!important/,'hiding title with display:none breaks right alignment');
 assert.match(style,/prefers-reduced-motion:reduce/,'reduced motion fallback');
 assert.match(style,/alex-ts-switch-ping-unit\{display:block;font-size:\.7em;font-weight:600;line-height:1\.05/,'readable ms label');
 assert.match(style,/alex-ts-switch-dot\{position:absolute;z-index:2;top:\.2em;right:\.2em/,'status dot is inset inside circle');
@@ -201,8 +206,10 @@ assert.equal(keys.torrserver_use_link,'two','debounce blocks immediate double ac
 keys.alex_tss_header=false;
 Lampa.Storage.set('alex_tss_header',false);
 assert.ok(button.removed,'disabling header removes button');
+assert.equal(header.find('.head__body').hasClass('alex-ts-header-present'),false,'mobile title spacer must not activate without TS');
 Lampa.Storage.set('alex_tss_header',true);
 assert.equal(button.removed,false,'re-enabling header inserts button');
+assert.ok(header.find('.head__body').hasClass('alex-ts-header-present'),'restoring TS reapplies mobile right alignment');
 
 Lampa.Storage.set('torrserver_use_link','one');
 Lampa.Storage.set('alex_tss_mode','auto');
@@ -246,4 +253,4 @@ assert.equal(sections.alexgood321_torrserver_switch_settings,undefined);
 assert.equal(listeners.change.length,0,'Storage listener removed on destroy');
 assert.equal(listeners.open.length,0,'Settings listener removed on destroy');
 assert.equal(documentListeners.size,0,'visibility handler removed on destroy');
-console.log('TorrServer Switch Pro 2.1.3: smoke, lifecycle and presentation checks passed');
+console.log('TorrServer Switch Pro 2.1.4: smoke, lifecycle and presentation checks passed');
