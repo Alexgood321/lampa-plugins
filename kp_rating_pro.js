@@ -1,6 +1,6 @@
 /**
- * KP Rating Pro for Lampa v1.1.0
- * Version: 1.1.0
+ * KP Rating Pro for Lampa v1.1.1
+ * Version: 1.1.1
  * Global, lazy Kinopoisk ratings for standard Lampa posters.
  * Original implementation by Alexgood321. Does not copy rating.js or its credentials.
  * Uses the installed Lampa.Api.sources.KP and reuses the existing rating.js cache.
@@ -10,7 +10,7 @@
     if (window.kp_rating_pro_initialized) return;
     window.kp_rating_pro_initialized = true;
 
-    var VERSION = '1.1.0';
+    var VERSION = '1.1.1';
     var STORAGE_PREFIX = 'kp_rating_pro_';
     var CACHE_KEY = STORAGE_PREFIX + 'cache_v1';
     var BUDGET_KEY = STORAGE_PREFIX + 'budget_v1';
@@ -27,7 +27,7 @@
     var cache = {}, budget = null;
     var queue = [], inflight = false, activeJob = null, lastRequestAt = 0;
     var stateByNode = new WeakMap();
-    var io = null, mo = null, scheduledScan = false, scanRoots = [];
+    var io = null, mo = null, scheduledScan = false, scanRoots = [], scanTimer = null;
     var saveTimer = null, dependencyLoading = false, dependencyFailed = false;
     var sourceTimer = null, sourceScript = null, sourceWaitCount = 0, pumpTimer = null, started = false;
     var metrics = window.KP_RATING_PRO_STATS = {
@@ -432,8 +432,10 @@
         if (root && root.nodeType===1 && scanRoots.length<100) scanRoots.push(root);
         if (scheduledScan) return;
         scheduledScan=true;
-        setTimeout(function(){
+        scanTimer=setTimeout(function(){
+            scanTimer=null;
             scheduledScan=false;
+            if(!started){scanRoots=[];return;}
             var roots=scanRoots.splice(0);
             if (!roots.length || roots.length>=95) {scan(document.body,false);return;}
             roots.forEach(function(elem){scan(elem,false);});
@@ -486,16 +488,36 @@
             mo.observe(document.body,{childList:true,subtree:true});
         }
         scan(document.body,false);
+        var lifecycle = {disposed:false};
+        var onActivity = function(e) {
+            if (!lifecycle.disposed && e && e.type==='start') queueScan(document.body);
+        };
+        var onVisibility = function() {
+            if (lifecycle.disposed) return;
+            if(document.hidden){
+                if(saveTimer){clearTimeout(saveTimer);saveTimer=null;storageSet(CACHE_KEY,cache);}
+            }else queueScan(document.body);
+        };
         if (Lampa.Listener && typeof Lampa.Listener.follow==='function')
-            Lampa.Listener.follow('activity',function(e){ if (e && e.type==='start') queueScan(document.body); });
-        if (typeof document.addEventListener==='function') document.addEventListener('visibilitychange',function(){if(document.hidden){if(saveTimer){clearTimeout(saveTimer);saveTimer=null;storageSet(CACHE_KEY,cache);}}else queueScan(document.body);});
+            Lampa.Listener.follow('activity',onActivity);
+        if (typeof document.addEventListener==='function')
+            document.addEventListener('visibilitychange',onVisibility);
         window.kp_rating_pro_rescan=function(){scan(document.body,true);};
         window.kp_rating_pro_destroy=function(){
+            lifecycle.disposed=true;
+            if (Lampa.Listener && typeof Lampa.Listener.remove==='function')
+                Lampa.Listener.remove('activity',onActivity);
+            if (typeof document.removeEventListener==='function')
+                document.removeEventListener('visibilitychange',onVisibility);
             if(io)io.disconnect(); if(mo)mo.disconnect();
+            io=null; mo=null;
+            if(scanTimer){clearTimeout(scanTimer);scanTimer=null;}
+            scheduledScan=false;scanRoots=[];stateByNode=new WeakMap();
             if(pumpTimer){clearTimeout(pumpTimer);pumpTimer=null;}
             if(sourceTimer){clearTimeout(sourceTimer);sourceTimer=null;}
             if(saveTimer){clearTimeout(saveTimer);saveTimer=null;storageSet(CACHE_KEY,cache);}
             window.kp_rating_pro_initialized=false;
+            delete window.kp_rating_pro_rescan;
             started=false;
         };
     }
