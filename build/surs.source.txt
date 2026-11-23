@@ -1,6 +1,6 @@
 /**
  * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
- * Версия: 4.0.12 (Hot Discovery 5.0 fresh data on upgrade)
+ * Версия: 4.0.13 (Hot Discovery 5.0 fresh data on upgrade)
  * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
  *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
  *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -3619,7 +3619,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
         script.src = resolved ?
             baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.12';
+            'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.13';
         script.async = true;
         function done(error) {
             if (token !== sursEditorRequestToken) return;
@@ -3897,12 +3897,11 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
                 sursBootRecoveryDone = true;
                 return;
             }
-            if (window.start_deep_link ||
-                (Lampa.Storage && Lampa.Storage.field &&
-                 Lampa.Storage.field('start_page') === 'last')) {
-                sursBootRecoveryDone = true;
-                return;
-            }
+            // Lampa may restore the last main activity or interpret its own
+            // URL as a deep link after reload. Both can leave TMDB visible
+            // despite SURS being the explicitly configured home source.
+            // Only a mismatched TMDB main is rescued; content/deep links and
+            // any intentionally selected non-TMDB source remain untouched.
             if (!Lampa.Storage || Lampa.Storage.get('source') !== 'SURS') return;
             sursBootRecoveryDone = true;
             window.SURS_PERFORMANCE.boot_rescue = {
@@ -4130,7 +4129,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
             window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
             scheduleSursBootRecovery();
             kp8PreloadEnabledSource();
-            console.log('SURS Pro v4.0.12 (Hot Discovery 5.0) успешно инициализирован.');
+            console.log('SURS Pro v4.0.13 (Hot Discovery 5.0) успешно инициализирован.');
         } catch(err) {
             console.error('[SURS] Ошибка запуска, повторная попытка:', err);
             if (window.surs_retry_count++ < 10) {
@@ -4161,7 +4160,7 @@ surs_new: '<svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.or
         getDefaultSectionShelves: getDefaultSectionShelves,
         hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
         openHotDiagnostics: openHotDiagnostics,
-        version: '4.0.12'
+        version: '4.0.13'
     };
 
     // Запуск плагина с поддержкой как ранней, так и поздней загрузки
