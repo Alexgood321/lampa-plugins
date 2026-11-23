@@ -180,6 +180,62 @@ test('source picker opens SURS from other screens, but never reacts to unrelated
     assert.equal(app.navigations.length,1);
     assert.equal(app.navigations[0].source,'SURS NEW');
 });
+test('cold boot repairs a source-less mobile main rendered as TMDB', () => {
+    const app=boot({saved:[{id:'nav_buttons',enabled:true}]});
+    assert.equal(app.stored.get('source'),'SURS');
+    app.Lampa.Activity.active=()=>({component:'main'});
+    app.timers.find(x=>x.ms===650).fn();
+    const restore=app.timers.find(x=>x.ms===80);
+    assert.ok(restore,'native Home can omit activity.source');
+    restore.fn();
+    assert.equal(app.navigations.length,1);
+    assert.equal(app.navigations[0].source,'SURS');
+    assert.equal(app.navigations[0].component,'main');
+});
+test('mobile navigation Home without source is repaired after boot', () => {
+    const app=boot();
+    app.Lampa.Activity.active=()=>({component:'main',source:'tmdb'});
+    app.timers.find(x=>x.ms===650).fn();
+    app.timers.find(x=>x.ms===80).fn();
+    const before=app.timers.length;
+    app.Lampa.Activity.active=()=>({component:'main'});
+    app.emit('activity',{type:'start',component:'main',object:{component:'main'}});
+    const next=app.timers.slice(before).find(x=>x.ms===0);
+    assert.ok(next,'activity start must be observed');
+    next.fn();
+    const refresh=app.timers.slice(before).find(x=>x.ms===80);
+    assert.ok(refresh,'missing activity.source must schedule SURS recovery');
+    refresh.fn();
+    assert.equal(app.navigations.at(-1).source,'SURS');
+});
+test('mobile default source healing never overrides explicit CUB or KP activities', () => {
+    const app=boot();
+    app.stored.set('source','SURS');
+    app.Lampa.Activity.active=()=>({component:'main',source:'KP'});
+    app.timers.find(x=>x.ms===650).fn();
+    assert.equal(app.navigations.length,0);
+    const before=app.timers.length;
+    app.emit('activity',{type:'start',component:'main',object:{component:'main',source:'cub'}});
+    app.timers.slice(before).find(x=>x.ms===0).fn();
+    assert.ok(!app.timers.slice(before).some(x=>x.ms===80));
+    assert.equal(app.navigations.length,0);
+});
+test('explicit SURS activation in settings updates source without resetting custom shelves', () => {
+    const saved=[{id:'nav_buttons',enabled:true},{id:'hot_us_new',enabled:true}];
+    const app=boot({saved});
+    app.stored.set('source','KP');
+    app.Lampa.Activity.active=()=>({component:'main',source:'KP'});
+    const button=app.settings.find(x=>x.param && x.param.name==='surs_activate_main');
+    assert.ok(button,'recovery button must be present');
+    button.onChange();
+    assert.equal(app.stored.get('source'),'SURS');
+    const route=app.timers.find(x=>x.ms===40);
+    assert.ok(route,'native source change should navigate back to SURS');
+    route.fn();
+    assert.equal(app.navigations.at(-1).source,'SURS');
+    assert.equal(app.stored.get('surs_fixed_shelves_v2'),saved);
+    assert.deepEqual(app.rows().map(x=>x.id),['nav_buttons','hot_us_new']);
+});
 test('cold boot repairs only a mismatched TMDB main and never other screens', () => {
     const app = boot({saved:[{id:'nav_buttons',enabled:true}]});
     app.Lampa.Activity.active = () => ({component:'main',source:'tmdb'});
