@@ -83,4 +83,27 @@ context.syncControllerItems();
 assert.equal(component.items.length, 2);
 assert.equal(component.items[0], b);
 assert.equal(component.items[1], a);
-console.log('PASS Home Categories: per-parent stable order, idempotence, observer isolation, D-pad restore');
+// SURS owns its own shelves and controller: Home Categories must not scan them.
+const priorScans = context.HC_PERF.scans;
+const priorWrites = writes;
+context.window = {LampaShelfManager: {version: '4.0.12'}};
+component = {items: [{cat: 'b'}, {cat: 'a'}], active: 0};
+context.updateDOM();
+assert.equal(context.HC_PERF.scans, priorScans, 'SURS presence must skip DOM scanning');
+assert.equal(writes, priorWrites, 'SURS presence must not reorder any rows');
+assert.equal(component.items.length, 2, 'SURS controller items must remain untouched');
+delete context.window.LampaShelfManager;
+// Even before SURS initializes, honor the selected source saved by Lampa.
+context.Lampa.Storage = {get() {return 'SURS';}};
+context.updateDOM();
+assert.equal(context.HC_PERF.scans, priorScans, 'saved SURS source must skip scanning');
+// SURS NEW / RUS must also be isolated when opened directly.
+context.Lampa.Storage.get = () => 'tmdb';
+context.Lampa.Activity.active = () => ({component: 'main', source: 'SURS NEW', activity:component});
+context.updateDOM();
+assert.equal(context.HC_PERF.scans, priorScans, 'SURS NEW must not be scanned');
+// Do not touch inactive/main DOM while Lampa is navigating in another component.
+context.Lampa.Activity.active = () => ({component: 'full', source: 'tmdb', activity:component});
+context.updateDOM();
+assert.equal(context.HC_PERF.scans, priorScans, 'non-main activity must not trigger DOM moves');
+console.log('PASS Home Categories: per-parent order, D-pad, SURS ownership isolation and background safety');

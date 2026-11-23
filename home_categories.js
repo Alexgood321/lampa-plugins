@@ -1,6 +1,6 @@
 /**
  * Lampa Plugin: Home Categories Pro (Скрытие и настройка порядка категорий)
- * Version: 2.0.3
+ * Version: 2.0.4
  * Author: Lampa Community & Alexgood321
  * Standard: Полное соответствие официальной документации Lampa (docs/ru)
  * Features:
@@ -226,6 +226,29 @@
      * ПРЯМОЙ БЕЗОПАСНЫЙ DOM-ДВИЖОК
      */
     function updateDOM() {
+        // SURS owns its shelves and controller. Home Categories must never
+        // reorder or hide SURS rows, including while Lampa is booting.
+        var activeScreen = null;
+        var activeSource = '';
+        var configuredSource = '';
+        try {
+            activeScreen = Lampa.Activity && Lampa.Activity.active ?
+                Lampa.Activity.active() : null;
+            activeSource = activeScreen && activeScreen.source || '';
+            configuredSource = Lampa.Storage && Lampa.Storage.get ?
+                Lampa.Storage.get('source', '') : '';
+        } catch (error) {}
+        var sursSource = /^(?:SURS(?: |$)|surs_mod(?: |$))/i;
+        var sursInstalled = typeof window !== 'undefined' &&
+            (window.LampaShelfManager || window.plugin_surs_fixed_ready);
+        if (sursInstalled || sursSource.test(String(activeSource)) ||
+            sursSource.test(String(configuredSource))) {
+            HC_PERF.skipped_surs = (HC_PERF.skipped_surs || 0) + 1;
+            return;
+        }
+        // Do not mutate hidden/inactive activities while another screen owns focus.
+        if (activeScreen && activeScreen.component &&
+            activeScreen.component !== 'main') return;
         var scanStarted = Date.now();
         HC_PERF.scans++;
         // Reordering rows creates childList mutations. Do not observe our own work.
@@ -984,9 +1007,9 @@
         HC_PERF.ready_ms = Date.now() - PERF_START;
         window.__AlexgoodPluginRuntime = window.__AlexgoodPluginRuntime || {};
         window.__AlexgoodPluginRuntime['alexgood321/lampa-plugins/home_categories.js'] = {
-            version:'2.0.3', ready:true, started_at:Date.now()
+            version:'2.0.4', ready:true, started_at:Date.now()
         };
-        console.log('HomeCategories: Plugin v2.0.2 (event-driven) initialized!');
+        console.log('HomeCategories: Plugin v2.0.4 (SURS-safe) initialized!');
     }
 
     if (window.appready) {
