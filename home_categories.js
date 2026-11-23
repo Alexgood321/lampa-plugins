@@ -238,7 +238,7 @@
             configuredSource = Lampa.Storage && Lampa.Storage.get ?
                 Lampa.Storage.get('source', '') : '';
         } catch (error) {}
-        var sursSource = /^(?:SURS(?:\\s|$)|surs_mod(?:\\s|$))/i;
+        var sursSource = /^(?:SURS(?: |$)|surs_mod(?: |$))/i;
         var sursInstalled = typeof window !== 'undefined' &&
             (window.LampaShelfManager || window.plugin_surs_fixed_ready);
         if (sursInstalled || sursSource.test(String(activeSource)) ||
