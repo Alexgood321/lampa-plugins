@@ -1,6 +1,6 @@
 /**
 * SURS Pro / Fixed & Configurable (Полный контроль над Главным экраном)
-* Версия: 4.0.14 (Hot Discovery 5.0 fresh data on upgrade)
+* Версия: 4.0.15 (Hot Discovery 5.0 fresh data on upgrade)
 * Релиз: сбалансированный рейтинг 8+ с порогами 300/150 голосов; диагностика глубины и отбора.
 *   - Нормализация карточек Trakt (извлечение show/movie/episode, замена {release_year} реальным годом, TMDB-постеры).
 *   - Прямые кнопки на строке: [ ▲ ] на 1 шаг выше, [ ▼ ] на 1 шаг ниже, [ ⤒ В топ ], [ ✓ Вкл ], [ ··· ].
@@ -3619,7 +3619,7 @@ var baseUrl = window.__SURS_MAIN_SCRIPT_URL || '';
 var resolved = /\/surs\.js(?:[?#]|$)/.test(baseUrl);
 script.src = resolved ?
 baseUrl.replace(/\/surs\.js(?=[?#]|$)/, '/surs-editor.js') :
-'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.14';
+'https://cdn.jsdelivr.net/gh/Alexgood321/lampa-plugins@main/surs-editor.js?v=4.0.15';
 script.async = true;
 function done(error) {
 if (token !== sursEditorRequestToken) return;
@@ -3877,6 +3877,70 @@ return loadPart;
 
 
 
+
+
+function registerSursSourceOptions() {
+if (!Lampa.Params || typeof Lampa.Params.select !== 'function') return false;
+try {
+var existing = Lampa.Params.values && Lampa.Params.values.source || {};
+var options = Object.assign({}, existing, {
+'SURS': 'SURS',
+'SURS NEW': 'SURS NEW',
+'SURS RUS': 'SURS RUS'
+});
+Lampa.Params.select('source', options, 'tmdb');
+window.SURS_PERFORMANCE.source_options_registered = true;
+return true;
+} catch (error) {
+console.warn('[SURS] Cannot register source options:', error);
+return false;
+}
+}
+
+
+
+var sursSourceListenerBound = false;
+function bindSursSourceChange() {
+if (sursSourceListenerBound) return true;
+var storageListener = Lampa.Storage && Lampa.Storage.listener;
+if (!storageListener || typeof storageListener.follow !== 'function') return false;
+storageListener.follow('change', function(event) {
+if (!event || event.name !== 'source') return;
+var selected = event.value;
+if (selected !== 'SURS' && selected !== 'SURS NEW' &&
+selected !== 'SURS RUS') return;
+setTimeout(function() {
+if (!window.plugin_surs_fixed_ready ||
+!Lampa.Storage || Lampa.Storage.get('source') !== selected ||
+!Lampa.Api.sources[selected]) return;
+try {
+var active = Lampa.Activity && Lampa.Activity.active &&
+Lampa.Activity.active();
+if (!active || (active.component === 'main' &&
+active.source === selected)) return;
+var destination = {
+url: '', title: 'Главная', component: 'main',
+source: selected, page: 1
+};
+if (active.component === 'main' &&
+typeof Lampa.Activity.replace === 'function') {
+Lampa.Activity.replace(destination, true);
+} else if (Lampa.Activity &&
+typeof Lampa.Activity.push === 'function') {
+Lampa.Activity.push(destination);
+}
+window.SURS_PERFORMANCE.source_selection_redirects =
+(window.SURS_PERFORMANCE.source_selection_redirects || 0) + 1;
+} catch (error) {
+console.error('[SURS] Cannot open selected source:', error);
+}
+}, 40);
+});
+sursSourceListenerBound = true;
+window.SURS_PERFORMANCE.source_change_listener_bound = true;
+return true;
+}
+
 var sursBootRecoveryDone = false, sursBootRecoveryBound = false;
 var sursBootRecoveryStarted = 0;
 function ensureSursActiveOnBoot() {
@@ -4003,9 +4067,19 @@ Lampa.Api.sources['SURS RUS'] = surs_mod_rus;
 Lampa.Api.sources.surs_mod = surs_mod;
 
 
+if (!registerSursSourceOptions()) {
+setTimeout(registerSursSourceOptions, 750);
+setTimeout(registerSursSourceOptions, 1800);
+}
+
+
 var curSource = Lampa.Storage.get('source');
 if (!curSource || curSource === 'tmdb' || curSource === 'surs_mod') {
 Lampa.Storage.set('source', 'SURS');
+}
+
+if (!bindSursSourceChange()) {
+setTimeout(bindSursSourceChange, 750);
 }
 
 
@@ -4178,7 +4252,7 @@ window.SURS_PERFORMANCE.ready_at = Date.now();
 window.SURS_PERFORMANCE.init_ms = Date.now() - initStartedAt;
 scheduleSursBootRecovery();
 kp8PreloadEnabledSource();
-console.log('SURS Pro v4.0.14 (Hot Discovery 5.0) успешно инициализирован.');
+console.log('SURS Pro v4.0.15 (Hot Discovery 5.0) успешно инициализирован.');
 } catch(err) {
 console.error('[SURS] Ошибка запуска, повторная попытка:', err);
 if (window.surs_retry_count++ < 10) {
@@ -4209,7 +4283,7 @@ return defaults;
 getDefaultSectionShelves: getDefaultSectionShelves,
 hotDiagnostics: function(){return window.SURS_PERFORMANCE.hot_us||{};},
 openHotDiagnostics: openHotDiagnostics,
-version: '4.0.14'
+version: '4.0.15'
 };
 
 
