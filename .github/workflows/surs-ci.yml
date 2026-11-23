@@ -77,6 +77,7 @@ jobs:
       - run: node tests/kp-rating-pro-smoke.cjs
       - run: node --check num_series.js
       - run: node tests/home-categories-performance.cjs
+      - run: node tests/home-categories-order-regression.cjs
       - run: node --check tests/num-series-smoke.cjs
       - run: node --check tests/surs-smoke.cjs
       - run: node tests/surs-smoke.cjs
