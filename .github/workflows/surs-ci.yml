@@ -22,6 +22,7 @@ on:
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
+      - torrserver_switch.js
       - num_series.js
       - num_series_v1_3_0.js
       - tests/**
@@ -45,6 +46,7 @@ on:
       - .github/workflows/hot-discovery.yml
       - home_categories.js
       - kp_rating_pro.js
+      - torrserver_switch.js
       - num_series.js
       - num_series_v1_3_0.js
       - tests/**
@@ -74,6 +76,8 @@ jobs:
       - run: node --check surs.js
       - run: node --check home_categories.js
       - run: node --check kp_rating_pro.js
+      - run: node --check torrserver_switch.js
+      - run: node tests/torrserver_switch_smoke.cjs
       - run: node tests/kp-rating-pro-smoke.cjs
       - run: node tests/kp-rating-lifecycle.cjs
       - run: node --check num_series.js
