@@ -29,6 +29,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
     const settings = [];
     const components = [];
     const navigations = [];
+    const listeners = {};
     const window = { appready: true, matchMedia: () => ({matches: coarse}), navigator: {maxTouchPoints: touchPoints} };
     const Lampa = {
         Reguest: function () {},
@@ -60,8 +61,9 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
             addComponent: component => components.push(component),
             addParam: param => settings.push(param)
         },
-        Activity: { active: () => true, replace: value => navigations.push(value) },
-        Listener: { follow: () => {} },
+        Activity: { active: () => true, replace: value => navigations.push(value),
+            push: value => navigations.push(value) },
+        Listener: { follow: (name,fn) => (listeners[name] || (listeners[name]=[])).push(fn) },
         Noty: { show: () => {} },
         Platform: { screen: type => type === 'tv' && tv },
         Favorite: { continues: () => [] },
@@ -108,6 +110,7 @@ function boot({ ready = true, saved = null, tv = false, coarse = false, touchPoi
         return result;
     };
     return { ctx, stored, timers, warnings, window, Lampa, added, settings, components, navigations, rows, getMain,
+        emit: (name, data) => (listeners[name] || []).forEach(fn => fn(data)),
         contentRowsCalls: () => contentRowsCalls };
 }
 
@@ -169,6 +172,66 @@ test('selected SURS home survives last-page restore and a stale main URL', () =>
     otherSource.Lampa.Activity.active=()=>({component:'main',source:'tmdb'});
     otherSource.timers.find(x=>x.ms===650).fn();
     assert.equal(otherSource.navigations.length,0,'do not override a non-SURS source');
+});
+test('native Home menu always returns to SURS without hijacking other sources', () => {
+    const app=boot();
+    assert.equal(app.stored.get('source'),'SURS');
+    app.Lampa.Activity.active=()=>({component:'main',source:'SURS'});
+    let aborted=false;
+    app.emit('menu',{type:'action',action:'main',abort(){aborted=true;}});
+    assert.equal(aborted,true,'must suppress native Lampa Home handler');
+    assert.equal(app.navigations.length,1);
+    assert.equal(app.navigations[0].source,'SURS');
+    assert.equal(app.window.SURS_PERFORMANCE.native_home_redirects,1);
+
+    // A stale source setting must not replace a currently visible SURS home.
+    app.stored.set('source','tmdb');
+    app.emit('menu',{type:'action',action:'main',abort(){}});
+    assert.equal(app.stored.get('source'),'SURS');
+    assert.equal(app.navigations.at(-1).source,'SURS');
+
+    const fromMovie=boot();
+    fromMovie.Lampa.Activity.active=()=>({component:'full',source:'tmdb'});
+    fromMovie.emit('menu',{type:'action',action:'main',abort(){}});
+    assert.equal(fromMovie.navigations.at(-1).source,'SURS');
+
+    const fromOther=boot();
+    fromOther.stored.set('source','KP');
+    fromOther.Lampa.Activity.active=()=>({component:'main',source:'KP'});
+    let otherAborted=false;
+    fromOther.emit('menu',{type:'action',action:'main',abort(){otherAborted=true;}});
+    assert.equal(otherAborted,false,'do not hijack an explicitly selected KP source');
+    assert.equal(fromOther.navigations.length,0);
+});
+test('native Home after boot recovers TMDB main without one-time guard suppression', () => {
+    const app=boot();
+    app.Lampa.Activity.active=()=>({component:'main',source:'tmdb'});
+    app.timers.find(x=>x.ms===650).fn();
+    const initial=app.timers.find(x=>x.ms===80);
+    assert.ok(initial);
+    initial.fn();
+    assert.equal(app.navigations.length,1);
+    assert.equal(app.navigations[0].source,'SURS');
+
+    // Later navigation-bar Home bypasses menu events and starts a TMDB main.
+    const before=app.timers.length;
+    app.emit('activity',{type:'start',component:'main',object:{source:'tmdb'}});
+    const pending=app.timers.slice(before).find(x=>x.ms===0);
+    assert.ok(pending,'later activity must be observed');
+    pending.fn();
+    const restored=app.timers.slice(before).find(x=>x.ms===80);
+    assert.ok(restored,'later TMDB main must schedule SURS navigation');
+    restored.fn();
+    assert.equal(app.navigations.length,2);
+    assert.equal(app.navigations[1].source,'SURS');
+
+    const another=boot();
+    another.stored.set('source','KP');
+    another.Lampa.Activity.active=()=>({component:'main',source:'tmdb'});
+    another.timers.find(x=>x.ms===650).fn();
+    another.emit('activity',{type:'start',component:'main',object:{source:'tmdb'}});
+    another.timers.filter(x=>x.ms===0).forEach(x=>x.fn());
+    assert.equal(another.navigations.length,0);
 });
 test('discovered shelf storage batching preserves latest metadata and writes once', () => {
     const app = boot();
