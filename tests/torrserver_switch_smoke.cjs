@@ -4,7 +4,7 @@ const vm = require('vm');
 const assert = require('node:assert/strict');
 
 const original = fs.readFileSync(require('node:path').join(__dirname,'..','torrserver_switch.js'),'utf8');
-assert.match(original, /Version: 2\.1\.2/);
+assert.match(original, /Version: 2\.1\.3/);
 const keys={torrserver_use_link:'one',torrserver_url:'http://primary:8090',
     torrserver_url_two:'http://secondary:8090'};
 const callbacks={};
@@ -49,6 +49,12 @@ class FakeXHR {
     abort(){if(this.onabort)this.onabort();}
 }
 const listeners={change:[],open:[]};
+const documentListeners = new Map();
+function detachListener(kind,fn) {
+    const idx=listeners[kind].indexOf(fn);
+    assert.ok(idx>=0,'missing listener to detach');
+    listeners[kind].splice(idx,1);
+}
 const Lampa={
     Storage:{
         get:(key,fallback)=>Object.hasOwn(keys,key)?keys[key]:fallback,
@@ -57,7 +63,7 @@ const Lampa={
             keys[key]=value;
             listeners.change.forEach(fn=>fn({name:key,value}));
         },
-        listener:{follow:(event,fn)=>listeners[event].push(fn)}
+        listener:{follow:(event,fn)=>listeners[event].push(fn),remove:detachListener}
     },
     SettingsApi:{
         addComponent:comp=>{sections[comp.component]=comp;},
@@ -67,7 +73,7 @@ const Lampa={
     Settings:{
         main:()=>({update(){}}),
         render:()=>new JQ(),
-        listener:{follow:(event,fn)=>listeners[event].push(fn)},
+        listener:{follow:(event,fn)=>listeners[event].push(fn),remove:detachListener},
         update(){}
     },
     Head:{
@@ -97,7 +103,12 @@ const context={
     document:{
         hidden:false,head:{appendChild(node){this.style=node;}},
         createElement:()=>({id:'',textContent:''}),
-        getElementById:()=>null
+        getElementById:()=>null,
+        addEventListener:(type,fn)=>documentListeners.set(type,fn),
+        removeEventListener:(type,fn)=>{
+            assert.equal(documentListeners.get(type),fn);
+            documentListeners.delete(type);
+        }
     },
     setInterval:(fn)=>{timers.set(++nextTimer,fn);return nextTimer;},
     clearInterval:n=>timers.delete(n),
@@ -108,7 +119,7 @@ const context={
 context.window.document=context.document;
 vm.runInNewContext(original,context);
 const plugin=context.window.__alexgood321TorrServerSwitch;
-assert.equal(plugin.version,'2.1.2');
+assert.equal(plugin.version,'2.1.3');
 assert.ok(sections.alexgood321_torrserver_switch_settings);
 assert.ok(params.alexgood321_torrserver_switch_settings.length>=20);
 assert.ok(params.alexgood321_torrserver_switch_settings.some(p=>p.param.name==='torrserver_url' && p.param.type==='input'));
@@ -222,6 +233,17 @@ Lampa.Storage.set('alex_tss_display','ping');
 assert.equal(button.attr('data-phase'),'ping');
 Lampa.Storage.set('alex_tss_display','alternate');
 assert.equal(button.attr('data-phase'),'server');
+assert.equal(typeof documentListeners.get('visibilitychange'),'function');
+assert.ok([...delays.values()].includes(3000),'presentation timer active before hide');
+context.document.hidden=true;
+documentListeners.get('visibilitychange')();
+assert.ok(![...delays.values()].includes(3000),'no presentation polling while hidden');
+context.document.hidden=false;
+documentListeners.get('visibilitychange')();
+assert.ok([...delays.values()].includes(3000),'presentation resumes after showing app');
 plugin.destroy();
 assert.equal(sections.alexgood321_torrserver_switch_settings,undefined);
-console.log('TorrServer Switch Pro 2.1.2: smoke, CSS layout and presentation checks passed');
+assert.equal(listeners.change.length,0,'Storage listener removed on destroy');
+assert.equal(listeners.open.length,0,'Settings listener removed on destroy');
+assert.equal(documentListeners.size,0,'visibility handler removed on destroy');
+console.log('TorrServer Switch Pro 2.1.3: smoke, lifecycle and presentation checks passed');
